@@ -1,0 +1,195 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/di/injection_container.dart';
+import '../../features/favorites/presentation/views/favorites_view.dart';
+import '../../features/home/presentation/views/home_view.dart';
+import '../../features/match_details/presentation/bloc/match_details_bloc.dart';
+import '../../features/match_details/presentation/views/match_details_view.dart';
+import '../../features/matches/domain/entities/match_entity.dart';
+import '../../features/matches/presentation/views/matches_view.dart';
+import '../../features/profiles/presentation/views/generic_profile_view.dart';
+import '../../features/search/presentation/views/search_view.dart';
+import '../../features/settings/presentation/views/settings_view.dart';
+import '../../features/standings/presentation/views/standings_view.dart';
+import '../../features/transfers/presentation/views/transfers_view.dart';
+import '../../features/videos/domain/entities/video_entity.dart';
+import '../../features/videos/presentation/views/video_details_view.dart';
+import '../../features/videos/presentation/views/videos_view.dart';
+import '../navigation/app_scaffold.dart';
+
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+class AppRouter {
+  AppRouter._();
+
+  static final GoRouter router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: '/',
+    routes: [
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return AppScaffold(navigationShell: navigationShell);
+        },
+        branches: [
+          // Branch 0: Home
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (context, state) => const HomeView(),
+              ),
+            ],
+          ),
+
+          // Branch 1: Matches
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/matches',
+                builder: (context, state) => const MatchesView(),
+              ),
+            ],
+          ),
+
+          // Branch 2: Standings
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/standings',
+                builder: (context, state) => const StandingsView(),
+              ),
+            ],
+          ),
+
+          // Branch 3: Transfers
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/transfers',
+                builder: (context, state) => const TransfersView(),
+              ),
+            ],
+          ),
+
+          // Branch 4: Videos
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/videos',
+                builder: (context, state) => const VideosView(),
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Match Details
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/match/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final match = state.extra as MatchEntity?;
+          return BlocProvider(
+            create: (_) => sl<MatchDetailsBloc>(param1: id),
+            child: MatchDetailsView(
+              matchId: id,
+              initialMatch: match,
+            ),
+          );
+        },
+      ),
+
+      // Standings with specific league
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/standings/:leagueId',
+        builder: (context, state) {
+          final leagueId = state.pathParameters['leagueId'];
+          return StandingsView(initialLeagueId: leagueId);
+        },
+      ),
+
+      // Video Details
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/video/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final video = state.extra as VideoItemEntity?;
+          return VideoDetailsView(
+            videoId: id,
+            initialVideo: video,
+          );
+        },
+      ),
+
+      // Stadium Profile
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/stadium/:id/:slug',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '1';
+          final slug = state.pathParameters['slug'] ?? '';
+          return GenericProfileView(
+            id: id,
+            slug: slug,
+            type: ProfileType.stadium,
+          );
+        },
+      ),
+
+      // Referee Profile
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/referee/:id/:slug',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '1';
+          final slug = state.pathParameters['slug'] ?? '';
+          return GenericProfileView(
+            id: id,
+            slug: slug,
+            type: ProfileType.referee,
+          );
+        },
+      ),
+
+      // Commentator Profile
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/commentator/:id/:slug',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '1';
+          final slug = state.pathParameters['slug'] ?? '';
+          return GenericProfileView(
+            id: id,
+            slug: slug,
+            type: ProfileType.commentator,
+          );
+        },
+      ),
+
+      // Favorites
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/favorites',
+        builder: (context, state) => const FavoritesView(),
+      ),
+
+      // Settings
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/settings',
+        builder: (context, state) => const SettingsView(),
+      ),
+
+      // Global Search
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/search',
+        builder: (context, state) => const GlobalSearchView(),
+      ),
+    ],
+  );
+}
