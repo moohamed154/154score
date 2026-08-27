@@ -11,9 +11,15 @@ class StandingsRepositoryImpl implements StandingsRepository {
   StandingsRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<ApiResult<LeagueStandingsEntity>> getStandings(String leagueId, {required String lang}) async {
+  Future<ApiResult<LeagueStandingsEntity>> getStandings(
+    String leagueId, {
+    required String lang,
+  }) async {
     try {
-      final standings = await _remoteDataSource.getStandings(leagueId, lang: lang);
+      final standings = await _remoteDataSource.getStandings(
+        leagueId,
+        lang: lang,
+      );
       return ApiSuccess(standings);
     } on NetworkException catch (e) {
       return ApiFailure(NetworkFailure(e.message));

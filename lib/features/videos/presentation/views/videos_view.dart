@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -33,9 +34,7 @@ class _VideosViewState extends State<VideosView> {
     final isArabic = l10n.isArabic;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('videos_title')),
-      ),
+      appBar: AppBar(title: Text(l10n.translate('videos_title'))),
       body: BlocBuilder<VideosBloc, VideosState>(
         builder: (context, state) {
           return Column(
@@ -47,7 +46,9 @@ class _VideosViewState extends State<VideosView> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.lg,
+                    ),
                     itemCount: state.categories.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
@@ -58,26 +59,42 @@ class _VideosViewState extends State<VideosView> {
                         showCheckmark: false,
                         selected: isSelected,
                         onSelected: (_) {
-                          context.read<VideosBloc>().add(SelectVideoCategoryEvent(cat.id));
+                          context.read<VideosBloc>().add(
+                            SelectVideoCategoryEvent(cat.id),
+                          );
                         },
-                        backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+                        backgroundColor: isDark
+                            ? AppColors.darkCard
+                            : AppColors.lightCard,
                         selectedColor: AppColors.primary,
                         side: BorderSide(
                           color: isSelected
                               ? Colors.transparent
-                              : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                              : (isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.lightBorder),
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusFull,
+                          ),
                         ),
                         label: Text(
                           cat.title,
-                          style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected
-                                ? Colors.black
-                                : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                          ),
+                          style:
+                              AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.black
+                                    : (isDark
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.lightTextPrimary),
+                              ),
                         ),
                       );
                     },
@@ -89,10 +106,12 @@ class _VideosViewState extends State<VideosView> {
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: () async {
-                    context.read<VideosBloc>().add(LoadVideosEvent(
-                          champId: state.selectedCategory,
-                          isRefresh: true,
-                        ));
+                    context.read<VideosBloc>().add(
+                      LoadVideosEvent(
+                        champId: state.selectedCategory,
+                        isRefresh: true,
+                      ),
+                    );
                   },
                   child: _buildBody(context, state),
                 ),
@@ -106,13 +125,17 @@ class _VideosViewState extends State<VideosView> {
 
   Widget _buildBody(BuildContext context, VideosState state) {
     if (state.status == VideosStatus.loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
 
     if (state.status == VideosStatus.error) {
       return ErrorView(
         message: state.errorMessage,
-        onRetry: () => context.read<VideosBloc>().add(LoadVideosEvent(champId: state.selectedCategory)),
+        onRetry: () => context.read<VideosBloc>().add(
+          LoadVideosEvent(champId: state.selectedCategory),
+        ),
       );
     }
 

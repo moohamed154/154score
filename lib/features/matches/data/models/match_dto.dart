@@ -1,3 +1,4 @@
+import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_entity.dart';
 
 class MatchDto {
@@ -10,7 +11,9 @@ class MatchDto {
   final String? score2;
   final String? time;
   final String? status;
+  final String? statusCode;
   final String? minute;
+  final String? period;
   final String? leagueTitle;
   final String? leagueLogo;
   final String? leagueId;
@@ -26,7 +29,9 @@ class MatchDto {
     this.score2,
     this.time,
     this.status,
+    this.statusCode,
     this.minute,
+    this.period,
     this.leagueTitle,
     this.leagueLogo,
     this.leagueId,
@@ -40,27 +45,107 @@ class MatchDto {
     String? leagueId,
     String? date,
   }) {
-    final t1 = json['team_1']?.toString() ?? json['home_team']?.toString() ?? 'Team 1';
-    final t2 = json['team_2']?.toString() ?? json['away_team']?.toString() ?? 'Team 2';
-    
-    // Create a stable synthetic ID if not present in the payload
-    final rawId = json['id']?.toString() ?? json['match_id']?.toString();
-    final effectiveId = rawId ?? '${t1}_${t2}_${date ?? ""}';
+    // 1. Team Names
+    Map? homeTeamMap;
+    Map? awayTeamMap;
+    if (json['teams'] is Map) {
+      if (json['teams']['home'] is Map) {
+        homeTeamMap = json['teams']['home'] as Map;
+      }
+      if (json['teams']['away'] is Map) {
+        awayTeamMap = json['teams']['away'] as Map;
+      }
+    }
+
+    final t1 =
+        json['team_1']?.toString() ??
+        homeTeamMap?['name']?.toString() ??
+        json['home_team']?.toString() ??
+        'Team 1';
+    final t2 =
+        json['team_2']?.toString() ??
+        awayTeamMap?['name']?.toString() ??
+        json['away_team']?.toString() ??
+        'Team 2';
+
+    // 2. Stable Match ID
+    final rawId =
+        json['match_id']?.toString() ??
+        json['id']?.toString() ??
+        json['id_match']?.toString();
+    final effectiveId = (rawId != null && rawId.isNotEmpty && rawId != 'null')
+        ? rawId
+        : '${t1}_${t2}_${date ?? ""}';
+
+    // 3. Team Logos (normalized)
+    final rawLogo1 =
+        json['team_1_logo']?.toString() ??
+        homeTeamMap?['logo']?.toString() ??
+        homeTeamMap?['image']?.toString() ??
+        json['home_logo']?.toString();
+    final rawLogo2 =
+        json['team_2_logo']?.toString() ??
+        awayTeamMap?['logo']?.toString() ??
+        awayTeamMap?['image']?.toString() ??
+        json['away_logo']?.toString();
+
+    final logo1 = UrlHelper.normalizeImageUrl(rawLogo1);
+    final logo2 = UrlHelper.normalizeImageUrl(rawLogo2);
+
+    // 4. Scores (robust parsing from score_1/2 or score object {home, away})
+    String? s1;
+    String? s2;
+
+    if (json['score'] is Map) {
+      final sMap = json['score'] as Map;
+      if (sMap['home'] != null) s1 = sMap['home'].toString();
+      if (sMap['away'] != null) s2 = sMap['away'].toString();
+    }
+    s1 ??= json['score_1']?.toString() ?? json['home_score']?.toString();
+    s2 ??= json['score_2']?.toString() ?? json['away_score']?.toString();
+
+    if (s1 == 'null') s1 = null;
+    if (s2 == 'null') s2 = null;
+
+    // 5. League info
+    Map? leagueMap;
+    if (json['league'] is Map) {
+      leagueMap = json['league'] as Map;
+    }
+
+    final lTitle =
+        leagueTitle ??
+        json['league_title']?.toString() ??
+        leagueMap?['name']?.toString() ??
+        json['league_name']?.toString();
+
+    final rawLLogo =
+        leagueLogo ??
+        json['league_logo']?.toString() ??
+        leagueMap?['logo']?.toString();
+    final lLogo = UrlHelper.normalizeImageUrl(rawLLogo);
+
+    final lId =
+        leagueId ??
+        json['league_id']?.toString() ??
+        leagueMap?['id']?.toString();
 
     return MatchDto(
       id: effectiveId,
       team1: t1,
       team2: t2,
-      team1Logo: json['team_1_logo']?.toString() ?? json['home_logo']?.toString(),
-      team2Logo: json['team_2_logo']?.toString() ?? json['away_logo']?.toString(),
-      score1: json['score_1']?.toString() ?? json['home_score']?.toString(),
-      score2: json['score_2']?.toString() ?? json['away_score']?.toString(),
+      team1Logo: logo1,
+      team2Logo: logo2,
+      score1: s1,
+      score2: s2,
       time: json['time']?.toString() ?? '-',
       status: json['status']?.toString() ?? 'Not Started',
+      statusCode: json['status_code']?.toString(),
       minute: json['minute']?.toString(),
-      leagueTitle: leagueTitle ?? json['league_title']?.toString(),
-      leagueLogo: leagueLogo ?? json['league_logo']?.toString(),
-      leagueId: leagueId ?? json['league_id']?.toString(),
+      period: json['period']?.toString(),
+      leagueTitle: lTitle,
+      leagueLogo: lLogo,
+      leagueId: lId,
       date: date ?? json['date']?.toString(),
     );
   }
@@ -100,16 +185,34 @@ class LeagueGroupDto {
   });
 
   factory LeagueGroupDto.fromJson(Map<String, dynamic> json, {String? date}) {
-    final title = json['league_title']?.toString() ?? json['title']?.toString() ?? 'Competition';
-    final logo = json['league_logo']?.toString() ?? json['logo']?.toString();
+    final title =
+        json['league_title']?.toString() ??
+        json['title']?.toString() ??
+        json['name']?.toString() ??
+        'Competition';
+    final rawLogo = json['league_logo']?.toString() ?? json['logo']?.toString();
+    final logo = UrlHelper.normalizeImageUrl(rawLogo);
     final id = json['league_id']?.toString() ?? json['id']?.toString();
 
     final rawMatches = json['matches'] as List? ?? [];
     final matchesList = rawMatches.map((m) {
       if (m is Map<String, dynamic>) {
-        return MatchDto.fromJson(m, leagueTitle: title, leagueLogo: logo, leagueId: id, date: date);
+        return MatchDto.fromJson(
+          m,
+          leagueTitle: title,
+          leagueLogo: logo,
+          leagueId: id,
+          date: date,
+        );
       }
-      return MatchDto(team1: 'Team 1', team2: 'Team 2', leagueTitle: title, date: date);
+      return MatchDto(
+        team1: 'Team 1',
+        team2: 'Team 2',
+        leagueTitle: title,
+        leagueLogo: logo,
+        leagueId: id,
+        date: date,
+      );
     }).toList();
 
     return LeagueGroupDto(
@@ -125,7 +228,9 @@ class LeagueGroupDto {
       leagueTitle: leagueTitle,
       leagueLogo: leagueLogo,
       leagueId: leagueId,
-      matches: matches.map((m) => m.toEntity(isFavorite: favoriteMatches.contains(m.id))).toList(),
+      matches: matches
+          .map((m) => m.toEntity(isFavorite: favoriteMatches.contains(m.id)))
+          .toList(),
     );
   }
 }

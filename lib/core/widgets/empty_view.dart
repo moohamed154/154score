@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_typography.dart';
@@ -35,18 +36,25 @@ class EmptyView extends StatelessWidget {
               padding: const EdgeInsets.all(AppDimensions.lg),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+                color: isDark
+                    ? AppColors.darkCardElevated
+                    : AppColors.lightCardElevated,
               ),
               child: Icon(
                 icon,
                 size: 44,
-                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
               ),
             ),
             const SizedBox(height: AppDimensions.md),
             Text(
               customMessage ?? l10n.translate(titleKey),
-              style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic),
+              style: AppTypography.getBodyLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ),
               textAlign: TextAlign.center,
             ),
             if (actionWidget != null) ...[

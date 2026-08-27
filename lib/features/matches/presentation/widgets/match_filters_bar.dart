@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -25,7 +26,11 @@ class MatchFiltersBar extends StatelessWidget {
 
     final filters = [
       (MatchFilterType.all, l10n.translate('filter_all'), null),
-      (MatchFilterType.live, l10n.translate('filter_live'), liveCount > 0 ? liveCount.toString() : null),
+      (
+        MatchFilterType.live,
+        l10n.translate('filter_live'),
+        liveCount > 0 ? liveCount.toString() : null,
+      ),
       (MatchFilterType.upcoming, l10n.translate('filter_upcoming'), null),
       (MatchFilterType.finished, l10n.translate('filter_finished'), null),
       (MatchFilterType.favorites, l10n.translate('filter_favorites'), null),
@@ -74,17 +79,28 @@ class MatchFiltersBar extends StatelessWidget {
                 ],
                 Text(
                   item.$2,
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.black
-                        : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.black
+                            : (isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary),
+                      ),
                 ),
                 if (item.$3 != null) ...[
                   const SizedBox(width: 5),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected ? Colors.black26 : AppColors.liveRed,
                       borderRadius: BorderRadius.circular(8),

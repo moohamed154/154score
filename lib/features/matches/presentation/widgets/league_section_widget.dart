@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -39,7 +40,10 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
           InkWell(
             onTap: () => setState(() => _isExpanded = !_isExpanded),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.lg,
+                vertical: 10,
+              ),
               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               child: Row(
                 children: [
@@ -54,31 +58,42 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                   Expanded(
                     child: Text(
                       widget.league.leagueTitle,
-                      style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+                      color: isDark
+                          ? AppColors.darkCardElevated
+                          : AppColors.lightCardElevated,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       widget.league.matches.length.toString(),
-                      style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
                 ],
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -69,7 +70,9 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
       padding: const EdgeInsets.all(AppDimensions.xxl),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusLg)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusLg),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -80,7 +83,10 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
             children: [
               Text(
                 l10n.translate('diag_title'),
-                style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+                style: AppTypography.getHeadingMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.close_rounded),
@@ -168,16 +174,23 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
               children: [
                 Text(
                   title,
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    color: isSuccess ? AppColors.primary : AppColors.liveRed,
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isSuccess
+                            ? AppColors.primary
+                            : AppColors.liveRed,
+                      ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

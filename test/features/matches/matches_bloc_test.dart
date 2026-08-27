@@ -12,7 +12,9 @@ import 'package:ysscores/features/matches/presentation/bloc/matches_event.dart';
 import 'package:ysscores/features/matches/presentation/bloc/matches_state.dart';
 
 class MockMatchesRepository extends Mock implements MatchesRepository {}
+
 class MockWebSocketService extends Mock implements WebSocketService {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
@@ -53,11 +55,13 @@ void main() {
     blocTest<MatchesBloc, MatchesState>(
       'emits [loading, success] when LoadMatchesEvent succeeds',
       build: () {
-        when(() => mockRepository.getMatches(
-              date: any(named: 'date'),
-              lang: any(named: 'lang'),
-              utcOffset: any(named: 'utcOffset'),
-            )).thenAnswer((_) async => const ApiSuccess(testLeagues));
+        when(
+          () => mockRepository.getMatches(
+            date: any(named: 'date'),
+            lang: any(named: 'lang'),
+            utcOffset: any(named: 'utcOffset'),
+          ),
+        ).thenAnswer((_) async => const ApiSuccess(testLeagues));
 
         return MatchesBloc(
           repository: mockRepository,

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../domain/entities/standings_entity.dart';
 import '../../domain/repositories/standings_repository.dart';
@@ -50,19 +51,20 @@ class StandingsState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, selectedLeagueId, standings, errorMessage];
+  List<Object?> get props => [
+    status,
+    selectedLeagueId,
+    standings,
+    errorMessage,
+  ];
 }
 
 class StandingsBloc extends Bloc<StandingsEvent, StandingsState> {
-  final StandingsRepository _repository;
-  final LocalStorageService _localStorageService;
+  final StandingsRepository repository;
+  final LocalStorageService localStorageService;
 
-  StandingsBloc({
-    required StandingsRepository repository,
-    required LocalStorageService localStorageService,
-  })  : _repository = repository,
-        _localStorageService = localStorageService,
-        super(const StandingsState()) {
+  StandingsBloc({required this.repository, required this.localStorageService})
+    : super(const StandingsState()) {
     on<LoadStandingsEvent>(_onLoadStandings);
   }
 
@@ -70,27 +72,35 @@ class StandingsBloc extends Bloc<StandingsEvent, StandingsState> {
     LoadStandingsEvent event,
     Emitter<StandingsState> emit,
   ) async {
-    emit(state.copyWith(
-      status: StandingsStatus.loading,
-      selectedLeagueId: event.leagueId,
-    ));
+    emit(
+      state.copyWith(
+        status: StandingsStatus.loading,
+        selectedLeagueId: event.leagueId,
+      ),
+    );
 
-    final lang = _localStorageService.getLanguage();
-    final result = await _repository.getStandings(event.leagueId, lang: lang);
+    final lang = localStorageService.getLanguage();
+    final result = await repository.getStandings(event.leagueId, lang: lang);
 
     result.fold(
       onSuccess: (data) {
-        emit(state.copyWith(
-          status: data.rows.isEmpty ? StandingsStatus.empty : StandingsStatus.success,
-          standings: data,
-          errorMessage: null,
-        ));
+        emit(
+          state.copyWith(
+            status: data.rows.isEmpty
+                ? StandingsStatus.empty
+                : StandingsStatus.success,
+            standings: data,
+            errorMessage: null,
+          ),
+        );
       },
       onFailure: (failure) {
-        emit(state.copyWith(
-          status: StandingsStatus.error,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: StandingsStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
       },
     );
   }

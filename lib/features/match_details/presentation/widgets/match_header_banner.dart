@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -37,7 +38,10 @@ class MatchHeaderBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: 16,
+      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         border: Border(
@@ -63,10 +67,16 @@ class MatchHeaderBanner extends StatelessWidget {
               ],
               Text(
                 match.leagueTitle ?? 'Match Center',
-                style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                ),
+                style:
+                    AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
               ),
             ],
           ),
@@ -91,10 +101,10 @@ class MatchHeaderBanner extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       match.team1,
-                      style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
+                      style: AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w700, fontSize: 15),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -112,24 +122,32 @@ class MatchHeaderBanner extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        AnimatedScoreText(score: score1Str, isLarge: true, isLive: isLive),
+                        AnimatedScoreText(
+                          score: score1Str,
+                          isLarge: true,
+                          isLive: isLive,
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
                             ':',
-                            style: AppTypography.getScoreLarge(isDark: isDark).copyWith(
-                              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                            ),
+                            style: AppTypography.getScoreLarge(isDark: isDark)
+                                .copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                ),
                           ),
                         ),
-                        AnimatedScoreText(score: score2Str, isLarge: true, isLive: isLive),
+                        AnimatedScoreText(
+                          score: score2Str,
+                          isLarge: true,
+                          isLive: isLive,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    StatusPill(
-                      status: effectiveStatus,
-                      time: match.time,
-                    ),
+                    StatusPill(status: effectiveStatus, time: match.time),
                   ],
                 ),
               ),
@@ -148,10 +166,10 @@ class MatchHeaderBanner extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       match.team2,
-                      style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
+                      style: AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w700, fontSize: 15),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

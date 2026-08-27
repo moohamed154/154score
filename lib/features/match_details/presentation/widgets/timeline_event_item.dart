@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -19,13 +20,21 @@ class TimelineEventItem extends StatelessWidget {
     final isHome = event.isHomeTeam;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: 8,
+      ),
       child: Row(
         children: [
           // Home Side Event
           Expanded(
             child: isHome
-                ? _buildEventContent(context, isHome: true, isDark: isDark, isArabic: isArabic)
+                ? _buildEventContent(
+                    context,
+                    isHome: true,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  )
                 : const SizedBox.shrink(),
           ),
 
@@ -34,7 +43,9 @@ class TimelineEventItem extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 12),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+              color: isDark
+                  ? AppColors.darkCardElevated
+                  : AppColors.lightCardElevated,
               borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
               border: Border.all(
                 color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -42,17 +53,22 @@ class TimelineEventItem extends StatelessWidget {
             ),
             child: Text(
               event.minute.isNotEmpty ? '${event.minute}\'' : '•',
-              style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
+              style: AppTypography.getBodySmall(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.w700, color: AppColors.primary),
             ),
           ),
 
           // Away Side Event
           Expanded(
             child: !isHome
-                ? _buildEventContent(context, isHome: false, isDark: isDark, isArabic: isArabic)
+                ? _buildEventContent(
+                    context,
+                    isHome: false,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  )
                 : const SizedBox.shrink(),
           ),
         ],
@@ -69,22 +85,34 @@ class TimelineEventItem extends StatelessWidget {
     final (icon, iconColor) = _getEventIcon(event.type);
 
     final textWidget = Column(
-      crossAxisAlignment: isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: isHome
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Text(
           event.playerName,
-          style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-            fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-          ),
+          style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic)
+              .copyWith(
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
           textAlign: isHome ? TextAlign.end : TextAlign.start,
         ),
-        if (event.secondaryPlayerName != null && event.secondaryPlayerName!.isNotEmpty)
+        if (event.secondaryPlayerName != null &&
+            event.secondaryPlayerName!.isNotEmpty)
           Text(
             event.secondaryPlayerName!,
-            style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-            ),
+            style:
+                AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
             textAlign: isHome ? TextAlign.end : TextAlign.start,
           ),
       ],
@@ -93,14 +121,16 @@ class TimelineEventItem extends StatelessWidget {
     final iconWidget = Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.15),
+        color: iconColor.withValues(alpha: 0.15),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, size: 16, color: iconColor),
     );
 
     return Row(
-      mainAxisAlignment: isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisAlignment: isHome
+          ? MainAxisAlignment.end
+          : MainAxisAlignment.start,
       children: isHome
           ? [Flexible(child: textWidget), const SizedBox(width: 8), iconWidget]
           : [iconWidget, const SizedBox(width: 8), Flexible(child: textWidget)],

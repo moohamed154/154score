@@ -4,7 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTypography {
   AppTypography._();
 
-  static TextStyle getHeadingLarge({required bool isDark, required bool isArabic}) {
+  static TextStyle getHeadingLarge({
+    required bool isDark,
+    required bool isArabic,
+  }) {
     final color = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
     if (isArabic) {
       return GoogleFonts.cairo(
@@ -22,7 +25,10 @@ class AppTypography {
     );
   }
 
-  static TextStyle getHeadingMedium({required bool isDark, required bool isArabic}) {
+  static TextStyle getHeadingMedium({
+    required bool isDark,
+    required bool isArabic,
+  }) {
     final color = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
     if (isArabic) {
       return GoogleFonts.cairo(
@@ -40,7 +46,10 @@ class AppTypography {
     );
   }
 
-  static TextStyle getBodyLarge({required bool isDark, required bool isArabic}) {
+  static TextStyle getBodyLarge({
+    required bool isDark,
+    required bool isArabic,
+  }) {
     final color = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
     if (isArabic) {
       return GoogleFonts.cairo(
@@ -56,7 +65,10 @@ class AppTypography {
     );
   }
 
-  static TextStyle getBodyMedium({required bool isDark, required bool isArabic}) {
+  static TextStyle getBodyMedium({
+    required bool isDark,
+    required bool isArabic,
+  }) {
     final color = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
     if (isArabic) {
       return GoogleFonts.cairo(
@@ -72,7 +84,10 @@ class AppTypography {
     );
   }
 
-  static TextStyle getBodySmall({required bool isDark, required bool isArabic}) {
+  static TextStyle getBodySmall({
+    required bool isDark,
+    required bool isArabic,
+  }) {
     final color = isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
     if (isArabic) {
       return GoogleFonts.cairo(

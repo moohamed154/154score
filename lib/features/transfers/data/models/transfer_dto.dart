@@ -1,3 +1,4 @@
+import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/transfer_entity.dart';
 
 class TransferDto {
@@ -43,22 +44,22 @@ class TransferDto {
       pLink = pMap['link']?.toString();
     }
 
-    String? fromImg;
-    String? fromName;
+    String? fromImg = json['from_team_logo']?.toString();
+    String? fromName = json['from_team_name']?.toString();
     if (json['from_team'] is Map) {
       final fMap = json['from_team'] as Map;
-      fromImg = fMap['image']?.toString();
-      fromName = fMap['title']?.toString() ?? fMap['name']?.toString();
+      fromImg ??= fMap['logo']?.toString() ?? fMap['image']?.toString();
+      fromName ??= fMap['title']?.toString() ?? fMap['name']?.toString();
     }
 
-    String? toImg;
-    String? toName;
-    String? toDate;
+    String? toImg = json['to_team_logo']?.toString();
+    String? toName = json['to_team_name']?.toString();
+    String? toDate = json['transfer_date']?.toString();
     if (json['to_team'] is Map) {
       final tMap = json['to_team'] as Map;
-      toImg = tMap['image']?.toString();
-      toName = tMap['title']?.toString() ?? tMap['name']?.toString();
-      toDate = tMap['date']?.toString();
+      toImg ??= tMap['logo']?.toString() ?? tMap['image']?.toString();
+      toName ??= tMap['title']?.toString() ?? tMap['name']?.toString();
+      toDate ??= tMap['date']?.toString();
     }
 
     String? type;
@@ -73,11 +74,11 @@ class TransferDto {
       id: json['id']?.toString() ?? name,
       playerName: name,
       playerPosition: position,
-      playerImage: playerImg,
+      playerImage: UrlHelper.normalizeImageUrl(playerImg),
       playerLink: pLink,
-      fromTeamImage: fromImg,
+      fromTeamImage: UrlHelper.normalizeImageUrl(fromImg),
       fromTeamName: fromName,
-      toTeamImage: toImg,
+      toTeamImage: UrlHelper.normalizeImageUrl(toImg),
       toTeamName: toName,
       transferType: type,
       transferPrice: price,

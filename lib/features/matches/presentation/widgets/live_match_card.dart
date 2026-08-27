@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -14,11 +15,7 @@ class LiveMatchCard extends StatelessWidget {
   final MatchEntity match;
   final double width;
 
-  const LiveMatchCard({
-    super.key,
-    required this.match,
-    this.width = 280.0,
-  });
+  const LiveMatchCard({super.key, required this.match, this.width = 280.0});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +39,7 @@ class LiveMatchCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
         border: Border.all(
-          color: AppColors.liveRed.withOpacity(0.4),
+          color: AppColors.liveRed.withValues(alpha: 0.4),
           width: 1.2,
         ),
         boxShadow: [
@@ -58,7 +55,10 @@ class LiveMatchCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           onTap: () {
-            context.push('/match/${Uri.encodeComponent(match.id)}', extra: match);
+            context.push(
+              '/match/${Uri.encodeComponent(match.id)}',
+              extra: match,
+            );
           },
           child: Padding(
             padding: const EdgeInsets.all(14.0),
@@ -85,10 +85,16 @@ class LiveMatchCard extends StatelessWidget {
                           constraints: BoxConstraints(maxWidth: width - 110),
                           child: Text(
                             match.leagueTitle ?? 'Live Match',
-                            style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                            ),
+                            style:
+                                AppTypography.getBodySmall(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -117,15 +123,23 @@ class LiveMatchCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             match.team1,
-                            style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            ),
+                            style:
+                                AppTypography.getBodyLarge(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        AnimatedScoreText(score: score1Str, isLive: true, isLarge: true),
+                        AnimatedScoreText(
+                          score: score1Str,
+                          isLive: true,
+                          isLarge: true,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -142,15 +156,23 @@ class LiveMatchCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             match.team2,
-                            style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            ),
+                            style:
+                                AppTypography.getBodyLarge(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        AnimatedScoreText(score: score2Str, isLive: true, isLarge: true),
+                        AnimatedScoreText(
+                          score: score2Str,
+                          isLive: true,
+                          isLarge: true,
+                        ),
                       ],
                     ),
                   ],

@@ -73,22 +73,22 @@ class MatchEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        team1,
-        team2,
-        team1Logo,
-        team2Logo,
-        score1,
-        score2,
-        time,
-        status,
-        minute,
-        leagueTitle,
-        leagueLogo,
-        leagueId,
-        date,
-        isFavorite,
-      ];
+    id,
+    team1,
+    team2,
+    team1Logo,
+    team2Logo,
+    score1,
+    score2,
+    time,
+    status,
+    minute,
+    leagueTitle,
+    leagueLogo,
+    leagueId,
+    date,
+    isFavorite,
+  ];
 }
 
 class LeagueGroupEntity extends Equatable {

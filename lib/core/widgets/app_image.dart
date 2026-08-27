@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+
 import '../constants/app_colors.dart';
+import '../utils/url_helper.dart';
 
 class AppImage extends StatelessWidget {
   final String? imageUrl;
@@ -23,27 +25,36 @@ class AppImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fallbackBg = isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated;
-    final iconColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    final fallbackBg = isDark
+        ? AppColors.darkCardElevated
+        : AppColors.lightCardElevated;
+    final iconColor = isDark
+        ? AppColors.darkTextMuted
+        : AppColors.lightTextMuted;
 
-    final safeIconSize = (width != null && width!.isFinite && !width!.isNaN)
-        ? (width! * 0.5).clamp(14.0, 40.0)
+    final safeWidth = (width != null && width!.isFinite && !width!.isNaN)
+        ? width
+        : null;
+    final safeHeight = (height != null && height!.isFinite && !height!.isNaN)
+        ? height
+        : null;
+
+    final safeIconSize = (safeWidth != null)
+        ? (safeWidth * 0.5).clamp(14.0, 40.0)
         : 20.0;
-    final safePlaceholderIconSize = (width != null && width!.isFinite && !width!.isNaN)
-        ? (width! * 0.4).clamp(12.0, 36.0)
+    final safePlaceholderIconSize = (safeWidth != null)
+        ? (safeWidth * 0.4).clamp(12.0, 36.0)
         : 16.0;
 
-    final cacheW = (width != null && width!.isFinite && !width!.isNaN)
-        ? (width! * 2).toInt()
-        : null;
-    final cacheH = (height != null && height!.isFinite && !height!.isNaN)
-        ? (height! * 2).toInt()
-        : null;
+    final cacheW = (safeWidth != null) ? (safeWidth * 2).toInt() : null;
+    final cacheH = (safeHeight != null) ? (safeHeight * 2).toInt() : null;
 
-    if (imageUrl == null || imageUrl!.trim().isEmpty || !imageUrl!.startsWith('http')) {
+    final normalizedUrl = UrlHelper.normalizeImageUrl(imageUrl);
+
+    if (normalizedUrl == null || !UrlHelper.isValidImageUrl(normalizedUrl)) {
       return Container(
-        width: width,
-        height: height,
+        width: safeWidth,
+        height: safeHeight,
         decoration: BoxDecoration(
           color: fallbackBg,
           borderRadius: BorderRadius.circular(borderRadius),
@@ -57,7 +68,7 @@ class AppImage extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: CachedNetworkImage(
-        imageUrl: imageUrl!,
+        imageUrl: normalizedUrl,
         width: width,
         height: height,
         fit: fit,
@@ -68,7 +79,11 @@ class AppImage extends StatelessWidget {
           height: height,
           color: fallbackBg,
           child: Center(
-            child: Icon(placeholderIcon, size: safePlaceholderIconSize, color: iconColor.withValues(alpha: 0.5)),
+            child: Icon(
+              placeholderIcon,
+              size: safePlaceholderIconSize,
+              color: iconColor.withValues(alpha: 0.5),
+            ),
           ),
         ),
         errorWidget: (context, url, error) => Container(

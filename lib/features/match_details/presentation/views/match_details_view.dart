@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -20,11 +21,7 @@ class MatchDetailsView extends StatefulWidget {
   final String matchId;
   final MatchEntity? initialMatch;
 
-  const MatchDetailsView({
-    super.key,
-    required this.matchId,
-    this.initialMatch,
-  });
+  const MatchDetailsView({super.key, required this.matchId, this.initialMatch});
 
   @override
   State<MatchDetailsView> createState() => _MatchDetailsViewState();
@@ -53,20 +50,18 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
-    final fallbackMatch = widget.initialMatch ??
-        MatchEntity(
-          id: widget.matchId,
-          team1: 'Home Team',
-          team2: 'Away Team',
-        );
+    final fallbackMatch =
+        widget.initialMatch ??
+        MatchEntity(id: widget.matchId, team1: 'Home Team', team2: 'Away Team');
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           '${fallbackMatch.team1} vs ${fallbackMatch.team2}',
-          style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: AppTypography.getBodyLarge(
+            isDark: isDark,
+            isArabic: isArabic,
+          ).copyWith(fontWeight: FontWeight.w700),
         ),
       ),
       body: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
@@ -91,10 +86,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                   indicatorColor: AppColors.primary,
                   indicatorWeight: 3,
                   labelColor: AppColors.primary,
-                  unselectedLabelColor: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                  labelStyle: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  unselectedLabelColor: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                  labelStyle: AppTypography.getBodyMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(fontWeight: FontWeight.w700),
                   tabs: [
                     Tab(text: l10n.translate('tab_overview')),
                     Tab(text: l10n.translate('tab_events')),
@@ -110,22 +108,28 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               // Tab Views
               Expanded(
                 child: state.status == MatchDetailsStatus.loading
-                    ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      )
                     : state.status == MatchDetailsStatus.error
-                        ? ErrorView(
-                            message: state.errorMessage,
-                            onRetry: () => context.read<MatchDetailsBloc>().add(LoadMatchDetailsEvent(widget.matchId)),
-                          )
-                        : TabBarView(
-                            controller: _tabController,
-                            children: [
-                              _buildOverviewTab(context, state, fallbackMatch),
-                              _buildEventsTab(context, state),
-                              _buildStatsTab(context, state),
-                              _buildInfoTab(context, state),
-                              _buildNewsTab(context, state),
-                            ],
-                          ),
+                    ? ErrorView(
+                        message: state.errorMessage,
+                        onRetry: () => context.read<MatchDetailsBloc>().add(
+                          LoadMatchDetailsEvent(widget.matchId),
+                        ),
+                      )
+                    : TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildOverviewTab(context, state, fallbackMatch),
+                          _buildEventsTab(context, state),
+                          _buildStatsTab(context, state),
+                          _buildInfoTab(context, state),
+                          _buildNewsTab(context, state),
+                        ],
+                      ),
               ),
             ],
           );
@@ -134,7 +138,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     );
   }
 
-  Widget _buildOverviewTab(BuildContext context, MatchDetailsState state, MatchEntity match) {
+  Widget _buildOverviewTab(
+    BuildContext context,
+    MatchDetailsState state,
+    MatchEntity match,
+  ) {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
@@ -146,7 +154,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         if (state.stats.isNotEmpty) ...[
           Text(
             l10n.translate('tab_stats'),
-            style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+            style: AppTypography.getHeadingMedium(
+              isDark: isDark,
+              isArabic: isArabic,
+            ),
           ),
           const SizedBox(height: AppDimensions.sm),
           ...state.stats.take(3).map((stat) => StatComparisonBar(stat: stat)),
@@ -157,7 +168,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         if (state.events.isNotEmpty) ...[
           Text(
             l10n.translate('tab_events'),
-            style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+            style: AppTypography.getHeadingMedium(
+              isDark: isDark,
+              isArabic: isArabic,
+            ),
           ),
           const SizedBox(height: AppDimensions.sm),
           ...state.events.take(4).map((e) => TimelineEventItem(event: e)),
@@ -168,7 +182,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         if (state.details.isNotEmpty)
           ...state.details.take(2).map((sec) => MatchInfoCard(section: sec)),
 
-        if (state.events.isEmpty && state.stats.isEmpty && state.details.isEmpty)
+        if (state.events.isEmpty &&
+            state.stats.isEmpty &&
+            state.details.isEmpty)
           EmptyView(
             titleKey: 'tab_overview',
             customMessage: l10n.translate('status_not_started'),
@@ -273,9 +289,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                     children: [
                       Text(
                         item.title,
-                        style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(fontWeight: FontWeight.w600),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -283,7 +300,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                         const SizedBox(height: 4),
                         Text(
                           item.date!,
-                          style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic),
+                          style: AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ),
                         ),
                       ],
                     ],

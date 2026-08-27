@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../core/di/injection_container.dart';
 import '../../features/favorites/presentation/views/favorites_view.dart';
 import '../../features/home/presentation/views/home_view.dart';
@@ -35,10 +36,7 @@ class AppRouter {
           // Branch 0: Home
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/',
-                builder: (context, state) => const HomeView(),
-              ),
+              GoRoute(path: '/', builder: (context, state) => const HomeView()),
             ],
           ),
 
@@ -93,10 +91,7 @@ class AppRouter {
           final match = state.extra as MatchEntity?;
           return BlocProvider(
             create: (_) => sl<MatchDetailsBloc>(param1: id),
-            child: MatchDetailsView(
-              matchId: id,
-              initialMatch: match,
-            ),
+            child: MatchDetailsView(matchId: id, initialMatch: match),
           );
         },
       ),
@@ -118,10 +113,7 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final video = state.extra as VideoItemEntity?;
-          return VideoDetailsView(
-            videoId: id,
-            initialVideo: video,
-          );
+          return VideoDetailsView(videoId: id, initialVideo: video);
         },
       ),
 

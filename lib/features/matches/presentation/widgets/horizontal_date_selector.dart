@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -63,11 +64,13 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               itemBuilder: (context, index) {
                 final date = dates[index];
-                final isSelected = date.year == widget.selectedDate.year &&
+                final isSelected =
+                    date.year == widget.selectedDate.year &&
                     date.month == widget.selectedDate.month &&
                     date.day == widget.selectedDate.day;
 
-                final isCurrentDay = date.year == today.year &&
+                final isCurrentDay =
+                    date.year == today.year &&
                     date.month == today.month &&
                     date.day == today.day;
 
@@ -80,10 +83,16 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                 } else if (diff == 1) {
                   dayLabel = l10n.translate('tomorrow');
                 } else {
-                  dayLabel = DateFormat('E', isArabic ? 'ar' : 'en').format(date);
+                  dayLabel = DateFormat(
+                    'E',
+                    isArabic ? 'ar' : 'en',
+                  ).format(date);
                 }
 
-                final dateNumber = DateFormat('d MMM', isArabic ? 'ar' : 'en').format(date);
+                final dateNumber = DateFormat(
+                  'd MMM',
+                  isArabic ? 'ar' : 'en',
+                ).format(date);
 
                 return InkWell(
                   onTap: () => widget.onDateSelected(date),
@@ -96,15 +105,19 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                       color: isSelected
                           ? AppColors.primary
                           : (isCurrentDay
-                              ? (isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated)
-                              : Colors.transparent),
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                                ? (isDark
+                                      ? AppColors.darkCardElevated
+                                      : AppColors.lightCardElevated)
+                                : Colors.transparent),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       border: Border.all(
                         color: isSelected
                             ? Colors.transparent
                             : (isCurrentDay
-                                ? AppColors.primary.withOpacity(0.5)
-                                : Colors.transparent),
+                                  ? AppColors.primary.withValues(alpha: 0.5)
+                                  : Colors.transparent),
                         width: 1,
                       ),
                     ),
@@ -113,26 +126,43 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                       children: [
                         Text(
                           dayLabel,
-                          style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                            color: isSelected
-                                ? Colors.black
-                                : (isCurrentDay ? AppColors.primary : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
-                            fontSize: 11,
-                          ),
+                          style:
+                              AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.w800
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.black
+                                    : (isCurrentDay
+                                          ? AppColors.primary
+                                          : (isDark
+                                                ? AppColors.darkTextSecondary
+                                                : AppColors
+                                                      .lightTextSecondary)),
+                                fontSize: 11,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Text(
                           dateNumber,
-                          style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: isSelected
-                                ? Colors.black
-                                : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                            fontSize: 12,
-                          ),
+                          style:
+                              AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: isSelected
+                                    ? Colors.black
+                                    : (isDark
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.lightTextPrimary),
+                                fontSize: 12,
+                              ),
                         ),
                       ],
                     ),
@@ -148,7 +178,9 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
             child: IconButton(
               icon: Icon(
                 Icons.calendar_month_rounded,
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
                 size: 22,
               ),
               tooltip: l10n.translate('select_date'),

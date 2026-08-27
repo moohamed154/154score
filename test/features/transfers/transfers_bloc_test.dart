@@ -8,6 +8,7 @@ import 'package:ysscores/features/transfers/domain/repositories/transfers_reposi
 import 'package:ysscores/features/transfers/presentation/bloc/transfers_bloc.dart';
 
 class MockTransfersRepository extends Mock implements TransfersRepository {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
@@ -44,7 +45,11 @@ void main() {
       },
       act: (bloc) => bloc.add(const LoadTransfersEvent()),
       expect: () => [
-        isA<TransfersState>().having((s) => s.status, 'status', TransfersStatus.loading),
+        isA<TransfersState>().having(
+          (s) => s.status,
+          'status',
+          TransfersStatus.loading,
+        ),
         isA<TransfersState>()
             .having((s) => s.status, 'status', TransfersStatus.success)
             .having((s) => s.allTransfers.length, 'transfers length', 1),

@@ -20,12 +20,15 @@ class TransfersRemoteDataSourceImpl implements TransfersRemoteDataSource {
 
     if (response is Map && response['data'] is List) {
       final list = response['data'] as List;
-      return list.map((item) {
-        if (item is Map<String, dynamic>) {
-          return TransferDto.fromJson(item);
-        }
-        return const TransferDto(id: '', playerName: '');
-      }).where((t) => t.playerName.isNotEmpty).toList();
+      return list
+          .map((item) {
+            if (item is Map<String, dynamic>) {
+              return TransferDto.fromJson(item);
+            }
+            return const TransferDto(id: '', playerName: '');
+          })
+          .where((t) => t.playerName.isNotEmpty)
+          .toList();
     }
 
     return [];

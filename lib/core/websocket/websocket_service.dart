@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+
 import '../constants/api_endpoints.dart';
 import 'websocket_event.dart';
 
@@ -10,6 +12,10 @@ abstract class WebSocketService {
   void disconnect();
   void subscribeToChannel(String channel);
   void unsubscribeFromChannel(String channel);
+  void joinMatchRoom(String matchId);
+  void leaveMatchRoom(String matchId);
+  void subscribeTransfers();
+  void unsubscribeTransfers();
   void switchLanguageChannel(String langCode);
   Stream<SocketConnectionStatus> get statusStream;
   Stream<LiveMatchUpdate> get updatesStream;
@@ -20,7 +26,8 @@ abstract class WebSocketService {
 
 class WebSocketServiceImpl implements WebSocketService {
   io.Socket? _socket;
-  String _activeChannel = ApiEndpoints.wsChannelAr;
+  String _activeChannel = ApiEndpoints.wsChannelMatchesAr;
+  final Set<String> _activeRooms = <String>{};
   SocketConnectionStatus _currentStatus = SocketConnectionStatus.initial;
 
   final StreamController<SocketConnectionStatus> _statusController =
@@ -75,7 +82,7 @@ class WebSocketServiceImpl implements WebSocketService {
 
     socket.onConnect((_) {
       _updateStatus(SocketConnectionStatus.connected);
-      _subscribeToCurrentChannel();
+      _resubscribeAll();
     });
 
     socket.onConnectError((data) {
@@ -96,7 +103,7 @@ class WebSocketServiceImpl implements WebSocketService {
 
     socket.on('reconnect', (_) {
       _updateStatus(SocketConnectionStatus.connected);
-      _subscribeToCurrentChannel();
+      _resubscribeAll();
     });
 
     // Listen to generic events and dynamic event names
@@ -129,10 +136,15 @@ class WebSocketServiceImpl implements WebSocketService {
     }
   }
 
-  void _subscribeToCurrentChannel() {
+  void _resubscribeAll() {
     if (_socket?.connected == true) {
       _socket?.emit('subscribe', _activeChannel);
       _socket?.emit('join', _activeChannel);
+
+      for (final room in _activeRooms) {
+        _socket?.emit('subscribe', room);
+        _socket?.emit('join', room);
+      }
     }
   }
 
@@ -160,7 +172,7 @@ class WebSocketServiceImpl implements WebSocketService {
 
   @override
   void subscribeToChannel(String channel) {
-    _activeChannel = channel;
+    _activeRooms.add(channel);
     if (_socket?.connected == true) {
       _socket?.emit('subscribe', channel);
       _socket?.emit('join', channel);
@@ -169,10 +181,33 @@ class WebSocketServiceImpl implements WebSocketService {
 
   @override
   void unsubscribeFromChannel(String channel) {
+    _activeRooms.remove(channel);
     if (_socket?.connected == true) {
       _socket?.emit('unsubscribe', channel);
       _socket?.emit('leave', channel);
     }
+  }
+
+  @override
+  void joinMatchRoom(String matchId) {
+    final room = ApiEndpoints.wsMatchRoom(matchId);
+    subscribeToChannel(room);
+  }
+
+  @override
+  void leaveMatchRoom(String matchId) {
+    final room = ApiEndpoints.wsMatchRoom(matchId);
+    unsubscribeFromChannel(room);
+  }
+
+  @override
+  void subscribeTransfers() {
+    subscribeToChannel(ApiEndpoints.wsChannelTransfersAr);
+  }
+
+  @override
+  void unsubscribeTransfers() {
+    unsubscribeFromChannel(ApiEndpoints.wsChannelTransfersAr);
   }
 
   @override

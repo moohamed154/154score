@@ -41,7 +41,8 @@ class LiveMatchUpdate extends Equatable {
   factory LiveMatchUpdate.fromJson(Map<String, dynamic> json) {
     return LiveMatchUpdate(
       matchId: json['id']?.toString() ?? json['match_id']?.toString(),
-      leagueTitle: json['league_title']?.toString() ?? json['league']?.toString(),
+      leagueTitle:
+          json['league_title']?.toString() ?? json['league']?.toString(),
       team1: json['team_1']?.toString() ?? json['home_team']?.toString(),
       team2: json['team_2']?.toString() ?? json['away_team']?.toString(),
       score1: json['score_1']?.toString() ?? json['home_score']?.toString(),
@@ -57,16 +58,16 @@ class LiveMatchUpdate extends Equatable {
 
   @override
   List<Object?> get props => [
-        matchId,
-        leagueTitle,
-        team1,
-        team2,
-        score1,
-        score2,
-        time,
-        status,
-        minute,
-        eventType,
-        playerName,
-      ];
+    matchId,
+    leagueTitle,
+    team1,
+    team2,
+    score1,
+    score2,
+    time,
+    status,
+    minute,
+    eventType,
+    playerName,
+  ];
 }

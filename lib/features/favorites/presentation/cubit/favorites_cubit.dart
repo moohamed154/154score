@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 
 class FavoritesState extends Equatable {
@@ -26,7 +27,11 @@ class FavoritesState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [favoriteTeams, favoriteCompetitions, favoriteMatches];
+  List<Object?> get props => [
+    favoriteTeams,
+    favoriteCompetitions,
+    favoriteMatches,
+  ];
 }
 
 class FavoritesCubit extends Cubit<FavoritesState> {
@@ -37,11 +42,13 @@ class FavoritesCubit extends Cubit<FavoritesState> {
   }
 
   void loadFavorites() {
-    emit(state.copyWith(
-      favoriteTeams: _storage.getFavoriteTeams(),
-      favoriteCompetitions: _storage.getFavoriteCompetitions(),
-      favoriteMatches: _storage.getFavoriteMatches(),
-    ));
+    emit(
+      state.copyWith(
+        favoriteTeams: _storage.getFavoriteTeams(),
+        favoriteCompetitions: _storage.getFavoriteCompetitions(),
+        favoriteMatches: _storage.getFavoriteMatches(),
+      ),
+    );
   }
 
   Future<void> toggleTeam(String teamName) async {

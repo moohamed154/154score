@@ -8,7 +8,5 @@ abstract class MatchesRepository {
     int? utcOffset,
   });
 
-  Future<ApiResult<List<MatchEntity>>> getLiveMatches({
-    required String lang,
-  });
+  Future<ApiResult<List<MatchEntity>>> getLiveMatches({required String lang});
 }

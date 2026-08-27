@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_typography.dart';
@@ -33,24 +34,26 @@ class ErrorView extends StatelessWidget {
               padding: const EdgeInsets.all(AppDimensions.lg),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.liveRed.withOpacity(0.12),
+                color: AppColors.liveRed.withValues(alpha: 0.12),
               ),
-              child: Icon(
-                icon,
-                size: 48,
-                color: AppColors.liveRed,
-              ),
+              child: Icon(icon, size: 48, color: AppColors.liveRed),
             ),
             const SizedBox(height: AppDimensions.lg),
             Text(
               l10n.translate('error_title'),
-              style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+              style: AppTypography.getHeadingMedium(
+                isDark: isDark,
+                isArabic: isArabic,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppDimensions.sm),
             Text(
               message ?? l10n.translate('error_network'),
-              style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic),
+              style: AppTypography.getBodyMedium(
+                isDark: isDark,
+                isArabic: isArabic,
+              ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -62,7 +65,10 @@ class ErrorView extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                   ),

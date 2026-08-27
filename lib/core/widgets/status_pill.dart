@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_typography.dart';
@@ -34,14 +35,14 @@ class StatusPill extends StatelessWidget {
           vertical: compact ? 2 : 4,
         ),
         decoration: BoxDecoration(
-          color: AppColors.liveRed.withOpacity(0.15),
+          color: AppColors.liveRed.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-          border: Border.all(color: AppColors.liveRed.withOpacity(0.4), width: 0.8),
+          border: Border.all(
+            color: AppColors.liveRed.withValues(alpha: 0.4),
+            width: 0.8,
+          ),
         ),
-        child: LivePulseBadge(
-          minute: status,
-          showText: true,
-        ),
+        child: LivePulseBadge(minute: status, showText: true),
       );
     }
 
@@ -50,10 +51,12 @@ class StatusPill extends StatelessWidget {
     String displayText = status ?? (time ?? '-');
 
     if (isFinished) {
-      bgColor = isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated;
+      bgColor = isDark
+          ? AppColors.darkCardElevated
+          : AppColors.lightCardElevated;
       textColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
     } else {
-      bgColor = AppColors.statusUpcoming.withOpacity(0.15);
+      bgColor = AppColors.statusUpcoming.withValues(alpha: 0.15);
       textColor = AppColors.statusUpcoming;
       if (time != null && time!.isNotEmpty && time != '-') {
         displayText = time!;
@@ -71,11 +74,12 @@ class StatusPill extends StatelessWidget {
       ),
       child: Text(
         displayText,
-        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-          fontSize: compact ? 10 : 11,
-        ),
+        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
+            .copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+              fontSize: compact ? 10 : 11,
+            ),
       ),
     );
   }

@@ -31,19 +31,19 @@ class StandingRowEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        position,
-        teamName,
-        teamLogo,
-        played,
-        wins,
-        draws,
-        losses,
-        goalsFor,
-        goalsAgainst,
-        goalDiff,
-        points,
-        rankColor,
-      ];
+    position,
+    teamName,
+    teamLogo,
+    played,
+    wins,
+    draws,
+    losses,
+    goalsFor,
+    goalsAgainst,
+    goalDiff,
+    points,
+    rankColor,
+  ];
 }
 
 class LeagueStandingsEntity extends Equatable {

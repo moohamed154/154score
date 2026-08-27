@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -45,11 +46,25 @@ class _GenericProfileViewState extends State<GenericProfileView> {
       _errorMessage = null;
     });
 
-    final repo = ProfilesRepositoryImpl(ProfilesRemoteDataSourceImpl(ApiClient()));
+    final repo = ProfilesRepositoryImpl(
+      ProfilesRemoteDataSourceImpl(ApiClient()),
+    );
     final result = await switch (widget.type) {
-      ProfileType.stadium => repo.getStadiumProfile(widget.id, widget.slug, lang: 'en'),
-      ProfileType.referee => repo.getRefereeProfile(widget.id, widget.slug, lang: 'en'),
-      ProfileType.commentator => repo.getCommentatorProfile(widget.id, widget.slug, lang: 'en'),
+      ProfileType.stadium => repo.getStadiumProfile(
+        widget.id,
+        widget.slug,
+        lang: 'en',
+      ),
+      ProfileType.referee => repo.getRefereeProfile(
+        widget.id,
+        widget.slug,
+        lang: 'en',
+      ),
+      ProfileType.commentator => repo.getCommentatorProfile(
+        widget.id,
+        widget.slug,
+        lang: 'en',
+      ),
     };
 
     result.fold(
@@ -84,16 +99,19 @@ class _GenericProfileViewState extends State<GenericProfileView> {
       appBar: AppBar(
         title: Text(
           _profile?.name ?? typeTitle,
-          style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: AppTypography.getBodyLarge(
+            isDark: isDark,
+            isArabic: isArabic,
+          ).copyWith(fontWeight: FontWeight.w700),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : _errorMessage != null
-              ? ErrorView(message: _errorMessage, onRetry: _loadProfile)
-              : _buildContent(context, isDark, isArabic),
+          ? ErrorView(message: _errorMessage, onRetry: _loadProfile)
+          : _buildContent(context, isDark, isArabic),
     );
   }
 
@@ -114,7 +132,9 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                 borderRadius: 45,
                 placeholderIcon: widget.type == ProfileType.stadium
                     ? Icons.stadium_rounded
-                    : (widget.type == ProfileType.referee ? Icons.sports_rounded : Icons.mic_rounded),
+                    : (widget.type == ProfileType.referee
+                          ? Icons.sports_rounded
+                          : Icons.mic_rounded),
               ),
               const SizedBox(height: 12),
               Row(
@@ -122,7 +142,10 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                 children: [
                   Text(
                     p.name,
-                    style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+                    style: AppTypography.getHeadingMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ),
                   ),
                   if (p.countryFlag != null) ...[
                     const SizedBox(width: 8),
@@ -159,10 +182,14 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                   child: Text(
                     sec.section,
-                    style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
+                    style:
+                        AppTypography.getBodyLarge(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
                   ),
                 ),
                 const Divider(height: 1),
@@ -175,18 +202,28 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                     final it = sec.items[index];
                     return ListTile(
                       dense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 2,
+                      ),
                       title: Text(
                         it.title,
-                        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                        ),
+                        style:
+                            AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                            ),
                       ),
                       trailing: Text(
                         it.content,
-                        style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(fontWeight: FontWeight.w600),
                       ),
                     );
                   },

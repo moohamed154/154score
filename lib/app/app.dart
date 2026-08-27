@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
 import '../core/di/injection_container.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/theme/app_theme.dart';

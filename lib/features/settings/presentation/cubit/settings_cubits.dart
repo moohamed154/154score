@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/websocket/websocket_service.dart';
 
@@ -35,7 +36,7 @@ class LocaleCubit extends Cubit<Locale> {
   final WebSocketService _webSocketService;
 
   LocaleCubit(this._storage, this._webSocketService)
-      : super(Locale(_storage.getLanguage()));
+    : super(Locale(_storage.getLanguage()));
 
   Future<void> setLocale(Locale locale) async {
     await _storage.setLanguage(locale.languageCode);

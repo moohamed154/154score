@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_typography.dart';
@@ -25,7 +26,10 @@ class SectionHeader extends StatelessWidget {
     final isArabic = l10n.isArabic;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: AppDimensions.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: AppDimensions.sm,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -38,7 +42,10 @@ class SectionHeader extends StatelessWidget {
               ],
               Text(
                 title,
-                style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+                style: AppTypography.getHeadingMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
               ),
             ],
           ),
@@ -50,10 +57,14 @@ class SectionHeader extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Text(
                   actionText ?? l10n.translate('view_all'),
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ),
             ),

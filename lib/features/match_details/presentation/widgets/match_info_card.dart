@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -18,7 +19,10 @@ class MatchInfoCard extends StatelessWidget {
     final isArabic = l10n.isArabic;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 6),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -34,10 +38,10 @@ class MatchInfoCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             child: Text(
               section.section,
-              style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
+              style: AppTypography.getBodyLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.w700, color: AppColors.primary),
             ),
           ),
           const Divider(height: 1),
@@ -54,26 +58,47 @@ class MatchInfoCard extends StatelessWidget {
 
               return ListTile(
                 dense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 2,
+                ),
                 title: Text(
                   item.title,
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       item.content,
-                      style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: isClickable ? AppColors.primary : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                      ),
+                      style:
+                          AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isClickable
+                                ? AppColors.primary
+                                : (isDark
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.lightTextPrimary),
+                          ),
                     ),
                     if (isClickable) ...[
                       const SizedBox(width: 4),
-                      const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.primary),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
                     ],
                   ],
                 ),
@@ -107,7 +132,8 @@ class MatchInfoCard extends StatelessWidget {
       context.push('/referee/$id/$slug');
     } else if (titleLower.contains('stadium') || titleLower.contains('ملعب')) {
       context.push('/stadium/$id/$slug');
-    } else if (titleLower.contains('commentator') || titleLower.contains('معلق')) {
+    } else if (titleLower.contains('commentator') ||
+        titleLower.contains('معلق')) {
       context.push('/commentator/$id/$slug');
     }
   }

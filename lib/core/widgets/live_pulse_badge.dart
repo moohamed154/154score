@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_typography.dart';
 
@@ -6,11 +7,7 @@ class LivePulseBadge extends StatefulWidget {
   final String? minute;
   final bool showText;
 
-  const LivePulseBadge({
-    super.key,
-    this.minute,
-    this.showText = true,
-  });
+  const LivePulseBadge({super.key, this.minute, this.showText = true});
 
   @override
   State<LivePulseBadge> createState() => _LivePulseBadgeState();
@@ -28,9 +25,10 @@ class _LivePulseBadgeState extends State<LivePulseBadge>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -57,10 +55,12 @@ class _LivePulseBadgeState extends State<LivePulseBadge>
                 height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.liveRed.withOpacity(_animation.value),
+                  color: AppColors.liveRed.withValues(alpha: _animation.value),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.liveRed.withOpacity(_animation.value * 0.7),
+                      color: AppColors.liveRed.withValues(
+                        alpha: _animation.value * 0.7,
+                      ),
                       blurRadius: 6,
                       spreadRadius: 1,
                     ),
@@ -71,10 +71,7 @@ class _LivePulseBadgeState extends State<LivePulseBadge>
           ),
           if (widget.showText) ...[
             const SizedBox(width: 5),
-            Text(
-              minuteText,
-              style: AppTypography.getMinuteText(isLive: true),
-            ),
+            Text(minuteText, style: AppTypography.getMinuteText(isLive: true)),
           ],
         ],
       ),

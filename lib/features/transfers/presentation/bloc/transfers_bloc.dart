@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../domain/entities/transfer_entity.dart';
 import '../../domain/repositories/transfers_repository.dart';
@@ -64,24 +65,20 @@ class TransfersState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        allTransfers,
-        filteredTransfers,
-        searchQuery,
-        errorMessage,
-      ];
+    status,
+    allTransfers,
+    filteredTransfers,
+    searchQuery,
+    errorMessage,
+  ];
 }
 
 class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
-  final TransfersRepository _repository;
-  final LocalStorageService _localStorageService;
+  final TransfersRepository repository;
+  final LocalStorageService localStorageService;
 
-  TransfersBloc({
-    required TransfersRepository repository,
-    required LocalStorageService localStorageService,
-  })  : _repository = repository,
-        _localStorageService = localStorageService,
-        super(const TransfersState()) {
+  TransfersBloc({required this.repository, required this.localStorageService})
+    : super(const TransfersState()) {
     on<LoadTransfersEvent>(_onLoadTransfers);
     on<SearchTransfersEvent>(_onSearchTransfers);
   }
@@ -94,24 +91,30 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
       emit(state.copyWith(status: TransfersStatus.loading));
     }
 
-    final lang = _localStorageService.getLanguage();
-    final result = await _repository.getTransfers(lang: lang);
+    final lang = localStorageService.getLanguage();
+    final result = await repository.getTransfers(lang: lang);
 
     result.fold(
       onSuccess: (transfers) {
         final filtered = _applySearch(transfers, state.searchQuery);
-        emit(state.copyWith(
-          status: transfers.isEmpty ? TransfersStatus.empty : TransfersStatus.success,
-          allTransfers: transfers,
-          filteredTransfers: filtered,
-          errorMessage: null,
-        ));
+        emit(
+          state.copyWith(
+            status: transfers.isEmpty
+                ? TransfersStatus.empty
+                : TransfersStatus.success,
+            allTransfers: transfers,
+            filteredTransfers: filtered,
+            errorMessage: null,
+          ),
+        );
       },
       onFailure: (failure) {
-        emit(state.copyWith(
-          status: TransfersStatus.error,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: TransfersStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
       },
     );
   }
@@ -121,10 +124,7 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
     Emitter<TransfersState> emit,
   ) {
     final filtered = _applySearch(state.allTransfers, event.query);
-    emit(state.copyWith(
-      searchQuery: event.query,
-      filteredTransfers: filtered,
-    ));
+    emit(state.copyWith(searchQuery: event.query, filteredTransfers: filtered));
   }
 
   List<TransferEntity> _applySearch(List<TransferEntity> list, String query) {

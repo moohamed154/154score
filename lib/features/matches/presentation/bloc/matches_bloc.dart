@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/score_helper.dart';
@@ -10,19 +12,16 @@ import 'matches_event.dart';
 import 'matches_state.dart';
 
 class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
-  final MatchesRepository _repository;
-  final WebSocketService _webSocketService;
-  final LocalStorageService _localStorageService;
+  final MatchesRepository repository;
+  final WebSocketService webSocketService;
+  final LocalStorageService localStorageService;
   StreamSubscription? _wsSubscription;
 
   MatchesBloc({
-    required MatchesRepository repository,
-    required WebSocketService webSocketService,
-    required LocalStorageService localStorageService,
-  })  : _repository = repository,
-        _webSocketService = webSocketService,
-        _localStorageService = localStorageService,
-        super(MatchesState(selectedDate: DateTime.now())) {
+    required this.repository,
+    required this.webSocketService,
+    required this.localStorageService,
+  }) : super(MatchesState(selectedDate: DateTime.now())) {
     on<LoadMatchesEvent>(_onLoadMatches);
     on<ChangeFilterEvent>(_onChangeFilter);
     on<SearchMatchesEvent>(_onSearchMatches);
@@ -30,7 +29,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     on<ToggleMatchFavoriteEvent>(_onToggleMatchFavorite);
 
     // Listen to WebSocket events
-    _wsSubscription = _webSocketService.updatesStream.listen((update) {
+    _wsSubscription = webSocketService.updatesStream.listen((update) {
       add(LiveMatchReceivedEvent(update));
     });
   }
@@ -40,17 +39,16 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     Emitter<MatchesState> emit,
   ) async {
     if (!event.isRefresh) {
-      emit(state.copyWith(
-        status: MatchesStatus.loading,
-        selectedDate: event.date,
-      ));
+      emit(
+        state.copyWith(status: MatchesStatus.loading, selectedDate: event.date),
+      );
     }
 
     final dateStr = DateFormatter.toApiDateString(event.date);
-    final lang = _localStorageService.getLanguage();
-    final offset = _localStorageService.getTimezoneOffset();
+    final lang = localStorageService.getLanguage();
+    final offset = localStorageService.getTimezoneOffset();
 
-    final result = await _repository.getMatches(
+    final result = await repository.getMatches(
       date: dateStr,
       lang: lang,
       utcOffset: offset,
@@ -65,62 +63,56 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           query: state.searchQuery,
         );
 
-        emit(state.copyWith(
-          status: leagues.isEmpty ? MatchesStatus.empty : MatchesStatus.success,
-          allLeagues: leagues,
-          filteredLeagues: filtered,
-          selectedDate: event.date,
-          liveMatchesCount: liveCount,
-          errorMessage: null,
-        ));
+        emit(
+          state.copyWith(
+            status: leagues.isEmpty
+                ? MatchesStatus.empty
+                : MatchesStatus.success,
+            allLeagues: leagues,
+            filteredLeagues: filtered,
+            selectedDate: event.date,
+            liveMatchesCount: liveCount,
+            errorMessage: null,
+          ),
+        );
       },
       onFailure: (failure) {
-        emit(state.copyWith(
-          status: MatchesStatus.error,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            status: MatchesStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
       },
     );
   }
 
-  void _onChangeFilter(
-    ChangeFilterEvent event,
-    Emitter<MatchesState> emit,
-  ) {
+  void _onChangeFilter(ChangeFilterEvent event, Emitter<MatchesState> emit) {
     final filtered = _applyFilters(
       leagues: state.allLeagues,
       filter: event.filter,
       query: state.searchQuery,
     );
 
-    emit(state.copyWith(
-      activeFilter: event.filter,
-      filteredLeagues: filtered,
-    ));
+    emit(state.copyWith(activeFilter: event.filter, filteredLeagues: filtered));
   }
 
-  void _onSearchMatches(
-    SearchMatchesEvent event,
-    Emitter<MatchesState> emit,
-  ) {
+  void _onSearchMatches(SearchMatchesEvent event, Emitter<MatchesState> emit) {
     final filtered = _applyFilters(
       leagues: state.allLeagues,
       filter: state.activeFilter,
       query: event.query,
     );
 
-    emit(state.copyWith(
-      searchQuery: event.query,
-      filteredLeagues: filtered,
-    ));
+    emit(state.copyWith(searchQuery: event.query, filteredLeagues: filtered));
   }
 
   Future<void> _onToggleMatchFavorite(
     ToggleMatchFavoriteEvent event,
     Emitter<MatchesState> emit,
   ) async {
-    await _localStorageService.toggleFavoriteMatch(event.matchId);
-    final favorites = _localStorageService.getFavoriteMatches();
+    await localStorageService.toggleFavoriteMatch(event.matchId);
+    final favorites = localStorageService.getFavoriteMatches();
 
     final updatedAll = state.allLeagues.map((league) {
       final updatedMatches = league.matches.map((match) {
@@ -138,10 +130,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       query: state.searchQuery,
     );
 
-    emit(state.copyWith(
-      allLeagues: updatedAll,
-      filteredLeagues: filtered,
-    ));
+    emit(state.copyWith(allLeagues: updatedAll, filteredLeagues: filtered));
   }
 
   void _onLiveMatchReceived(
@@ -154,10 +143,11 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final updatedLeagues = state.allLeagues.map((league) {
       final updatedMatches = league.matches.map((m) {
         final matchesId = update.matchId != null && m.id == update.matchId;
-        final matchesTeams = (update.team1 != null &&
-                update.team2 != null &&
-                m.team1.toLowerCase().contains(update.team1!.toLowerCase()) &&
-                m.team2.toLowerCase().contains(update.team2!.toLowerCase()));
+        final matchesTeams =
+            (update.team1 != null &&
+            update.team2 != null &&
+            m.team1.toLowerCase().contains(update.team1!.toLowerCase()) &&
+            m.team2.toLowerCase().contains(update.team2!.toLowerCase()));
 
         if (matchesId || matchesTeams) {
           matchFound = true;
@@ -182,11 +172,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         query: state.searchQuery,
       );
 
-      emit(state.copyWith(
-        allLeagues: updatedLeagues,
-        filteredLeagues: filtered,
-        liveMatchesCount: liveCount,
-      ));
+      emit(
+        state.copyWith(
+          allLeagues: updatedLeagues,
+          filteredLeagues: filtered,
+          liveMatchesCount: liveCount,
+        ),
+      );
     }
   }
 
@@ -216,8 +208,12 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             final matchesFilter = switch (filter) {
               MatchFilterType.all => true,
               MatchFilterType.live => ScoreHelper.isLiveStatus(match.status),
-              MatchFilterType.upcoming => ScoreHelper.isUpcomingStatus(match.status),
-              MatchFilterType.finished => ScoreHelper.isFinishedStatus(match.status),
+              MatchFilterType.upcoming => ScoreHelper.isUpcomingStatus(
+                match.status,
+              ),
+              MatchFilterType.finished => ScoreHelper.isFinishedStatus(
+                match.status,
+              ),
               MatchFilterType.favorites => match.isFavorite,
             };
 
@@ -225,7 +221,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
             // Apply search query
             if (cleanQuery.isNotEmpty) {
-              final inTeams = match.team1.toLowerCase().contains(cleanQuery) ||
+              final inTeams =
+                  match.team1.toLowerCase().contains(cleanQuery) ||
                   match.team2.toLowerCase().contains(cleanQuery);
               final inLeague = (match.leagueTitle ?? league.leagueTitle)
                   .toLowerCase()

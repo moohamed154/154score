@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -67,15 +68,19 @@ class _HomeViewState extends State<HomeView> {
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.sports_soccer_rounded, color: Colors.black, size: 20),
+              child: const Icon(
+                Icons.sports_soccer_rounded,
+                color: Colors.black,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 10),
             Text(
               '154Score',
-              style: AppTypography.getHeadingLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
-              ),
+              style: AppTypography.getHeadingLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
             ),
           ],
         ),
@@ -90,14 +95,20 @@ class _HomeViewState extends State<HomeView> {
           // Theme Toggle
           BlocBuilder<ThemeCubit, ThemeMode>(
             builder: (context, themeMode) {
-              final isCurrentlyDark = themeMode == ThemeMode.dark ||
-                  (themeMode == ThemeMode.system && Theme.of(context).brightness == Brightness.dark);
+              final isCurrentlyDark =
+                  themeMode == ThemeMode.dark ||
+                  (themeMode == ThemeMode.system &&
+                      Theme.of(context).brightness == Brightness.dark);
               return IconButton(
-                icon: Icon(isCurrentlyDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
+                icon: Icon(
+                  isCurrentlyDark
+                      ? Icons.light_mode_rounded
+                      : Icons.dark_mode_rounded,
+                ),
                 onPressed: () {
                   context.read<ThemeCubit>().setThemeMode(
-                        isCurrentlyDark ? ThemeMode.light : ThemeMode.dark,
-                      );
+                    isCurrentlyDark ? ThemeMode.light : ThemeMode.dark,
+                  );
                 },
               );
             },
@@ -114,11 +125,11 @@ class _HomeViewState extends State<HomeView> {
               context.read<LocaleCubit>().setLocale(Locale(newLang));
               context.read<HomeCubit>().loadHomeData(isRefresh: true);
               context.read<MatchesBloc>().add(
-                    LoadMatchesEvent(
-                      date: context.read<MatchesBloc>().state.selectedDate,
-                      isRefresh: true,
-                    ),
-                  );
+                LoadMatchesEvent(
+                  date: context.read<MatchesBloc>().state.selectedDate,
+                  isRefresh: true,
+                ),
+              );
             },
           ),
 
@@ -139,14 +150,18 @@ class _HomeViewState extends State<HomeView> {
                 onRefresh: () async {
                   await Future.wait([
                     homeState.status != HomeStatus.loading
-                        ? context.read<HomeCubit>().loadHomeData(isRefresh: true)
-                        : Future.value(),
-                    Future.sync(() => context.read<MatchesBloc>().add(
-                          LoadMatchesEvent(
-                            date: matchesState.selectedDate,
+                        ? context.read<HomeCubit>().loadHomeData(
                             isRefresh: true,
-                          ),
-                        )),
+                          )
+                        : Future.value(),
+                    Future.sync(
+                      () => context.read<MatchesBloc>().add(
+                        LoadMatchesEvent(
+                          date: matchesState.selectedDate,
+                          isRefresh: true,
+                        ),
+                      ),
+                    ),
                   ]);
                 },
                 child: ListView(
@@ -156,14 +171,21 @@ class _HomeViewState extends State<HomeView> {
                     HorizontalDateSelector(
                       selectedDate: matchesState.selectedDate,
                       onDateSelected: (date) {
-                        context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+                        context.read<MatchesBloc>().add(
+                          LoadMatchesEvent(date: date),
+                        );
                       },
                     ),
 
                     const SizedBox(height: 12),
 
                     // 2. LIVE NOW Section (if any live matches)
-                    _buildLiveNowSection(context, matchesState, isDark, isArabic),
+                    _buildLiveNowSection(
+                      context,
+                      matchesState,
+                      isDark,
+                      isArabic,
+                    ),
 
                     // 3. Popular Competitions Quick Chips
                     _buildPopularCompetitionsSection(context, isDark, isArabic),
@@ -171,7 +193,12 @@ class _HomeViewState extends State<HomeView> {
                     const SizedBox(height: 8),
 
                     // 4. Matches for Selected Date
-                    _buildMatchesSection(context, matchesState, isDark, isArabic),
+                    _buildMatchesSection(
+                      context,
+                      matchesState,
+                      isDark,
+                      isArabic,
+                    ),
 
                     const SizedBox(height: 16),
 
@@ -181,7 +208,12 @@ class _HomeViewState extends State<HomeView> {
                     const SizedBox(height: 16),
 
                     // 6. Latest Transfer News
-                    _buildTransfersSection(context, homeState, isDark, isArabic),
+                    _buildTransfersSection(
+                      context,
+                      homeState,
+                      isDark,
+                      isArabic,
+                    ),
                   ],
                 ),
               );
@@ -270,14 +302,21 @@ class _HomeViewState extends State<HomeView> {
               final title = isArabic ? item.$3 : item.$2;
 
               return ActionChip(
-                avatar: const Icon(Icons.emoji_events_outlined, size: 16, color: AppColors.primary),
+                avatar: const Icon(
+                  Icons.emoji_events_outlined,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
                 label: Text(
                   title,
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(fontWeight: FontWeight.w600),
                 ),
-                backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+                backgroundColor: isDark
+                    ? AppColors.darkCard
+                    : AppColors.lightCard,
                 side: BorderSide(
                   color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                 ),
@@ -316,7 +355,9 @@ class _HomeViewState extends State<HomeView> {
         else if (state.status == MatchesStatus.error)
           ErrorView(
             message: state.errorMessage,
-            onRetry: () => context.read<MatchesBloc>().add(LoadMatchesEvent(date: state.selectedDate)),
+            onRetry: () => context.read<MatchesBloc>().add(
+              LoadMatchesEvent(date: state.selectedDate),
+            ),
           )
         else if (state.allLeagues.isEmpty)
           const EmptyView(
@@ -328,7 +369,9 @@ class _HomeViewState extends State<HomeView> {
             return LeagueSectionWidget(
               league: league,
               onFavoriteMatchTap: (matchId) {
-                context.read<MatchesBloc>().add(ToggleMatchFavoriteEvent(matchId));
+                context.read<MatchesBloc>().add(
+                  ToggleMatchFavoriteEvent(matchId),
+                );
               },
             );
           }),

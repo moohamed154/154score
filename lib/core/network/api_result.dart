@@ -7,14 +7,14 @@ sealed class ApiResult<T> {
   bool get isFailure => this is ApiFailure<T>;
 
   T? get dataOrNull => switch (this) {
-        ApiSuccess<T>(data: final d) => d,
-        _ => null,
-      };
+    ApiSuccess<T>(data: final d) => d,
+    _ => null,
+  };
 
   Failure? get failureOrNull => switch (this) {
-        ApiFailure<T>(failure: final f) => f,
-        _ => null,
-      };
+    ApiFailure<T>(failure: final f) => f,
+    _ => null,
+  };
 
   R fold<R>({
     required R Function(T data) onSuccess,

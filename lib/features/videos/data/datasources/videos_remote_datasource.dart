@@ -1,13 +1,12 @@
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/video_entity.dart';
 import '../models/video_dto.dart';
 
 abstract class VideosRemoteDataSource {
-  Future<(List<VideoItemEntity>, List<VideoCategoryEntity>)> getVideosAndCategories({
-    required String champId,
-    required String lang,
-  });
+  Future<(List<VideoItemEntity>, List<VideoCategoryEntity>)>
+  getVideosAndCategories({required String champId, required String lang});
 
   Future<VideoDetailEntity> getVideoDetail(String id, {required String lang});
 }
@@ -18,16 +17,14 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
   VideosRemoteDataSourceImpl(this._client);
 
   @override
-  Future<(List<VideoItemEntity>, List<VideoCategoryEntity>)> getVideosAndCategories({
+  Future<(List<VideoItemEntity>, List<VideoCategoryEntity>)>
+  getVideosAndCategories({
     required String champId,
     required String lang,
   }) async {
     final response = await _client.get(
       ApiEndpoints.videos,
-      queryParameters: {
-        'champ_id': champId,
-        'lang': lang,
-      },
+      queryParameters: {'champ_id': champId, 'lang': lang},
     );
 
     final videos = <VideoItemEntity>[];
@@ -45,10 +42,12 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
               sectionName.toLowerCase().contains('appearances')) {
             for (final item in items) {
               if (item is Map) {
-                categories.add(VideoCategoryEntity(
-                  id: item['id']?.toString() ?? 'all',
-                  title: item['title']?.toString() ?? 'Category',
-                ));
+                categories.add(
+                  VideoCategoryEntity(
+                    id: item['id']?.toString() ?? 'all',
+                    title: item['title']?.toString() ?? 'Category',
+                  ),
+                );
               }
             }
           } else if (sectionName.toLowerCase().contains('video') ||
@@ -56,6 +55,10 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
             for (final item in items) {
               if (item is Map<String, dynamic>) {
                 videos.add(VideoDto.fromJson(item).toEntity());
+              } else if (item is Map) {
+                videos.add(
+                  VideoDto.fromJson(Map<String, dynamic>.from(item)).toEntity(),
+                );
               }
             }
           }
@@ -67,7 +70,10 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
   }
 
   @override
-  Future<VideoDetailEntity> getVideoDetail(String id, {required String lang}) async {
+  Future<VideoDetailEntity> getVideoDetail(
+    String id, {
+    required String lang,
+  }) async {
     final response = await _client.get(
       ApiEndpoints.videoDetails(id),
       queryParameters: {'lang': lang},
@@ -89,26 +95,37 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
 
           if (sTitle.contains('info') || sTitle.contains('معلومات')) {
             for (final it in items) {
-              if (it is Map && it['title']?.toString().toLowerCase().contains('title') == true) {
+              if (it is Map &&
+                  it['title']?.toString().toLowerCase().contains('title') ==
+                      true) {
                 title = it['content']?.toString() ?? title;
               }
-              if (it is Map && it['title']?.toString().toLowerCase().contains('embed') == true) {
+              if (it is Map &&
+                  (it['title']?.toString().toLowerCase().contains('embed') ==
+                          true ||
+                      it['title']?.toString().contains('التضمين') == true)) {
                 embed = it['content']?.toString();
               }
             }
-          } else if (sTitle.contains('tag') || sTitle.contains('وسوم')) {
+          } else if (sTitle.contains('tag') ||
+              sTitle.contains('وسوم') ||
+              sTitle.contains('الكلمات')) {
             for (final it in items) {
               if (it is Map && it['content'] != null) {
                 tags.add(it['content'].toString());
               }
             }
-          } else if (sTitle.contains('match') || sTitle.contains('مباراة')) {
+          } else if (sTitle.contains('match') ||
+              sTitle.contains('مباراة') ||
+              sTitle.contains('مركز')) {
             for (final it in items) {
               if (it is Map && it['content'] != null) {
                 matchInfo = "${it['title'] ?? ''}: ${it['content']}";
               }
             }
-          } else if (sTitle.contains('about') || sTitle.contains('حول')) {
+          } else if (sTitle.contains('about') ||
+              sTitle.contains('حول') ||
+              sTitle.contains('عن')) {
             final parts = <String>[];
             for (final it in items) {
               if (it is Map && it['content'] != null) {
@@ -116,18 +133,25 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
               }
             }
             desc = parts.join('\n');
-          } else if (sTitle.contains('related') || sTitle.contains('أخرى') || sTitle.contains('ذات صلة')) {
+          } else if (sTitle.contains('related') ||
+              sTitle.contains('أخرى') ||
+              sTitle.contains('ذات صلة') ||
+              sTitle.contains('صلة')) {
             for (final it in items) {
               if (it is Map) {
                 final rId = it['link'] != null
                     ? it['link'].toString().split('/').last
                     : (it['id']?.toString() ?? '');
-                related.add(VideoItemEntity(
-                  id: rId,
-                  title: it['title']?.toString() ?? 'Highlight',
-                  image: it['image']?.toString(),
-                  link: it['link']?.toString(),
-                ));
+                final rawImg =
+                    it['image']?.toString() ?? it['thumbnail']?.toString();
+                related.add(
+                  VideoItemEntity(
+                    id: rId,
+                    title: it['title']?.toString() ?? 'Highlight',
+                    image: UrlHelper.normalizeImageUrl(rawImg),
+                    link: it['link']?.toString(),
+                  ),
+                );
               }
             }
           }

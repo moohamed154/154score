@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -53,12 +54,16 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
             hintText: l10n.translate('search_placeholder'),
             border: InputBorder.none,
             hintStyle: TextStyle(
-              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
               fontSize: 15,
             ),
           ),
           style: TextStyle(
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
           ),
           onChanged: (val) {
             setState(() => _query = val.trim().toLowerCase());
@@ -81,7 +86,11 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
     );
   }
 
-  Widget _buildPopularSuggestions(BuildContext context, bool isDark, bool isArabic) {
+  Widget _buildPopularSuggestions(
+    BuildContext context,
+    bool isDark,
+    bool isArabic,
+  ) {
     final l10n = AppLocalizations.of(context);
 
     return ListView(
@@ -89,7 +98,10 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
       children: [
         Text(
           l10n.translate('popular_competitions'),
-          style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+          style: AppTypography.getHeadingMedium(
+            isDark: isDark,
+            isArabic: isArabic,
+          ),
         ),
         const SizedBox(height: 12),
         ..._popularCompetitions.map((comp) {
@@ -104,12 +116,16 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
               ),
             ),
             child: ListTile(
-              leading: const Icon(Icons.emoji_events_outlined, color: AppColors.primary),
+              leading: const Icon(
+                Icons.emoji_events_outlined,
+                color: AppColors.primary,
+              ),
               title: Text(
                 title,
-                style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTypography.getBodyMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(fontWeight: FontWeight.w600),
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
@@ -137,7 +153,8 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
         }
 
         final matchingCompetitions = _popularCompetitions.where((c) {
-          return c.$2.toLowerCase().contains(_query) || c.$3.toLowerCase().contains(_query);
+          return c.$2.toLowerCase().contains(_query) ||
+              c.$3.toLowerCase().contains(_query);
         }).toList();
 
         if (matchingMatches.isEmpty && matchingCompetitions.isEmpty) {
@@ -153,13 +170,19 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
             if (matchingCompetitions.isNotEmpty) ...[
               Text(
                 'Competitions',
-                style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+                style: AppTypography.getHeadingMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
               ),
               const SizedBox(height: 8),
               ...matchingCompetitions.map((comp) {
                 final title = isArabic ? comp.$3 : comp.$2;
                 return ListTile(
-                  leading: const Icon(Icons.emoji_events_outlined, color: AppColors.primary),
+                  leading: const Icon(
+                    Icons.emoji_events_outlined,
+                    color: AppColors.primary,
+                  ),
                   title: Text(title),
                   onTap: () => context.push('/standings/${comp.$1}'),
                 );
@@ -170,7 +193,10 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
             if (matchingMatches.isNotEmpty) ...[
               Text(
                 'Matches',
-                style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+                style: AppTypography.getHeadingMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
               ),
               const SizedBox(height: 8),
               ...matchingMatches.map((m) => MatchCard(match: m)),

@@ -1,3 +1,4 @@
+import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/video_entity.dart';
 
 class VideoDto {
@@ -16,11 +17,22 @@ class VideoDto {
   });
 
   factory VideoDto.fromJson(Map<String, dynamic> json) {
+    final rawLink = json['link']?.toString();
+    String id = json['id']?.toString() ?? '';
+    if (id.isEmpty && rawLink != null) {
+      final segments = rawLink.split('/');
+      if (segments.isNotEmpty) {
+        id = segments.last;
+      }
+    }
+
+    final rawImage = json['image']?.toString() ?? json['thumbnail']?.toString();
+
     return VideoDto(
-      id: json['id']?.toString() ?? '',
+      id: id.isNotEmpty ? id : 'video',
       title: json['title']?.toString() ?? 'Football Highlight',
-      image: json['image']?.toString(),
-      link: json['link']?.toString(),
+      image: UrlHelper.normalizeImageUrl(rawImage),
+      link: rawLink,
       date: json['date']?.toString(),
     );
   }

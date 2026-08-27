@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -45,9 +46,7 @@ class _StandingsViewState extends State<StandingsView> {
     final isArabic = l10n.isArabic;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('standings_title')),
-      ),
+      appBar: AppBar(title: Text(l10n.translate('standings_title'))),
       body: BlocBuilder<StandingsBloc, StandingsState>(
         builder: (context, state) {
           return Column(
@@ -58,7 +57,9 @@ class _StandingsViewState extends State<StandingsView> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.lg,
+                  ),
                   itemCount: _popularLeagues.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
@@ -70,26 +71,42 @@ class _StandingsViewState extends State<StandingsView> {
                       showCheckmark: false,
                       selected: isSelected,
                       onSelected: (_) {
-                        context.read<StandingsBloc>().add(LoadStandingsEvent(item.$1));
+                        context.read<StandingsBloc>().add(
+                          LoadStandingsEvent(item.$1),
+                        );
                       },
-                      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+                      backgroundColor: isDark
+                          ? AppColors.darkCard
+                          : AppColors.lightCard,
                       selectedColor: AppColors.primary,
                       side: BorderSide(
                         color: isSelected
                             ? Colors.transparent
-                            : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                            : (isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder),
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusFull,
+                        ),
                       ),
                       label: Text(
                         title,
-                        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected
-                              ? Colors.black
-                              : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                        ),
+                        style:
+                            AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.black
+                                  : (isDark
+                                        ? AppColors.darkTextPrimary
+                                        : AppColors.lightTextPrimary),
+                            ),
                       ),
                     );
                   },
@@ -101,7 +118,9 @@ class _StandingsViewState extends State<StandingsView> {
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: () async {
-                    context.read<StandingsBloc>().add(LoadStandingsEvent(state.selectedLeagueId));
+                    context.read<StandingsBloc>().add(
+                      LoadStandingsEvent(state.selectedLeagueId),
+                    );
                   },
                   child: _buildBody(context, state),
                 ),
@@ -117,14 +136,18 @@ class _StandingsViewState extends State<StandingsView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (state.status == StandingsStatus.loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
 
     if (state.status == StandingsStatus.error) {
       return ErrorView(
         message: state.errorMessage,
         onRetry: () {
-          context.read<StandingsBloc>().add(LoadStandingsEvent(state.selectedLeagueId));
+          context.read<StandingsBloc>().add(
+            LoadStandingsEvent(state.selectedLeagueId),
+          );
         },
       );
     }
@@ -144,7 +167,10 @@ class _StandingsViewState extends State<StandingsView> {
 
         // Qualification Legend
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.xl, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.xl,
+            vertical: 8,
+          ),
           child: Wrap(
             spacing: 16,
             runSpacing: 8,

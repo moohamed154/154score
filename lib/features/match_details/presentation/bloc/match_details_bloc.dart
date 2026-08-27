@@ -7,25 +7,24 @@ import 'match_details_event.dart';
 import 'match_details_state.dart';
 
 class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
-  final MatchDetailsRepository _repository;
-  final WebSocketService _webSocketService;
-  final LocalStorageService _localStorageService;
+  final MatchDetailsRepository repository;
+  final WebSocketService webSocketService;
+  final LocalStorageService localStorageService;
   StreamSubscription? _wsSubscription;
 
   MatchDetailsBloc({
-    required MatchDetailsRepository repository,
-    required WebSocketService webSocketService,
-    required LocalStorageService localStorageService,
+    required this.repository,
+    required this.webSocketService,
+    required this.localStorageService,
     required String matchId,
-  })  : _repository = repository,
-        _webSocketService = webSocketService,
-        _localStorageService = localStorageService,
-        super(MatchDetailsState(matchId: matchId)) {
+  }) : super(MatchDetailsState(matchId: matchId)) {
     on<LoadMatchDetailsEvent>(_onLoadMatchDetails);
     on<ChangeTabEvent>(_onChangeTab);
     on<LiveMatchDetailUpdateEvent>(_onLiveMatchDetailUpdate);
 
-    _wsSubscription = _webSocketService.updatesStream.listen((update) {
+    webSocketService.joinMatchRoom(matchId);
+
+    _wsSubscription = webSocketService.updatesStream.listen((update) {
       add(LiveMatchDetailUpdateEvent(update));
     });
   }
@@ -38,28 +37,27 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       emit(state.copyWith(status: MatchDetailsStatus.loading));
     }
 
-    final lang = _localStorageService.getLanguage();
-    final offset = _localStorageService.getTimezoneOffset();
+    final lang = localStorageService.getLanguage();
+    final offset = localStorageService.getTimezoneOffset();
 
     try {
-      final results = await Future.wait([
-        _repository.getEvents(event.matchId, lang: lang),
-        _repository.getStats(event.matchId, lang: lang),
-        _repository.getDetails(event.matchId, lang: lang, utcOffset: offset),
-        _repository.getNews(event.matchId, lang: lang),
-      ]);
+      final eventsFuture = repository.getEvents(event.matchId, lang: lang);
+      final statsFuture = repository.getStats(event.matchId, lang: lang);
+      final detailsFuture =
+          repository.getDetails(event.matchId, lang: lang, utcOffset: offset);
+      final newsFuture = repository.getNews(event.matchId, lang: lang);
 
-      final eventsRes = results[0].dataOrNull ?? [];
-      final statsRes = results[1].dataOrNull ?? [];
-      final detailsRes = results[2].dataOrNull ?? [];
-      final newsRes = results[3].dataOrNull ?? [];
+      final eventsRes = (await eventsFuture).dataOrNull ?? [];
+      final statsRes = (await statsFuture).dataOrNull ?? [];
+      final detailsRes = (await detailsFuture).dataOrNull ?? [];
+      final newsRes = (await newsFuture).dataOrNull ?? [];
 
       emit(state.copyWith(
         status: MatchDetailsStatus.success,
-        events: eventsRes as dynamic,
-        stats: statsRes as dynamic,
-        details: detailsRes as dynamic,
-        news: newsRes as dynamic,
+        events: eventsRes,
+        stats: statsRes,
+        details: detailsRes,
+        news: newsRes,
         errorMessage: null,
       ));
     } catch (e) {
@@ -93,6 +91,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
   @override
   Future<void> close() {
+    webSocketService.leaveMatchRoom(state.matchId);
     _wsSubscription?.cancel();
     return super.close();
   }

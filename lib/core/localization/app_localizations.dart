@@ -13,10 +13,7 @@ class AppLocalizations {
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 
-  static const List<Locale> supportedLocales = [
-    Locale('ar'),
-    Locale('en'),
-  ];
+  static const List<Locale> supportedLocales = [Locale('ar'), Locale('en')];
 
   bool get isArabic => locale.languageCode == 'ar';
   String get langCode => locale.languageCode;
@@ -144,7 +141,8 @@ class AppLocalizations {
       'favorite_teams': 'Favorite Teams',
       'favorite_competitions': 'Favorite Competitions',
       'no_favorites_matches': 'No favorite matches found for this date',
-      'no_favorites_yet': 'No favorites added yet. Tap ⭐ on matches or teams to add.',
+      'no_favorites_yet':
+          'No favorites added yet. Tap ⭐ on matches or teams to add.',
 
       // Settings
       'settings_title': 'Settings',
@@ -315,7 +313,8 @@ class AppLocalizations {
       'favorite_teams': 'الفرق المفضلة',
       'favorite_competitions': 'البطولات المفضلة',
       'no_favorites_matches': 'لا توجد مباريات مفضلة في هذا اليوم',
-      'no_favorites_yet': 'لم تقم بإضافة فرق أو مباريات للمفضلة بعد. اضغط ⭐ للإضافة.',
+      'no_favorites_yet':
+          'لم تقم بإضافة فرق أو مباريات للمفضلة بعد. اضغط ⭐ للإضافة.',
 
       // Settings
       'settings_title': 'الإعدادات',
@@ -363,7 +362,7 @@ class AppLocalizations {
       'search_no_results': 'لم نتمكن من العثور على نتائج لبحثك.',
       'clear': 'مسح',
       'close': 'إغلاق',
-    }
+    },
   };
 
   String translate(String key) {

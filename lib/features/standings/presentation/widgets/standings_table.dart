@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -18,7 +19,10 @@ class StandingsTable extends StatelessWidget {
     final isArabic = l10n.isArabic;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 8),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -32,8 +36,12 @@ class StandingsTable extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightCardElevated,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusMd)),
+              color: isDark
+                  ? AppColors.darkSurface
+                  : AppColors.lightCardElevated,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppDimensions.radiusMd),
+              ),
             ),
             child: Row(
               children: [
@@ -41,7 +49,10 @@ class StandingsTable extends StatelessWidget {
                   width: 24,
                   child: Text(
                     l10n.translate('standings_pos'),
-                    style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(fontWeight: FontWeight.w700),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(fontWeight: FontWeight.w700),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -49,15 +60,43 @@ class StandingsTable extends StatelessWidget {
                 Expanded(
                   child: Text(
                     l10n.translate('standings_team'),
-                    style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(fontWeight: FontWeight.w700),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
-                _buildHeaderCell(l10n.translate('standings_played'), isDark, isArabic),
-                _buildHeaderCell(l10n.translate('standings_wins'), isDark, isArabic),
-                _buildHeaderCell(l10n.translate('standings_draws'), isDark, isArabic),
-                _buildHeaderCell(l10n.translate('standings_losses'), isDark, isArabic),
-                _buildHeaderCell(l10n.translate('standings_gd'), isDark, isArabic),
-                _buildHeaderCell(l10n.translate('standings_points'), isDark, isArabic, isHighlight: true),
+                _buildHeaderCell(
+                  l10n.translate('standings_played'),
+                  isDark,
+                  isArabic,
+                ),
+                _buildHeaderCell(
+                  l10n.translate('standings_wins'),
+                  isDark,
+                  isArabic,
+                ),
+                _buildHeaderCell(
+                  l10n.translate('standings_draws'),
+                  isDark,
+                  isArabic,
+                ),
+                _buildHeaderCell(
+                  l10n.translate('standings_losses'),
+                  isDark,
+                  isArabic,
+                ),
+                _buildHeaderCell(
+                  l10n.translate('standings_gd'),
+                  isDark,
+                  isArabic,
+                ),
+                _buildHeaderCell(
+                  l10n.translate('standings_points'),
+                  isDark,
+                  isArabic,
+                  isHighlight: true,
+                ),
               ],
             ),
           ),
@@ -79,21 +118,32 @@ class StandingsTable extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderCell(String label, bool isDark, bool isArabic, {bool isHighlight = false}) {
+  Widget _buildHeaderCell(
+    String label,
+    bool isDark,
+    bool isArabic, {
+    bool isHighlight = false,
+  }) {
     return SizedBox(
       width: 28,
       child: Text(
         label,
-        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-          fontWeight: FontWeight.w700,
-          color: isHighlight ? AppColors.primary : null,
-        ),
+        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
+            .copyWith(
+              fontWeight: FontWeight.w700,
+              color: isHighlight ? AppColors.primary : null,
+            ),
         textAlign: TextAlign.center,
       ),
     );
   }
 
-  Widget _buildRow(BuildContext context, StandingRowEntity row, bool isDark, bool isArabic) {
+  Widget _buildRow(
+    BuildContext context,
+    StandingRowEntity row,
+    bool isDark,
+    bool isArabic,
+  ) {
     Color? indicatorColor;
     if (row.rankColor != null && row.rankColor!.isNotEmpty) {
       try {
@@ -136,9 +186,10 @@ class StandingsTable extends StatelessWidget {
                 Expanded(
                   child: Text(
                     row.position.toString(),
-                    style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(fontWeight: FontWeight.w700),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -162,9 +213,10 @@ class StandingsTable extends StatelessWidget {
                 Expanded(
                   child: Text(
                     row.teamName,
-                    style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -178,22 +230,43 @@ class StandingsTable extends StatelessWidget {
           _buildDataCell(row.wins.toString(), isDark, isArabic),
           _buildDataCell(row.draws.toString(), isDark, isArabic),
           _buildDataCell(row.losses.toString(), isDark, isArabic),
-          _buildDataCell('${row.goalDiff >= 0 ? "+" : ""}${row.goalDiff}', isDark, isArabic),
-          _buildDataCell(row.points.toString(), isDark, isArabic, isBold: true, isHighlight: true),
+          _buildDataCell(
+            '${row.goalDiff >= 0 ? "+" : ""}${row.goalDiff}',
+            isDark,
+            isArabic,
+          ),
+          _buildDataCell(
+            row.points.toString(),
+            isDark,
+            isArabic,
+            isBold: true,
+            isHighlight: true,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDataCell(String text, bool isDark, bool isArabic, {bool isBold = false, bool isHighlight = false}) {
+  Widget _buildDataCell(
+    String text,
+    bool isDark,
+    bool isArabic, {
+    bool isBold = false,
+    bool isHighlight = false,
+  }) {
     return SizedBox(
       width: 28,
       child: Text(
         text,
-        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-          fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-          color: isHighlight ? AppColors.primary : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-        ),
+        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
+            .copyWith(
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+              color: isHighlight
+                  ? AppColors.primary
+                  : (isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary),
+            ),
         textAlign: TextAlign.center,
       ),
     );

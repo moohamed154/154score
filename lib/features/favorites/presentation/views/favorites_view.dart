@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -16,12 +17,11 @@ class FavoritesView extends StatelessWidget {
     final isArabic = l10n.isArabic;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('favorites_title')),
-      ),
+      appBar: AppBar(title: Text(l10n.translate('favorites_title'))),
       body: BlocBuilder<FavoritesCubit, FavoritesState>(
         builder: (context, state) {
-          final hasFavorites = state.favoriteTeams.isNotEmpty ||
+          final hasFavorites =
+              state.favoriteTeams.isNotEmpty ||
               state.favoriteCompetitions.isNotEmpty ||
               state.favoriteMatches.isNotEmpty;
 
@@ -39,7 +39,10 @@ class FavoritesView extends StatelessWidget {
               if (state.favoriteTeams.isNotEmpty) ...[
                 Text(
                   l10n.translate('favorite_teams'),
-                  style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+                  style: AppTypography.getHeadingMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -63,7 +66,10 @@ class FavoritesView extends StatelessWidget {
               if (state.favoriteCompetitions.isNotEmpty) ...[
                 Text(
                   l10n.translate('favorite_competitions'),
-                  style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+                  style: AppTypography.getHeadingMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(

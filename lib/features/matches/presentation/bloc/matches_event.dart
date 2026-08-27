@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/websocket/websocket_event.dart';
 
 enum MatchFilterType { all, live, upcoming, finished, favorites }
@@ -14,10 +15,7 @@ class LoadMatchesEvent extends MatchesEvent {
   final DateTime date;
   final bool isRefresh;
 
-  const LoadMatchesEvent({
-    required this.date,
-    this.isRefresh = false,
-  });
+  const LoadMatchesEvent({required this.date, this.isRefresh = false});
 
   @override
   List<Object?> get props => [date, isRefresh];

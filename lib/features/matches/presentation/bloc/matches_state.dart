@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/match_entity.dart';
 import 'matches_event.dart';
 
@@ -49,13 +50,13 @@ class MatchesState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        allLeagues,
-        filteredLeagues,
-        selectedDate,
-        activeFilter,
-        searchQuery,
-        errorMessage,
-        liveMatchesCount,
-      ];
+    status,
+    allLeagues,
+    filteredLeagues,
+    selectedDate,
+    activeFilter,
+    searchQuery,
+    errorMessage,
+    liveMatchesCount,
+  ];
 }

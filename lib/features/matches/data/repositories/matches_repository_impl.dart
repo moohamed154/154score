@@ -47,15 +47,21 @@ class MatchesRepositoryImpl implements MatchesRepository {
   }) async {
     try {
       final now = DateTime.now();
-      final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      final dtos = await _remoteDataSource.getMatches(date: dateStr, lang: lang);
+      final dateStr =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final dtos = await _remoteDataSource.getMatches(
+        date: dateStr,
+        lang: lang,
+      );
       final favoriteMatches = _localStorageService.getFavoriteMatches();
 
       final liveMatches = <MatchEntity>[];
       for (final league in dtos) {
         for (final m in league.matches) {
           if (ScoreHelper.isLiveStatus(m.status)) {
-            liveMatches.add(m.toEntity(isFavorite: favoriteMatches.contains(m.id)));
+            liveMatches.add(
+              m.toEntity(isFavorite: favoriteMatches.contains(m.id)),
+            );
           }
         }
       }

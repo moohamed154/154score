@@ -1,8 +1,14 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/profile_entity.dart';
 
 abstract class ProfilesRemoteDataSource {
-  Future<ProfileEntity> getProfile(String endpoint, String id, String slug, {required String lang});
+  Future<ProfileEntity> getProfile(
+    String endpoint,
+    String id,
+    String slug, {
+    required String lang,
+  });
 }
 
 class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
@@ -11,7 +17,12 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
   ProfilesRemoteDataSourceImpl(this._client);
 
   @override
-  Future<ProfileEntity> getProfile(String endpoint, String id, String slug, {required String lang}) async {
+  Future<ProfileEntity> getProfile(
+    String endpoint,
+    String id,
+    String slug, {
+    required String lang,
+  }) async {
     final response = await _client.get(
       endpoint,
       queryParameters: {'lang': lang},
@@ -35,12 +46,17 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
               final title = it['title']?.toString() ?? '';
               final content = it['content']?.toString() ?? '';
 
-              if (title.toLowerCase() == 'name' || title.toLowerCase() == 'الاسم') {
+              if (title.toLowerCase() == 'name' ||
+                  title.toLowerCase() == 'الاسم') {
                 name = content;
-              } else if (title.toLowerCase() == 'image' || title.toLowerCase() == 'الصورة') {
-                image = content;
-              } else if (title.toLowerCase().contains('flag') || title.toLowerCase().contains('country logo') || title.toLowerCase().contains('علم')) {
-                flag = content;
+              } else if (title.toLowerCase() == 'image' ||
+                  title.toLowerCase() == 'الصورة') {
+                image = UrlHelper.normalizeImageUrl(content);
+              } else if (title.toLowerCase().contains('flag') ||
+                  title.toLowerCase().contains('country logo') ||
+                  title.toLowerCase().contains('شعار الدولة') ||
+                  title.toLowerCase().contains('علم')) {
+                flag = UrlHelper.normalizeImageUrl(content);
               } else if (title.isNotEmpty && content.isNotEmpty) {
                 items.add(ProfileItemEntity(title: title, content: content));
               }

@@ -6,7 +6,9 @@ import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
 import 'package:ysscores/features/matches/presentation/widgets/match_card.dart';
 
 void main() {
-  testWidgets('MatchCard renders teams and score correctly', (WidgetTester tester) async {
+  testWidgets('MatchCard renders teams and score correctly', (
+    WidgetTester tester,
+  ) async {
     const match = MatchEntity(
       id: '1',
       team1: 'Real Madrid',
@@ -24,9 +26,7 @@ void main() {
           GlobalWidgetsLocalizations.delegate,
         ],
         supportedLocales: [Locale('en')],
-        home: Scaffold(
-          body: MatchCard(match: match),
-        ),
+        home: Scaffold(body: MatchCard(match: match)),
       ),
     );
 

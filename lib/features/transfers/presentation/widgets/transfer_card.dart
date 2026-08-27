@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -18,7 +19,10 @@ class TransferCard extends StatelessWidget {
     final isArabic = l10n.isArabic;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 6),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: 6,
+      ),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -46,9 +50,10 @@ class TransferCard extends StatelessWidget {
                   children: [
                     Text(
                       transfer.playerName,
-                      style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -56,26 +61,42 @@ class TransferCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         transfer.playerPosition!,
-                        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic),
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ),
                       ),
                     ],
                   ],
                 ),
               ),
-              if (transfer.transferPrice != null && transfer.transferPrice!.isNotEmpty)
+              if (transfer.transferPrice != null &&
+                  transfer.transferPrice!.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.4), width: 0.8),
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusFull,
+                    ),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      width: 0.8,
+                    ),
                   ),
                   child: Text(
                     transfer.transferPrice!,
-                    style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
+                    style:
+                        AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
                   ),
                 ),
             ],
@@ -104,9 +125,15 @@ class TransferCard extends StatelessWidget {
                     Flexible(
                       child: Text(
                         transfer.fromTeamName ?? 'Previous Club',
-                        style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                        ),
+                        style:
+                            AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                            ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -118,7 +145,11 @@ class TransferCard extends StatelessWidget {
               // Arrow
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
 
               // To Club
@@ -129,10 +160,16 @@ class TransferCard extends StatelessWidget {
                     Flexible(
                       child: Text(
                         transfer.toTeamName ?? 'New Club',
-                        style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                        ),
+                        style:
+                            AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.end,
@@ -159,14 +196,21 @@ class TransferCard extends StatelessWidget {
               children: [
                 Text(
                   transfer.transferType ?? '',
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    color: AppColors.accent,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: AppColors.accent,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 Text(
                   transfer.date ?? '',
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
                 ),
               ],
             ),

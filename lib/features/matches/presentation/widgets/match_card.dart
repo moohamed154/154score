@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -14,11 +15,7 @@ class MatchCard extends StatelessWidget {
   final MatchEntity match;
   final VoidCallback? onFavoriteTap;
 
-  const MatchCard({
-    super.key,
-    required this.match,
-    this.onFavoriteTap,
-  });
+  const MatchCard({super.key, required this.match, this.onFavoriteTap});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +28,10 @@ class MatchCard extends StatelessWidget {
     final score2Str = ScoreHelper.normalizeScore(match.score2);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 4),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: 4,
+      ),
       decoration: BoxDecoration(
         color: isLive
             ? (isDark ? const Color(0xFF1E2430) : const Color(0xFFF1F7FF))
@@ -39,7 +39,7 @@ class MatchCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
           color: isLive
-              ? AppColors.liveRed.withOpacity(0.35)
+              ? AppColors.liveRed.withValues(alpha: 0.35)
               : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
           width: isLive ? 1.2 : 1,
         ),
@@ -49,7 +49,10 @@ class MatchCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           onTap: () {
-            context.push('/match/${Uri.encodeComponent(match.id)}', extra: match);
+            context.push(
+              '/match/${Uri.encodeComponent(match.id)}',
+              extra: match,
+            );
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -63,10 +66,10 @@ class MatchCard extends StatelessWidget {
                       Flexible(
                         child: Text(
                           match.team1,
-                          style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
+                          style: AppTypography.getBodyLarge(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(fontWeight: FontWeight.w600, fontSize: 14),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.end,
@@ -97,12 +100,18 @@ class MatchCard extends StatelessWidget {
                           children: [
                             AnimatedScoreText(score: score1Str, isLive: isLive),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               child: Text(
                                 ':',
-                                style: AppTypography.getScoreMedium(isDark: isDark).copyWith(
-                                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                                ),
+                                style:
+                                    AppTypography.getScoreMedium(isDark: isDark)
+                                        .copyWith(
+                                          color: isDark
+                                              ? AppColors.darkTextMuted
+                                              : AppColors.lightTextMuted,
+                                        ),
                               ),
                             ),
                             AnimatedScoreText(score: score2Str, isLive: isLive),
@@ -135,10 +144,10 @@ class MatchCard extends StatelessWidget {
                       Flexible(
                         child: Text(
                           match.team2,
-                          style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
+                          style: AppTypography.getBodyLarge(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(fontWeight: FontWeight.w600, fontSize: 14),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.start,
@@ -153,13 +162,21 @@ class MatchCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   InkWell(
                     onTap: onFavoriteTap,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusFull,
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: Icon(
-                        match.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+                        match.isFavorite
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
                         size: 20,
-                        color: match.isFavorite ? AppColors.yellowCard : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                        color: match.isFavorite
+                            ? AppColors.yellowCard
+                            : (isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted),
                       ),
                     ),
                   ),

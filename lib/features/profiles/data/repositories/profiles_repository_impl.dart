@@ -12,7 +12,11 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
   ProfilesRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<ApiResult<ProfileEntity>> getStadiumProfile(String id, String slug, {required String lang}) async {
+  Future<ApiResult<ProfileEntity>> getStadiumProfile(
+    String id,
+    String slug, {
+    required String lang,
+  }) async {
     try {
       final data = await _remoteDataSource.getProfile(
         ApiEndpoints.stadium(id, slug),
@@ -31,7 +35,11 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
   }
 
   @override
-  Future<ApiResult<ProfileEntity>> getRefereeProfile(String id, String slug, {required String lang}) async {
+  Future<ApiResult<ProfileEntity>> getRefereeProfile(
+    String id,
+    String slug, {
+    required String lang,
+  }) async {
     try {
       final data = await _remoteDataSource.getProfile(
         ApiEndpoints.referee(id, slug),
@@ -50,7 +58,11 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
   }
 
   @override
-  Future<ApiResult<ProfileEntity>> getCommentatorProfile(String id, String slug, {required String lang}) async {
+  Future<ApiResult<ProfileEntity>> getCommentatorProfile(
+    String id,
+    String slug, {
+    required String lang,
+  }) async {
     try {
       final data = await _remoteDataSource.getProfile(
         ApiEndpoints.commentator(id, slug),
@@ -64,7 +76,9 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
     } on ServerException catch (e) {
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
-      return ApiFailure(ServerFailure('Failed to load commentator profile: $e'));
+      return ApiFailure(
+        ServerFailure('Failed to load commentator profile: $e'),
+      );
     }
   }
 }

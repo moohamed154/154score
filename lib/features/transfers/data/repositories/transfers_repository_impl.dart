@@ -11,7 +11,9 @@ class TransfersRepositoryImpl implements TransfersRepository {
   TransfersRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<ApiResult<List<TransferEntity>>> getTransfers({required String lang}) async {
+  Future<ApiResult<List<TransferEntity>>> getTransfers({
+    required String lang,
+  }) async {
     try {
       final dtos = await _remoteDataSource.getTransfers(lang: lang);
       final entities = dtos.map((d) => d.toEntity()).toList();

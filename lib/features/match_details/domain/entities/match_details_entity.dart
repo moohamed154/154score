@@ -19,13 +19,13 @@ class MatchEventEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        minute,
-        playerName,
-        secondaryPlayerName,
-        type,
-        isHomeTeam,
-        score,
-      ];
+    minute,
+    playerName,
+    secondaryPlayerName,
+    type,
+    isHomeTeam,
+    score,
+  ];
 }
 
 class MatchStatItemEntity extends Equatable {
@@ -49,10 +49,7 @@ class MatchInfoSectionEntity extends Equatable {
   final String section;
   final List<MatchInfoItemEntity> items;
 
-  const MatchInfoSectionEntity({
-    required this.section,
-    required this.items,
-  });
+  const MatchInfoSectionEntity({required this.section, required this.items});
 
   @override
   List<Object?> get props => [section, items];

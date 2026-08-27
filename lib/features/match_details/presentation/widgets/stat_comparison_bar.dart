@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -17,7 +18,10 @@ class StatComparisonBar extends StatelessWidget {
     final isArabic = l10n.isArabic;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: 8,
+      ),
       child: Column(
         children: [
           // Labels Row: Home Value -- Stat Title -- Away Value
@@ -26,18 +30,32 @@ class StatComparisonBar extends StatelessWidget {
             children: [
               Text(
                 stat.homeValue,
-                style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: stat.homePercentage >= 0.5 ? AppColors.primary : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                ),
+                style:
+                    AppTypography.getBodyLarge(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: stat.homePercentage >= 0.5
+                          ? AppColors.primary
+                          : (isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary),
+                    ),
               ),
               Expanded(
                 child: Text(
                   stat.title,
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -45,10 +63,18 @@ class StatComparisonBar extends StatelessWidget {
               ),
               Text(
                 stat.awayValue,
-                style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: stat.homePercentage < 0.5 ? AppColors.primary : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                ),
+                style:
+                    AppTypography.getBodyLarge(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: stat.homePercentage < 0.5
+                          ? AppColors.primary
+                          : (isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary),
+                    ),
               ),
             ],
           ),
@@ -67,16 +93,23 @@ class StatComparisonBar extends StatelessWidget {
                     child: Container(
                       color: stat.homePercentage >= 0.5
                           ? AppColors.primary
-                          : (isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated),
+                          : (isDark
+                                ? AppColors.darkCardElevated
+                                : AppColors.lightCardElevated),
                     ),
                   ),
                   const SizedBox(width: 2),
                   Expanded(
-                    flex: ((1.0 - stat.homePercentage) * 100).toInt().clamp(1, 99),
+                    flex: ((1.0 - stat.homePercentage) * 100).toInt().clamp(
+                      1,
+                      99,
+                    ),
                     child: Container(
                       color: stat.homePercentage < 0.5
                           ? AppColors.accent
-                          : (isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated),
+                          : (isDark
+                                ? AppColors.darkCardElevated
+                                : AppColors.lightCardElevated),
                     ),
                   ),
                 ],

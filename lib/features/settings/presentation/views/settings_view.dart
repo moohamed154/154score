@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -27,50 +28,50 @@ class _SettingsViewState extends State<SettingsView> {
     final ws = sl<WebSocketService>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('settings_title')),
-      ),
+      appBar: AppBar(title: Text(l10n.translate('settings_title'))),
       body: ListView(
         padding: const EdgeInsets.all(AppDimensions.lg),
         children: [
           // Section: Appearance
-          _buildSectionHeader(l10n.translate('settings_appearance'), isDark, isArabic),
+          _buildSectionHeader(
+            l10n.translate('settings_appearance'),
+            isDark,
+            isArabic,
+          ),
           BlocBuilder<ThemeCubit, ThemeMode>(
             builder: (context, themeMode) {
               return Container(
                 decoration: _cardDecoration(isDark),
-                child: Column(
-                  children: [
-                    RadioListTile<ThemeMode>(
-                      title: Text(l10n.translate('theme_dark')),
-                      secondary: const Icon(Icons.dark_mode_rounded),
-                      value: ThemeMode.dark,
-                      groupValue: themeMode,
-                      onChanged: (mode) {
-                        if (mode != null) context.read<ThemeCubit>().setThemeMode(mode);
-                      },
-                    ),
-                    const Divider(height: 1),
-                    RadioListTile<ThemeMode>(
-                      title: Text(l10n.translate('theme_light')),
-                      secondary: const Icon(Icons.light_mode_rounded),
-                      value: ThemeMode.light,
-                      groupValue: themeMode,
-                      onChanged: (mode) {
-                        if (mode != null) context.read<ThemeCubit>().setThemeMode(mode);
-                      },
-                    ),
-                    const Divider(height: 1),
-                    RadioListTile<ThemeMode>(
-                      title: Text(l10n.translate('theme_system')),
-                      secondary: const Icon(Icons.settings_system_daydream_rounded),
-                      value: ThemeMode.system,
-                      groupValue: themeMode,
-                      onChanged: (mode) {
-                        if (mode != null) context.read<ThemeCubit>().setThemeMode(mode);
-                      },
-                    ),
-                  ],
+                child: RadioGroup<ThemeMode>(
+                  groupValue: themeMode,
+                  onChanged: (mode) {
+                    if (mode != null) {
+                      context.read<ThemeCubit>().setThemeMode(mode);
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      RadioListTile<ThemeMode>(
+                        title: Text(l10n.translate('theme_dark')),
+                        secondary: const Icon(Icons.dark_mode_rounded),
+                        value: ThemeMode.dark,
+                      ),
+                      const Divider(height: 1),
+                      RadioListTile<ThemeMode>(
+                        title: Text(l10n.translate('theme_light')),
+                        secondary: const Icon(Icons.light_mode_rounded),
+                        value: ThemeMode.light,
+                      ),
+                      const Divider(height: 1),
+                      RadioListTile<ThemeMode>(
+                        title: Text(l10n.translate('theme_system')),
+                        secondary: const Icon(
+                          Icons.settings_system_daydream_rounded,
+                        ),
+                        value: ThemeMode.system,
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -79,33 +80,43 @@ class _SettingsViewState extends State<SettingsView> {
           const SizedBox(height: 24),
 
           // Section: Language
-          _buildSectionHeader(l10n.translate('settings_language'), isDark, isArabic),
+          _buildSectionHeader(
+            l10n.translate('settings_language'),
+            isDark,
+            isArabic,
+          ),
           BlocBuilder<LocaleCubit, Locale>(
             builder: (context, currentLocale) {
               return Container(
                 decoration: _cardDecoration(isDark),
-                child: Column(
-                  children: [
-                    RadioListTile<String>(
-                      title: Text(l10n.translate('lang_arabic')),
-                      secondary: const Text('🇸🇦', style: TextStyle(fontSize: 22)),
-                      value: 'ar',
-                      groupValue: currentLocale.languageCode,
-                      onChanged: (lang) {
-                        if (lang != null) context.read<LocaleCubit>().setLocale(Locale(lang));
-                      },
-                    ),
-                    const Divider(height: 1),
-                    RadioListTile<String>(
-                      title: Text(l10n.translate('lang_english')),
-                      secondary: const Text('🇬🇧', style: TextStyle(fontSize: 22)),
-                      value: 'en',
-                      groupValue: currentLocale.languageCode,
-                      onChanged: (lang) {
-                        if (lang != null) context.read<LocaleCubit>().setLocale(Locale(lang));
-                      },
-                    ),
-                  ],
+                child: RadioGroup<String>(
+                  groupValue: currentLocale.languageCode,
+                  onChanged: (lang) {
+                    if (lang != null) {
+                      context.read<LocaleCubit>().setLocale(Locale(lang));
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      RadioListTile<String>(
+                        title: Text(l10n.translate('lang_arabic')),
+                        secondary: const Text(
+                          '🇸🇦',
+                          style: TextStyle(fontSize: 22),
+                        ),
+                        value: 'ar',
+                      ),
+                      const Divider(height: 1),
+                      RadioListTile<String>(
+                        title: Text(l10n.translate('lang_english')),
+                        secondary: const Text(
+                          '🇬🇧',
+                          style: TextStyle(fontSize: 22),
+                        ),
+                        value: 'en',
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -114,7 +125,11 @@ class _SettingsViewState extends State<SettingsView> {
           const SizedBox(height: 24),
 
           // Section: Time & Timezone
-          _buildSectionHeader(l10n.translate('settings_time'), isDark, isArabic),
+          _buildSectionHeader(
+            l10n.translate('settings_time'),
+            isDark,
+            isArabic,
+          ),
           Container(
             decoration: _cardDecoration(isDark),
             child: Column(
@@ -126,8 +141,14 @@ class _SettingsViewState extends State<SettingsView> {
                     value: storage.getTimeFormat(),
                     underline: const SizedBox(),
                     items: [
-                      DropdownMenuItem(value: '12h', child: Text(l10n.translate('time_12h'))),
-                      DropdownMenuItem(value: '24h', child: Text(l10n.translate('time_24h'))),
+                      DropdownMenuItem(
+                        value: '12h',
+                        child: Text(l10n.translate('time_12h')),
+                      ),
+                      DropdownMenuItem(
+                        value: '24h',
+                        child: Text(l10n.translate('time_24h')),
+                      ),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -147,8 +168,14 @@ class _SettingsViewState extends State<SettingsView> {
                     items: const [
                       DropdownMenuItem(value: 0, child: Text('UTC +0')),
                       DropdownMenuItem(value: 1, child: Text('UTC +1')),
-                      DropdownMenuItem(value: 2, child: Text('UTC +2 (Cairo/Jerusalem)')),
-                      DropdownMenuItem(value: 3, child: Text('UTC +3 (Riyadh/Kuwait/Doha)')),
+                      DropdownMenuItem(
+                        value: 2,
+                        child: Text('UTC +2 (Cairo/Jerusalem)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 3,
+                        child: Text('UTC +3 (Riyadh/Kuwait/Doha)'),
+                      ),
                       DropdownMenuItem(value: 4, child: Text('UTC +4 (Dubai)')),
                     ],
                     onChanged: (val) {
@@ -166,11 +193,18 @@ class _SettingsViewState extends State<SettingsView> {
           const SizedBox(height: 24),
 
           // Section: Diagnostics & Health
-          _buildSectionHeader(l10n.translate('settings_diagnostics'), isDark, isArabic),
+          _buildSectionHeader(
+            l10n.translate('settings_diagnostics'),
+            isDark,
+            isArabic,
+          ),
           Container(
             decoration: _cardDecoration(isDark),
             child: ListTile(
-              leading: const Icon(Icons.health_and_safety_rounded, color: AppColors.primary),
+              leading: const Icon(
+                Icons.health_and_safety_rounded,
+                color: AppColors.primary,
+              ),
               title: Text(l10n.translate('diag_title')),
               subtitle: Text(l10n.translate('settings_diagnostics')),
               trailing: const Icon(Icons.chevron_right_rounded),
@@ -187,7 +221,11 @@ class _SettingsViewState extends State<SettingsView> {
           const SizedBox(height: 24),
 
           // Section: About
-          _buildSectionHeader(l10n.translate('settings_about'), isDark, isArabic),
+          _buildSectionHeader(
+            l10n.translate('settings_about'),
+            isDark,
+            isArabic,
+          ),
           Container(
             decoration: _cardDecoration(isDark),
             padding: const EdgeInsets.all(16),
@@ -202,7 +240,11 @@ class _SettingsViewState extends State<SettingsView> {
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.sports_soccer_rounded, color: Colors.black, size: 24),
+                      child: const Icon(
+                        Icons.sports_soccer_rounded,
+                        color: Colors.black,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Column(
@@ -210,13 +252,17 @@ class _SettingsViewState extends State<SettingsView> {
                       children: [
                         Text(
                           '154Score v1.0.0',
-                          style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: AppTypography.getBodyLarge(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(fontWeight: FontWeight.w700),
                         ),
                         Text(
                           'Powered by 154score API & WebSocket',
-                          style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic),
+                          style: AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ),
                         ),
                       ],
                     ),
@@ -225,9 +271,10 @@ class _SettingsViewState extends State<SettingsView> {
                 const SizedBox(height: 12),
                 Text(
                   l10n.translate('about_description'),
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    height: 1.4,
-                  ),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -244,11 +291,12 @@ class _SettingsViewState extends State<SettingsView> {
       padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
       child: Text(
         title,
-        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-        ),
+        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
+            .copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
       ),
     );
   }

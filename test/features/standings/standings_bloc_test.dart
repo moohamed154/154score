@@ -8,6 +8,7 @@ import 'package:ysscores/features/standings/domain/repositories/standings_reposi
 import 'package:ysscores/features/standings/presentation/bloc/standings_bloc.dart';
 
 class MockStandingsRepository extends Mock implements StandingsRepository {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
@@ -53,7 +54,11 @@ void main() {
       },
       act: (bloc) => bloc.add(const LoadStandingsEvent('937599')),
       expect: () => [
-        isA<StandingsState>().having((s) => s.status, 'status', StandingsStatus.loading),
+        isA<StandingsState>().having(
+          (s) => s.status,
+          'status',
+          StandingsStatus.loading,
+        ),
         isA<StandingsState>()
             .having((s) => s.status, 'status', StandingsStatus.success)
             .having((s) => s.standings?.rows.length, 'rows length', 1),

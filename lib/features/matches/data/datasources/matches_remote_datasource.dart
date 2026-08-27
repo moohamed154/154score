@@ -21,10 +21,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     required String lang,
     int? utcOffset,
   }) async {
-    final queryParams = <String, dynamic>{
-      'lang': lang,
-      'date': date,
-    };
+    final queryParams = <String, dynamic>{'lang': lang, 'date': date};
     if (utcOffset != null) {
       queryParams['utc-offset'] = utcOffset;
     }

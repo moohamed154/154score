@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -11,11 +12,7 @@ class VideoCard extends StatelessWidget {
   final VideoItemEntity video;
   final bool isHorizontal;
 
-  const VideoCard({
-    super.key,
-    required this.video,
-    this.isHorizontal = false,
-  });
+  const VideoCard({super.key, required this.video, this.isHorizontal = false});
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +56,11 @@ class VideoCard extends StatelessWidget {
                             color: Colors.black54,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
+                          child: const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ),
@@ -69,9 +70,10 @@ class VideoCard extends StatelessWidget {
                   padding: const EdgeInsets.all(10),
                   child: Text(
                     video.title,
-                    style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(fontWeight: FontWeight.w600),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -84,7 +86,10 @@ class VideoCard extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: 8),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.lg,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -117,7 +122,11 @@ class VideoCard extends StatelessWidget {
                           color: Colors.black54,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
+                        child: const Icon(
+                          Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 36,
+                        ),
                       ),
                     ),
                   ),
@@ -130,9 +139,10 @@ class VideoCard extends StatelessWidget {
                   children: [
                     Text(
                       video.title,
-                      style: AppTypography.getBodyLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w700),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -140,7 +150,10 @@ class VideoCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         video.date!,
-                        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic),
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ),
                       ),
                     ],
                   ],

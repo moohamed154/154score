@@ -25,7 +25,11 @@ class DateFormatter {
     return DateFormat('EEE, d MMM', locale).format(date);
   }
 
-  static String formatDisplayTime(String? timeStr, {required String timeFormat, required bool isArabic}) {
+  static String formatDisplayTime(
+    String? timeStr, {
+    required String timeFormat,
+    required bool isArabic,
+  }) {
     if (timeStr == null || timeStr.trim().isEmpty || timeStr == '-') {
       return '-';
     }

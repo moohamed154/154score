@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/websocket/websocket_event.dart';
 
 abstract class MatchDetailsEvent extends Equatable {

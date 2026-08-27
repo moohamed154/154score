@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_typography.dart';
@@ -111,7 +112,10 @@ class AppScaffold extends StatelessWidget {
     );
   }
 
-  List<NavigationRailDestination> _buildRailDestinations(AppLocalizations l10n, int liveCount) {
+  List<NavigationRailDestination> _buildRailDestinations(
+    AppLocalizations l10n,
+    int liveCount,
+  ) {
     return [
       NavigationRailDestination(
         icon: const Icon(Icons.home_outlined),
@@ -162,7 +166,12 @@ class AppScaffold extends StatelessWidget {
 
     final navItems = [
       (Icons.home_rounded, l10n.translate('nav_home'), 0, null),
-      (Icons.sports_soccer_rounded, l10n.translate('nav_matches'), 1, liveCount > 0 ? liveCount.toString() : null),
+      (
+        Icons.sports_soccer_rounded,
+        l10n.translate('nav_matches'),
+        1,
+        liveCount > 0 ? liveCount.toString() : null,
+      ),
       (Icons.table_chart_rounded, l10n.translate('nav_standings'), 2, null),
       (Icons.swap_horiz_rounded, l10n.translate('nav_transfers'), 3, null),
       (Icons.video_library_rounded, l10n.translate('nav_videos'), 4, null),
@@ -184,14 +193,19 @@ class AppScaffold extends StatelessWidget {
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.sports_soccer_rounded, color: Colors.black, size: 22),
+                child: const Icon(
+                  Icons.sports_soccer_rounded,
+                  color: Colors.black,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 10),
               Text(
                 '154Score',
-                style: AppTypography.getHeadingLarge(isDark: isDark, isArabic: isArabic).copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+                style: AppTypography.getHeadingLarge(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(fontWeight: FontWeight.w900),
               ),
             ],
           ),
@@ -204,31 +218,50 @@ class AppScaffold extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 6),
               child: ListTile(
                 selected: isSelected,
-                selectedTileColor: AppColors.primary.withOpacity(0.12),
+                selectedTileColor: AppColors.primary.withValues(alpha: 0.12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                 ),
                 leading: Icon(
                   item.$1,
-                  color: isSelected ? AppColors.primary : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                  color: isSelected
+                      ? AppColors.primary
+                      : (isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted),
                 ),
                 title: Text(
                   item.$2,
-                  style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic).copyWith(
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? AppColors.primary : null,
-                  ),
+                  style:
+                      AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isSelected ? AppColors.primary : null,
+                      ),
                 ),
                 trailing: item.$4 != null
                     ? Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.liveRed,
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusFull,
+                          ),
                         ),
                         child: Text(
                           item.$4!,
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       )
                     : null,

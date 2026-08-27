@@ -51,5 +51,13 @@ class VideoDetailEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, title, embedUrl, matchInfo, description, tags, relatedVideos];
+  List<Object?> get props => [
+    id,
+    title,
+    embedUrl,
+    matchInfo,
+    description,
+    tags,
+    relatedVideos,
+  ];
 }

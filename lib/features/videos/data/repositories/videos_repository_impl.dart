@@ -11,9 +11,15 @@ class VideosRepositoryImpl implements VideosRepository {
   VideosRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<ApiResult<List<VideoItemEntity>>> getVideos({required String champId, required String lang}) async {
+  Future<ApiResult<List<VideoItemEntity>>> getVideos({
+    required String champId,
+    required String lang,
+  }) async {
     try {
-      final (videos, _) = await _remoteDataSource.getVideosAndCategories(champId: champId, lang: lang);
+      final (videos, _) = await _remoteDataSource.getVideosAndCategories(
+        champId: champId,
+        lang: lang,
+      );
       return ApiSuccess(videos);
     } on NetworkException catch (e) {
       return ApiFailure(NetworkFailure(e.message));
@@ -25,9 +31,14 @@ class VideosRepositoryImpl implements VideosRepository {
   }
 
   @override
-  Future<ApiResult<List<VideoCategoryEntity>>> getCategories({required String lang}) async {
+  Future<ApiResult<List<VideoCategoryEntity>>> getCategories({
+    required String lang,
+  }) async {
     try {
-      final (_, categories) = await _remoteDataSource.getVideosAndCategories(champId: 'all', lang: lang);
+      final (_, categories) = await _remoteDataSource.getVideosAndCategories(
+        champId: 'all',
+        lang: lang,
+      );
       return ApiSuccess(categories);
     } on NetworkException catch (e) {
       return ApiFailure(NetworkFailure(e.message));
@@ -39,7 +50,10 @@ class VideosRepositoryImpl implements VideosRepository {
   }
 
   @override
-  Future<ApiResult<VideoDetailEntity>> getVideoDetail(String id, {required String lang}) async {
+  Future<ApiResult<VideoDetailEntity>> getVideoDetail(
+    String id, {
+    required String lang,
+  }) async {
     try {
       final detail = await _remoteDataSource.getVideoDetail(id, lang: lang);
       return ApiSuccess(detail);

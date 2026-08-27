@@ -94,9 +94,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<TransfersRepository>(
     () => TransfersRepositoryImpl(sl()),
   );
-  sl.registerLazySingleton<VideosRepository>(
-    () => VideosRepositoryImpl(sl()),
-  );
+  sl.registerLazySingleton<VideosRepository>(() => VideosRepositoryImpl(sl()));
   sl.registerLazySingleton<ProfilesRepository>(
     () => ProfilesRepositoryImpl(sl()),
   );
@@ -120,24 +118,15 @@ Future<void> initDependencies() async {
   );
 
   sl.registerFactory<StandingsBloc>(
-    () => StandingsBloc(
-      repository: sl(),
-      localStorageService: sl(),
-    ),
+    () => StandingsBloc(repository: sl(), localStorageService: sl()),
   );
 
   sl.registerFactory<TransfersBloc>(
-    () => TransfersBloc(
-      repository: sl(),
-      localStorageService: sl(),
-    ),
+    () => TransfersBloc(repository: sl(), localStorageService: sl()),
   );
 
   sl.registerFactory<VideosBloc>(
-    () => VideosBloc(
-      repository: sl(),
-      localStorageService: sl(),
-    ),
+    () => VideosBloc(repository: sl(), localStorageService: sl()),
   );
 
   sl.registerFactory<HomeCubit>(
@@ -149,15 +138,9 @@ Future<void> initDependencies() async {
     ),
   );
 
-  sl.registerFactory<FavoritesCubit>(
-    () => FavoritesCubit(sl()),
-  );
+  sl.registerFactory<FavoritesCubit>(() => FavoritesCubit(sl()));
 
-  sl.registerLazySingleton<ThemeCubit>(
-    () => ThemeCubit(sl()),
-  );
+  sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit(sl()));
 
-  sl.registerLazySingleton<LocaleCubit>(
-    () => LocaleCubit(sl(), sl()),
-  );
+  sl.registerLazySingleton<LocaleCubit>(() => LocaleCubit(sl(), sl()));
 }

@@ -31,14 +31,14 @@ class TransferEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        playerName,
-        playerPosition,
-        playerImage,
-        fromTeamImage,
-        toTeamImage,
-        transferType,
-        transferPrice,
-        date,
-      ];
+    id,
+    playerName,
+    playerPosition,
+    playerImage,
+    fromTeamImage,
+    toTeamImage,
+    transferType,
+    transferPrice,
+    date,
+  ];
 }

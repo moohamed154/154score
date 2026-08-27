@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -54,12 +55,16 @@ class _MatchesViewState extends State<MatchesView> {
                   hintText: l10n.translate('search_placeholder'),
                   border: InputBorder.none,
                   hintStyle: TextStyle(
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                     fontSize: 14,
                   ),
                 ),
                 style: TextStyle(
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
                 ),
                 onChanged: (val) {
                   context.read<MatchesBloc>().add(SearchMatchesEvent(val));
@@ -68,7 +73,9 @@ class _MatchesViewState extends State<MatchesView> {
             : Text(l10n.translate('nav_matches')),
         actions: [
           IconButton(
-            icon: Icon(_isSearchVisible ? Icons.close_rounded : Icons.search_rounded),
+            icon: Icon(
+              _isSearchVisible ? Icons.close_rounded : Icons.search_rounded,
+            ),
             onPressed: () {
               setState(() {
                 _isSearchVisible = !_isSearchVisible;
@@ -112,8 +119,11 @@ class _MatchesViewState extends State<MatchesView> {
                   color: AppColors.primary,
                   onRefresh: () async {
                     context.read<MatchesBloc>().add(
-                          LoadMatchesEvent(date: state.selectedDate, isRefresh: true),
-                        );
+                      LoadMatchesEvent(
+                        date: state.selectedDate,
+                        isRefresh: true,
+                      ),
+                    );
                   },
                   child: _buildBody(context, state),
                 ),
@@ -138,7 +148,9 @@ class _MatchesViewState extends State<MatchesView> {
       return ErrorView(
         message: state.errorMessage,
         onRetry: () {
-          context.read<MatchesBloc>().add(LoadMatchesEvent(date: state.selectedDate));
+          context.read<MatchesBloc>().add(
+            LoadMatchesEvent(date: state.selectedDate),
+          );
         },
       );
     }

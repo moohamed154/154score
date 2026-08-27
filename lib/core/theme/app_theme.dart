@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 
 class AppTheme {
@@ -57,7 +58,10 @@ class AppTheme {
         backgroundColor: AppColors.darkSurface,
         selectedIconTheme: IconThemeData(color: AppColors.primary),
         unselectedIconTheme: IconThemeData(color: AppColors.darkTextMuted),
-        selectedLabelTextStyle: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+        selectedLabelTextStyle: TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w700,
+        ),
         unselectedLabelTextStyle: TextStyle(color: AppColors.darkTextMuted),
       ),
     );
@@ -116,7 +120,10 @@ class AppTheme {
         backgroundColor: AppColors.lightSurface,
         selectedIconTheme: IconThemeData(color: AppColors.primaryDark),
         unselectedIconTheme: IconThemeData(color: AppColors.lightTextMuted),
-        selectedLabelTextStyle: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w700),
+        selectedLabelTextStyle: TextStyle(
+          color: AppColors.primaryDark,
+          fontWeight: FontWeight.w700,
+        ),
         unselectedLabelTextStyle: TextStyle(color: AppColors.lightTextMuted),
       ),
     );

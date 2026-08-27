@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/domain/repositories/matches_repository.dart';
@@ -47,13 +48,13 @@ class HomeState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        liveMatches,
-        todayLeagues,
-        recentVideos,
-        recentTransfers,
-        errorMessage,
-      ];
+    status,
+    liveMatches,
+    todayLeagues,
+    recentVideos,
+    recentTransfers,
+    errorMessage,
+  ];
 }
 
 class HomeCubit extends Cubit<HomeState> {
@@ -63,15 +64,11 @@ class HomeCubit extends Cubit<HomeState> {
   final LocalStorageService _localStorageService;
 
   HomeCubit({
-    required MatchesRepository matchesRepository,
-    required VideosRepository videosRepository,
-    required TransfersRepository transfersRepository,
-    required LocalStorageService localStorageService,
-  })  : _matchesRepository = matchesRepository,
-        _videosRepository = videosRepository,
-        _transfersRepository = transfersRepository,
-        _localStorageService = localStorageService,
-        super(const HomeState());
+    required this._matchesRepository,
+    required this._videosRepository,
+    required this._transfersRepository,
+    required this._localStorageService,
+  }) : super(const HomeState());
 
   Future<void> loadHomeData({bool isRefresh = false}) async {
     if (!isRefresh) {
@@ -80,35 +77,42 @@ class HomeCubit extends Cubit<HomeState> {
 
     final lang = _localStorageService.getLanguage();
     final now = DateTime.now();
-    final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final offset = _localStorageService.getTimezoneOffset();
 
     try {
       final results = await Future.wait([
-        _matchesRepository.getMatches(date: dateStr, lang: lang, utcOffset: offset),
+        _matchesRepository.getMatches(
+          date: dateStr,
+          lang: lang,
+          utcOffset: offset,
+        ),
         _matchesRepository.getLiveMatches(lang: lang),
         _videosRepository.getVideos(champId: 'all', lang: lang),
         _transfersRepository.getTransfers(lang: lang),
       ]);
 
-      final leaguesRes = results[0].dataOrNull as List<LeagueGroupEntity>? ?? [];
+      final leaguesRes =
+          results[0].dataOrNull as List<LeagueGroupEntity>? ?? [];
       final liveRes = results[1].dataOrNull as List<MatchEntity>? ?? [];
       final videosRes = results[2].dataOrNull as List<VideoItemEntity>? ?? [];
       final transfersRes = results[3].dataOrNull as List<TransferEntity>? ?? [];
 
-      emit(state.copyWith(
-        status: HomeStatus.success,
-        todayLeagues: leaguesRes,
-        liveMatches: liveRes,
-        recentVideos: videosRes,
-        recentTransfers: transfersRes,
-        errorMessage: null,
-      ));
+      emit(
+        state.copyWith(
+          status: HomeStatus.success,
+          todayLeagues: leaguesRes,
+          liveMatches: liveRes,
+          recentVideos: videosRes,
+          recentTransfers: transfersRes,
+          errorMessage: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: HomeStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(status: HomeStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 }

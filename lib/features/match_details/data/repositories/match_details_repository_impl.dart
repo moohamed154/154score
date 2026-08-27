@@ -9,22 +9,28 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
   MatchDetailsRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<ApiResult<List<MatchEventEntity>>> getEvents(String matchId, {required String lang}) async {
+  Future<ApiResult<List<MatchEventEntity>>> getEvents(
+    String matchId, {
+    required String lang,
+  }) async {
     try {
       final data = await _remoteDataSource.getEvents(matchId, lang: lang);
       return ApiSuccess(data);
     } catch (e) {
-      return ApiSuccess(const []);
+      return const ApiSuccess([]);
     }
   }
 
   @override
-  Future<ApiResult<List<MatchStatItemEntity>>> getStats(String matchId, {required String lang}) async {
+  Future<ApiResult<List<MatchStatItemEntity>>> getStats(
+    String matchId, {
+    required String lang,
+  }) async {
     try {
       final data = await _remoteDataSource.getStats(matchId, lang: lang);
       return ApiSuccess(data);
     } catch (e) {
-      return ApiSuccess(const []);
+      return const ApiSuccess([]);
     }
   }
 
@@ -35,20 +41,27 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
     int? utcOffset,
   }) async {
     try {
-      final data = await _remoteDataSource.getDetails(matchId, lang: lang, utcOffset: utcOffset);
+      final data = await _remoteDataSource.getDetails(
+        matchId,
+        lang: lang,
+        utcOffset: utcOffset,
+      );
       return ApiSuccess(data);
     } catch (e) {
-      return ApiSuccess(const []);
+      return const ApiSuccess([]);
     }
   }
 
   @override
-  Future<ApiResult<List<MatchNewsItemEntity>>> getNews(String matchId, {required String lang}) async {
+  Future<ApiResult<List<MatchNewsItemEntity>>> getNews(
+    String matchId, {
+    required String lang,
+  }) async {
     try {
       final data = await _remoteDataSource.getNews(matchId, lang: lang);
       return ApiSuccess(data);
     } catch (e) {
-      return ApiSuccess(const []);
+      return const ApiSuccess([]);
     }
   }
 }
