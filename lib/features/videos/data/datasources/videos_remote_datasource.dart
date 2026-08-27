@@ -80,6 +80,8 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
     );
 
     String title = 'Video Highlight';
+    String? rawImage;
+    String? rawVideoUrl;
     String? embed;
     String? matchInfo;
     String? desc;
@@ -93,23 +95,47 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
           final sTitle = sec['section']?.toString().toLowerCase() ?? '';
           final items = sec['items'] as List? ?? [];
 
-          if (sTitle.contains('info') || sTitle.contains('معلومات')) {
+          if (sTitle.contains('info') ||
+              sTitle.contains('معلومات') ||
+              sTitle.contains('مقطع') ||
+              sTitle.contains('details')) {
             for (final it in items) {
-              if (it is Map &&
-                  it['title']?.toString().toLowerCase().contains('title') ==
-                      true) {
-                title = it['content']?.toString() ?? title;
-              }
-              if (it is Map &&
-                  (it['title']?.toString().toLowerCase().contains('embed') ==
-                          true ||
-                      it['title']?.toString().contains('التضمين') == true)) {
-                embed = it['content']?.toString();
+              if (it is Map) {
+                final itemTitle = it['title']?.toString().toLowerCase() ?? '';
+                final itemContent = it['content']?.toString();
+                final itemLink =
+                    it['link']?.toString() ?? it['url']?.toString();
+
+                if (itemTitle.contains('title') ||
+                    itemTitle.contains('عنوان') ||
+                    itemTitle.contains('الاسم')) {
+                  title = itemContent ?? it['name']?.toString() ?? title;
+                }
+
+                if (itemTitle.contains('image') ||
+                    itemTitle.contains('صورة') ||
+                    itemTitle.contains('thumbnail')) {
+                  rawImage = itemContent ?? itemLink ?? rawImage;
+                }
+
+                if (itemTitle.contains('video') ||
+                    itemTitle.contains('رابط') ||
+                    itemTitle.contains('فيديو') ||
+                    itemTitle.contains('link') ||
+                    itemTitle.contains('url') ||
+                    itemTitle.contains('source') ||
+                    itemTitle.contains('youtube') ||
+                    itemTitle.contains('تضمين') ||
+                    itemTitle.contains('embed')) {
+                  rawVideoUrl = itemLink ?? itemContent ?? rawVideoUrl;
+                  embed = itemContent ?? itemLink ?? embed;
+                }
               }
             }
           } else if (sTitle.contains('tag') ||
               sTitle.contains('وسوم') ||
-              sTitle.contains('الكلمات')) {
+              sTitle.contains('الكلمات') ||
+              sTitle.contains('keywords')) {
             for (final it in items) {
               if (it is Map && it['content'] != null) {
                 tags.add(it['content'].toString());
@@ -117,15 +143,27 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
             }
           } else if (sTitle.contains('match') ||
               sTitle.contains('مباراة') ||
-              sTitle.contains('مركز')) {
+              sTitle.contains('مركز') ||
+              sTitle.contains('center')) {
+            final matchParts = <String>[];
             for (final it in items) {
               if (it is Map && it['content'] != null) {
-                matchInfo = "${it['title'] ?? ''}: ${it['content']}";
+                final t = it['title']?.toString();
+                if (t != null && t.isNotEmpty) {
+                  matchParts.add('$t: ${it['content']}');
+                } else {
+                  matchParts.add(it['content'].toString());
+                }
               }
+            }
+            if (matchParts.isNotEmpty) {
+              matchInfo = matchParts.join(' · ');
             }
           } else if (sTitle.contains('about') ||
               sTitle.contains('حول') ||
-              sTitle.contains('عن')) {
+              sTitle.contains('عن') ||
+              sTitle.contains('وصف') ||
+              sTitle.contains('desc')) {
             final parts = <String>[];
             for (final it in items) {
               if (it is Map && it['content'] != null) {
@@ -136,20 +174,21 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
           } else if (sTitle.contains('related') ||
               sTitle.contains('أخرى') ||
               sTitle.contains('ذات صلة') ||
-              sTitle.contains('صلة')) {
+              sTitle.contains('صلة') ||
+              sTitle.contains('more')) {
             for (final it in items) {
               if (it is Map) {
                 final rId = it['link'] != null
                     ? it['link'].toString().split('/').last
                     : (it['id']?.toString() ?? '');
-                final rawImg =
+                final rImg =
                     it['image']?.toString() ?? it['thumbnail']?.toString();
                 related.add(
                   VideoItemEntity(
                     id: rId,
                     title: it['title']?.toString() ?? 'Highlight',
-                    image: UrlHelper.normalizeImageUrl(rawImg),
-                    link: it['link']?.toString(),
+                    image: UrlHelper.normalizeImageUrl(rImg),
+                    link: it['link']?.toString() ?? it['url']?.toString(),
                   ),
                 );
               }
@@ -159,10 +198,18 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
       }
     }
 
+    final normalizedImg = UrlHelper.normalizeImageUrl(rawImage);
+    final normalizedVideoUrl = UrlHelper.normalizeVideoUrl(
+      rawVideoUrl,
+      thumbnail: normalizedImg,
+    );
+
     return VideoDetailEntity(
       id: id,
       title: title,
-      embedUrl: embed,
+      image: normalizedImg,
+      videoUrl: normalizedVideoUrl,
+      embedUrl: embed ?? normalizedVideoUrl,
       matchInfo: matchInfo,
       description: desc,
       tags: tags,

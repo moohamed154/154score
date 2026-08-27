@@ -54,10 +54,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       _pulseController.value = 1.0;
     }
 
-    _pulseAnimation = Tween<double>(
-      begin: 0.4,
-      end: 1.0,
-    ).animate(
+    _pulseAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 

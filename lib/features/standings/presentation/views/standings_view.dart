@@ -153,9 +153,11 @@ class _StandingsViewState extends State<StandingsView> {
     }
 
     if (state.standings == null || state.standings!.rows.isEmpty) {
-      return const EmptyView(
-        titleKey: 'no_matches_date',
-        customMessage: 'No standings data available for this competition',
+      return EmptyView(
+        titleKey: 'standings_title',
+        customMessage: isArabic
+            ? 'لا يوجد جدول ترتيب متوفر لهذه البطولة حالياً'
+            : 'No standings data available for this competition',
         icon: Icons.table_chart_outlined,
       );
     }

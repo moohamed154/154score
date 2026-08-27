@@ -34,6 +34,8 @@ class VideoCategoryEntity extends Equatable {
 class VideoDetailEntity extends Equatable {
   final String id;
   final String title;
+  final String? image;
+  final String? videoUrl;
   final String? embedUrl;
   final String? matchInfo;
   final String? description;
@@ -43,6 +45,8 @@ class VideoDetailEntity extends Equatable {
   const VideoDetailEntity({
     required this.id,
     required this.title,
+    this.image,
+    this.videoUrl,
     this.embedUrl,
     this.matchInfo,
     this.description,
@@ -54,6 +58,8 @@ class VideoDetailEntity extends Equatable {
   List<Object?> get props => [
     id,
     title,
+    image,
+    videoUrl,
     embedUrl,
     matchInfo,
     description,

@@ -44,19 +44,22 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
           if (it is Map<String, dynamic>) {
             final row = StandingRowDto.fromJson(i + 1, it).toEntity();
             rows.add(row);
-            final gName = row.groupName ?? 'Regular Season';
-            groups.putIfAbsent(gName, () => []).add(row);
+            if (row.groupName != null && row.groupName!.isNotEmpty) {
+              groups.putIfAbsent(row.groupName!, () => []).add(row);
+            }
           } else if (it is Map) {
             final row = StandingRowDto.fromJson(
               i + 1,
               Map<String, dynamic>.from(it),
             ).toEntity();
             rows.add(row);
-            final gName = row.groupName ?? 'Regular Season';
-            groups.putIfAbsent(gName, () => []).add(row);
+            if (row.groupName != null && row.groupName!.isNotEmpty) {
+              groups.putIfAbsent(row.groupName!, () => []).add(row);
+            }
           }
         }
-      } else if (data['groups'] is List) {
+      } else if (data['groups'] is List &&
+          (data['groups'] as List).isNotEmpty) {
         // Multi-group structure
         final groupList = data['groups'] as List;
         for (final g in groupList) {
@@ -88,25 +91,44 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         }
 
         if (listMatch != null) {
-          for (final item in listMatch) {
+          final hasMultiList = listMatch.length > 1;
+          for (int groupIdx = 0; groupIdx < listMatch.length; groupIdx++) {
+            final item = listMatch[groupIdx];
+            final groupLetter = String.fromCharCode(65 + groupIdx);
+            final defaultGroupName = hasMultiList
+                ? (lang == 'ar'
+                      ? 'المجموعة $groupLetter'
+                      : 'Group $groupLetter')
+                : null;
+
             if (item is Map) {
+              final groupRows = <StandingRowEntity>[];
               item.forEach((key, val) {
-                final pos = int.tryParse(key.toString()) ?? (rows.length + 1);
+                final pos =
+                    int.tryParse(key.toString()) ?? (groupRows.length + 1);
                 if (val is Map<String, dynamic>) {
-                  final row = StandingRowDto.fromJson(pos, val).toEntity();
+                  final row = StandingRowDto.fromJson(
+                    pos,
+                    val,
+                    groupName: defaultGroupName,
+                  ).toEntity();
                   rows.add(row);
-                  final gName = row.groupName ?? 'Regular Season';
-                  groups.putIfAbsent(gName, () => []).add(row);
+                  groupRows.add(row);
                 } else if (val is Map) {
                   final row = StandingRowDto.fromJson(
                     pos,
                     Map<String, dynamic>.from(val),
+                    groupName: defaultGroupName,
                   ).toEntity();
                   rows.add(row);
-                  final gName = row.groupName ?? 'Regular Season';
-                  groups.putIfAbsent(gName, () => []).add(row);
+                  groupRows.add(row);
                 }
               });
+
+              if (hasMultiList && defaultGroupName != null) {
+                groupRows.sort((a, b) => a.position.compareTo(b.position));
+                groups[defaultGroupName] = groupRows;
+              }
             }
           }
         }
@@ -120,7 +142,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
       leagueId: leagueId,
       leagueTitle: leagueName,
       rows: rows,
-      groups: groups.isNotEmpty ? groups : null,
+      groups: groups.length > 1 ? groups : null,
     );
   }
 }

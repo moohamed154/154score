@@ -15,12 +15,16 @@ class StandingsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (rows.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
     final isSmall = AppDimensions.isSmallScreen(context);
     final hMargin = AppDimensions.getHorizontalMargin(context);
-    final cellWidth = isSmall ? 24.0 : 28.0;
+    final cellWidth = isSmall ? 22.0 : 28.0;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 8),
@@ -36,7 +40,7 @@ class StandingsTable extends StatelessWidget {
           // Table Header
           Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isSmall ? 8 : 12,
+              horizontal: isSmall ? 6 : 12,
               vertical: 10,
             ),
             decoration: BoxDecoration(
@@ -50,18 +54,21 @@ class StandingsTable extends StatelessWidget {
             child: Row(
               children: [
                 SizedBox(
-                  width: isSmall ? 20 : 24,
-                  child: Text(
-                    l10n.translate('standings_pos'),
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: isSmall ? 11 : 12,
-                        ),
-                    textAlign: TextAlign.center,
+                  width: isSmall ? 18 : 24,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      l10n.translate('standings_pos'),
+                      style:
+                          AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: isSmall ? 11 : 12,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
                 SizedBox(width: isSmall ? 4 : 8),
@@ -159,15 +166,23 @@ class StandingsTable extends StatelessWidget {
   }) {
     return SizedBox(
       width: width,
-      child: Text(
-        label,
-        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
-            .copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: isSmall ? 10 : 12,
-              color: isHighlight ? AppColors.primary : null,
-            ),
-        textAlign: TextAlign.center,
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            style:
+                AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: isSmall ? 10 : 12,
+                  color: isHighlight ? AppColors.primary : null,
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }
@@ -212,14 +227,14 @@ class StandingsTable extends StatelessWidget {
         },
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: isSmall ? 8 : 12,
+            horizontal: isSmall ? 6 : 12,
             vertical: 8,
           ),
           child: Row(
             children: [
               // Pos Indicator + Number
               SizedBox(
-                width: isSmall ? 20 : 24,
+                width: isSmall ? 18 : 24,
                 child: Row(
                   children: [
                     if (indicatorColor != null)
@@ -233,17 +248,20 @@ class StandingsTable extends StatelessWidget {
                       ),
                     const SizedBox(width: 2),
                     Expanded(
-                      child: Text(
-                        row.position.toString(),
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: isSmall ? 11 : 12,
-                            ),
-                        textAlign: TextAlign.center,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          row.position.toString(),
+                          style:
+                              AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: isSmall ? 11 : 12,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                   ],
@@ -257,13 +275,13 @@ class StandingsTable extends StatelessWidget {
                   children: [
                     AppImage(
                       imageUrl: row.teamLogo,
-                      width: isSmall ? 18 : 20,
-                      height: isSmall ? 18 : 20,
-                      borderRadius: (isSmall ? 18 : 20) / 2,
+                      width: isSmall ? 16 : 20,
+                      height: isSmall ? 16 : 20,
+                      borderRadius: (isSmall ? 16 : 20) / 2,
                       fit: BoxFit.contain,
                       placeholderIcon: Icons.shield_outlined,
                     ),
-                    SizedBox(width: isSmall ? 6 : 8),
+                    SizedBox(width: isSmall ? 4 : 8),
                     Expanded(
                       child: Text(
                         row.teamName,
@@ -273,7 +291,7 @@ class StandingsTable extends StatelessWidget {
                               isArabic: isArabic,
                             ).copyWith(
                               fontWeight: FontWeight.w600,
-                              fontSize: isSmall ? 12 : 14,
+                              fontSize: isSmall ? 11 : 14,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -346,19 +364,27 @@ class StandingsTable extends StatelessWidget {
   }) {
     return SizedBox(
       width: width,
-      child: Text(
-        text,
-        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
-            .copyWith(
-              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-              fontSize: isSmall ? 11 : 12,
-              color: isHighlight
-                  ? AppColors.primary
-                  : (isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary),
-            ),
-        textAlign: TextAlign.center,
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            text,
+            style:
+                AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: isSmall ? 10 : 12,
+                  color: isHighlight
+                      ? AppColors.primary
+                      : (isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary),
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }
