@@ -1,13 +1,15 @@
 import 'package:equatable/equatable.dart';
 
-enum SocketConnectionStatus {
-  initial,
+enum SocketConnectionState {
+  disconnected,
   connecting,
   connected,
-  disconnected,
   reconnecting,
   error,
 }
+
+// Backward compatibility alias
+typedef SocketConnectionStatus = SocketConnectionState;
 
 class LiveMatchUpdate extends Equatable {
   final String? matchId;

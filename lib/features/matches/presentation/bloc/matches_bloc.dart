@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/date_formatter.dart';
-import '../../../../core/utils/score_helper.dart';
+import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../domain/repositories/matches_repository.dart';
@@ -186,7 +186,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     int count = 0;
     for (final l in leagues) {
       for (final m in l.matches) {
-        if (ScoreHelper.isLiveStatus(m.status)) {
+        final phase = MatchStatusHelper.parseStatus(m.status, time: m.time);
+        if (MatchStatusHelper.isLive(phase)) {
           count++;
         }
       }
@@ -201,19 +202,20 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   }) {
     final cleanQuery = query.trim().toLowerCase();
 
-    return leagues
+    final result = leagues
         .map((league) {
           final matches = league.matches.where((match) {
+            final phase = MatchStatusHelper.parseStatus(
+              match.status,
+              time: match.time,
+            );
+
             // Apply filter
             final matchesFilter = switch (filter) {
               MatchFilterType.all => true,
-              MatchFilterType.live => ScoreHelper.isLiveStatus(match.status),
-              MatchFilterType.upcoming => ScoreHelper.isUpcomingStatus(
-                match.status,
-              ),
-              MatchFilterType.finished => ScoreHelper.isFinishedStatus(
-                match.status,
-              ),
+              MatchFilterType.live => MatchStatusHelper.isLive(phase),
+              MatchFilterType.upcoming => MatchStatusHelper.isUpcoming(phase),
+              MatchFilterType.finished => MatchStatusHelper.isFinished(phase),
               MatchFilterType.favorites => match.isFavorite,
             };
 
@@ -233,10 +235,40 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             return true;
           }).toList();
 
+          // Sort matches within each league: Live -> Upcoming -> Finished
+          matches.sort((a, b) {
+            final pA = MatchStatusHelper.getPriority(
+              MatchStatusHelper.parseStatus(a.status, time: a.time),
+            );
+            final pB = MatchStatusHelper.getPriority(
+              MatchStatusHelper.parseStatus(b.status, time: b.time),
+            );
+            return pA.compareTo(pB);
+          });
+
           return league.copyWith(matches: matches);
         })
         .where((league) => league.matches.isNotEmpty)
         .toList();
+
+    // Sort leagues with live matches first
+    result.sort((a, b) {
+      final aHasLive = a.matches.any(
+        (m) => MatchStatusHelper.isLive(
+          MatchStatusHelper.parseStatus(m.status, time: m.time),
+        ),
+      );
+      final bHasLive = b.matches.any(
+        (m) => MatchStatusHelper.isLive(
+          MatchStatusHelper.parseStatus(m.status, time: m.time),
+        ),
+      );
+      if (aHasLive && !bHasLive) return -1;
+      if (!aHasLive && bHasLive) return 1;
+      return 0;
+    });
+
+    return result;
   }
 
   @override

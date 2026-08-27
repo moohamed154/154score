@@ -219,8 +219,61 @@ class TimelineEventItem extends StatelessWidget {
                 ],
         ),
 
-        // Event Type / Secondary Player / Assist
-        if (event.secondaryPlayerName != null &&
+        // Event Type / Secondary Player / Substitution In-Out
+        if (event.type.toLowerCase().contains('sub') &&
+            event.secondaryPlayerName != null &&
+            event.secondaryPlayerName!.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: isHome
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            children: isHome
+                ? [
+                    Flexible(
+                      child: Text(
+                        event.secondaryPlayerName!,
+                        style: TextStyle(
+                          fontSize: isSmall ? 10 : 11,
+                          color: AppColors.redCard,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.end,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.arrow_downward_rounded,
+                      size: 11,
+                      color: AppColors.redCard,
+                    ),
+                  ]
+                : [
+                    const Icon(
+                      Icons.arrow_downward_rounded,
+                      size: 11,
+                      color: AppColors.redCard,
+                    ),
+                    const SizedBox(width: 2),
+                    Flexible(
+                      child: Text(
+                        event.secondaryPlayerName!,
+                        style: TextStyle(
+                          fontSize: isSmall ? 10 : 11,
+                          color: AppColors.redCard,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.start,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+          ),
+        ] else if (event.secondaryPlayerName != null &&
             event.secondaryPlayerName!.isNotEmpty) ...[
           const SizedBox(height: 1),
           Text(

@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/match_event_helper.dart';
 import '../../../../core/websocket/websocket_service.dart';
+import '../../domain/entities/match_details_entity.dart';
 import '../../domain/repositories/match_details_repository.dart';
 import 'match_details_event.dart';
 import 'match_details_state.dart';
@@ -87,11 +89,32 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
   ) {
     final update = event.update;
     if (update.matchId != null && update.matchId == state.matchId) {
+      List<MatchEventEntity> updatedEvents = state.events;
+      if (update.eventType != null && update.eventType!.isNotEmpty) {
+        final newEvent = MatchEventEntity(
+          minute: update.minute ?? '',
+          type: update.eventType!,
+          playerName: update.playerName ?? '',
+          score: (update.score1 != null && update.score2 != null)
+              ? '${update.score1} - ${update.score2}'
+              : null,
+          isHomeTeam:
+              update.rawPayload['is_home'] == true ||
+              update.rawPayload['team'] == '1' ||
+              update.rawPayload['team'] == 'home',
+        );
+        updatedEvents = MatchEventHelper.mergeEvents(
+          existingEvents: state.events,
+          incomingEvents: [newEvent],
+        );
+      }
+
       emit(
         state.copyWith(
           liveScore1: update.score1 ?? state.liveScore1,
           liveScore2: update.score2 ?? state.liveScore2,
           liveStatus: update.status ?? state.liveStatus,
+          events: updatedEvents,
         ),
       );
     }

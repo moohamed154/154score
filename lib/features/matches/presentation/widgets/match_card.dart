@@ -5,11 +5,12 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/animated_score_text.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../../core/widgets/live_match_clock.dart';
 import '../../../../core/widgets/penalty_shootout_widget.dart';
-import '../../../../core/widgets/status_pill.dart';
 import '../../domain/entities/match_entity.dart';
 
 class MatchCard extends StatelessWidget {
@@ -23,25 +24,28 @@ class MatchCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
-    final isLive = ScoreHelper.isLiveStatus(match.status);
     final isSmall = AppDimensions.isSmallScreen(context);
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
+    final phase = MatchStatusHelper.parseStatus(match.status, time: match.time);
+    final isLive = MatchStatusHelper.isLive(phase);
+    final isUpcoming = MatchStatusHelper.isUpcoming(phase);
+
     final score1Str = ScoreHelper.normalizeScore(match.score1);
     final score2Str = ScoreHelper.normalizeScore(match.score2);
-
+    final hasScores = score1Str != '-' && score2Str != '-';
     final hasPenalties = match.hasPenalties;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 4),
       decoration: BoxDecoration(
         color: isLive
-            ? (isDark ? const Color(0xFF1E2430) : const Color(0xFFF1F7FF))
+            ? (isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F7FF))
             : (isDark ? AppColors.darkCard : AppColors.lightCard),
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
           color: isLive
-              ? AppColors.liveRed.withValues(alpha: 0.35)
+              ? AppColors.liveRed.withValues(alpha: 0.4)
               : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
           width: isLive ? 1.2 : 1,
         ),
@@ -59,7 +63,7 @@ class MatchCard extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: isSmall ? 8 : 12,
-              vertical: 10,
+              vertical: isSmall ? 8 : 10,
             ),
             child: Row(
               children: [
@@ -93,8 +97,10 @@ class MatchCard extends StatelessWidget {
                                     isDark: isDark,
                                     isArabic: isArabic,
                                   ).copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: isSmall ? 13 : 14,
+                                    fontWeight: isLive
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    fontSize: isSmall ? 12 : 14,
                                   ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -118,16 +124,20 @@ class MatchCard extends StatelessWidget {
 
                 // Center Score & Status
                 Container(
-                  constraints: BoxConstraints(minWidth: isSmall ? 60 : 72),
+                  constraints: BoxConstraints(minWidth: isSmall ? 64 : 76),
                   padding: EdgeInsets.symmetric(horizontal: isSmall ? 4 : 6),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (score1Str != '-' || score2Str != '-') ...[
+                      if (hasScores) ...[
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            AnimatedScoreText(score: score1Str, isLive: isLive),
+                            AnimatedScoreText(
+                              score: score1Str,
+                              isLive: isLive,
+                              isLarge: !isSmall,
+                            ),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 3,
@@ -143,8 +153,23 @@ class MatchCard extends StatelessWidget {
                                         ),
                               ),
                             ),
-                            AnimatedScoreText(score: score2Str, isLive: isLive),
+                            AnimatedScoreText(
+                              score: score2Str,
+                              isLive: isLive,
+                              isLarge: !isSmall,
+                            ),
                           ],
+                        ),
+                      ] else if (isUpcoming) ...[
+                        Text(
+                          'VS',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: isSmall ? 11 : 12,
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                          ),
                         ),
                       ],
                       if (hasPenalties) ...[
@@ -156,10 +181,24 @@ class MatchCard extends StatelessWidget {
                         ),
                       ],
                       const SizedBox(height: 2),
-                      StatusPill(
+                      LiveMatchClock(
                         status: match.status,
+                        minute: match.minute,
                         time: match.time,
-                        compact: true,
+                        showLiveDot: true,
+                        textStyle:
+                            AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: isSmall ? 10 : 11,
+                              color: isLive
+                                  ? AppColors.liveRed
+                                  : (isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary),
+                            ),
                       ),
                     ],
                   ),
@@ -204,8 +243,10 @@ class MatchCard extends StatelessWidget {
                                     isDark: isDark,
                                     isArabic: isArabic,
                                   ).copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: isSmall ? 13 : 14,
+                                    fontWeight: isLive
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    fontSize: isSmall ? 12 : 14,
                                   ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

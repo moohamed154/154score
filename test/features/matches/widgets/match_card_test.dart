@@ -36,6 +36,6 @@ void main() {
     expect(find.text('Barcelona'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
-    expect(find.text('Ended'), findsOneWidget);
+    expect(find.text('FT'), findsOneWidget);
   });
 }

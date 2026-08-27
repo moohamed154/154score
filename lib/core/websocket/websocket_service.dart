@@ -17,9 +17,9 @@ abstract class WebSocketService {
   void subscribeTransfers();
   void unsubscribeTransfers();
   void switchLanguageChannel(String langCode);
-  Stream<SocketConnectionStatus> get statusStream;
+  Stream<SocketConnectionState> get statusStream;
   Stream<LiveMatchUpdate> get updatesStream;
-  SocketConnectionStatus get currentStatus;
+  SocketConnectionState get currentStatus;
   String get activeChannel;
   void dispose();
 }
@@ -28,21 +28,22 @@ class WebSocketServiceImpl implements WebSocketService {
   io.Socket? _socket;
   String _activeChannel = ApiEndpoints.wsChannelMatchesAr;
   final Set<String> _activeRooms = <String>{};
-  SocketConnectionStatus _currentStatus = SocketConnectionStatus.initial;
+  SocketConnectionState _currentStatus = SocketConnectionState.disconnected;
+  bool _isConnecting = false;
 
-  final StreamController<SocketConnectionStatus> _statusController =
-      StreamController<SocketConnectionStatus>.broadcast();
+  final StreamController<SocketConnectionState> _statusController =
+      StreamController<SocketConnectionState>.broadcast();
   final StreamController<LiveMatchUpdate> _updatesController =
       StreamController<LiveMatchUpdate>.broadcast();
 
   @override
-  SocketConnectionStatus get currentStatus => _currentStatus;
+  SocketConnectionState get currentStatus => _currentStatus;
 
   @override
   String get activeChannel => _activeChannel;
 
   @override
-  Stream<SocketConnectionStatus> get statusStream => _statusController.stream;
+  Stream<SocketConnectionState> get statusStream => _statusController.stream;
 
   @override
   Stream<LiveMatchUpdate> get updatesStream => _updatesController.stream;
@@ -52,7 +53,7 @@ class WebSocketServiceImpl implements WebSocketService {
     if (_socket != null) return;
 
     try {
-      _updateStatus(SocketConnectionStatus.connecting);
+      _updateStatus(SocketConnectionState.connecting);
 
       _socket = io.io(
         ApiEndpoints.websocketUrl,
@@ -60,10 +61,10 @@ class WebSocketServiceImpl implements WebSocketService {
             .setTransports(['websocket', 'polling'])
             .disableAutoConnect()
             .enableReconnection()
-            .setReconnectionAttempts(20)
+            .setReconnectionAttempts(10)
             .setReconnectionDelay(2000)
-            .setReconnectionDelayMax(10000)
-            .setTimeout(15000)
+            .setReconnectionDelayMax(8000)
+            .setTimeout(12000)
             .build(),
       );
 
@@ -72,7 +73,7 @@ class WebSocketServiceImpl implements WebSocketService {
       if (kDebugMode) {
         print('WebSocket initialization error: $e');
       }
-      _updateStatus(SocketConnectionStatus.error);
+      _updateStatus(SocketConnectionState.error);
     }
   }
 
@@ -80,29 +81,37 @@ class WebSocketServiceImpl implements WebSocketService {
     final socket = _socket;
     if (socket == null) return;
 
+    // Clear any previous listeners to avoid duplicate callbacks
+    socket.clearListeners();
+
     socket.onConnect((_) {
-      _updateStatus(SocketConnectionStatus.connected);
+      _isConnecting = false;
+      _updateStatus(SocketConnectionState.connected);
       _resubscribeAll();
     });
 
     socket.onConnectError((data) {
-      _updateStatus(SocketConnectionStatus.error);
+      _isConnecting = false;
+      _updateStatus(SocketConnectionState.error);
     });
 
     socket.onConnectTimeout((_) {
-      _updateStatus(SocketConnectionStatus.disconnected);
+      _isConnecting = false;
+      _updateStatus(SocketConnectionState.disconnected);
     });
 
     socket.onDisconnect((_) {
-      _updateStatus(SocketConnectionStatus.disconnected);
+      _isConnecting = false;
+      _updateStatus(SocketConnectionState.disconnected);
     });
 
     socket.on('reconnect_attempt', (_) {
-      _updateStatus(SocketConnectionStatus.reconnecting);
+      _updateStatus(SocketConnectionState.reconnecting);
     });
 
     socket.on('reconnect', (_) {
-      _updateStatus(SocketConnectionStatus.connected);
+      _isConnecting = false;
+      _updateStatus(SocketConnectionState.connected);
       _resubscribeAll();
     });
 
@@ -119,13 +128,17 @@ class WebSocketServiceImpl implements WebSocketService {
       if (data is Map) {
         final map = Map<String, dynamic>.from(data);
         final update = LiveMatchUpdate.fromJson(map);
-        _updatesController.add(update);
+        if (!_updatesController.isClosed) {
+          _updatesController.add(update);
+        }
       } else if (data is List) {
         for (final item in data) {
           if (item is Map) {
             final map = Map<String, dynamic>.from(item);
             final update = LiveMatchUpdate.fromJson(map);
-            _updatesController.add(update);
+            if (!_updatesController.isClosed) {
+              _updatesController.add(update);
+            }
           }
         }
       }
@@ -158,16 +171,25 @@ class WebSocketServiceImpl implements WebSocketService {
       initialize();
     }
 
-    if (_socket?.connected != true) {
-      _updateStatus(SocketConnectionStatus.connecting);
-      _socket?.connect();
+    if (_socket?.connected != true && !_isConnecting) {
+      _isConnecting = true;
+      _updateStatus(SocketConnectionState.connecting);
+      try {
+        _socket?.connect();
+      } catch (e) {
+        _isConnecting = false;
+        _updateStatus(SocketConnectionState.error);
+      }
     }
   }
 
   @override
   void disconnect() {
-    _socket?.disconnect();
-    _updateStatus(SocketConnectionStatus.disconnected);
+    _isConnecting = false;
+    try {
+      _socket?.disconnect();
+    } catch (_) {}
+    _updateStatus(SocketConnectionState.disconnected);
   }
 
   @override
@@ -224,7 +246,7 @@ class WebSocketServiceImpl implements WebSocketService {
     }
   }
 
-  void _updateStatus(SocketConnectionStatus status) {
+  void _updateStatus(SocketConnectionState status) {
     _currentStatus = status;
     if (!_statusController.isClosed) {
       _statusController.add(status);
@@ -233,7 +255,10 @@ class WebSocketServiceImpl implements WebSocketService {
 
   @override
   void dispose() {
-    _socket?.dispose();
+    _isConnecting = false;
+    try {
+      _socket?.dispose();
+    } catch (_) {}
     _socket = null;
     _statusController.close();
     _updatesController.close();

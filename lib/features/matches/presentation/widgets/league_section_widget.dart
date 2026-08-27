@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../domain/entities/match_entity.dart';
 import 'match_card.dart';
@@ -31,6 +32,11 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
+
+    final liveMatches = widget.league.matches.where((m) {
+      final phase = MatchStatusHelper.parseStatus(m.status, time: m.time);
+      return MatchStatusHelper.isLive(phase);
+    }).length;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
@@ -98,7 +104,7 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                 ),
                 const SizedBox(width: 8),
 
-                // Match count & Expand/Collapse Trigger
+                // Match count & Live count & Expand/Collapse Trigger
                 InkWell(
                   borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                   onTap: () => setState(() => _isExpanded = !_isExpanded),
@@ -107,6 +113,45 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (liveMatches > 0) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            margin: EdgeInsets.only(
+                              left: isArabic ? 0 : 4,
+                              right: isArabic ? 4 : 0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.liveRed.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 5,
+                                  height: 5,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.liveRed,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '$liveMatches ${isArabic ? "مباشر" : "Live"}',
+                                  style: const TextStyle(
+                                    color: AppColors.liveRed,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
