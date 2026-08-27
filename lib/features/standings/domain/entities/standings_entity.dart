@@ -1,5 +1,18 @@
 import 'package:equatable/equatable.dart';
 
+class StandingLegendEntity extends Equatable {
+  final String colorHex;
+  final String description;
+
+  const StandingLegendEntity({
+    required this.colorHex,
+    required this.description,
+  });
+
+  @override
+  List<Object?> get props => [colorHex, description];
+}
+
 class StandingRowEntity extends Equatable {
   final int position;
   final String teamName;
@@ -54,16 +67,18 @@ class LeagueStandingsEntity extends Equatable {
   final String leagueTitle;
   final List<StandingRowEntity> rows;
   final Map<String, List<StandingRowEntity>>? groups;
+  final List<StandingLegendEntity>? legends;
 
   const LeagueStandingsEntity({
     required this.leagueId,
     required this.leagueTitle,
     required this.rows,
     this.groups,
+    this.legends,
   });
 
   bool get hasMultipleGroups => groups != null && groups!.length > 1;
 
   @override
-  List<Object?> get props => [leagueId, leagueTitle, rows, groups];
+  List<Object?> get props => [leagueId, leagueTitle, rows, groups, legends];
 }

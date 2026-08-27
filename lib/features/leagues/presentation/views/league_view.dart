@@ -286,6 +286,51 @@ class _LeagueViewState extends State<LeagueView>
         ] else ...[
           StandingsTable(rows: standings.rows),
         ],
+        if (standings.legends != null && standings.legends!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.xl,
+              vertical: 12,
+            ),
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 10,
+              children: standings.legends!.map((item) {
+                Color itemColor = AppColors.primary;
+                try {
+                  final hex = item.colorHex.replaceFirst('#', '');
+                  if (hex.length == 6) {
+                    itemColor = Color(int.parse('0xFF$hex'));
+                  }
+                } catch (_) {}
+
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: itemColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      item.description,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
       ],
     );
   }

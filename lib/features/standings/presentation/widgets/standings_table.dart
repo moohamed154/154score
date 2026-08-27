@@ -10,8 +10,13 @@ import '../../domain/entities/standings_entity.dart';
 
 class StandingsTable extends StatelessWidget {
   final List<StandingRowEntity> rows;
+  final bool showFullStats;
 
-  const StandingsTable({super.key, required this.rows});
+  const StandingsTable({
+    super.key,
+    required this.rows,
+    this.showFullStats = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +29,7 @@ class StandingsTable extends StatelessWidget {
     final isArabic = l10n.isArabic;
     final isSmall = AppDimensions.isSmallScreen(context);
     final hMargin = AppDimensions.getHorizontalMargin(context);
-    final cellWidth = isSmall ? 22.0 : 28.0;
+    final cellWidth = isSmall ? 20.0 : 26.0;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 8),
@@ -40,7 +45,7 @@ class StandingsTable extends StatelessWidget {
           // Table Header
           Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isSmall ? 6 : 12,
+              horizontal: isSmall ? 6 : 10,
               vertical: 10,
             ),
             decoration: BoxDecoration(
@@ -71,7 +76,7 @@ class StandingsTable extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: isSmall ? 4 : 8),
+                SizedBox(width: isSmall ? 4 : 6),
                 Expanded(
                   child: Text(
                     l10n.translate('standings_team'),
@@ -83,6 +88,8 @@ class StandingsTable extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           fontSize: isSmall ? 11 : 12,
                         ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 _buildHeaderCell(
@@ -113,6 +120,22 @@ class StandingsTable extends StatelessWidget {
                   width: cellWidth,
                   isSmall: isSmall,
                 ),
+                if (showFullStats) ...[
+                  _buildHeaderCell(
+                    l10n.translate('standings_gf'),
+                    isDark,
+                    isArabic,
+                    width: cellWidth,
+                    isSmall: isSmall,
+                  ),
+                  _buildHeaderCell(
+                    l10n.translate('standings_ga'),
+                    isDark,
+                    isArabic,
+                    width: cellWidth,
+                    isSmall: isSmall,
+                  ),
+                ],
                 _buildHeaderCell(
                   l10n.translate('standings_gd'),
                   isDark,
@@ -133,7 +156,7 @@ class StandingsTable extends StatelessWidget {
           ),
           const Divider(height: 1),
 
-          // Table Rows
+          // Table Rows (All rows rendered with proper keys and tap handling)
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -148,6 +171,7 @@ class StandingsTable extends StatelessWidget {
                 isArabic,
                 cellWidth: cellWidth,
                 isSmall: isSmall,
+                showFullStats: showFullStats,
               );
             },
           ),
@@ -177,7 +201,7 @@ class StandingsTable extends StatelessWidget {
                   isArabic: isArabic,
                 ).copyWith(
                   fontWeight: FontWeight.w700,
-                  fontSize: isSmall ? 10 : 12,
+                  fontSize: isSmall ? 10 : 11,
                   color: isHighlight ? AppColors.primary : null,
                 ),
             textAlign: TextAlign.center,
@@ -194,6 +218,7 @@ class StandingsTable extends StatelessWidget {
     bool isArabic, {
     required double cellWidth,
     required bool isSmall,
+    required bool showFullStats,
   }) {
     Color? indicatorColor;
     if (row.rankColor != null && row.rankColor!.isNotEmpty) {
@@ -203,16 +228,6 @@ class StandingsTable extends StatelessWidget {
           indicatorColor = Color(int.parse('0xFF$hex'));
         }
       } catch (_) {}
-    }
-
-    if (indicatorColor == null) {
-      if (row.position <= 4) {
-        indicatorColor = AppColors.uclGreen;
-      } else if (row.position == 5) {
-        indicatorColor = AppColors.uelBlue;
-      } else if (row.position >= 18) {
-        indicatorColor = AppColors.relegationRed;
-      }
     }
 
     return Material(
@@ -227,12 +242,12 @@ class StandingsTable extends StatelessWidget {
         },
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: isSmall ? 6 : 12,
+            horizontal: isSmall ? 6 : 10,
             vertical: 8,
           ),
           child: Row(
             children: [
-              // Pos Indicator + Number
+              // Position Indicator + Position Number
               SizedBox(
                 width: isSmall ? 18 : 24,
                 child: Row(
@@ -245,7 +260,9 @@ class StandingsTable extends StatelessWidget {
                           color: indicatorColor,
                           borderRadius: BorderRadius.circular(2),
                         ),
-                      ),
+                      )
+                    else
+                      const SizedBox(width: 3),
                     const SizedBox(width: 2),
                     Expanded(
                       child: FittedBox(
@@ -267,7 +284,7 @@ class StandingsTable extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: isSmall ? 4 : 8),
+              SizedBox(width: isSmall ? 4 : 6),
 
               // Team Logo & Name
               Expanded(
@@ -281,7 +298,7 @@ class StandingsTable extends StatelessWidget {
                       fit: BoxFit.contain,
                       placeholderIcon: Icons.shield_outlined,
                     ),
-                    SizedBox(width: isSmall ? 4 : 8),
+                    SizedBox(width: isSmall ? 4 : 6),
                     Expanded(
                       child: Text(
                         row.teamName,
@@ -291,7 +308,7 @@ class StandingsTable extends StatelessWidget {
                               isArabic: isArabic,
                             ).copyWith(
                               fontWeight: FontWeight.w600,
-                              fontSize: isSmall ? 11 : 14,
+                              fontSize: isSmall ? 11 : 13,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -330,6 +347,22 @@ class StandingsTable extends StatelessWidget {
                 width: cellWidth,
                 isSmall: isSmall,
               ),
+              if (showFullStats) ...[
+                _buildDataCell(
+                  row.goalsFor.toString(),
+                  isDark,
+                  isArabic,
+                  width: cellWidth,
+                  isSmall: isSmall,
+                ),
+                _buildDataCell(
+                  row.goalsAgainst.toString(),
+                  isDark,
+                  isArabic,
+                  width: cellWidth,
+                  isSmall: isSmall,
+                ),
+              ],
               _buildDataCell(
                 '${row.goalDiff >= 0 ? "+" : ""}${row.goalDiff}',
                 isDark,

@@ -7,6 +7,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../domain/entities/standings_entity.dart';
 import '../bloc/standings_bloc.dart';
 import '../widgets/standings_table.dart';
 
@@ -134,6 +135,7 @@ class _StandingsViewState extends State<StandingsView> {
 
   Widget _buildBody(BuildContext context, StandingsState state, bool isArabic) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     if (state.status == StandingsStatus.loading) {
       return const Center(
@@ -191,59 +193,83 @@ class _StandingsViewState extends State<StandingsView> {
           StandingsTable(rows: standings.rows),
         ],
 
-        // Qualification Legend
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.xl,
-            vertical: 8,
-          ),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            children: [
-              _buildLegendItem(
-                AppColors.uclGreen,
-                isArabic ? 'دوري أبطال أوروبا' : 'Champions League',
-                isDark,
-              ),
-              _buildLegendItem(
-                AppColors.uelBlue,
-                isArabic ? 'الدوري الأوروبي' : 'Europa League',
-                isDark,
-              ),
-              _buildLegendItem(
-                AppColors.relegationRed,
-                isArabic ? 'الهبوط' : 'Relegation',
-                isDark,
-              ),
-            ],
-          ),
-        ),
+        // API-driven Qualification / Relegation Legend
+        _buildLegendSection(context, standings.legends, isDark, isArabic, l10n),
       ],
     );
   }
 
-  Widget _buildLegendItem(Color color, String text, bool isDark) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
+  Widget _buildLegendSection(
+    BuildContext context,
+    List<StandingLegendEntity>? legends,
+    bool isDark,
+    bool isArabic,
+    AppLocalizations l10n,
+  ) {
+    if (legends != null && legends.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.xl,
+          vertical: 12,
         ),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 11,
-            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-          ),
+        child: Wrap(
+          spacing: 16,
+          runSpacing: 10,
+          children: legends.map((item) {
+            Color itemColor = AppColors.primary;
+            try {
+              final hex = item.colorHex.replaceFirst('#', '');
+              if (hex.length == 6) {
+                itemColor = Color(int.parse('0xFF$hex'));
+              }
+            } catch (_) {}
+
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: itemColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  item.description,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
         ),
-      ],
+      );
+    }
+
+    // Neutral Fallback when no qualification/relegation metadata exists in API
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.xl,
+        vertical: 12,
+      ),
+      child: Text(
+        l10n.translate('standings_no_legends'),
+        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
+            .copyWith(
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
+              fontStyle: FontStyle.italic,
+              fontSize: 11,
+            ),
+      ),
     );
   }
 }

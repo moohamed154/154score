@@ -121,6 +121,7 @@ class AppLocalizations {
       'standings_gd': 'GD',
       'standings_points': 'Pts',
       'standings_form': 'Form',
+      'standings_no_legends': 'Qualification and relegation information is not available for this competition currently',
 
       // Transfers
       'transfers_title': 'Transfer Market',
@@ -296,6 +297,8 @@ class AppLocalizations {
       'standings_gd': 'الفارق',
       'standings_points': 'النقاط',
       'standings_form': 'آخر المباريات',
+      'standings_no_legends':
+          'معلومات التأهل والهبوط غير متاحة لهذه البطولة حالياً',
 
       // Transfers
       'transfers_title': 'سوق الانتقالات',
