@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/network/api_client.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
-import '../../data/datasources/profiles_remote_datasource.dart';
-import '../../data/repositories/profiles_repository_impl.dart';
 import '../../domain/entities/profile_entity.dart';
+import '../../domain/repositories/profiles_repository.dart';
 
 enum ProfileType { stadium, referee, commentator }
 
@@ -46,26 +47,28 @@ class _GenericProfileViewState extends State<GenericProfileView> {
       _errorMessage = null;
     });
 
-    final repo = ProfilesRepositoryImpl(
-      ProfilesRemoteDataSourceImpl(ApiClient()),
-    );
+    final lang = sl<LocalStorageService>().getLanguage();
+    final repo = sl<ProfilesRepository>();
+
     final result = await switch (widget.type) {
       ProfileType.stadium => repo.getStadiumProfile(
         widget.id,
         widget.slug,
-        lang: 'en',
+        lang: lang,
       ),
       ProfileType.referee => repo.getRefereeProfile(
         widget.id,
         widget.slug,
-        lang: 'en',
+        lang: lang,
       ),
       ProfileType.commentator => repo.getCommentatorProfile(
         widget.id,
         widget.slug,
-        lang: 'en',
+        lang: lang,
       ),
     };
+
+    if (!mounted) return;
 
     result.fold(
       onSuccess: (p) {
@@ -103,6 +106,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             isDark: isDark,
             isArabic: isArabic,
           ).copyWith(fontWeight: FontWeight.w700),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
       body: _isLoading
@@ -111,128 +116,245 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             )
           : _errorMessage != null
           ? ErrorView(message: _errorMessage, onRetry: _loadProfile)
-          : _buildContent(context, isDark, isArabic),
+          : RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: _loadProfile,
+              child: _buildContent(context, isDark, isArabic),
+            ),
     );
   }
 
   Widget _buildContent(BuildContext context, bool isDark, bool isArabic) {
     final p = _profile!;
+    final hMargin = AppDimensions.getHorizontalMargin(context);
 
     return ListView(
-      padding: const EdgeInsets.all(AppDimensions.lg),
+      padding: EdgeInsets.all(hMargin),
       children: [
         // Header Hero Card
-        Center(
-          child: Column(
-            children: [
-              AppImage(
-                imageUrl: p.image,
-                width: 90,
-                height: 90,
-                borderRadius: 45,
-                placeholderIcon: widget.type == ProfileType.stadium
-                    ? Icons.stadium_rounded
-                    : (widget.type == ProfileType.referee
-                          ? Icons.sports_rounded
-                          : Icons.mic_rounded),
+        if (widget.type == ProfileType.stadium)
+          _buildStadiumHero(context, p, isDark, isArabic)
+        else
+          _buildPersonHero(context, p, isDark, isArabic),
+
+        const SizedBox(height: 20),
+
+        // Detail Sections
+        if (p.sections.isEmpty)
+          const EmptyView(
+            titleKey: 'tab_info',
+            customMessage: 'No further details available',
+            icon: Icons.info_outline_rounded,
+          )
+        else
+          ...p.sections.map((sec) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: AppDimensions.md),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                    child: Text(
+                      sec.section,
+                      style:
+                          AppTypography.getBodyLarge(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: sec.items.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final it = sec.items[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                it.title,
+                                style:
+                                    AppTypography.getBodySmall(
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                    ).copyWith(
+                                      color: isDark
+                                          ? AppColors.darkTextMuted
+                                          : AppColors.lightTextMuted,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                it.content,
+                                style: AppTypography.getBodyMedium(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(fontWeight: FontWeight.w600),
+                                textAlign: TextAlign.end,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildStadiumHero(
+    BuildContext context,
+    ProfileEntity p,
+    bool isDark,
+    bool isArabic,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          if (p.image != null && p.image!.isNotEmpty)
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: AppImage(
+                imageUrl: p.image,
+                width: double.infinity,
+                height: double.infinity,
+                borderRadius: 0,
+                placeholderIcon: Icons.stadium_rounded,
+              ),
+            )
+          else
+            Container(
+              height: 120,
+              color: isDark
+                  ? AppColors.darkCardElevated
+                  : AppColors.lightCardElevated,
+              child: const Center(
+                child: Icon(
+                  Icons.stadium_rounded,
+                  size: 54,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
                     p.name,
                     style: AppTypography.getHeadingMedium(
                       isDark: isDark,
                       isArabic: isArabic,
                     ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  if (p.countryFlag != null) ...[
-                    const SizedBox(width: 8),
-                    AppImage(
-                      imageUrl: p.countryFlag,
-                      width: 20,
-                      height: 15,
-                      borderRadius: 2,
-                    ),
-                  ],
+                ),
+                if (p.countryFlag != null) ...[
+                  const SizedBox(width: 8),
+                  AppImage(
+                    imageUrl: p.countryFlag,
+                    width: 22,
+                    height: 16,
+                    borderRadius: 2,
+                  ),
                 ],
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // Detail Sections
-        ...p.sections.map((sec) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: AppDimensions.md),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCard : AppColors.lightCard,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                  child: Text(
-                    sec.section,
-                    style:
-                        AppTypography.getBodyLarge(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                  ),
-                ),
-                const Divider(height: 1),
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: sec.items.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final it = sec.items[index];
-                    return ListTile(
-                      dense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 2,
-                      ),
-                      title: Text(
-                        it.title,
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                            ),
-                      ),
-                      trailing: Text(
-                        it.content,
-                        style: AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    );
-                  },
-                ),
               ],
             ),
-          );
-        }),
-      ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonHero(
+    BuildContext context,
+    ProfileEntity p,
+    bool isDark,
+    bool isArabic,
+  ) {
+    return Center(
+      child: Column(
+        children: [
+          AppImage(
+            imageUrl: p.image,
+            width: 90,
+            height: 90,
+            borderRadius: 45,
+            placeholderIcon: widget.type == ProfileType.referee
+                ? Icons.sports_rounded
+                : Icons.mic_rounded,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  p.name,
+                  style: AppTypography.getHeadingMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (p.countryFlag != null) ...[
+                const SizedBox(width: 8),
+                AppImage(
+                  imageUrl: p.countryFlag,
+                  width: 20,
+                  height: 15,
+                  borderRadius: 2,
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

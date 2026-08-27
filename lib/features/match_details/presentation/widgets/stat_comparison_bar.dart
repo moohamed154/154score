@@ -16,11 +16,17 @@ class StatComparisonBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
+    final isSmall = AppDimensions.isSmallScreen(context);
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    final homePercent = stat.homePercentage.clamp(0.0, 1.0);
+    final homeFlex = (homePercent * 100).toInt().clamp(1, 99);
+    final awayFlex = ((1.0 - homePercent) * 100).toInt().clamp(1, 99);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.lg,
-        vertical: 8,
+      padding: EdgeInsets.symmetric(
+        horizontal: hMargin,
+        vertical: isSmall ? 6 : 8,
       ),
       child: Column(
         children: [
@@ -36,7 +42,8 @@ class StatComparisonBar extends StatelessWidget {
                       isArabic: isArabic,
                     ).copyWith(
                       fontWeight: FontWeight.w700,
-                      color: stat.homePercentage >= 0.5
+                      fontSize: isSmall ? 13 : 15,
+                      color: homePercent >= 0.5
                           ? AppColors.primary
                           : (isDark
                                 ? AppColors.darkTextPrimary
@@ -44,21 +51,25 @@ class StatComparisonBar extends StatelessWidget {
                     ),
               ),
               Expanded(
-                child: Text(
-                  stat.title,
-                  style:
-                      AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    stat.title,
+                    style:
+                        AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 11 : 12,
+                        ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
               Text(
@@ -69,7 +80,8 @@ class StatComparisonBar extends StatelessWidget {
                       isArabic: isArabic,
                     ).copyWith(
                       fontWeight: FontWeight.w700,
-                      color: stat.homePercentage < 0.5
+                      fontSize: isSmall ? 13 : 15,
+                      color: homePercent < 0.5
                           ? AppColors.primary
                           : (isDark
                                 ? AppColors.darkTextPrimary
@@ -85,13 +97,13 @@ class StatComparisonBar extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
             child: SizedBox(
-              height: 6,
+              height: isSmall ? 5 : 6,
               child: Row(
                 children: [
                   Expanded(
-                    flex: (stat.homePercentage * 100).toInt().clamp(1, 99),
+                    flex: homeFlex,
                     child: Container(
-                      color: stat.homePercentage >= 0.5
+                      color: homePercent >= 0.5
                           ? AppColors.primary
                           : (isDark
                                 ? AppColors.darkCardElevated
@@ -100,12 +112,9 @@ class StatComparisonBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 2),
                   Expanded(
-                    flex: ((1.0 - stat.homePercentage) * 100).toInt().clamp(
-                      1,
-                      99,
-                    ),
+                    flex: awayFlex,
                     child: Container(
-                      color: stat.homePercentage < 0.5
+                      color: homePercent < 0.5
                           ? AppColors.accent
                           : (isDark
                                 ? AppColors.darkCardElevated

@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../matches/domain/entities/match_entity.dart';
+import '../../domain/entities/match_details_entity.dart';
 import '../bloc/match_details_bloc.dart';
 import '../bloc/match_details_event.dart';
 import '../bloc/match_details_state.dart';
@@ -62,6 +63,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
             isDark: isDark,
             isArabic: isArabic,
           ).copyWith(fontWeight: FontWeight.w700),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
       body: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
@@ -74,6 +77,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                 liveScore1: state.liveScore1,
                 liveScore2: state.liveScore2,
                 liveStatus: state.liveStatus,
+                penaltyScore1: fallbackMatch.penaltyScore1,
+                penaltyScore2: fallbackMatch.penaltyScore2,
               ),
 
               // Sticky Sports Tab Bar
@@ -105,31 +110,39 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
               const Divider(height: 1),
 
-              // Tab Views
+              // Tab Views with RefreshIndicator
               Expanded(
-                child: state.status == MatchDetailsStatus.loading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
+                child: RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    context.read<MatchDetailsBloc>().add(
+                      LoadMatchDetailsEvent(widget.matchId),
+                    );
+                  },
+                  child: state.status == MatchDetailsStatus.loading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : state.status == MatchDetailsStatus.error
+                      ? ErrorView(
+                          message: state.errorMessage,
+                          onRetry: () => context.read<MatchDetailsBloc>().add(
+                            LoadMatchDetailsEvent(widget.matchId),
+                          ),
+                        )
+                      : TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildOverviewTab(context, state, fallbackMatch),
+                            _buildEventsTab(context, state),
+                            _buildStatsTab(context, state),
+                            _buildInfoTab(context, state),
+                            _buildNewsTab(context, state),
+                          ],
                         ),
-                      )
-                    : state.status == MatchDetailsStatus.error
-                    ? ErrorView(
-                        message: state.errorMessage,
-                        onRetry: () => context.read<MatchDetailsBloc>().add(
-                          LoadMatchDetailsEvent(widget.matchId),
-                        ),
-                      )
-                    : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildOverviewTab(context, state, fallbackMatch),
-                          _buildEventsTab(context, state),
-                          _buildStatsTab(context, state),
-                          _buildInfoTab(context, state),
-                          _buildNewsTab(context, state),
-                        ],
-                      ),
+                ),
               ),
             ],
           );
@@ -146,9 +159,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
+    final hMargin = AppDimensions.getHorizontalMargin(context);
 
     return ListView(
-      padding: const EdgeInsets.all(AppDimensions.lg),
+      padding: EdgeInsets.all(hMargin),
       children: [
         // Quick Stats summary if available
         if (state.stats.isNotEmpty) ...[
@@ -160,7 +174,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
             ),
           ),
           const SizedBox(height: AppDimensions.sm),
-          ...state.stats.take(3).map((stat) => StatComparisonBar(stat: stat)),
+          ...state.stats.take(4).map((stat) => StatComparisonBar(stat: stat)),
           const SizedBox(height: AppDimensions.lg),
         ],
 
@@ -174,7 +188,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
             ),
           ),
           const SizedBox(height: AppDimensions.sm),
-          ...state.events.take(4).map((e) => TimelineEventItem(event: e)),
+          ...state.events.take(5).map((e) => TimelineEventItem(event: e)),
           const SizedBox(height: AppDimensions.lg),
         ],
 
@@ -212,6 +226,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   }
 
   Widget _buildStatsTab(BuildContext context, MatchDetailsState state) {
+    final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isArabic = l10n.isArabic;
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
     if (state.stats.isEmpty) {
       return const EmptyView(
         titleKey: 'no_stats',
@@ -219,12 +238,69 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.md),
-      itemCount: state.stats.length,
-      itemBuilder: (context, index) {
-        return StatComparisonBar(stat: state.stats[index]);
-      },
+    // Group stats by category if multiple sections exist
+    final categoryMap = <String, List<MatchStatItemEntity>>{};
+    for (final s in state.stats) {
+      final cat =
+          s.category ?? (isArabic ? 'إحصائيات عامة' : 'General Statistics');
+      categoryMap.putIfAbsent(cat, () => []).add(s);
+    }
+
+    if (categoryMap.length <= 1) {
+      return ListView.builder(
+        padding: EdgeInsets.symmetric(
+          horizontal: hMargin,
+          vertical: AppDimensions.md,
+        ),
+        itemCount: state.stats.length,
+        itemBuilder: (context, index) {
+          return StatComparisonBar(stat: state.stats[index]);
+        },
+      );
+    }
+
+    return ListView(
+      padding: EdgeInsets.symmetric(
+        horizontal: hMargin,
+        vertical: AppDimensions.md,
+      ),
+      children: categoryMap.entries.map((entry) {
+        final categoryTitle = entry.key;
+        final items = entry.value;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: AppDimensions.md),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+                child: Text(
+                  categoryTitle,
+                  style:
+                      AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                ),
+              ),
+              const Divider(height: 1),
+              ...items.map((stat) => StatComparisonBar(stat: stat)),
+              const SizedBox(height: 6),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -249,6 +325,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+    final isSmall = AppDimensions.isSmallScreen(context);
 
     if (state.news.isEmpty) {
       return const EmptyView(
@@ -259,7 +337,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(AppDimensions.lg),
+      padding: EdgeInsets.all(hMargin),
       itemCount: state.news.length,
       itemBuilder: (context, index) {
         final item = state.news[index];
@@ -277,7 +355,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               if (item.image != null)
                 AppImage(
                   imageUrl: item.image,
-                  width: 90,
+                  width: isSmall ? 70 : 90,
                   height: 70,
                   borderRadius: AppDimensions.radiusMd,
                 ),

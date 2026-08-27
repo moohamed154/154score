@@ -23,6 +23,8 @@ class ErrorView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
+    final displayMessage = _getFriendlyMessage(message, l10n);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.xxl),
@@ -49,7 +51,7 @@ class ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.sm),
             Text(
-              message ?? l10n.translate('error_network'),
+              displayMessage,
               style: AppTypography.getBodyMedium(
                 isDark: isDark,
                 isArabic: isArabic,
@@ -79,5 +81,32 @@ class ErrorView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getFriendlyMessage(String? raw, AppLocalizations l10n) {
+    if (raw == null || raw.isEmpty) {
+      return l10n.translate('error_network');
+    }
+    final lower = raw.toLowerCase();
+    if (lower.contains('503') ||
+        lower.contains('unavailable') ||
+        lower.contains('temporarily') ||
+        lower.contains('غير متاحة')) {
+      return l10n.translate('error_service_unavailable');
+    }
+    if (lower.contains('429') ||
+        lower.contains('rate') ||
+        lower.contains('limit') ||
+        lower.contains('تجاوز')) {
+      return l10n.translate('error_rate_limited');
+    }
+    if (lower.contains('dioexception') ||
+        lower.contains('socketexception') ||
+        lower.contains('connection') ||
+        lower.contains('handshake') ||
+        lower.contains('failed host lookup')) {
+      return l10n.translate('error_network');
+    }
+    return raw;
   }
 }

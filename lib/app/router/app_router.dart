@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/di/injection_container.dart';
 import '../../features/favorites/presentation/views/favorites_view.dart';
 import '../../features/home/presentation/views/home_view.dart';
+import '../../features/leagues/presentation/bloc/league_bloc.dart';
+import '../../features/leagues/presentation/views/league_view.dart';
 import '../../features/match_details/presentation/bloc/match_details_bloc.dart';
 import '../../features/match_details/presentation/views/match_details_view.dart';
 import '../../features/matches/domain/entities/match_entity.dart';
@@ -13,6 +15,8 @@ import '../../features/profiles/presentation/views/generic_profile_view.dart';
 import '../../features/search/presentation/views/search_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
 import '../../features/standings/presentation/views/standings_view.dart';
+import '../../features/teams/presentation/bloc/team_bloc.dart';
+import '../../features/teams/presentation/views/team_view.dart';
 import '../../features/transfers/presentation/views/transfers_view.dart';
 import '../../features/videos/domain/entities/video_entity.dart';
 import '../../features/videos/presentation/views/video_details_view.dart';
@@ -92,6 +96,43 @@ class AppRouter {
           return BlocProvider(
             create: (_) => sl<MatchDetailsBloc>(param1: id),
             child: MatchDetailsView(matchId: id, initialMatch: match),
+          );
+        },
+      ),
+
+      // League Page
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/league/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final extra = state.extra as Map<String, dynamic>?;
+          return BlocProvider(
+            create: (_) => sl<LeagueBloc>(param1: id, param2: extra),
+            child: LeagueView(
+              leagueId: id,
+              initialTitle: extra?['title']?.toString(),
+              initialLogo: extra?['logo']?.toString(),
+            ),
+          );
+        },
+      ),
+
+      // Team Page
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/team/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final extra = state.extra as Map<String, dynamic>?;
+          return BlocProvider(
+            create: (_) => sl<TeamBloc>(param1: id, param2: extra),
+            child: TeamView(
+              teamId: id,
+              initialName: extra?['name']?.toString(),
+              initialLogo: extra?['logo']?.toString(),
+              leagueId: extra?['leagueId']?.toString(),
+            ),
           );
         },
       ),

@@ -9,6 +9,14 @@ class MatchDto {
   final String? team2Logo;
   final String? score1;
   final String? score2;
+  final String? penaltyScore1;
+  final String? penaltyScore2;
+  final String? halfTimeScore1;
+  final String? halfTimeScore2;
+  final String? extraTimeScore1;
+  final String? extraTimeScore2;
+  final String? aggregateScore1;
+  final String? aggregateScore2;
   final String? time;
   final String? status;
   final String? statusCode;
@@ -27,6 +35,14 @@ class MatchDto {
     this.team2Logo,
     this.score1,
     this.score2,
+    this.penaltyScore1,
+    this.penaltyScore2,
+    this.halfTimeScore1,
+    this.halfTimeScore2,
+    this.extraTimeScore1,
+    this.extraTimeScore2,
+    this.aggregateScore1,
+    this.aggregateScore2,
     this.time,
     this.status,
     this.statusCode,
@@ -92,7 +108,7 @@ class MatchDto {
     final logo1 = UrlHelper.normalizeImageUrl(rawLogo1);
     final logo2 = UrlHelper.normalizeImageUrl(rawLogo2);
 
-    // 4. Scores (robust parsing from score_1/2 or score object {home, away})
+    // 4. Main Match Scores
     String? s1;
     String? s2;
 
@@ -107,7 +123,79 @@ class MatchDto {
     if (s1 == 'null') s1 = null;
     if (s2 == 'null') s2 = null;
 
-    // 5. League info
+    // 5. Penalty Shootout Scores
+    String? pen1;
+    String? pen2;
+    if (json['score'] is Map && json['score']['penalties'] is Map) {
+      final pMap = json['score']['penalties'] as Map;
+      if (pMap['home'] != null) pen1 = pMap['home'].toString();
+      if (pMap['away'] != null) pen2 = pMap['away'].toString();
+    }
+    pen1 ??=
+        json['penalty_score_1']?.toString() ??
+        json['penalties_1']?.toString() ??
+        json['penalties_home']?.toString() ??
+        (json['penalties'] is Map
+            ? json['penalties']['home']?.toString()
+            : null);
+    pen2 ??=
+        json['penalty_score_2']?.toString() ??
+        json['penalties_2']?.toString() ??
+        json['penalties_away']?.toString() ??
+        (json['penalties'] is Map
+            ? json['penalties']['away']?.toString()
+            : null);
+
+    if (pen1 == 'null') pen1 = null;
+    if (pen2 == 'null') pen2 = null;
+
+    // 6. Half-Time Scores
+    String? ht1;
+    String? ht2;
+    if (json['score'] is Map && json['score']['half_time'] is Map) {
+      final htMap = json['score']['half_time'] as Map;
+      if (htMap['home'] != null) ht1 = htMap['home'].toString();
+      if (htMap['away'] != null) ht2 = htMap['away'].toString();
+    }
+    ht1 ??=
+        json['half_time_score_1']?.toString() ??
+        json['ht_score_1']?.toString() ??
+        (json['half_time'] is Map
+            ? json['half_time']['home']?.toString()
+            : null);
+    ht2 ??=
+        json['half_time_score_2']?.toString() ??
+        json['ht_score_2']?.toString() ??
+        (json['half_time'] is Map
+            ? json['half_time']['away']?.toString()
+            : null);
+
+    if (ht1 == 'null') ht1 = null;
+    if (ht2 == 'null') ht2 = null;
+
+    // 7. Extra-Time Scores
+    String? et1;
+    String? et2;
+    if (json['score'] is Map && json['score']['extra_time'] is Map) {
+      final etMap = json['score']['extra_time'] as Map;
+      if (etMap['home'] != null) et1 = etMap['home'].toString();
+      if (etMap['away'] != null) et2 = etMap['away'].toString();
+    }
+    et1 ??=
+        json['extra_time_score_1']?.toString() ??
+        (json['extra_time'] is Map
+            ? json['extra_time']['home']?.toString()
+            : null);
+    et2 ??=
+        json['extra_time_score_2']?.toString() ??
+        (json['extra_time'] is Map
+            ? json['extra_time']['away']?.toString()
+            : null);
+
+    if (et1 == 'null') et1 = null;
+    if (et2 == 'null') et2 = null;
+
+    // 8. League info
     Map? leagueMap;
     if (json['league'] is Map) {
       leagueMap = json['league'] as Map;
@@ -138,6 +226,12 @@ class MatchDto {
       team2Logo: logo2,
       score1: s1,
       score2: s2,
+      penaltyScore1: pen1,
+      penaltyScore2: pen2,
+      halfTimeScore1: ht1,
+      halfTimeScore2: ht2,
+      extraTimeScore1: et1,
+      extraTimeScore2: et2,
       time: json['time']?.toString() ?? '-',
       status: json['status']?.toString() ?? 'Not Started',
       statusCode: json['status_code']?.toString(),
@@ -159,6 +253,12 @@ class MatchDto {
       team2Logo: team2Logo,
       score1: score1,
       score2: score2,
+      penaltyScore1: penaltyScore1,
+      penaltyScore2: penaltyScore2,
+      halfTimeScore1: halfTimeScore1,
+      halfTimeScore2: halfTimeScore2,
+      extraTimeScore1: extraTimeScore1,
+      extraTimeScore2: extraTimeScore2,
       time: time,
       status: status,
       minute: minute,

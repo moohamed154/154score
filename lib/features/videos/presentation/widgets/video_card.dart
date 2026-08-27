@@ -85,11 +85,10 @@ class VideoCard extends StatelessWidget {
       );
     }
 
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.lg,
-        vertical: 8,
-      ),
+      margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 8),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),

@@ -22,6 +22,16 @@ import '../../features/standings/data/repositories/standings_repository_impl.dar
 import '../../features/standings/domain/repositories/standings_repository.dart';
 import '../../features/standings/presentation/bloc/standings_bloc.dart';
 
+import '../../features/leagues/data/datasources/leagues_remote_datasource.dart';
+import '../../features/leagues/data/repositories/leagues_repository_impl.dart';
+import '../../features/leagues/domain/repositories/leagues_repository.dart';
+import '../../features/leagues/presentation/bloc/league_bloc.dart';
+
+import '../../features/teams/data/datasources/teams_remote_datasource.dart';
+import '../../features/teams/data/repositories/teams_repository_impl.dart';
+import '../../features/teams/domain/repositories/teams_repository.dart';
+import '../../features/teams/presentation/bloc/team_bloc.dart';
+
 import '../../features/transfers/data/datasources/transfers_remote_datasource.dart';
 import '../../features/transfers/data/repositories/transfers_repository_impl.dart';
 import '../../features/transfers/domain/repositories/transfers_repository.dart';
@@ -71,6 +81,12 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<StandingsRemoteDataSource>(
     () => StandingsRemoteDataSourceImpl(sl()),
   );
+  sl.registerLazySingleton<LeaguesRemoteDataSource>(
+    () => LeaguesRemoteDataSourceImpl(sl(), sl()),
+  );
+  sl.registerLazySingleton<TeamsRemoteDataSource>(
+    () => TeamsRemoteDataSourceImpl(sl(), sl()),
+  );
   sl.registerLazySingleton<TransfersRemoteDataSource>(
     () => TransfersRemoteDataSourceImpl(sl()),
   );
@@ -91,6 +107,10 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<StandingsRepository>(
     () => StandingsRepositoryImpl(sl()),
   );
+  sl.registerLazySingleton<LeaguesRepository>(
+    () => LeaguesRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<TeamsRepository>(() => TeamsRepositoryImpl(sl()));
   sl.registerLazySingleton<TransfersRepository>(
     () => TransfersRepositoryImpl(sl()),
   );
@@ -114,6 +134,26 @@ Future<void> initDependencies() async {
       webSocketService: sl(),
       localStorageService: sl(),
       matchId: matchId,
+    ),
+  );
+
+  sl.registerFactoryParam<LeagueBloc, String, Map<String, dynamic>?>(
+    (leagueId, extra) => LeagueBloc(
+      repository: sl(),
+      localStorageService: sl(),
+      leagueId: leagueId,
+      initialTitle: extra?['title']?.toString(),
+      initialLogo: extra?['logo']?.toString(),
+    ),
+  );
+
+  sl.registerFactoryParam<TeamBloc, String, Map<String, dynamic>?>(
+    (teamId, extra) => TeamBloc(
+      repository: sl(),
+      localStorageService: sl(),
+      teamId: teamId,
+      initialName: extra?['name']?.toString(),
+      initialLogo: extra?['logo']?.toString(),
     ),
   );
 

@@ -14,6 +14,7 @@ class StandingRowDto {
   final int goalDiff;
   final int points;
   final String? rankColor;
+  final String? groupName;
 
   const StandingRowDto({
     required this.position,
@@ -28,9 +29,14 @@ class StandingRowDto {
     required this.goalDiff,
     required this.points,
     this.rankColor,
+    this.groupName,
   });
 
-  factory StandingRowDto.fromJson(int pos, Map<String, dynamic> json) {
+  factory StandingRowDto.fromJson(
+    int pos,
+    Map<String, dynamic> json, {
+    String? groupName,
+  }) {
     String name = 'Team';
     String? rawLogo;
 
@@ -91,6 +97,10 @@ class StandingRowDto {
         ) ??
         0;
     final points = int.tryParse(json['points']?.toString() ?? '0') ?? 0;
+    final group =
+        groupName ??
+        json['group_name']?.toString() ??
+        json['group']?.toString();
 
     return StandingRowDto(
       position: position,
@@ -105,6 +115,7 @@ class StandingRowDto {
       goalDiff: goalDiff,
       points: points,
       rankColor: json['color']?.toString(),
+      groupName: group,
     );
   }
 
@@ -122,6 +133,7 @@ class StandingRowDto {
       goalDiff: goalDiff,
       points: points,
       rankColor: rankColor,
+      groupName: groupName,
     );
   }
 }

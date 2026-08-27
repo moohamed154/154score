@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart';
+
 class AppDimensions {
   AppDimensions._();
 
@@ -19,6 +21,7 @@ class AppDimensions {
   static const double radiusFull = 999.0;
 
   // Layout Breakpoints
+  static const double smallPhoneMaxWidth = 360.0;
   static const double mobileMaxWidth = 768.0;
   static const double tabletMaxWidth = 1024.0;
   static const double desktopContentMaxWidth = 1280.0;
@@ -31,4 +34,31 @@ class AppDimensions {
 
   static const double cardHeightMatch = 84.0;
   static const double dateBarHeight = 56.0;
+
+  // Responsive Helpers using modern MediaQuery.sizeOf(context)
+  static bool isSmallScreen(BuildContext context) {
+    return MediaQuery.sizeOf(context).width < smallPhoneMaxWidth;
+  }
+
+  static bool isTablet(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return width >= mobileMaxWidth && width < tabletMaxWidth;
+  }
+
+  static bool isDesktop(BuildContext context) {
+    return MediaQuery.sizeOf(context).width >= tabletMaxWidth;
+  }
+
+  static double getHorizontalMargin(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width < smallPhoneMaxWidth) return sm;
+    if (width >= mobileMaxWidth) return xl;
+    return lg;
+  }
+
+  static double getCardPadding(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width < smallPhoneMaxWidth) return sm;
+    return lg;
+  }
 }

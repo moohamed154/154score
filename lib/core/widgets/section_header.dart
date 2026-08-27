@@ -33,21 +33,27 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (leading != null) ...[
-                leading!,
-                const SizedBox(width: AppDimensions.sm),
-              ],
-              Text(
-                title,
-                style: AppTypography.getHeadingMedium(
-                  isDark: isDark,
-                  isArabic: isArabic,
+          Expanded(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (leading != null) ...[
+                  leading!,
+                  const SizedBox(width: AppDimensions.sm),
+                ],
+                Flexible(
+                  child: Text(
+                    title,
+                    style: AppTypography.getHeadingMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           if (onActionTap != null)
             InkWell(

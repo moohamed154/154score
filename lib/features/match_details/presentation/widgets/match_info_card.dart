@@ -17,12 +17,11 @@ class MatchInfoCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+    final isSmall = AppDimensions.isSmallScreen(context);
 
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.lg,
-        vertical: 6,
-      ),
+      margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -56,55 +55,79 @@ class MatchInfoCard extends StatelessWidget {
               final item = section.items[index];
               final isClickable = _canNavigate(item);
 
-              return ListTile(
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 2,
-                ),
-                title: Text(
-                  item.title,
-                  style:
-                      AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
-                      ),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      item.content,
-                      style:
-                          AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: isClickable
-                                ? AppColors.primary
-                                : (isDark
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.lightTextPrimary),
-                          ),
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: isClickable
+                      ? () => _handleNavigation(context, item)
+                      : null,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: isSmall ? 8 : 10,
                     ),
-                    if (isClickable) ...[
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: AppColors.primary,
-                      ),
-                    ],
-                  ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            item.title,
+                            style:
+                                AppTypography.getBodySmall(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 3,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  item.content,
+                                  style:
+                                      AppTypography.getBodyMedium(
+                                        isDark: isDark,
+                                        isArabic: isArabic,
+                                      ).copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: isClickable
+                                            ? AppColors.primary
+                                            : (isDark
+                                                  ? AppColors.darkTextPrimary
+                                                  : AppColors.lightTextPrimary),
+                                      ),
+                                  textAlign: TextAlign.end,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isClickable) ...[
+                                const SizedBox(width: 4),
+                                Icon(
+                                  isArabic
+                                      ? Icons.chevron_left_rounded
+                                      : Icons.chevron_right_rounded,
+                                  size: 18,
+                                  color: AppColors.primary,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                onTap: isClickable
-                    ? () => _handleNavigation(context, item)
-                    : null,
               );
             },
           ),

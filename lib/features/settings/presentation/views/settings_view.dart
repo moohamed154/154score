@@ -207,7 +207,11 @@ class _SettingsViewState extends State<SettingsView> {
               ),
               title: Text(l10n.translate('diag_title')),
               subtitle: Text(l10n.translate('settings_diagnostics')),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              trailing: Icon(
+                isArabic
+                    ? Icons.chevron_left_rounded
+                    : Icons.chevron_right_rounded,
+              ),
               onTap: () {
                 showModalBottomSheet(
                   context: context,

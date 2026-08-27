@@ -8,6 +8,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/animated_score_text.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../../core/widgets/penalty_shootout_widget.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../domain/entities/match_entity.dart';
 
@@ -23,15 +24,16 @@ class MatchCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
     final isLive = ScoreHelper.isLiveStatus(match.status);
+    final isSmall = AppDimensions.isSmallScreen(context);
+    final hMargin = AppDimensions.getHorizontalMargin(context);
 
     final score1Str = ScoreHelper.normalizeScore(match.score1);
     final score2Str = ScoreHelper.normalizeScore(match.score2);
 
+    final hasPenalties = match.hasPenalties;
+
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.lg,
-        vertical: 4,
-      ),
+      margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 4),
       decoration: BoxDecoration(
         color: isLive
             ? (isDark ? const Color(0xFF1E2430) : const Color(0xFFF1F7FF))
@@ -55,42 +57,69 @@ class MatchCard extends StatelessWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmall ? 8 : 12,
+              vertical: 10,
+            ),
             child: Row(
               children: [
                 // Home Team
                 Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          match.team1,
-                          style: AppTypography.getBodyLarge(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(fontWeight: FontWeight.w600, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                        ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusSm,
                       ),
-                      const SizedBox(width: AppDimensions.sm),
-                      AppImage(
-                        imageUrl: match.team1Logo,
-                        width: 26,
-                        height: 26,
-                        borderRadius: 13,
-                        placeholderIcon: Icons.shield_outlined,
+                      onTap: () {
+                        final tId = Uri.encodeComponent(match.team1);
+                        context.push(
+                          '/team/$tId',
+                          extra: {
+                            'name': match.team1,
+                            'logo': match.team1Logo,
+                            'leagueId': match.leagueId,
+                          },
+                        );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              match.team1,
+                              style:
+                                  AppTypography.getBodyLarge(
+                                    isDark: isDark,
+                                    isArabic: isArabic,
+                                  ).copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: isSmall ? 13 : 14,
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                          SizedBox(width: isSmall ? 6 : AppDimensions.sm),
+                          AppImage(
+                            imageUrl: match.team1Logo,
+                            width: isSmall ? 22 : 26,
+                            height: isSmall ? 22 : 26,
+                            borderRadius: (isSmall ? 22 : 26) / 2,
+                            fit: BoxFit.contain,
+                            placeholderIcon: Icons.shield_outlined,
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
 
                 // Center Score & Status
                 Container(
-                  constraints: const BoxConstraints(minWidth: 76),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  constraints: BoxConstraints(minWidth: isSmall ? 60 : 72),
+                  padding: EdgeInsets.symmetric(horizontal: isSmall ? 4 : 6),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -101,7 +130,7 @@ class MatchCard extends StatelessWidget {
                             AnimatedScoreText(score: score1Str, isLive: isLive),
                             Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
+                                horizontal: 3,
                               ),
                               child: Text(
                                 ':',
@@ -118,6 +147,14 @@ class MatchCard extends StatelessWidget {
                           ],
                         ),
                       ],
+                      if (hasPenalties) ...[
+                        const SizedBox(height: 2),
+                        PenaltyShootoutWidget(
+                          penaltyScore1: match.penaltyScore1!,
+                          penaltyScore2: match.penaltyScore2!,
+                          isCompact: true,
+                        ),
+                      ],
                       const SizedBox(height: 2),
                       StatusPill(
                         status: match.status,
@@ -130,48 +167,72 @@ class MatchCard extends StatelessWidget {
 
                 // Away Team
                 Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      AppImage(
-                        imageUrl: match.team2Logo,
-                        width: 26,
-                        height: 26,
-                        borderRadius: 13,
-                        placeholderIcon: Icons.shield_outlined,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusSm,
                       ),
-                      const SizedBox(width: AppDimensions.sm),
-                      Flexible(
-                        child: Text(
-                          match.team2,
-                          style: AppTypography.getBodyLarge(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(fontWeight: FontWeight.w600, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.start,
-                        ),
+                      onTap: () {
+                        final tId = Uri.encodeComponent(match.team2);
+                        context.push(
+                          '/team/$tId',
+                          extra: {
+                            'name': match.team2,
+                            'logo': match.team2Logo,
+                            'leagueId': match.leagueId,
+                          },
+                        );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          AppImage(
+                            imageUrl: match.team2Logo,
+                            width: isSmall ? 22 : 26,
+                            height: isSmall ? 22 : 26,
+                            borderRadius: (isSmall ? 22 : 26) / 2,
+                            fit: BoxFit.contain,
+                            placeholderIcon: Icons.shield_outlined,
+                          ),
+                          SizedBox(width: isSmall ? 6 : AppDimensions.sm),
+                          Flexible(
+                            child: Text(
+                              match.team2,
+                              style:
+                                  AppTypography.getBodyLarge(
+                                    isDark: isDark,
+                                    isArabic: isArabic,
+                                  ).copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: isSmall ? 13 : 14,
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.start,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
 
                 // Favorite Star
                 if (onFavoriteTap != null) ...[
-                  const SizedBox(width: 4),
+                  SizedBox(width: isSmall ? 2 : 4),
                   InkWell(
                     onTap: onFavoriteTap,
                     borderRadius: BorderRadius.circular(
                       AppDimensions.radiusFull,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(3.0),
                       child: Icon(
                         match.isFavorite
                             ? Icons.star_rounded
                             : Icons.star_border_rounded,
-                        size: 20,
+                        size: isSmall ? 18 : 20,
                         color: match.isFavorite
                             ? AppColors.yellowCard
                             : (isDark

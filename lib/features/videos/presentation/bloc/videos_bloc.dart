@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../domain/entities/video_entity.dart';
 import '../../domain/repositories/videos_repository.dart';
@@ -64,18 +65,21 @@ class VideosState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [status, selectedCategory, categories, videos, errorMessage];
+  List<Object?> get props => [
+    status,
+    selectedCategory,
+    categories,
+    videos,
+    errorMessage,
+  ];
 }
 
 class VideosBloc extends Bloc<VideosEvent, VideosState> {
   final VideosRepository repository;
   final LocalStorageService localStorageService;
 
-  VideosBloc({
-    required this.repository,
-    required this.localStorageService,
-  }) : super(const VideosState()) {
+  VideosBloc({required this.repository, required this.localStorageService})
+    : super(const VideosState()) {
     on<LoadVideosEvent>(_onLoadVideos);
     on<SelectVideoCategoryEvent>(_onSelectCategory);
   }
@@ -85,32 +89,41 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
     Emitter<VideosState> emit,
   ) async {
     if (!event.isRefresh) {
-      emit(state.copyWith(
-          status: VideosStatus.loading, selectedCategory: event.champId));
+      emit(
+        state.copyWith(
+          status: VideosStatus.loading,
+          selectedCategory: event.champId,
+        ),
+      );
     }
 
     final lang = localStorageService.getLanguage();
 
     try {
-      final videosFuture =
-          repository.getVideos(champId: event.champId, lang: lang);
+      final videosFuture = repository.getVideos(
+        champId: event.champId,
+        lang: lang,
+      );
       final categoriesFuture = repository.getCategories(lang: lang);
 
       final videosRes = (await videosFuture).dataOrNull ?? [];
       final categoriesRes = (await categoriesFuture).dataOrNull ?? [];
 
-      emit(state.copyWith(
-        status: videosRes.isEmpty ? VideosStatus.empty : VideosStatus.success,
-        videos: videosRes,
-        categories: categoriesRes.isNotEmpty ? categoriesRes : state.categories,
-        selectedCategory: event.champId,
-        errorMessage: null,
-      ));
+      emit(
+        state.copyWith(
+          status: videosRes.isEmpty ? VideosStatus.empty : VideosStatus.success,
+          videos: videosRes,
+          categories: categoriesRes.isNotEmpty
+              ? categoriesRes
+              : state.categories,
+          selectedCategory: event.champId,
+          errorMessage: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: VideosStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(status: VideosStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 

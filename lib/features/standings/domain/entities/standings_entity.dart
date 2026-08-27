@@ -13,6 +13,7 @@ class StandingRowEntity extends Equatable {
   final int goalDiff;
   final int points;
   final String? rankColor;
+  final String? groupName;
 
   const StandingRowEntity({
     required this.position,
@@ -27,6 +28,7 @@ class StandingRowEntity extends Equatable {
     required this.goalDiff,
     required this.points,
     this.rankColor,
+    this.groupName,
   });
 
   @override
@@ -43,6 +45,7 @@ class StandingRowEntity extends Equatable {
     goalDiff,
     points,
     rankColor,
+    groupName,
   ];
 }
 
@@ -50,13 +53,17 @@ class LeagueStandingsEntity extends Equatable {
   final String leagueId;
   final String leagueTitle;
   final List<StandingRowEntity> rows;
+  final Map<String, List<StandingRowEntity>>? groups;
 
   const LeagueStandingsEntity({
     required this.leagueId,
     required this.leagueTitle,
     required this.rows,
+    this.groups,
   });
 
+  bool get hasMultipleGroups => groups != null && groups!.length > 1;
+
   @override
-  List<Object?> get props => [leagueId, leagueTitle, rows];
+  List<Object?> get props => [leagueId, leagueTitle, rows, groups];
 }

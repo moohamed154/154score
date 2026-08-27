@@ -127,7 +127,14 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
                   isArabic: isArabic,
                 ).copyWith(fontWeight: FontWeight.w600),
               ),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              trailing: Icon(
+                isArabic
+                    ? Icons.chevron_left_rounded
+                    : Icons.chevron_right_rounded,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
+              ),
               onTap: () {
                 context.push('/standings/${comp.$1}');
               },
@@ -139,6 +146,7 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
   }
 
   Widget _buildSearchResults(BuildContext context, bool isDark, bool isArabic) {
+    final l10n = AppLocalizations.of(context);
     return BlocBuilder<MatchesBloc, MatchesState>(
       builder: (context, matchesState) {
         final matchingMatches = <dynamic>[];
@@ -169,7 +177,7 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
           children: [
             if (matchingCompetitions.isNotEmpty) ...[
               Text(
-                'Competitions',
+                l10n.translate('popular_competitions'),
                 style: AppTypography.getHeadingMedium(
                   isDark: isDark,
                   isArabic: isArabic,
@@ -192,7 +200,7 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
 
             if (matchingMatches.isNotEmpty) ...[
               Text(
-                'Matches',
+                l10n.translate('nav_matches'),
                 style: AppTypography.getHeadingMedium(
                   isDark: isDark,
                   isArabic: isArabic,

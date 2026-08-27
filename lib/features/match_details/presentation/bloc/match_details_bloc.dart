@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../domain/repositories/match_details_repository.dart';
@@ -43,8 +45,11 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     try {
       final eventsFuture = repository.getEvents(event.matchId, lang: lang);
       final statsFuture = repository.getStats(event.matchId, lang: lang);
-      final detailsFuture =
-          repository.getDetails(event.matchId, lang: lang, utcOffset: offset);
+      final detailsFuture = repository.getDetails(
+        event.matchId,
+        lang: lang,
+        utcOffset: offset,
+      );
       final newsFuture = repository.getNews(event.matchId, lang: lang);
 
       final eventsRes = (await eventsFuture).dataOrNull ?? [];
@@ -52,26 +57,27 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final detailsRes = (await detailsFuture).dataOrNull ?? [];
       final newsRes = (await newsFuture).dataOrNull ?? [];
 
-      emit(state.copyWith(
-        status: MatchDetailsStatus.success,
-        events: eventsRes,
-        stats: statsRes,
-        details: detailsRes,
-        news: newsRes,
-        errorMessage: null,
-      ));
+      emit(
+        state.copyWith(
+          status: MatchDetailsStatus.success,
+          events: eventsRes,
+          stats: statsRes,
+          details: detailsRes,
+          news: newsRes,
+          errorMessage: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: MatchDetailsStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: MatchDetailsStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
-  void _onChangeTab(
-    ChangeTabEvent event,
-    Emitter<MatchDetailsState> emit,
-  ) {
+  void _onChangeTab(ChangeTabEvent event, Emitter<MatchDetailsState> emit) {
     emit(state.copyWith(selectedTab: event.tabIndex));
   }
 
@@ -81,11 +87,13 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
   ) {
     final update = event.update;
     if (update.matchId != null && update.matchId == state.matchId) {
-      emit(state.copyWith(
-        liveScore1: update.score1 ?? state.liveScore1,
-        liveScore2: update.score2 ?? state.liveScore2,
-        liveStatus: update.status ?? state.liveStatus,
-      ));
+      emit(
+        state.copyWith(
+          liveScore1: update.score1 ?? state.liveScore1,
+          liveScore2: update.score2 ?? state.liveScore2,
+          liveStatus: update.status ?? state.liveStatus,
+        ),
+      );
     }
   }
 

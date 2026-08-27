@@ -33,16 +33,24 @@ class MatchStatItemEntity extends Equatable {
   final String homeValue;
   final String awayValue;
   final double homePercentage;
+  final String? category;
 
   const MatchStatItemEntity({
     required this.title,
     required this.homeValue,
     required this.awayValue,
     required this.homePercentage,
+    this.category,
   });
 
   @override
-  List<Object?> get props => [title, homeValue, awayValue, homePercentage];
+  List<Object?> get props => [
+    title,
+    homeValue,
+    awayValue,
+    homePercentage,
+    category,
+  ];
 }
 
 class MatchInfoSectionEntity extends Equatable {

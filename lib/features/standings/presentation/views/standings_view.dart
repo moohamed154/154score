@@ -122,7 +122,7 @@ class _StandingsViewState extends State<StandingsView> {
                       LoadStandingsEvent(state.selectedLeagueId),
                     );
                   },
-                  child: _buildBody(context, state),
+                  child: _buildBody(context, state, isArabic),
                 ),
               ),
             ],
@@ -132,7 +132,7 @@ class _StandingsViewState extends State<StandingsView> {
     );
   }
 
-  Widget _buildBody(BuildContext context, StandingsState state) {
+  Widget _buildBody(BuildContext context, StandingsState state, bool isArabic) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (state.status == StandingsStatus.loading) {
@@ -160,10 +160,34 @@ class _StandingsViewState extends State<StandingsView> {
       );
     }
 
+    final standings = state.standings!;
+    final hasGroups = standings.hasMultipleGroups;
+
     return ListView(
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
       children: [
-        StandingsTable(rows: state.standings!.rows),
+        if (hasGroups) ...[
+          ...standings.groups!.entries.map((groupEntry) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Text(
+                    groupEntry.key,
+                    style: AppTypography.getHeadingMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(fontSize: 16),
+                  ),
+                ),
+                StandingsTable(rows: groupEntry.value),
+              ],
+            );
+          }),
+        ] else ...[
+          StandingsTable(rows: standings.rows),
+        ],
 
         // Qualification Legend
         Padding(
@@ -175,9 +199,21 @@ class _StandingsViewState extends State<StandingsView> {
             spacing: 16,
             runSpacing: 8,
             children: [
-              _buildLegendItem(AppColors.uclGreen, 'Champions League', isDark),
-              _buildLegendItem(AppColors.uelBlue, 'Europa League', isDark),
-              _buildLegendItem(AppColors.relegationRed, 'Relegation', isDark),
+              _buildLegendItem(
+                AppColors.uclGreen,
+                isArabic ? 'دوري أبطال أوروبا' : 'Champions League',
+                isDark,
+              ),
+              _buildLegendItem(
+                AppColors.uelBlue,
+                isArabic ? 'الدوري الأوروبي' : 'Europa League',
+                isDark,
+              ),
+              _buildLegendItem(
+                AppColors.relegationRed,
+                isArabic ? 'الهبوط' : 'Relegation',
+                isDark,
+              ),
             ],
           ),
         ),

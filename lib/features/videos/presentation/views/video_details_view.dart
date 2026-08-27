@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/network/api_client.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../data/datasources/videos_remote_datasource.dart';
@@ -38,17 +39,21 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
       _errorMessage = null;
     });
 
+    final lang = sl<LocalStorageService>().getLanguage();
+
     try {
-      final dataSource = VideosRemoteDataSourceImpl(ApiClient());
+      final dataSource = sl<VideosRemoteDataSource>();
       final detail = await dataSource.getVideoDetail(
         widget.videoId,
-        lang: 'en',
+        lang: lang,
       );
+      if (!mounted) return;
       setState(() {
         _detail = detail;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
@@ -61,6 +66,7 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
+    final hPadding = AppDimensions.getHorizontalMargin(context);
 
     final title =
         _detail?.title ?? widget.initialVideo?.title ?? 'Video Highlight';
@@ -84,35 +90,38 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
           : _errorMessage != null
           ? ErrorView(message: _errorMessage, onRetry: _loadDetail)
           : ListView(
-              padding: const EdgeInsets.all(AppDimensions.lg),
+              padding: EdgeInsets.all(hPadding),
               children: [
                 // Video Thumbnail / Player Preview
-                Stack(
-                  children: [
-                    AppImage(
-                      imageUrl: widget.initialVideo?.image,
-                      width: double.infinity,
-                      height: 220,
-                      borderRadius: AppDimensions.radiusLg,
-                      placeholderIcon: Icons.play_circle_outline_rounded,
-                    ),
-                    Positioned.fill(
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: const BoxDecoration(
-                            color: Color(0x99000000),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.play_arrow_rounded,
-                            color: Colors.white,
-                            size: 48,
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Stack(
+                    children: [
+                      AppImage(
+                        imageUrl: widget.initialVideo?.image,
+                        width: double.infinity,
+                        height: double.infinity,
+                        borderRadius: AppDimensions.radiusLg,
+                        placeholderIcon: Icons.play_circle_outline_rounded,
+                      ),
+                      Positioned.fill(
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: const BoxDecoration(
+                              color: Color(0x99000000),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.play_arrow_rounded,
+                              color: Colors.white,
+                              size: 40,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: AppDimensions.lg),

@@ -177,9 +177,12 @@ class AppLocalizations {
       'diag_status_error': 'Service Error',
       'check_now': 'Check Now',
 
-      // Errors & Empty
       'error_title': 'Something went wrong',
       'error_network': 'Unable to connect to the server. Please check your internet connection.',
+      'error_service_unavailable':
+          'Data is temporarily unavailable. Please try again.',
+      'error_rate_limited':
+          'Too many requests. Please wait a moment and try again.',
       'error_not_found': 'Content could not be found.',
       'try_again': 'Try Again',
       'no_matches_date': 'No matches scheduled for this date.',
@@ -349,9 +352,11 @@ class AppLocalizations {
       'diag_status_error': 'خطأ في الخدمة',
       'check_now': 'فحص الآن',
 
-      // Errors & Empty
       'error_title': 'حدث خطأ ما',
       'error_network': 'تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة ثانية.',
+      'error_service_unavailable': 'البيانات غير متاحة مؤقتًا، حاول مرة أخرى.',
+      'error_rate_limited':
+          'تم تجاوز معدل الطلبات، يرجى الانتظار قليلًا والمحاولة ثانية.',
       'error_not_found': 'المحتوى المطلوب غير موجود.',
       'try_again': 'إعادة المحاولة',
       'no_matches_date': 'لا توجد مباريات مجدولة في هذا التاريخ.',

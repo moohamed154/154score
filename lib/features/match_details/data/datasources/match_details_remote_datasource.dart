@@ -123,16 +123,21 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         for (final entry in list) {
           if (entry is Map) {
             // Check if entry is a Section containing items
+            final sectionName =
+                entry['section']?.toString() ??
+                entry['name']?.toString() ??
+                entry['title']?.toString();
+
             if (entry['items'] is List) {
               final sectionItems = entry['items'] as List;
               for (final it in sectionItems) {
                 if (it is Map) {
-                  _parseAndAddStatItem(it, stats);
+                  _parseAndAddStatItem(it, stats, category: sectionName);
                 }
               }
             } else {
               // Direct flat stat item fallback
-              _parseAndAddStatItem(entry, stats);
+              _parseAndAddStatItem(entry, stats, category: sectionName);
             }
           }
         }
@@ -143,7 +148,11 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     }
   }
 
-  void _parseAndAddStatItem(Map item, List<MatchStatItemEntity> stats) {
+  void _parseAndAddStatItem(
+    Map item,
+    List<MatchStatItemEntity> stats, {
+    String? category,
+  }) {
     final title =
         item['title']?.toString() ?? item['name']?.toString() ?? 'Stat';
 
@@ -181,6 +190,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         homeValue: home,
         awayValue: away,
         homePercentage: homePct.clamp(0.0, 1.0),
+        category: category,
       ),
     );
   }

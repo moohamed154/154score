@@ -28,7 +28,7 @@ class LiveMatchCard extends StatelessWidget {
 
     return Container(
       width: width,
-      margin: const EdgeInsets.only(right: 12, top: 4, bottom: 4),
+      margin: const EdgeInsetsDirectional.only(end: 12, top: 4, bottom: 4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -61,51 +61,46 @@ class LiveMatchCard extends StatelessWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(14.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Top League & Live Minute
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        if (match.leagueLogo != null) ...[
-                          AppImage(
-                            imageUrl: match.leagueLogo,
-                            width: 18,
-                            height: 18,
-                            borderRadius: 4,
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                        ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: width - 110),
-                          child: Text(
-                            match.leagueTitle ?? 'Live Match',
-                            style:
-                                AppTypography.getBodySmall(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
-                                ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    if (match.leagueLogo != null) ...[
+                      AppImage(
+                        imageUrl: match.leagueLogo,
+                        width: 18,
+                        height: 18,
+                        borderRadius: 4,
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        match.leagueTitle ?? 'Live Match',
+                        style:
+                            AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    const SizedBox(width: 6),
                     LivePulseBadge(minute: match.status, showText: true),
                   ],
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
 
                 // Teams and Scores
                 Column(
@@ -115,11 +110,12 @@ class LiveMatchCard extends StatelessWidget {
                       children: [
                         AppImage(
                           imageUrl: match.team1Logo,
-                          width: 28,
-                          height: 28,
-                          borderRadius: 14,
+                          width: 26,
+                          height: 26,
+                          borderRadius: 13,
+                          fit: BoxFit.contain,
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             match.team1,
@@ -129,12 +125,13 @@ class LiveMatchCard extends StatelessWidget {
                                   isArabic: isArabic,
                                 ).copyWith(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 14,
+                                  fontSize: 13,
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 6),
                         AnimatedScoreText(
                           score: score1Str,
                           isLive: true,
@@ -142,17 +139,18 @@ class LiveMatchCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     // Away Team Row
                     Row(
                       children: [
                         AppImage(
                           imageUrl: match.team2Logo,
-                          width: 28,
-                          height: 28,
-                          borderRadius: 14,
+                          width: 26,
+                          height: 26,
+                          borderRadius: 13,
+                          fit: BoxFit.contain,
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             match.team2,
@@ -162,12 +160,13 @@ class LiveMatchCard extends StatelessWidget {
                                   isArabic: isArabic,
                                 ).copyWith(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 14,
+                                  fontSize: 13,
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 6),
                         AnimatedScoreText(
                           score: score2Str,
                           isLive: true,
