@@ -6,6 +6,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/websocket/websocket_event.dart';
 import '../../../../core/websocket/websocket_service.dart';
 
 class DiagnosticsSheet extends StatefulWidget {
@@ -63,9 +64,6 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
-    final wsStatus = widget.webSocketService.currentStatus.name;
-    final activeChannel = widget.webSocketService.activeChannel;
-
     return Container(
       padding: const EdgeInsets.all(AppDimensions.xxl),
       decoration: BoxDecoration(
@@ -96,12 +94,26 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
           ),
           const SizedBox(height: 16),
 
-          _buildDiagTile(
-            title: l10n.translate('diag_ws_status'),
-            value: '$wsStatus (Channel: $activeChannel)',
-            isSuccess: wsStatus == 'connected',
-            isDark: isDark,
-            isArabic: isArabic,
+          StreamBuilder<WebSocketConnectionHealth>(
+            stream: widget.webSocketService.healthStream,
+            initialData: widget.webSocketService.currentHealth,
+            builder: (context, snapshot) {
+              final health =
+                  snapshot.data ?? widget.webSocketService.currentHealth;
+              final wsStatus = health.state.name;
+              final rooms = health.activeSubscriptions.isNotEmpty
+                  ? health.activeSubscriptions.join(', ')
+                  : widget.webSocketService.activeChannel;
+
+              return _buildDiagTile(
+                title: l10n.translate('diag_ws_status'),
+                value:
+                    '$wsStatus | Rooms: [$rooms] | Events: ${health.totalEventsReceived}',
+                isSuccess: health.state == SocketConnectionState.connected,
+                isDark: isDark,
+                isArabic: isArabic,
+              );
+            },
           ),
           const SizedBox(height: 10),
 

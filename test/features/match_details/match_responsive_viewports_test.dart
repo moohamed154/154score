@@ -110,10 +110,7 @@ void main() {
     MatchInfoSectionEntity(
       section: 'معلومات اللقاء',
       items: [
-        MatchInfoItemEntity(
-          title: 'القناة',
-          content: 'بي إن سبورت 1',
-        ),
+        MatchInfoItemEntity(title: 'القناة', content: 'بي إن سبورت 1'),
         MatchInfoItemEntity(
           title: 'المعلق',
           content: 'حفيظ دراجي',
@@ -146,12 +143,10 @@ void main() {
     when(() => ws.leaveMatchRoom(any())).thenReturn(null);
     when(() => ws.updatesStream).thenAnswer((_) => const Stream.empty());
 
-    when(
-      () => repo.getEvents(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess(sampleEvents));
-    when(
-      () => repo.getStats(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess(sampleStats));
+    when(() => repo.getEvents(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(sampleEvents));
+    when(() => repo.getStats(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(sampleStats));
     when(
       () => repo.getDetails(
         any(),
@@ -159,9 +154,8 @@ void main() {
         utcOffset: any(named: 'utcOffset'),
       ),
     ).thenAnswer((_) async => const ApiSuccess(sampleDetails));
-    when(
-      () => repo.getNews(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getNews(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
   });
 
   group('Match Details Responsive Matrix Tests (320px - 1024px)', () {

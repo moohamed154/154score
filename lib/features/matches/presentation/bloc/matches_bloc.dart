@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/match_status_helper.dart';
+import '../../../../core/utils/realtime_merge_engine.dart';
+import '../../../../core/websocket/websocket_event.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../domain/repositories/matches_repository.dart';
@@ -15,7 +17,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   final MatchesRepository repository;
   final WebSocketService webSocketService;
   final LocalStorageService localStorageService;
+
   StreamSubscription? _wsSubscription;
+  StreamSubscription? _wsStatusSubscription;
+  Timer? _fallbackPollingTimer;
 
   MatchesBloc({
     required this.repository,
@@ -26,12 +31,27 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     on<ChangeFilterEvent>(_onChangeFilter);
     on<SearchMatchesEvent>(_onSearchMatches);
     on<LiveMatchReceivedEvent>(_onLiveMatchReceived);
+    on<SocketStatusChangedEvent>(_onSocketStatusChanged);
     on<ToggleMatchFavoriteEvent>(_onToggleMatchFavorite);
 
-    // Listen to WebSocket events
-    _wsSubscription = webSocketService.updatesStream.listen((update) {
-      add(LiveMatchReceivedEvent(update));
-    });
+    // 1. Listen to Real-Time WebSocket updates
+    try {
+      _wsSubscription = webSocketService.updatesStream.listen((update) {
+        add(LiveMatchReceivedEvent(update));
+      });
+    } catch (_) {}
+
+    // 2. Listen to WebSocket Connection status for intelligent fallback polling
+    try {
+      _wsStatusSubscription = webSocketService.statusStream.listen((status) {
+        add(SocketStatusChangedEvent(status));
+      });
+    } catch (_) {}
+
+    // 3. Connect WebSocket if not already connected
+    try {
+      webSocketService.connect();
+    } catch (_) {}
   }
 
   Future<void> _onLoadMatches(
@@ -137,49 +157,60 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     LiveMatchReceivedEvent event,
     Emitter<MatchesState> emit,
   ) {
-    final update = event.update;
-    bool matchFound = false;
+    final mergeResult = RealtimeMergeEngine.mergeMatchesWithRealtime(
+      existingLeagues: state.allLeagues,
+      update: event.update,
+    );
 
-    final updatedLeagues = state.allLeagues.map((league) {
-      final updatedMatches = league.matches.map((m) {
-        final matchesId = update.matchId != null && m.id == update.matchId;
-        final matchesTeams =
-            (update.team1 != null &&
-            update.team2 != null &&
-            m.team1.toLowerCase().contains(update.team1!.toLowerCase()) &&
-            m.team2.toLowerCase().contains(update.team2!.toLowerCase()));
-
-        if (matchesId || matchesTeams) {
-          matchFound = true;
-          return m.copyWith(
-            score1: update.score1 ?? m.score1,
-            score2: update.score2 ?? m.score2,
-            status: update.status ?? m.status,
-            minute: update.minute ?? m.minute,
-          );
-        }
-        return m;
-      }).toList();
-
-      return league.copyWith(matches: updatedMatches);
-    }).toList();
-
-    if (matchFound) {
-      final liveCount = _calculateLiveCount(updatedLeagues);
+    if (mergeResult.isUpdated) {
+      final liveCount = _calculateLiveCount(mergeResult.data);
       final filtered = _applyFilters(
-        leagues: updatedLeagues,
+        leagues: mergeResult.data,
         filter: state.activeFilter,
         query: state.searchQuery,
       );
 
       emit(
         state.copyWith(
-          allLeagues: updatedLeagues,
+          allLeagues: mergeResult.data,
           filteredLeagues: filtered,
           liveMatchesCount: liveCount,
         ),
       );
     }
+  }
+
+  void _onSocketStatusChanged(
+    SocketStatusChangedEvent event,
+    Emitter<MatchesState> emit,
+  ) {
+    if (event.status == SocketConnectionState.connected) {
+      _stopFallbackPolling();
+    } else if (event.status == SocketConnectionState.disconnected ||
+        event.status == SocketConnectionState.error) {
+      _startFallbackPolling();
+    }
+  }
+
+  void _startFallbackPolling() {
+    if (_fallbackPollingTimer != null && _fallbackPollingTimer!.isActive) {
+      return;
+    }
+
+    // Poll every 35 seconds only when disconnected and matches are loaded
+    _fallbackPollingTimer = Timer.periodic(const Duration(seconds: 35), (
+      timer,
+    ) {
+      if (state.status == MatchesStatus.success ||
+          state.status == MatchesStatus.empty) {
+        add(LoadMatchesEvent(date: state.selectedDate, isRefresh: true));
+      }
+    });
+  }
+
+  void _stopFallbackPolling() {
+    _fallbackPollingTimer?.cancel();
+    _fallbackPollingTimer = null;
   }
 
   int _calculateLiveCount(List<LeagueGroupEntity> leagues) {
@@ -273,7 +304,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
   @override
   Future<void> close() {
+    _stopFallbackPolling();
     _wsSubscription?.cancel();
+    _wsStatusSubscription?.cancel();
     return super.close();
   }
 }

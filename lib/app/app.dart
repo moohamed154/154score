@@ -14,8 +14,32 @@ import '../features/transfers/presentation/bloc/transfers_bloc.dart';
 import '../features/videos/presentation/bloc/videos_bloc.dart';
 import 'router/app_router.dart';
 
-class App extends StatelessWidget {
+import '../core/websocket/websocket_service.dart';
+
+class App extends StatefulWidget {
   const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    sl<WebSocketService>().handleAppLifecycleState(state);
+  }
 
   @override
   Widget build(BuildContext context) {

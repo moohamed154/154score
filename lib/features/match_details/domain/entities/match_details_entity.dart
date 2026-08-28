@@ -4,7 +4,8 @@ class MatchEventEntity extends Equatable {
   final String minute;
   final String playerName;
   final String? secondaryPlayerName;
-  final String type; // goal, yellow_card, red_card, substitution, var, start-end-match
+  final String
+  type; // goal, yellow_card, red_card, substitution, var, start-end-match
   final bool isHomeTeam;
   final String? score;
 
@@ -93,14 +94,7 @@ class MatchInfoItemEntity extends Equatable {
       content.trim() != 'N/A';
 
   @override
-  List<Object?> get props => [
-    title,
-    content,
-    entityType,
-    entityId,
-    slug,
-    link,
-  ];
+  List<Object?> get props => [title, content, entityType, entityId, slug, link];
 }
 
 class MatchNewsItemEntity extends Equatable {

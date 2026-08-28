@@ -48,13 +48,14 @@ class MatchInfoCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     section.section,
-                    style: AppTypography.getBodyLarge(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
+                    style:
+                        AppTypography.getBodyLarge(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
                   ),
                 ),
               ],
@@ -99,8 +100,8 @@ class MatchInfoCard extends StatelessWidget {
                           color: isClickable
                               ? AppColors.primary
                               : (isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted),
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted),
                         ),
                         const SizedBox(width: 8),
 
@@ -109,15 +110,16 @@ class MatchInfoCard extends StatelessWidget {
                           flex: 2,
                           child: Text(
                             item.title,
-                            style: AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style:
+                                AppTypography.getBodySmall(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -131,19 +133,20 @@ class MatchInfoCard extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   item.content,
-                                  style: AppTypography.getBodyMedium(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    fontWeight: isClickable
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
-                                    color: isClickable
-                                        ? AppColors.primary
-                                        : (isDark
-                                            ? AppColors.darkTextPrimary
-                                            : AppColors.lightTextPrimary),
-                                  ),
+                                  style:
+                                      AppTypography.getBodyMedium(
+                                        isDark: isDark,
+                                        isArabic: isArabic,
+                                      ).copyWith(
+                                        fontWeight: isClickable
+                                            ? FontWeight.w700
+                                            : FontWeight.w600,
+                                        color: isClickable
+                                            ? AppColors.primary
+                                            : (isDark
+                                                  ? AppColors.darkTextPrimary
+                                                  : AppColors.lightTextPrimary),
+                                      ),
                                   textAlign: TextAlign.end,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -181,14 +184,17 @@ class MatchInfoCard extends StatelessWidget {
   void _handleNavigation(BuildContext context, MatchInfoItemEntity item) {
     if (!item.canNavigate) return;
 
-    final id = (item.entityId != null &&
+    final id =
+        (item.entityId != null &&
             item.entityId!.isNotEmpty &&
             item.entityId != 'null')
         ? item.entityId!
         : '0';
     final slug = (item.slug != null && item.slug!.isNotEmpty)
         ? item.slug!
-        : Uri.encodeComponent(item.content.trim().replaceAll(RegExp(r'\s+'), '-'));
+        : Uri.encodeComponent(
+            item.content.trim().replaceAll(RegExp(r'\s+'), '-'),
+          );
 
     final type = item.entityType?.toLowerCase();
     String finalRoute = '';
@@ -233,7 +239,9 @@ class MatchInfoCard extends StatelessWidget {
 
   IconData _getItemIcon(String itemTitle) {
     final lower = itemTitle.toLowerCase();
-    if (lower.contains('ملعب') || lower.contains('stadium') || lower.contains('venue')) {
+    if (lower.contains('ملعب') ||
+        lower.contains('stadium') ||
+        lower.contains('venue')) {
       return Icons.stadium_outlined;
     }
     if (lower.contains('حكم') || lower.contains('referee')) {
@@ -242,19 +250,31 @@ class MatchInfoCard extends StatelessWidget {
     if (lower.contains('معلق') || lower.contains('commentator')) {
       return Icons.mic_none_rounded;
     }
-    if (lower.contains('قناة') || lower.contains('channel') || lower.contains('mbc') || lower.contains('bein') || lower.contains('sport')) {
+    if (lower.contains('قناة') ||
+        lower.contains('channel') ||
+        lower.contains('mbc') ||
+        lower.contains('bein') ||
+        lower.contains('sport')) {
       return Icons.tv_rounded;
     }
-    if (lower.contains('بطولة') || lower.contains('دوري') || lower.contains('كأس') || lower.contains('competition') || lower.contains('league')) {
+    if (lower.contains('بطولة') ||
+        lower.contains('دوري') ||
+        lower.contains('كأس') ||
+        lower.contains('competition') ||
+        lower.contains('league')) {
       return Icons.emoji_events_outlined;
     }
     if (lower.contains('تاريخ') || lower.contains('date')) {
       return Icons.calendar_today_rounded;
     }
-    if (lower.contains('وقت') || lower.contains('time') || lower.contains('موعد')) {
+    if (lower.contains('وقت') ||
+        lower.contains('time') ||
+        lower.contains('موعد')) {
       return Icons.access_time_rounded;
     }
-    if (lower.contains('جولة') || lower.contains('round') || lower.contains('stage')) {
+    if (lower.contains('جولة') ||
+        lower.contains('round') ||
+        lower.contains('stage')) {
       return Icons.format_list_numbered_rounded;
     }
     return Icons.info_outline_rounded;

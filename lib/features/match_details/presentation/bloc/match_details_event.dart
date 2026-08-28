@@ -36,3 +36,12 @@ class LiveMatchDetailUpdateEvent extends MatchDetailsEvent {
   @override
   List<Object?> get props => [update];
 }
+
+class MatchDetailSocketUpdateEvent extends MatchDetailsEvent {
+  final MatchDetailRealtimeUpdate update;
+
+  const MatchDetailSocketUpdateEvent(this.update);
+
+  @override
+  List<Object?> get props => [update];
+}

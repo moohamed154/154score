@@ -580,7 +580,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
     if (widget.initialMatch != null) {
       final m = widget.initialMatch!;
-      
+
       final fallbackItems = <MatchInfoItemEntity>[];
       if (m.leagueTitle != null && m.leagueTitle!.isNotEmpty) {
         fallbackItems.add(
@@ -660,7 +660,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
       if (existingInfoIndex >= 0) {
         final existingSection = detailsList[existingInfoIndex];
-        final mergedItems = List<MatchInfoItemEntity>.from(existingSection.items);
+        final mergedItems = List<MatchInfoItemEntity>.from(
+          existingSection.items,
+        );
         for (final item in fallbackItems) {
           if (!mergedItems.any((it) => it.title == item.title)) {
             mergedItems.add(item);

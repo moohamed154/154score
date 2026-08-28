@@ -137,12 +137,10 @@ void main() {
     when(() => ws.leaveMatchRoom(any())).thenReturn(null);
     when(() => ws.updatesStream).thenAnswer((_) => const Stream.empty());
 
-    when(
-      () => repo.getEvents(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess(sampleEvents));
-    when(
-      () => repo.getStats(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getEvents(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(sampleEvents));
+    when(() => repo.getStats(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
     when(
       () => repo.getDetails(
         any(),
@@ -150,19 +148,21 @@ void main() {
         utcOffset: any(named: 'utcOffset'),
       ),
     ).thenAnswer((_) async => const ApiSuccess(sampleDetails));
-    when(
-      () => repo.getNews(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getNews(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
   });
 
   group('V4.7.4 Mandatory Regression Tests (1 to 15)', () {
     // ── 1. Real event payload with Unicode apostrophe minute parses correctly ──
-    test('1. Real event payload with Unicode apostrophe minute parses correctly', () {
-      final res = MatchMinuteParser.parse('82’');
-      expect(res.mainMinute, equals(82));
-      expect(res.extraMinute, equals(0));
-      expect(res.formatted, equals('82'));
-    });
+    test(
+      '1. Real event payload with Unicode apostrophe minute parses correctly',
+      () {
+        final res = MatchMinuteParser.parse('82’');
+        expect(res.mainMinute, equals(82));
+        expect(res.extraMinute, equals(0));
+        expect(res.formatted, equals('82'));
+      },
+    );
 
     // ── 2. 90’ +4 parses correctly ──────────────────────────────────────────
     test('2. 90’ +4 and all its variants parse correctly', () {
@@ -211,9 +211,8 @@ void main() {
     // ── 5. Referee navigation uses extracted real ID ────────────────────────
     test('5. Referee navigation uses extracted real ID and slug', () {
       const link = '/referee/770414/mateo-busquets';
-      final match = RegExp(
-        r'/(referee|commentator|stadium)/(\d+)/?([^/?#]*)',
-      ).firstMatch(link);
+      final match = RegExp(r'/(referee|commentator|stadium)/(\d+)/?([^/?#]*)')
+          .firstMatch(link);
       expect(match?.group(1), equals('referee'));
       expect(match?.group(2), equals('770414'));
       expect(match?.group(3), equals('mateo-busquets'));
@@ -245,9 +244,8 @@ void main() {
     // ── 9. Stadium navigation uses extracted real ID ────────────────────────
     test('9. Stadium navigation uses extracted real ID from link', () {
       const link = 'https://ysscores.com/stadium/962/hard-rock-stadium';
-      final match = RegExp(
-        r'/(referee|commentator|stadium)/(\d+)/?([^/?#]*)',
-      ).firstMatch(link);
+      final match = RegExp(r'/(referee|commentator|stadium)/(\d+)/?([^/?#]*)')
+          .firstMatch(link);
       expect(match?.group(1), equals('stadium'));
       expect(match?.group(2), equals('962'));
       expect(match?.group(3), equals('hard-rock-stadium'));
@@ -285,9 +283,7 @@ void main() {
     });
 
     // ── 11. Events are visible in Events tab ─────────────────────────────────
-    testWidgets('11. Events are visible in Events tab', (
-      tester,
-    ) async {
+    testWidgets('11. Events are visible in Events tab', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           BlocProvider(
@@ -313,9 +309,7 @@ void main() {
     });
 
     // ── 12. Main tabs are restored ─────────────────────────────────────────
-    testWidgets('12. Main tabs exist', (
-      tester,
-    ) async {
+    testWidgets('12. Main tabs exist', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           BlocProvider(

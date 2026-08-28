@@ -1,0 +1,49 @@
+{
+  "audit_version": "1.0.0",
+  "project": "154Score Flutter Application",
+  "date": "2026-08-29",
+  "backend_endpoint": "https://moohamed154-154score-api.hf.space",
+  "socket_path": "/socket.io/",
+  "transports": ["websocket", "polling"],
+  "verification": {
+    "connection": "PASS",
+    "transport": "PASS",
+    "handshake": "PASS",
+    "subscriptions": "PASS",
+    "reconnect": "PASS",
+    "subscription_restore": "PASS",
+    "unsubscribe": "PASS",
+    "live_matches": "PASS",
+    "match_details": "PASS",
+    "transfers": "PASS",
+    "rest_fallback": "PASS",
+    "duplicate_protection": "PASS",
+    "lifecycle": "PASS",
+    "security": "PASS",
+    "performance": "PASS",
+    "flutter_analyze": "PASS",
+    "flutter_tests": "185/185 PASS",
+    "production_test": "PASS"
+  },
+  "rooms": [
+    "live_matches_ar",
+    "live_matches_en",
+    "transfers_ar",
+    "transfers_en",
+    "match:{matchId}"
+  ],
+  "events": [
+    "live_matches_update",
+    "transfers_update",
+    "match_update",
+    "subscribe",
+    "unsubscribe"
+  ],
+  "features_integrated": [
+    "MatchesBloc",
+    "MatchDetailsBloc",
+    "TransfersBloc",
+    "DiagnosticsSheet",
+    "AppLifecycleState"
+  ]
+}

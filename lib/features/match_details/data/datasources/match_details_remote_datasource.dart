@@ -84,8 +84,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             parsedMinute.isPeriodMarker;
 
         final typeStr =
-            e['type']?.toString() ??
-            (isStartEnd ? 'start-end-match' : 'event');
+            e['type']?.toString() ?? (isStartEnd ? 'start-end-match' : 'event');
 
         final scoreStr = e['score']?.toString();
 
@@ -95,8 +94,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             playerName: playerName,
             secondaryPlayerName:
                 (secondaryName != null && secondaryName.isNotEmpty)
-                    ? secondaryName
-                    : null,
+                ? secondaryName
+                : null,
             type: typeStr,
             isHomeTeam: isHome,
             score: scoreStr,
@@ -150,7 +149,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         if (map.containsKey('items')) {
           final itemsVal = map['items'];
           if (itemsVal is Map) {
-            if (itemsVal['all_events'] is List && (itemsVal['all_events'] as List).isNotEmpty) {
+            if (itemsVal['all_events'] is List &&
+                (itemsVal['all_events'] as List).isNotEmpty) {
               process(itemsVal['all_events']);
             } else if (itemsVal['featured_events'] is List) {
               process(itemsVal['featured_events']);
@@ -166,7 +166,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           process(map['all_events']);
           return;
         }
-        if (map.containsKey('featured_events') && map['featured_events'] is List) {
+        if (map.containsKey('featured_events') &&
+            map['featured_events'] is List) {
           process(map['featured_events']);
           return;
         }
@@ -229,8 +230,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     List<MatchStatItemEntity> stats, {
     String? category,
   }) {
-    final title =
-        item['title']?.toString() ?? item['name']?.toString();
+    final title = item['title']?.toString() ?? item['name']?.toString();
 
     // Ignore if there is no valid stat title or if it's promotional text
     if (title == null ||
@@ -358,10 +358,10 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
 
                     // Fallback slug from content if entity is navigable
                     if ((slug == null || slug.isEmpty) && content.isNotEmpty) {
-                      slug = content
-                          .trim()
-                          .toLowerCase()
-                          .replaceAll(RegExp(r'\s+'), '-');
+                      slug = content.trim().toLowerCase().replaceAll(
+                        RegExp(r'\s+'),
+                        '-',
+                      );
                     }
 
                     return MatchInfoItemEntity(

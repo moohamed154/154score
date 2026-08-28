@@ -48,6 +48,15 @@ class LiveMatchReceivedEvent extends MatchesEvent {
   List<Object?> get props => [update];
 }
 
+class SocketStatusChangedEvent extends MatchesEvent {
+  final SocketConnectionState status;
+
+  const SocketStatusChangedEvent(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}
+
 class ToggleMatchFavoriteEvent extends MatchesEvent {
   final String matchId;
 

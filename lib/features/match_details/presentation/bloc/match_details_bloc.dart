@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/match_event_helper.dart';
+import '../../../../core/utils/realtime_merge_engine.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../domain/entities/match_details_entity.dart';
 import '../../domain/repositories/match_details_repository.dart';
@@ -14,7 +15,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
   final MatchDetailsRepository repository;
   final WebSocketService webSocketService;
   final LocalStorageService localStorageService;
-  StreamSubscription? _wsSubscription;
+
+  StreamSubscription? _liveMatchSubscription;
+  StreamSubscription? _matchRoomSubscription;
 
   MatchDetailsBloc({
     required this.repository,
@@ -25,12 +28,29 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     on<LoadMatchDetailsEvent>(_onLoadMatchDetails);
     on<ChangeTabEvent>(_onChangeTab);
     on<LiveMatchDetailUpdateEvent>(_onLiveMatchDetailUpdate);
+    on<MatchDetailSocketUpdateEvent>(_onMatchDetailSocketUpdate);
 
-    webSocketService.joinMatchRoom(matchId);
+    // 1. Join room: match:{matchId}
+    try {
+      webSocketService.joinMatchRoom(matchId);
+    } catch (_) {}
 
-    _wsSubscription = webSocketService.updatesStream.listen((update) {
-      add(LiveMatchDetailUpdateEvent(update));
-    });
+    // 2. Listen to dedicated match updates stream
+    try {
+      final stream = webSocketService.matchUpdatesStream(matchId);
+      _matchRoomSubscription = stream.listen((update) {
+        add(MatchDetailSocketUpdateEvent(update));
+      });
+    } catch (_) {}
+
+    // 3. Listen to general live matches stream for match updates
+    try {
+      _liveMatchSubscription = webSocketService.updatesStream.listen((update) {
+        if (update.matchId == matchId) {
+          add(LiveMatchDetailUpdateEvent(update));
+        }
+      });
+    } catch (_) {}
   }
 
   Future<void> _onLoadMatchDetails(
@@ -120,10 +140,35 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     }
   }
 
+  void _onMatchDetailSocketUpdate(
+    MatchDetailSocketUpdateEvent event,
+    Emitter<MatchDetailsState> emit,
+  ) {
+    final update = event.update;
+    if (update.matchId == state.matchId) {
+      final mergeResult = RealtimeMergeEngine.mergeMatchDetailsEvents(
+        existingEvents: state.events,
+        update: update,
+      );
+
+      emit(
+        state.copyWith(
+          liveScore1: update.score1 ?? state.liveScore1,
+          liveScore2: update.score2 ?? state.liveScore2,
+          liveStatus: update.status ?? state.liveStatus,
+          events: mergeResult.isUpdated ? mergeResult.data : state.events,
+        ),
+      );
+    }
+  }
+
   @override
   Future<void> close() {
-    webSocketService.leaveMatchRoom(state.matchId);
-    _wsSubscription?.cancel();
+    try {
+      webSocketService.leaveMatchRoom(state.matchId);
+    } catch (_) {}
+    _liveMatchSubscription?.cancel();
+    _matchRoomSubscription?.cancel();
     return super.close();
   }
 }

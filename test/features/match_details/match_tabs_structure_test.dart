@@ -24,11 +24,7 @@ class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 // ── Helper ─────────────────────────────────────────────────────────────────
 
-Widget buildTestApp(
-  Widget child, {
-  double width = 390,
-  double height = 844,
-}) {
+Widget buildTestApp(Widget child, {double width = 390, double height = 844}) {
   return MaterialApp(
     locale: const Locale('ar'),
     supportedLocales: AppLocalizations.supportedLocales,
@@ -64,12 +60,10 @@ void main() {
     when(() => ws.joinMatchRoom(any())).thenReturn(null);
     when(() => ws.leaveMatchRoom(any())).thenReturn(null);
     when(() => ws.updatesStream).thenAnswer((_) => const Stream.empty());
-    when(
-      () => repo.getEvents(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
-    when(
-      () => repo.getStats(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getEvents(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getStats(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
     when(
       () => repo.getDetails(
         any(),
@@ -77,43 +71,45 @@ void main() {
         utcOffset: any(named: 'utcOffset'),
       ),
     ).thenAnswer((_) async => const ApiSuccess([]));
-    when(
-      () => repo.getNews(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getNews(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
   });
 
   group('Match Tabs Structure — V4.7.6 Reference Match Tabs', () {
     // ── 1. Main tabs exist ────────────────────────────────────────────────
-    testWidgets('Main tabs exist: الأحداث, التفاصيل, التشكيلة, الإحصائيات, الترتيب, الأخبار', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        buildTestApp(
-          BlocProvider(
-            create: (_) => MatchDetailsBloc(
-              repository: repo,
-              webSocketService: ws,
-              localStorageService: storage,
-              matchId: 'test123',
+    testWidgets(
+      'Main tabs exist: الأحداث, التفاصيل, التشكيلة, الإحصائيات, الترتيب, الأخبار',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTestApp(
+            BlocProvider(
+              create: (_) => MatchDetailsBloc(
+                repository: repo,
+                webSocketService: ws,
+                localStorageService: storage,
+                matchId: 'test123',
+              ),
+              child: const MatchDetailsView(matchId: 'test123'),
             ),
-            child: const MatchDetailsView(matchId: 'test123'),
           ),
-        ),
-      );
+        );
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('الأحداث'), findsWidgets);
-      expect(find.text('التفاصيل'), findsOneWidget);
-      expect(find.text('التشكيلة'), findsOneWidget);
-      expect(find.text('الإحصائيات'), findsWidgets);
-      expect(find.text('الترتيب'), findsOneWidget);
-      expect(find.text('الأخبار'), findsOneWidget);
-    });
+        expect(find.text('الأحداث'), findsWidgets);
+        expect(find.text('التفاصيل'), findsOneWidget);
+        expect(find.text('التشكيلة'), findsOneWidget);
+        expect(find.text('الإحصائيات'), findsWidgets);
+        expect(find.text('الترتيب'), findsOneWidget);
+        expect(find.text('الأخبار'), findsOneWidget);
+      },
+    );
 
     // ── 2. Events filter inside الأحداث ──────────────────────────────────
-    testWidgets('Events tab contains الأبرز and كل الأحداث filter', (tester) async {
+    testWidgets('Events tab contains الأبرز and كل الأحداث filter', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestApp(
           BlocProvider(

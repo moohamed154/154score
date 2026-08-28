@@ -162,7 +162,11 @@ Future<void> initDependencies() async {
   );
 
   sl.registerFactory<TransfersBloc>(
-    () => TransfersBloc(repository: sl(), localStorageService: sl()),
+    () => TransfersBloc(
+      repository: sl(),
+      localStorageService: sl(),
+      webSocketService: sl(),
+    ),
   );
 
   sl.registerFactory<VideosBloc>(

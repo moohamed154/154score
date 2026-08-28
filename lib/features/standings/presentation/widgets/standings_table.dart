@@ -29,7 +29,10 @@ class StandingsTable extends StatelessWidget {
       return s
           .trim()
           .toLowerCase()
-          .replaceAll(RegExp(r'^(نادي|فريق|fc|sc|cf)\s+', caseSensitive: false), '')
+          .replaceAll(
+            RegExp(r'^(نادي|فريق|fc|sc|cf)\s+', caseSensitive: false),
+            '',
+          )
           .replaceAll(RegExp(r'\s+(fc|sc|cf)$', caseSensitive: false), '')
           .replaceAll('أ', 'ا')
           .replaceAll('إ', 'ا')
@@ -271,8 +274,8 @@ class StandingsTable extends StatelessWidget {
     return Material(
       color: isHighlighted
           ? (isDark
-              ? AppColors.primary.withValues(alpha: 0.18)
-              : AppColors.primary.withValues(alpha: 0.12))
+                ? AppColors.primary.withValues(alpha: 0.18)
+                : AppColors.primary.withValues(alpha: 0.12))
           : Colors.transparent,
       child: InkWell(
         onTap: () {
@@ -370,8 +373,8 @@ class StandingsTable extends StatelessWidget {
                               fontSize: isSmall ? 11 : 13,
                               color: isHighlighted
                                   ? (isDark
-                                      ? AppColors.primaryLight
-                                      : AppColors.primaryDark)
+                                        ? AppColors.primaryLight
+                                        : AppColors.primaryDark)
                                   : null,
                             ),
                         maxLines: 1,

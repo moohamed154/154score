@@ -27,74 +27,71 @@ Widget createTestApp(Widget child, {Locale locale = const Locale('ar')}) {
 
 void main() {
   group('154Score V4.7.1 Standings Fix & Qualification Regression Tests', () {
-    test(
-      '1. DataSource parses all 20 teams when data.table has 1 item and raw.list_match has 20 items',
-      () async {
-        final mockClient = MockApiClient();
-        final ds = StandingsRemoteDataSourceImpl(mockClient);
+    test('1. DataSource parses all 20 teams when data.table has 1 item and raw.list_match has 20 items', () async {
+      final mockClient = MockApiClient();
+      final ds = StandingsRemoteDataSourceImpl(mockClient);
 
-        // Simulate the exact production API response bug where table had 1 item, but raw.list_match had 20 items
-        final mock20Teams = <String, dynamic>{};
-        for (int i = 1; i <= 20; i++) {
-          mock20Teams[i.toString()] = {
-            'name': 'الفريق $i',
-            'play': 38,
-            'wins': 20,
-            'draw': 10,
-            'lose': 8,
-            'for': 60,
-            'against': 30,
-            'diff': 30,
-            'points': 70 - i,
-            'color': i <= 4 ? '#4986e7' : (i >= 18 ? '#f83a22' : null),
-          };
-        }
-
-        final mockPayload = {
-          'success': true,
-          'data': {
-            'league_name': 'الدوري الإنجليزي الممتاز',
-            'table': [
-              {
-                'position': 1,
-                'team_name': 'الفريق 1',
-                'played': 38,
-                'wins': 20,
-                'draws': 10,
-                'losses': 8,
-                'goals_for': 60,
-                'goals_against': 30,
-                'goal_difference': 30,
-                'points': 70,
-              },
-            ],
-            'raw': {
-              'list_match': [mock20Teams],
-              'promotion': [
-                '<div class="rank-key"><svg><rect fill="#4986e7"/></svg><span>يتأهل دوري أبطال أوروبا</span></div> <div class="rank-key"><svg><rect fill="#f83a22"/></svg><span>يهبط دوري البطولة الإنجليزية</span></div>',
-              ],
-            },
-          },
+      // Simulate the exact production API response bug where table had 1 item, but raw.list_match had 20 items
+      final mock20Teams = <String, dynamic>{};
+      for (int i = 1; i <= 20; i++) {
+        mock20Teams[i.toString()] = {
+          'name': 'الفريق $i',
+          'play': 38,
+          'wins': 20,
+          'draw': 10,
+          'lose': 8,
+          'for': 60,
+          'against': 30,
+          'diff': 30,
+          'points': 70 - i,
+          'color': i <= 4 ? '#4986e7' : (i >= 18 ? '#f83a22' : null),
         };
+      }
 
-        when(
-          () => mockClient.get(
-            any(),
-            queryParameters: any(named: 'queryParameters'),
-          ),
-        ).thenAnswer((_) async => mockPayload);
+      final mockPayload = {
+        'success': true,
+        'data': {
+          'league_name': 'الدوري الإنجليزي الممتاز',
+          'table': [
+            {
+              'position': 1,
+              'team_name': 'الفريق 1',
+              'played': 38,
+              'wins': 20,
+              'draws': 10,
+              'losses': 8,
+              'goals_for': 60,
+              'goals_against': 30,
+              'goal_difference': 30,
+              'points': 70,
+            },
+          ],
+          'raw': {
+            'list_match': [mock20Teams],
+            'promotion': [
+              '<div class="rank-key"><svg><rect fill="#4986e7"/></svg><span>يتأهل دوري أبطال أوروبا</span></div> <div class="rank-key"><svg><rect fill="#f83a22"/></svg><span>يهبط دوري البطولة الإنجليزية</span></div>',
+            ],
+          },
+        },
+      };
 
-        final result = await ds.getStandings('937599', lang: 'ar');
+      when(
+        () => mockClient.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => mockPayload);
 
-        expect(result.rows.length, 20); // Must be 20 teams, NOT 1 team!
-        expect(result.rows.first.teamName, 'الفريق 1');
-        expect(result.rows.last.teamName, 'الفريق 20');
-        expect(result.legends, isNotNull);
-        expect(result.legends!.length, 2);
-        expect(result.legends!.first.description, 'يتأهل دوري أبطال أوروبا');
-        expect(result.legends!.last.description, 'يهبط دوري البطولة الإنجليزية');
-      },
-    );
+      final result = await ds.getStandings('937599', lang: 'ar');
+
+      expect(result.rows.length, 20); // Must be 20 teams, NOT 1 team!
+      expect(result.rows.first.teamName, 'الفريق 1');
+      expect(result.rows.last.teamName, 'الفريق 20');
+      expect(result.legends, isNotNull);
+      expect(result.legends!.length, 2);
+      expect(result.legends!.first.description, 'يتأهل دوري أبطال أوروبا');
+      expect(result.legends!.last.description, 'يهبط دوري البطولة الإنجليزية');
+    });
 
     testWidgets('2. StandingsTable renders all 5 teams without dropping rows', (
       tester,
@@ -312,10 +309,9 @@ void main() {
                 children: [
                   StandingsTable(rows: standings.rows),
                   Wrap(
-                    children:
-                        standings.legends!
-                            .map((l) => Text(l.description))
-                            .toList(),
+                    children: standings.legends!
+                        .map((l) => Text(l.description))
+                        .toList(),
                   ),
                 ],
               ),

@@ -140,12 +140,10 @@ void main() {
     when(() => ws.leaveMatchRoom(any())).thenReturn(null);
     when(() => ws.updatesStream).thenAnswer((_) => const Stream.empty());
 
-    when(
-      () => repo.getEvents(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess(sampleEvents));
-    when(
-      () => repo.getStats(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getEvents(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(sampleEvents));
+    when(() => repo.getStats(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
     when(
       () => repo.getDetails(
         any(),
@@ -153,9 +151,8 @@ void main() {
         utcOffset: any(named: 'utcOffset'),
       ),
     ).thenAnswer((_) async => const ApiSuccess(sampleDetails));
-    when(
-      () => repo.getNews(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getNews(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
   });
 
   group('Phase 9 — All 30 Mandatory Regression Tests', () {
@@ -330,7 +327,9 @@ void main() {
     });
 
     // TEST 8: Match Information remains present
-    testWidgets('TEST 8: Match Information remains present in التفاصيل tab', (tester) async {
+    testWidgets('TEST 8: Match Information remains present in التفاصيل tab', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestApp(
           BlocProvider(
@@ -355,9 +354,7 @@ void main() {
     });
 
     // TEST 9: Stadium information remains visible
-    testWidgets('TEST 9: Stadium information remains visible', (
-      tester,
-    ) async {
+    testWidgets('TEST 9: Stadium information remains visible', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           BlocProvider(
@@ -382,9 +379,7 @@ void main() {
     });
 
     // TEST 10: Referee information remains visible
-    testWidgets('TEST 10: Referee information remains visible', (
-      tester,
-    ) async {
+    testWidgets('TEST 10: Referee information remains visible', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           BlocProvider(
@@ -436,25 +431,36 @@ void main() {
     });
 
     // TEST 12
-    test('TEST 12: A valid referee ID navigates to the correct referee route', () {
-      const link = '/referee/770414/mateo-busquets';
-      final match = RegExp(
-        r'/(referee|commentator|stadium)/(\d+)/?([^/?#]*)',
-      ).firstMatch(link);
-      expect(match?.group(1), equals('referee'));
-      expect(match?.group(2), equals('770414'));
-      expect(match?.group(3), equals('mateo-busquets'));
-      expect(ApiEndpoints.referee('770414', 'mateo-busquets'), equals('/api/referee/770414/mateo-busquets'));
-    });
+    test(
+      'TEST 12: A valid referee ID navigates to the correct referee route',
+      () {
+        const link = '/referee/770414/mateo-busquets';
+        final match = RegExp(r'/(referee|commentator|stadium)/(\d+)/?([^/?#]*)')
+            .firstMatch(link);
+        expect(match?.group(1), equals('referee'));
+        expect(match?.group(2), equals('770414'));
+        expect(match?.group(3), equals('mateo-busquets'));
+        expect(
+          ApiEndpoints.referee('770414', 'mateo-busquets'),
+          equals('/api/referee/770414/mateo-busquets'),
+        );
+      },
+    );
 
     // TEST 13
     test('TEST 13: A valid commentator ID navigates to the correct commentator route', () {
-      expect(ApiEndpoints.commentator('55', 'hafid-darragi'), equals('/api/commentator/55/hafid-darragi'));
+      expect(
+        ApiEndpoints.commentator('55', 'hafid-darragi'),
+        equals('/api/commentator/55/hafid-darragi'),
+      );
     });
 
     // TEST 14
     test('TEST 14: A valid stadium ID navigates correctly', () {
-      expect(ApiEndpoints.stadium('962', 'santiago-bernabeu'), equals('/api/stadium/962/santiago-bernabeu'));
+      expect(
+        ApiEndpoints.stadium('962', 'santiago-bernabeu'),
+        equals('/api/stadium/962/santiago-bernabeu'),
+      );
     });
 
     // TEST 15
@@ -517,62 +523,62 @@ void main() {
     });
 
     // TEST 23
-    testWidgets('TEST 23: Empty event API response shows a proper empty state', (
-      tester,
-    ) async {
-      when(
-        () => repo.getEvents(any(), lang: any(named: 'lang')),
-      ).thenAnswer((_) async => const ApiSuccess([]));
+    testWidgets(
+      'TEST 23: Empty event API response shows a proper empty state',
+      (tester) async {
+        when(() => repo.getEvents(any(), lang: any(named: 'lang')))
+            .thenAnswer((_) async => const ApiSuccess([]));
 
-      await tester.pumpWidget(
-        buildTestApp(
-          BlocProvider(
-            create: (_) => MatchDetailsBloc(
-              repository: repo,
-              webSocketService: ws,
-              localStorageService: storage,
-              matchId: '5868018',
-            ),
-            child: const MatchDetailsView(
-              matchId: '5868018',
-              initialMatch: sampleMatch,
+        await tester.pumpWidget(
+          buildTestApp(
+            BlocProvider(
+              create: (_) => MatchDetailsBloc(
+                repository: repo,
+                webSocketService: ws,
+                localStorageService: storage,
+                matchId: '5868018',
+              ),
+              child: const MatchDetailsView(
+                matchId: '5868018',
+                initialMatch: sampleMatch,
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byIcon(Icons.timeline_rounded), findsOneWidget);
-    });
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.byIcon(Icons.timeline_rounded), findsOneWidget);
+      },
+    );
 
     // TEST 24
-    testWidgets('TEST 24: Valid non-empty event API response MUST NOT show empty state', (
-      tester,
-    ) async {
-      when(
-        () => repo.getEvents(any(), lang: any(named: 'lang')),
-      ).thenAnswer((_) async => const ApiSuccess(sampleEvents));
+    testWidgets(
+      'TEST 24: Valid non-empty event API response MUST NOT show empty state',
+      (tester) async {
+        when(() => repo.getEvents(any(), lang: any(named: 'lang')))
+            .thenAnswer((_) async => const ApiSuccess(sampleEvents));
 
-      await tester.pumpWidget(
-        buildTestApp(
-          BlocProvider(
-            create: (_) => MatchDetailsBloc(
-              repository: repo,
-              webSocketService: ws,
-              localStorageService: storage,
-              matchId: '5868018',
-            ),
-            child: const MatchDetailsView(
-              matchId: '5868018',
-              initialMatch: sampleMatch,
+        await tester.pumpWidget(
+          buildTestApp(
+            BlocProvider(
+              create: (_) => MatchDetailsBloc(
+                repository: repo,
+                webSocketService: ws,
+                localStorageService: storage,
+                matchId: '5868018',
+              ),
+              child: const MatchDetailsView(
+                matchId: '5868018',
+                initialMatch: sampleMatch,
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('كيليان مبابي'), findsOneWidget);
-    });
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('كيليان مبابي'), findsOneWidget);
+      },
+    );
 
     // TEST 25
     testWidgets('TEST 25: 320px width has zero overflow', (tester) async {

@@ -40,11 +40,10 @@ void main() {
       const id = '770414';
       const slug = 'espen-eskaas';
 
-      when(
-        () => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')),
-      ).thenAnswer(
-        (_) async => ApiSuccess(makeProfile(id, slug, 'إسبن إسكاس')),
-      );
+      when(() => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')))
+          .thenAnswer(
+            (_) async => ApiSuccess(makeProfile(id, slug, 'إسبن إسكاس')),
+          );
 
       final result = await repo.getRefereeProfile(id, slug, lang: 'ar');
 
@@ -52,9 +51,8 @@ void main() {
       expect(result.dataOrNull?.slug, equals('espen-eskaas'));
       expect(result.dataOrNull?.name, equals('إسبن إسكاس'));
 
-      verify(
-        () => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')),
-      ).called(1);
+      verify(() => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')))
+          .called(1);
     });
 
     // ── 2. Missing optional fields do not crash ───────────────────────────
@@ -82,17 +80,14 @@ void main() {
       const id2 = '999';
       const slug2 = 'another-referee';
 
-      when(
-        () => repo.getRefereeProfile(id1, slug1, lang: any(named: 'lang')),
-      ).thenAnswer(
-        (_) async => ApiSuccess(makeProfile(id1, slug1, 'إسبن إسكاس')),
-      );
+      when(() => repo.getRefereeProfile(id1, slug1, lang: any(named: 'lang')))
+          .thenAnswer(
+            (_) async => ApiSuccess(makeProfile(id1, slug1, 'إسبن إسكاس')),
+          );
 
       when(
         () => repo.getRefereeProfile(id2, slug2, lang: any(named: 'lang')),
-      ).thenAnswer(
-        (_) async => ApiSuccess(makeProfile(id2, slug2, 'حكم آخر')),
-      );
+      ).thenAnswer((_) async => ApiSuccess(makeProfile(id2, slug2, 'حكم آخر')));
 
       final r1 = await repo.getRefereeProfile(id1, slug1, lang: 'ar');
       final r2 = await repo.getRefereeProfile(id2, slug2, lang: 'ar');
@@ -106,12 +101,11 @@ void main() {
       const id = '0';
       const slug = 'invalid-referee';
 
-      when(
-        () => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')),
-      ).thenAnswer(
-        (_) async =>
-            const ApiFailure(ServerFailure('Not found', statusCode: 404)),
-      );
+      when(() => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')))
+          .thenAnswer(
+            (_) async =>
+                const ApiFailure(ServerFailure('Not found', statusCode: 404)),
+          );
 
       final result = await repo.getRefereeProfile(id, slug, lang: 'ar');
 
@@ -120,23 +114,25 @@ void main() {
     });
 
     // ── 5. Retry produces a new request ──────────────────────────────────
-    test('calling getRefereeProfile twice (retry) makes two API calls', () async {
-      const id = '770414';
-      const slug = 'espen-eskaas';
-      var callCount = 0;
+    test(
+      'calling getRefereeProfile twice (retry) makes two API calls',
+      () async {
+        const id = '770414';
+        const slug = 'espen-eskaas';
+        var callCount = 0;
 
-      when(
-        () => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')),
-      ).thenAnswer((_) async {
-        callCount++;
-        return ApiSuccess(makeProfile(id, slug, 'إسبن إسكاس'));
-      });
+        when(() => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')))
+            .thenAnswer((_) async {
+              callCount++;
+              return ApiSuccess(makeProfile(id, slug, 'إسبن إسكاس'));
+            });
 
-      await repo.getRefereeProfile(id, slug, lang: 'ar');
-      await repo.getRefereeProfile(id, slug, lang: 'ar');
+        await repo.getRefereeProfile(id, slug, lang: 'ar');
+        await repo.getRefereeProfile(id, slug, lang: 'ar');
 
-      expect(callCount, equals(2));
-    });
+        expect(callCount, equals(2));
+      },
+    );
 
     // ── 6. Three different referee IDs return three distinct profiles ──────
     test('three referees produce three distinct results', () async {
@@ -147,11 +143,8 @@ void main() {
       ];
 
       for (final (id, slug, name) in referees) {
-        when(
-          () => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')),
-        ).thenAnswer(
-          (_) async => ApiSuccess(makeProfile(id, slug, name)),
-        );
+        when(() => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')))
+            .thenAnswer((_) async => ApiSuccess(makeProfile(id, slug, name)));
       }
 
       final results = await Future.wait(
@@ -197,8 +190,7 @@ void main() {
       expect(profile.sections.first.section, equals('معلومات أخرى'));
       expect(profile.sections.first.items.length, equals(4));
       expect(
-        profile.sections.first.items
-            .any((i) => i.title == 'نوع الحكم'),
+        profile.sections.first.items.any((i) => i.title == 'نوع الحكم'),
         isTrue,
       );
     });

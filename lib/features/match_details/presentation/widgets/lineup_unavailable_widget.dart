@@ -87,14 +87,15 @@ class LineupUnavailableWidget extends StatelessWidget {
             isArabic
                 ? 'بيانات التشكيلة غير متوفرة حالياً من مصدر البيانات.\nسيتم إضافتها عند توفرها من واجهة البرمجة.'
                 : 'Lineup data is not yet available from the data source.\nIt will be added when the API supports it.',
-            style: AppTypography.getBodyMedium(
-              isDark: isDark,
-              isArabic: isArabic,
-            ).copyWith(
-              color: isDark
-                  ? AppColors.darkTextMuted
-                  : AppColors.lightTextMuted,
-            ),
+            style:
+                AppTypography.getBodyMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -106,9 +107,7 @@ class LineupUnavailableWidget extends StatelessWidget {
     return Container(
       height: 160,
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF1A3A2A)
-            : const Color(0xFF2D7A4F),
+        color: isDark ? const Color(0xFF1A3A2A) : const Color(0xFF2D7A4F),
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.primary,
@@ -124,7 +123,10 @@ class LineupUnavailableWidget extends StatelessWidget {
               height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  width: 1.5,
+                ),
               ),
             ),
           ),

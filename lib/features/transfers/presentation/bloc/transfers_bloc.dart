@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/realtime_merge_engine.dart';
+import '../../../../core/websocket/websocket_event.dart';
+import '../../../../core/websocket/websocket_service.dart';
 import '../../domain/entities/transfer_entity.dart';
 import '../../domain/repositories/transfers_repository.dart';
 
@@ -28,6 +33,15 @@ class SearchTransfersEvent extends TransfersEvent {
 
   @override
   List<Object?> get props => [query];
+}
+
+class TransferSocketUpdateEvent extends TransfersEvent {
+  final TransferUpdate update;
+
+  const TransferSocketUpdateEvent(this.update);
+
+  @override
+  List<Object?> get props => [update];
 }
 
 enum TransfersStatus { initial, loading, success, empty, error }
@@ -76,11 +90,25 @@ class TransfersState extends Equatable {
 class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
   final TransfersRepository repository;
   final LocalStorageService localStorageService;
+  final WebSocketService? webSocketService;
 
-  TransfersBloc({required this.repository, required this.localStorageService})
-    : super(const TransfersState()) {
+  StreamSubscription? _wsSubscription;
+
+  TransfersBloc({
+    required this.repository,
+    required this.localStorageService,
+    this.webSocketService,
+  }) : super(const TransfersState()) {
     on<LoadTransfersEvent>(_onLoadTransfers);
     on<SearchTransfersEvent>(_onSearchTransfers);
+    on<TransferSocketUpdateEvent>(_onTransferSocketUpdate);
+
+    if (webSocketService != null) {
+      webSocketService!.subscribeTransfers();
+      _wsSubscription = webSocketService!.transfersStream.listen((update) {
+        add(TransferSocketUpdateEvent(update));
+      });
+    }
   }
 
   Future<void> _onLoadTransfers(
@@ -127,6 +155,27 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
     emit(state.copyWith(searchQuery: event.query, filteredTransfers: filtered));
   }
 
+  void _onTransferSocketUpdate(
+    TransferSocketUpdateEvent event,
+    Emitter<TransfersState> emit,
+  ) {
+    final mergeResult = RealtimeMergeEngine.mergeTransfersWithRealtime(
+      existingTransfers: state.allTransfers,
+      update: event.update,
+    );
+
+    if (mergeResult.isUpdated) {
+      final filtered = _applySearch(mergeResult.data, state.searchQuery);
+      emit(
+        state.copyWith(
+          status: TransfersStatus.success,
+          allTransfers: mergeResult.data,
+          filteredTransfers: filtered,
+        ),
+      );
+    }
+  }
+
   List<TransferEntity> _applySearch(List<TransferEntity> list, String query) {
     if (query.trim().isEmpty) return list;
     final q = query.trim().toLowerCase();
@@ -136,5 +185,12 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
           (t.toTeamName?.toLowerCase().contains(q) ?? false) ||
           (t.playerPosition?.toLowerCase().contains(q) ?? false);
     }).toList();
+  }
+
+  @override
+  Future<void> close() {
+    webSocketService?.unsubscribeTransfers();
+    _wsSubscription?.cancel();
+    return super.close();
   }
 }
