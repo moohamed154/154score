@@ -8,6 +8,10 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/utils/url_helper.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../standings/presentation/bloc/standings_bloc.dart';
+import '../../../standings/presentation/widgets/standings_table.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../bloc/match_details_bloc.dart';
 import '../bloc/match_details_event.dart';
@@ -89,10 +93,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.share_rounded),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.share_rounded), onPressed: () {}),
         ],
       ),
       body: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
@@ -157,16 +158,21 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                       : state.status == MatchDetailsStatus.error
                       ? ErrorView(
                           message: state.errorMessage,
-                          onRetry: () =>
-                              context.read<MatchDetailsBloc>().add(
-                                LoadMatchDetailsEvent(widget.matchId),
-                              ),
+                          onRetry: () => context.read<MatchDetailsBloc>().add(
+                            LoadMatchDetailsEvent(widget.matchId),
+                          ),
                         )
                       : TabBarView(
                           controller: _tabController,
                           children: [
                             // 1. الأحداث (Events with Video chips, Highlights/All filter, Timeline & Stats Preview)
-                            _buildEventsTab(context, state, fallbackMatch, isDark, isArabic),
+                            _buildEventsTab(
+                              context,
+                              state,
+                              fallbackMatch,
+                              isDark,
+                              isArabic,
+                            ),
 
                             // 2. التفاصيل (Details / Match Info)
                             _buildDetailsTab(context, state, isDark, isArabic),
@@ -206,11 +212,15 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     // Filter events based on selected filter
     final displayedEvents = state.events.where((e) {
       if (_eventFilter == _EventFilter.all) return true;
-      // Highlights: Goals, disallowed goals, penalties, red cards, second yellows, and period markers
+      // Highlights: Goals, disallowed goals, penalties, red cards, yellow cards, subs, and period markers
       final t = e.type.toLowerCase();
       return t.contains('goal') ||
           t.contains('penalty') ||
+          t.contains('card') ||
           t.contains('red') ||
+          t.contains('yellow') ||
+          t.contains('sub') ||
+          t.contains('event') ||
           t.contains('start-end') ||
           t.contains('period') ||
           t.contains('whistle') ||
@@ -222,10 +232,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       padding: EdgeInsets.all(hMargin),
       children: [
         // ── Video Highlights Summary Chips ───────────────────────────────
-        if (state.news.isNotEmpty) ...[
-          _buildVideoSummaryChips(state.news, isDark, isArabic),
-          const SizedBox(height: AppDimensions.md),
-        ],
+        _buildVideoSummaryChips(state.news, isDark, isArabic),
+        const SizedBox(height: AppDimensions.md),
 
         // ── Section Title & Filter (الأحداث + [الأبرز | كل الأحداث]) ─────
         Row(
@@ -255,7 +263,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         else
           Container(
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+              color: isDark
+                  ? AppColors.darkCardElevated
+                  : AppColors.lightCardElevated,
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               border: Border.all(
                 color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -263,7 +273,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
             ),
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Column(
-              children: displayedEvents.map((e) => TimelineEventItem(event: e)).toList(),
+              children: displayedEvents
+                  .map((e) => TimelineEventItem(event: e))
+                  .toList(),
             ),
           ),
 
@@ -290,7 +302,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   Widget _buildEventFilterSelector(bool isDark, bool isArabic) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+        color: isDark
+            ? AppColors.darkCardElevated
+            : AppColors.lightCardElevated,
         borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
       ),
       padding: const EdgeInsets.all(3),
@@ -334,22 +348,23 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary
-              : Colors.transparent,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
         ),
         child: Text(
           label,
-          style: AppTypography.getBodySmall(
-            isDark: isSelected ? true : isDark,
-            isArabic: isArabic,
-          ).copyWith(
-            fontWeight: FontWeight.w700,
-            color: isSelected
-                ? Colors.white
-                : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-          ),
+          style:
+              AppTypography.getBodySmall(
+                isDark: isSelected ? true : isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontWeight: FontWeight.w700,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary),
+              ),
         ),
       ),
     );
@@ -361,42 +376,86 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     bool isDark,
     bool isArabic,
   ) {
+    final items = news.isNotEmpty
+        ? news.take(4).toList()
+        : [
+            MatchNewsItemEntity(
+              title: isArabic ? 'ملخص المباراة' : 'Match Highlights',
+              link: '/video/${widget.matchId}',
+            ),
+          ];
+
     return SizedBox(
       height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: news.take(4).length,
+        itemCount: items.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final item = news[index];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+          final item = items[index];
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              onTap: () {
+                final link = item.link;
+                if (link != null && link.isNotEmpty) {
+                  final videoMatch = RegExp(r'/video/(\d+)').firstMatch(link);
+                  if (videoMatch != null) {
+                    context.push('/video/${videoMatch.group(1)}');
+                  } else if (link.startsWith('http://') ||
+                      link.startsWith('https://')) {
+                    UrlHelper.launchVideoUrl(
+                      link,
+                      thumbnail: item.image,
+                      context: context,
+                    );
+                  } else {
+                    context.push('/video/${Uri.encodeComponent(link)}');
+                  }
+                } else {
+                  context.push('/video/${Uri.encodeComponent(widget.matchId)}');
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkCardElevated
+                      : AppColors.lightCardElevated,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.video_library_rounded,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      item.title.isNotEmpty
+                          ? item.title
+                          : (isArabic ? 'ملخص المباراة' : 'Highlights'),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.video_library_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  item.title.isNotEmpty ? item.title : (isArabic ? 'ملخص المباراة' : 'Highlights'),
-                  style: AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
             ),
           );
         },
@@ -415,7 +474,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+        color: isDark
+            ? AppColors.darkCardElevated
+            : AppColors.lightCardElevated,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -446,12 +507,15 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                   Expanded(
                     child: Text(
                       st.title,
-                      style: AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                      ),
+                      style:
+                          AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -487,13 +551,14 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               child: Center(
                 child: Text(
                   isArabic ? 'أظهر المزيد' : 'Show More',
-                  style: AppTypography.getBodyMedium(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
+                  style:
+                      AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                 ),
               ),
             ),
@@ -511,8 +576,46 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     bool isArabic,
   ) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
+    final detailsList = List<MatchInfoSectionEntity>.from(state.details);
 
-    if (state.details.isEmpty) {
+    if (detailsList.isEmpty && widget.initialMatch != null) {
+      final m = widget.initialMatch!;
+      final items = <MatchInfoItemEntity>[];
+      if (m.leagueTitle != null && m.leagueTitle!.isNotEmpty) {
+        items.add(
+          MatchInfoItemEntity(
+            title: isArabic ? 'البطولة' : 'Competition',
+            content: m.leagueTitle!,
+          ),
+        );
+      }
+      if (m.time != null && m.time!.isNotEmpty) {
+        items.add(
+          MatchInfoItemEntity(
+            title: isArabic ? 'وقت المباراة' : 'Match Time',
+            content: m.time!,
+          ),
+        );
+      }
+      if (m.date != null && m.date!.isNotEmpty) {
+        items.add(
+          MatchInfoItemEntity(
+            title: isArabic ? 'تاريخ المباراة' : 'Match Date',
+            content: m.date!,
+          ),
+        );
+      }
+      if (items.isNotEmpty) {
+        detailsList.add(
+          MatchInfoSectionEntity(
+            section: isArabic ? 'معلومات اللقاء' : 'Match Information',
+            items: items,
+          ),
+        );
+      }
+    }
+
+    if (detailsList.isEmpty) {
       return const EmptyView(
         titleKey: 'tab_overview',
         icon: Icons.info_outline_rounded,
@@ -522,9 +625,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     return ListView(
       key: const PageStorageKey('details_tab_list'),
       padding: EdgeInsets.all(hMargin),
-      children: [
-        ...state.details.map((sec) => MatchInfoCard(section: sec)),
-      ],
+      children: [...detailsList.map((sec) => MatchInfoCard(section: sec))],
     );
   }
 
@@ -554,34 +655,214 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     );
   }
 
+  String? _resolveLeagueId() {
+    final rawId = widget.initialMatch?.leagueId;
+    if (rawId != null && rawId.isNotEmpty && rawId != 'null') {
+      return rawId;
+    }
+    final title = widget.initialMatch?.leagueTitle?.toLowerCase() ?? '';
+    if (title.contains('إسباني') ||
+        title.contains('laliga') ||
+        title.contains('spain')) {
+      return '938652';
+    }
+    if (title.contains('إنجليزي') ||
+        title.contains('premier') ||
+        title.contains('england')) {
+      return '937599';
+    }
+    if (title.contains('روسي') ||
+        title.contains('russian') ||
+        title.contains('russia')) {
+      return '938370';
+    }
+    if (title.contains('إيطالي') ||
+        title.contains('serie a') ||
+        title.contains('italy')) {
+      return '936357';
+    }
+    if (title.contains('ألماني') ||
+        title.contains('bundesliga') ||
+        title.contains('germany')) {
+      return '938769';
+    }
+    if (title.contains('فرنسي') ||
+        title.contains('ligue 1') ||
+        title.contains('france')) {
+      return '937873';
+    }
+    if (title.contains('أبطال أوروبا') || title.contains('champions')) {
+      return '904988';
+    }
+    if (title.contains('سعودي') || title.contains('roshn')) {
+      return '941825';
+    }
+    if (title.contains('مصري') || title.contains('egypt')) {
+      return '943009';
+    }
+    return null;
+  }
+
   // ── Tab 5: الترتيب (Standings) ─────────────────────────────────────────────
-  Widget _buildStandingsTab(
-    BuildContext context,
-    bool isDark,
-    bool isArabic,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.format_list_numbered_rounded,
-              size: 48,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              isArabic ? 'جدول الترتيب متاح في صفحة البطولة' : 'Standings available in League view',
-              style: AppTypography.getBodyLarge(
-                isDark: isDark,
-                isArabic: isArabic,
-              ).copyWith(fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
-            ),
-          ],
+  Widget _buildStandingsTab(BuildContext context, bool isDark, bool isArabic) {
+    final leagueId = _resolveLeagueId();
+
+    if (leagueId == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.format_list_numbered_rounded,
+                size: 48,
+                color: AppColors.primary,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                isArabic
+                    ? 'جدول الترتيب غير متوفر لهذه البطولة حالياً'
+                    : 'Standings not available for this competition',
+                style: AppTypography.getBodyLarge(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
+      );
+    }
+
+    return BlocProvider<StandingsBloc>(
+      create: (_) => sl<StandingsBloc>()..add(LoadStandingsEvent(leagueId)),
+      child: BlocBuilder<StandingsBloc, StandingsState>(
+        builder: (context, state) {
+          if (state.status == StandingsStatus.loading) {
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
+          }
+
+          if (state.status == StandingsStatus.error) {
+            return ErrorView(
+              message: state.errorMessage,
+              onRetry: () {
+                context.read<StandingsBloc>().add(LoadStandingsEvent(leagueId));
+              },
+            );
+          }
+
+          if (state.standings == null || state.standings!.rows.isEmpty) {
+            return EmptyView(
+              titleKey: 'standings_title',
+              customMessage: isArabic
+                  ? 'لا يوجد جدول ترتيب متوفر لهذه البطولة حالياً'
+                  : 'No standings data available for this competition',
+              icon: Icons.table_chart_outlined,
+            );
+          }
+
+          final standings = state.standings!;
+          final hasGroups = standings.hasMultipleGroups;
+
+          return ListView(
+            key: const PageStorageKey('match_standings_tab_list'),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            children: [
+              if (hasGroups) ...[
+                ...standings.groups!.entries.map((groupEntry) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                        child: Text(
+                          groupEntry.key,
+                          style: AppTypography.getHeadingMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(fontSize: 16),
+                        ),
+                      ),
+                      StandingsTable(
+                        rows: groupEntry.value,
+                        highlightedTeamNames: [
+                          if (widget.initialMatch?.team1 != null)
+                            widget.initialMatch!.team1,
+                          if (widget.initialMatch?.team2 != null)
+                            widget.initialMatch!.team2,
+                        ],
+                      ),
+                    ],
+                  );
+                }),
+              ] else ...[
+                StandingsTable(
+                  rows: standings.rows,
+                  highlightedTeamNames: [
+                    if (widget.initialMatch?.team1 != null)
+                      widget.initialMatch!.team1,
+                    if (widget.initialMatch?.team2 != null)
+                      widget.initialMatch!.team2,
+                  ],
+                ),
+              ],
+
+              // Promotion / Relegation Legend
+              if (standings.legends != null && standings.legends!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.xl,
+                    vertical: 12,
+                  ),
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 10,
+                    children: standings.legends!.map((item) {
+                      Color itemColor = AppColors.primary;
+                      try {
+                        final hex = item.colorHex.replaceAll('#', '');
+                        if (hex.length == 6) {
+                          itemColor = Color(int.parse('0xFF$hex'));
+                        }
+                      } catch (_) {}
+
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: itemColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            item.description,
+                            style:
+                                AppTypography.getBodySmall(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                  fontSize: 11,
+                                ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -596,10 +877,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     if (state.news.isEmpty) {
-      return const EmptyView(
-        titleKey: 'tab_news',
-        icon: Icons.article_rounded,
-      );
+      return const EmptyView(titleKey: 'tab_news', icon: Icons.article_rounded);
     }
 
     return ListView.separated(
@@ -617,7 +895,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                     width: 50,
                     height: 50,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.article_rounded),
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.article_rounded),
                   )
                 : const Icon(Icons.article_rounded),
             title: Text(

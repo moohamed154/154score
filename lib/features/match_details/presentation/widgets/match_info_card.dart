@@ -181,52 +181,40 @@ class MatchInfoCard extends StatelessWidget {
   void _handleNavigation(BuildContext context, MatchInfoItemEntity item) {
     if (!item.canNavigate) return;
 
-    final id = item.entityId!;
+    final id = (item.entityId != null &&
+            item.entityId!.isNotEmpty &&
+            item.entityId != 'null')
+        ? item.entityId!
+        : '0';
     final slug = (item.slug != null && item.slug!.isNotEmpty)
         ? item.slug!
-        : item.content.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '-');
+        : Uri.encodeComponent(item.content.trim().replaceAll(RegExp(r'\s+'), '-'));
 
     final type = item.entityType?.toLowerCase();
     String finalRoute = '';
-    String finalApi = '';
-    String cacheKey = '';
 
     if (type == 'referee') {
       finalRoute = '/referee/$id/$slug';
-      finalApi = '/api/referee/$id/$slug';
-      cacheKey = 'referee:$id:$slug';
-      debugPrint(
-        'ENTITY TYPE: referee | ENTITY NAME: ${item.content} | ENTITY ID: $id | ENTITY SLUG: $slug | FINAL ROUTE: $finalRoute | FINAL API: $finalApi | CACHE KEY: $cacheKey',
-      );
-      context.push(finalRoute);
     } else if (type == 'stadium') {
       finalRoute = '/stadium/$id/$slug';
-      finalApi = '/api/stadium/$id/$slug';
-      cacheKey = 'stadium:$id:$slug';
-      debugPrint(
-        'ENTITY TYPE: stadium | ENTITY NAME: ${item.content} | ENTITY ID: $id | ENTITY SLUG: $slug | FINAL ROUTE: $finalRoute | FINAL API: $finalApi | CACHE KEY: $cacheKey',
-      );
-      context.push(finalRoute);
     } else if (type == 'commentator') {
       finalRoute = '/commentator/$id/$slug';
-      finalApi = '/api/commentator/$id/$slug';
-      cacheKey = 'commentator:$id:$slug';
-      debugPrint(
-        'ENTITY TYPE: commentator | ENTITY NAME: ${item.content} | ENTITY ID: $id | ENTITY SLUG: $slug | FINAL ROUTE: $finalRoute | FINAL API: $finalApi | CACHE KEY: $cacheKey',
-      );
-      context.push(finalRoute);
     } else {
       final titleLower = item.title.toLowerCase();
       if (titleLower.contains('referee') || titleLower.contains('حكم')) {
-        context.push('/referee/$id/$slug');
+        finalRoute = '/referee/$id/$slug';
       } else if (titleLower.contains('stadium') ||
           titleLower.contains('ملعب') ||
           titleLower.contains('استاد')) {
-        context.push('/stadium/$id/$slug');
+        finalRoute = '/stadium/$id/$slug';
       } else if (titleLower.contains('commentator') ||
           titleLower.contains('معلق')) {
-        context.push('/commentator/$id/$slug');
+        finalRoute = '/commentator/$id/$slug';
       }
+    }
+
+    if (finalRoute.isNotEmpty) {
+      context.push(finalRoute);
     }
   }
 

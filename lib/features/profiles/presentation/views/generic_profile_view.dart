@@ -108,10 +108,24 @@ class _GenericProfileViewState extends State<GenericProfileView> {
       ProfileType.commentator => l10n.translate('info_commentator'),
     };
 
+    final decodedName = Uri.decodeComponent(widget.slug).replaceAll('-', ' ');
+
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(
+            isArabic
+                ? Icons.arrow_forward_ios_rounded
+                : Icons.arrow_back_ios_rounded,
+          ),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
         title: Text(
-          _profile?.name ?? typeTitle,
+          _profile?.name ?? (decodedName.isNotEmpty ? decodedName : typeTitle),
           style: AppTypography.getBodyLarge(
             isDark: isDark,
             isArabic: isArabic,

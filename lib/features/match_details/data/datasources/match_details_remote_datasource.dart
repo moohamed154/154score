@@ -143,13 +143,37 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         }
 
         // Otherwise traverse nested containers
-        if (map.containsKey('data')) process(map['data']);
-        if (map.containsKey('items')) process(map['items']);
-        if (map.containsKey('all_events')) process(map['all_events']);
-        if (map.containsKey('featured_events')) {
-          process(map['featured_events']);
+        if (map.containsKey('data')) {
+          process(map['data']);
+          return;
         }
-        if (map.containsKey('events')) process(map['events']);
+        if (map.containsKey('items')) {
+          final itemsVal = map['items'];
+          if (itemsVal is Map) {
+            if (itemsVal['all_events'] is List && (itemsVal['all_events'] as List).isNotEmpty) {
+              process(itemsVal['all_events']);
+            } else if (itemsVal['featured_events'] is List) {
+              process(itemsVal['featured_events']);
+            } else {
+              process(itemsVal);
+            }
+          } else {
+            process(itemsVal);
+          }
+          return;
+        }
+        if (map.containsKey('all_events') && map['all_events'] is List) {
+          process(map['all_events']);
+          return;
+        }
+        if (map.containsKey('featured_events') && map['featured_events'] is List) {
+          process(map['featured_events']);
+          return;
+        }
+        if (map.containsKey('events')) {
+          process(map['events']);
+          return;
+        }
       }
     }
 
@@ -185,7 +209,10 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                   _parseAndAddStatItem(it, stats, category: sectionName);
                 }
               }
-            } else {
+            } else if (entry.containsKey('title') ||
+                entry.containsKey('name') ||
+                entry.containsKey('team_a') ||
+                entry.containsKey('home')) {
               _parseAndAddStatItem(entry, stats, category: sectionName);
             }
           }
@@ -203,7 +230,30 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     String? category,
   }) {
     final title =
-        item['title']?.toString() ?? item['name']?.toString() ?? 'Stat';
+        item['title']?.toString() ?? item['name']?.toString();
+
+    // Ignore if there is no valid stat title or if it's promotional text
+    if (title == null ||
+        title.trim().isEmpty ||
+        title.trim().toLowerCase() == 'stat' ||
+        title.contains('تطبيق') ||
+        title.contains('تحميل') ||
+        title.contains('يلا شووت') ||
+        title.toLowerCase().contains('yalla')) {
+      return;
+    }
+
+    // Must have at least one stat value field
+    if (!item.containsKey('team_a') &&
+        !item.containsKey('home') &&
+        !item.containsKey('team_a_val') &&
+        !item.containsKey('home_value') &&
+        !item.containsKey('team_b') &&
+        !item.containsKey('away') &&
+        !item.containsKey('team_b_val') &&
+        !item.containsKey('away_value')) {
+      return;
+    }
 
     final home =
         item['team_a']?.toString() ??
@@ -328,9 +378,11 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                 .where((i) => i.title.isNotEmpty || i.content.isNotEmpty)
                 .toList();
 
-            sections.add(
-              MatchInfoSectionEntity(section: sectionTitle, items: items),
-            );
+            if (items.isNotEmpty) {
+              sections.add(
+                MatchInfoSectionEntity(section: sectionTitle, items: items),
+              );
+            }
           }
         }
       }
@@ -376,17 +428,20 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         final list = response['data'] as List;
         for (final item in list) {
           if (item is Map) {
-            final rawImg = item['image']?.toString();
-            final normImg = UrlHelper.normalizeImageUrl(rawImg);
+            final title = item['title']?.toString() ?? '';
+            if (title.isNotEmpty) {
+              final rawImg = item['image']?.toString();
+              final normImg = UrlHelper.normalizeImageUrl(rawImg);
 
-            newsList.add(
-              MatchNewsItemEntity(
-                title: item['title']?.toString() ?? '',
-                image: normImg,
-                link: item['link']?.toString(),
-                date: item['date']?.toString(),
-              ),
-            );
+              newsList.add(
+                MatchNewsItemEntity(
+                  title: title,
+                  image: normImg,
+                  link: item['link']?.toString(),
+                  date: item['date']?.toString(),
+                ),
+              );
+            }
           }
         }
       }

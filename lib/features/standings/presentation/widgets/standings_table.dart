@@ -11,12 +11,48 @@ import '../../domain/entities/standings_entity.dart';
 class StandingsTable extends StatelessWidget {
   final List<StandingRowEntity> rows;
   final bool showFullStats;
+  final List<String>? highlightedTeamNames;
+  final String? highlightedTeamName;
 
   const StandingsTable({
     super.key,
     required this.rows,
     this.showFullStats = true,
+    this.highlightedTeamNames,
+    this.highlightedTeamName,
   });
+
+  bool _isTeamHighlighted(String name) {
+    if (name.isEmpty) return false;
+
+    String normalize(String s) {
+      return s
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r'^(نادي|فريق|fc|sc|cf)\s+', caseSensitive: false), '')
+          .replaceAll(RegExp(r'\s+(fc|sc|cf)$', caseSensitive: false), '')
+          .replaceAll('أ', 'ا')
+          .replaceAll('إ', 'ا')
+          .replaceAll('آ', 'ا')
+          .replaceAll('ة', 'ه')
+          .replaceAll('ى', 'ي')
+          .trim();
+    }
+
+    final n = normalize(name);
+
+    if (highlightedTeamName != null && highlightedTeamName!.isNotEmpty) {
+      if (n == normalize(highlightedTeamName!)) return true;
+    }
+    if (highlightedTeamNames != null) {
+      for (final hName in highlightedTeamNames!) {
+        if (hName.trim().isNotEmpty) {
+          if (n == normalize(hName)) return true;
+        }
+      }
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -220,6 +256,8 @@ class StandingsTable extends StatelessWidget {
     required bool isSmall,
     required bool showFullStats,
   }) {
+    final isHighlighted = _isTeamHighlighted(row.teamName);
+
     Color? indicatorColor;
     if (row.rankColor != null && row.rankColor!.isNotEmpty) {
       try {
@@ -231,7 +269,11 @@ class StandingsTable extends StatelessWidget {
     }
 
     return Material(
-      color: Colors.transparent,
+      color: isHighlighted
+          ? (isDark
+              ? AppColors.primary.withValues(alpha: 0.18)
+              : AppColors.primary.withValues(alpha: 0.12))
+          : Colors.transparent,
       child: InkWell(
         onTap: () {
           final tId = Uri.encodeComponent(row.teamName);
@@ -240,7 +282,19 @@ class StandingsTable extends StatelessWidget {
             extra: {'name': row.teamName, 'logo': row.teamLogo},
           );
         },
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            border: isHighlighted
+                ? Border(
+                    right: isArabic
+                        ? const BorderSide(color: AppColors.primary, width: 3.5)
+                        : BorderSide.none,
+                    left: !isArabic
+                        ? const BorderSide(color: AppColors.primary, width: 3.5)
+                        : BorderSide.none,
+                  )
+                : null,
+          ),
           padding: EdgeInsets.symmetric(
             horizontal: isSmall ? 6 : 10,
             vertical: 8,
@@ -274,8 +328,11 @@ class StandingsTable extends StatelessWidget {
                                 isDark: isDark,
                                 isArabic: isArabic,
                               ).copyWith(
-                                fontWeight: FontWeight.w700,
+                                fontWeight: isHighlighted
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
                                 fontSize: isSmall ? 11 : 12,
+                                color: isHighlighted ? AppColors.primary : null,
                               ),
                           textAlign: TextAlign.center,
                         ),
@@ -307,8 +364,15 @@ class StandingsTable extends StatelessWidget {
                               isDark: isDark,
                               isArabic: isArabic,
                             ).copyWith(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: isHighlighted
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                               fontSize: isSmall ? 11 : 13,
+                              color: isHighlighted
+                                  ? (isDark
+                                      ? AppColors.primaryLight
+                                      : AppColors.primaryDark)
+                                  : null,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

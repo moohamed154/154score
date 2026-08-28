@@ -87,10 +87,10 @@ class MatchInfoItemEntity extends Equatable {
 
   bool get canNavigate =>
       entityType != null &&
-      entityId != null &&
-      entityId!.isNotEmpty &&
-      entityId != '0' &&
-      entityId != 'null';
+      content.trim().isNotEmpty &&
+      content.trim() != '-' &&
+      content.trim() != 'غير محدد' &&
+      content.trim() != 'N/A';
 
   @override
   List<Object?> get props => [
