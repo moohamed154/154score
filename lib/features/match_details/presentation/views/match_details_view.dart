@@ -578,38 +578,104 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final hMargin = AppDimensions.getHorizontalMargin(context);
     final detailsList = List<MatchInfoSectionEntity>.from(state.details);
 
-    if (detailsList.isEmpty && widget.initialMatch != null) {
+    if (widget.initialMatch != null) {
       final m = widget.initialMatch!;
-      final items = <MatchInfoItemEntity>[];
+      
+      final fallbackItems = <MatchInfoItemEntity>[];
       if (m.leagueTitle != null && m.leagueTitle!.isNotEmpty) {
-        items.add(
+        fallbackItems.add(
           MatchInfoItemEntity(
             title: isArabic ? 'البطولة' : 'Competition',
             content: m.leagueTitle!,
           ),
         );
       }
-      if (m.time != null && m.time!.isNotEmpty) {
-        items.add(
-          MatchInfoItemEntity(
-            title: isArabic ? 'وقت المباراة' : 'Match Time',
-            content: m.time!,
-          ),
-        );
-      }
       if (m.date != null && m.date!.isNotEmpty) {
-        items.add(
+        fallbackItems.add(
           MatchInfoItemEntity(
             title: isArabic ? 'تاريخ المباراة' : 'Match Date',
             content: m.date!,
           ),
         );
       }
-      if (items.isNotEmpty) {
-        detailsList.add(
+      if (m.time != null &&
+          m.time!.trim().isNotEmpty &&
+          m.time!.trim() != '-' &&
+          m.time != 'null') {
+        fallbackItems.add(
+          MatchInfoItemEntity(
+            title: isArabic ? 'وقت المباراة' : 'Match Time',
+            content: m.time!,
+          ),
+        );
+      }
+      if (m.status != null &&
+          m.status!.trim().isNotEmpty &&
+          m.status != '-' &&
+          m.status != 'null') {
+        final statusContent = m.minute != null && m.minute!.isNotEmpty
+            ? '${m.status!} (${m.minute}\')'
+            : m.status!;
+        fallbackItems.add(
+          MatchInfoItemEntity(
+            title: isArabic ? 'حالة المباراة' : 'Match Status',
+            content: statusContent,
+          ),
+        );
+      }
+      fallbackItems.add(
+        MatchInfoItemEntity(
+          title: isArabic ? 'صاحب الأرض' : 'Home Team',
+          content: m.team1,
+        ),
+      );
+      fallbackItems.add(
+        MatchInfoItemEntity(
+          title: isArabic ? 'الضيف' : 'Away Team',
+          content: m.team2,
+        ),
+      );
+      if (m.score1 != null && m.score2 != null && m.score1!.isNotEmpty) {
+        fallbackItems.add(
+          MatchInfoItemEntity(
+            title: isArabic ? 'النتيجة الحالية' : 'Current Score',
+            content: '${m.score1} : ${m.score2}',
+          ),
+        );
+      }
+      if (m.hasHalfTimeScore) {
+        fallbackItems.add(
+          MatchInfoItemEntity(
+            title: isArabic ? 'نتيجة الشوط الأول' : 'Half-time Score',
+            content: '${m.halfTimeScore1} : ${m.halfTimeScore2}',
+          ),
+        );
+      }
+
+      final existingInfoIndex = detailsList.indexWhere(
+        (s) =>
+            s.section.contains('معلومات') ||
+            s.section.toLowerCase().contains('info'),
+      );
+
+      if (existingInfoIndex >= 0) {
+        final existingSection = detailsList[existingInfoIndex];
+        final mergedItems = List<MatchInfoItemEntity>.from(existingSection.items);
+        for (final item in fallbackItems) {
+          if (!mergedItems.any((it) => it.title == item.title)) {
+            mergedItems.add(item);
+          }
+        }
+        detailsList[existingInfoIndex] = MatchInfoSectionEntity(
+          section: existingSection.section,
+          items: mergedItems,
+        );
+      } else {
+        detailsList.insert(
+          0,
           MatchInfoSectionEntity(
             section: isArabic ? 'معلومات اللقاء' : 'Match Information',
-            items: items,
+            items: fallbackItems,
           ),
         );
       }
