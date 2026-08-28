@@ -65,3 +65,4 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
     }
   }
 }
+

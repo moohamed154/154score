@@ -41,6 +41,16 @@ class _GenericProfileViewState extends State<GenericProfileView> {
     _loadProfile();
   }
 
+  @override
+  void didUpdateWidget(covariant GenericProfileView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.id != widget.id ||
+        oldWidget.slug != widget.slug ||
+        oldWidget.type != widget.type) {
+      _loadProfile();
+    }
+  }
+
   Future<void> _loadProfile() async {
     setState(() {
       _isLoading = true;

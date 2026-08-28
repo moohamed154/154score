@@ -69,56 +69,37 @@ class MatchCard extends StatelessWidget {
               children: [
                 // Home Team
                 Expanded(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusSm,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          match.team1,
+                          style:
+                              AppTypography.getBodyLarge(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: isLive
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                fontSize: isSmall ? 12 : 14,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                        ),
                       ),
-                      onTap: () {
-                        final tId = Uri.encodeComponent(match.team1);
-                        context.push(
-                          '/team/$tId',
-                          extra: {
-                            'name': match.team1,
-                            'logo': match.team1Logo,
-                            'leagueId': match.leagueId,
-                          },
-                        );
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              match.team1,
-                              style:
-                                  AppTypography.getBodyLarge(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    fontWeight: isLive
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
-                                    fontSize: isSmall ? 12 : 14,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
-                            ),
-                          ),
-                          SizedBox(width: isSmall ? 6 : AppDimensions.sm),
-                          AppImage(
-                            imageUrl: match.team1Logo,
-                            width: isSmall ? 22 : 26,
-                            height: isSmall ? 22 : 26,
-                            borderRadius: (isSmall ? 22 : 26) / 2,
-                            fit: BoxFit.contain,
-                            placeholderIcon: Icons.shield_outlined,
-                          ),
-                        ],
+                      SizedBox(width: isSmall ? 6 : AppDimensions.sm),
+                      AppImage(
+                        imageUrl: match.team1Logo,
+                        width: isSmall ? 22 : 26,
+                        height: isSmall ? 22 : 26,
+                        borderRadius: (isSmall ? 22 : 26) / 2,
+                        fit: BoxFit.contain,
+                        placeholderIcon: Icons.shield_outlined,
                       ),
-                    ),
+                    ],
                   ),
                 ),
 
@@ -206,56 +187,37 @@ class MatchCard extends StatelessWidget {
 
                 // Away Team
                 Expanded(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusSm,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      AppImage(
+                        imageUrl: match.team2Logo,
+                        width: isSmall ? 22 : 26,
+                        height: isSmall ? 22 : 26,
+                        borderRadius: (isSmall ? 22 : 26) / 2,
+                        fit: BoxFit.contain,
+                        placeholderIcon: Icons.shield_outlined,
                       ),
-                      onTap: () {
-                        final tId = Uri.encodeComponent(match.team2);
-                        context.push(
-                          '/team/$tId',
-                          extra: {
-                            'name': match.team2,
-                            'logo': match.team2Logo,
-                            'leagueId': match.leagueId,
-                          },
-                        );
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          AppImage(
-                            imageUrl: match.team2Logo,
-                            width: isSmall ? 22 : 26,
-                            height: isSmall ? 22 : 26,
-                            borderRadius: (isSmall ? 22 : 26) / 2,
-                            fit: BoxFit.contain,
-                            placeholderIcon: Icons.shield_outlined,
-                          ),
-                          SizedBox(width: isSmall ? 6 : AppDimensions.sm),
-                          Flexible(
-                            child: Text(
-                              match.team2,
-                              style:
-                                  AppTypography.getBodyLarge(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    fontWeight: isLive
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
-                                    fontSize: isSmall ? 12 : 14,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.start,
-                            ),
-                          ),
-                        ],
+                      SizedBox(width: isSmall ? 6 : AppDimensions.sm),
+                      Flexible(
+                        child: Text(
+                          match.team2,
+                          style:
+                              AppTypography.getBodyLarge(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: isLive
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                fontSize: isSmall ? 12 : 14,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.start,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
 

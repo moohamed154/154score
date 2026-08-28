@@ -20,6 +20,8 @@ class MatchInfoCard extends StatelessWidget {
     final hMargin = AppDimensions.getHorizontalMargin(context);
     final isSmall = AppDimensions.isSmallScreen(context);
 
+    if (section.items.isEmpty) return const SizedBox.shrink();
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
       decoration: BoxDecoration(
@@ -32,15 +34,30 @@ class MatchInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Title Header
+          // Section Title Header with icon
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-            child: Text(
-              section.section,
-              style: AppTypography.getBodyLarge(
-                isDark: isDark,
-                isArabic: isArabic,
-              ).copyWith(fontWeight: FontWeight.w700, color: AppColors.primary),
+            child: Row(
+              children: [
+                Icon(
+                  _getSectionIcon(section.section),
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    section.section,
+                    style: AppTypography.getBodyLarge(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const Divider(height: 1),
@@ -54,6 +71,7 @@ class MatchInfoCard extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = section.items[index];
               final isClickable = _canNavigate(item);
+              final itemIcon = _getItemIcon(item.title);
 
               return Material(
                 color: Colors.transparent,
@@ -61,31 +79,50 @@ class MatchInfoCard extends StatelessWidget {
                   onTap: isClickable
                       ? () => _handleNavigation(context, item)
                       : null,
+                  borderRadius: index == section.items.length - 1
+                      ? const BorderRadius.vertical(
+                          bottom: Radius.circular(AppDimensions.radiusMd),
+                        )
+                      : BorderRadius.zero,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: 14,
-                      vertical: isSmall ? 8 : 10,
+                      vertical: isSmall ? 9 : 11,
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        // Item leading icon
+                        Icon(
+                          itemIcon,
+                          size: 16,
+                          color: isClickable
+                              ? AppColors.primary
+                              : (isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted),
+                        ),
+                        const SizedBox(width: 8),
+
+                        // Title (e.g. الملعب, الحكم, المعلق, البطولة)
                         Expanded(
                           flex: 2,
                           child: Text(
                             item.title,
-                            style:
-                                AppTypography.getBodySmall(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextMuted
-                                      : AppColors.lightTextMuted,
-                                ),
+                            style: AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
+
+                        // Content (e.g. Stadium Name, Referee Name, Channel Name)
                         Expanded(
                           flex: 3,
                           child: Row(
@@ -94,18 +131,19 @@ class MatchInfoCard extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   item.content,
-                                  style:
-                                      AppTypography.getBodyMedium(
-                                        isDark: isDark,
-                                        isArabic: isArabic,
-                                      ).copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: isClickable
-                                            ? AppColors.primary
-                                            : (isDark
-                                                  ? AppColors.darkTextPrimary
-                                                  : AppColors.lightTextPrimary),
-                                      ),
+                                  style: AppTypography.getBodyMedium(
+                                    isDark: isDark,
+                                    isArabic: isArabic,
+                                  ).copyWith(
+                                    fontWeight: isClickable
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    color: isClickable
+                                        ? AppColors.primary
+                                        : (isDark
+                                            ? AppColors.darkTextPrimary
+                                            : AppColors.lightTextPrimary),
+                                  ),
                                   textAlign: TextAlign.end,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -137,27 +175,100 @@ class MatchInfoCard extends StatelessWidget {
   }
 
   bool _canNavigate(MatchInfoItemEntity item) {
-    final titleLower = item.title.toLowerCase();
-    return titleLower.contains('referee') ||
-        titleLower.contains('stadium') ||
-        titleLower.contains('commentator') ||
-        titleLower.contains('حكم') ||
-        titleLower.contains('ملعب') ||
-        titleLower.contains('معلق');
+    return item.canNavigate;
   }
 
   void _handleNavigation(BuildContext context, MatchInfoItemEntity item) {
-    final titleLower = item.title.toLowerCase();
-    final id = item.id ?? '1';
-    final slug = item.slug ?? item.content.toLowerCase().replaceAll(' ', '-');
+    if (!item.canNavigate) return;
 
-    if (titleLower.contains('referee') || titleLower.contains('حكم')) {
-      context.push('/referee/$id/$slug');
-    } else if (titleLower.contains('stadium') || titleLower.contains('ملعب')) {
-      context.push('/stadium/$id/$slug');
-    } else if (titleLower.contains('commentator') ||
-        titleLower.contains('معلق')) {
-      context.push('/commentator/$id/$slug');
+    final id = item.entityId!;
+    final slug = (item.slug != null && item.slug!.isNotEmpty)
+        ? item.slug!
+        : item.content.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '-');
+
+    final type = item.entityType?.toLowerCase();
+    String finalRoute = '';
+    String finalApi = '';
+    String cacheKey = '';
+
+    if (type == 'referee') {
+      finalRoute = '/referee/$id/$slug';
+      finalApi = '/api/referee/$id/$slug';
+      cacheKey = 'referee:$id:$slug';
+      debugPrint(
+        'ENTITY TYPE: referee | ENTITY NAME: ${item.content} | ENTITY ID: $id | ENTITY SLUG: $slug | FINAL ROUTE: $finalRoute | FINAL API: $finalApi | CACHE KEY: $cacheKey',
+      );
+      context.push(finalRoute);
+    } else if (type == 'stadium') {
+      finalRoute = '/stadium/$id/$slug';
+      finalApi = '/api/stadium/$id/$slug';
+      cacheKey = 'stadium:$id:$slug';
+      debugPrint(
+        'ENTITY TYPE: stadium | ENTITY NAME: ${item.content} | ENTITY ID: $id | ENTITY SLUG: $slug | FINAL ROUTE: $finalRoute | FINAL API: $finalApi | CACHE KEY: $cacheKey',
+      );
+      context.push(finalRoute);
+    } else if (type == 'commentator') {
+      finalRoute = '/commentator/$id/$slug';
+      finalApi = '/api/commentator/$id/$slug';
+      cacheKey = 'commentator:$id:$slug';
+      debugPrint(
+        'ENTITY TYPE: commentator | ENTITY NAME: ${item.content} | ENTITY ID: $id | ENTITY SLUG: $slug | FINAL ROUTE: $finalRoute | FINAL API: $finalApi | CACHE KEY: $cacheKey',
+      );
+      context.push(finalRoute);
+    } else {
+      final titleLower = item.title.toLowerCase();
+      if (titleLower.contains('referee') || titleLower.contains('حكم')) {
+        context.push('/referee/$id/$slug');
+      } else if (titleLower.contains('stadium') ||
+          titleLower.contains('ملعب') ||
+          titleLower.contains('استاد')) {
+        context.push('/stadium/$id/$slug');
+      } else if (titleLower.contains('commentator') ||
+          titleLower.contains('معلق')) {
+        context.push('/commentator/$id/$slug');
+      }
     }
+  }
+
+  IconData _getSectionIcon(String sectionTitle) {
+    final lower = sectionTitle.toLowerCase();
+    if (lower.contains('حكام') || lower.contains('referee')) {
+      return Icons.sports_rounded;
+    }
+    if (lower.contains('قنوات') ||
+        lower.contains('معلق') ||
+        lower.contains('broadcast')) {
+      return Icons.live_tv_rounded;
+    }
+    return Icons.info_outline_rounded;
+  }
+
+  IconData _getItemIcon(String itemTitle) {
+    final lower = itemTitle.toLowerCase();
+    if (lower.contains('ملعب') || lower.contains('stadium') || lower.contains('venue')) {
+      return Icons.stadium_outlined;
+    }
+    if (lower.contains('حكم') || lower.contains('referee')) {
+      return Icons.sports_rounded;
+    }
+    if (lower.contains('معلق') || lower.contains('commentator')) {
+      return Icons.mic_none_rounded;
+    }
+    if (lower.contains('قناة') || lower.contains('channel') || lower.contains('mbc') || lower.contains('bein') || lower.contains('sport')) {
+      return Icons.tv_rounded;
+    }
+    if (lower.contains('بطولة') || lower.contains('دوري') || lower.contains('كأس') || lower.contains('competition') || lower.contains('league')) {
+      return Icons.emoji_events_outlined;
+    }
+    if (lower.contains('تاريخ') || lower.contains('date')) {
+      return Icons.calendar_today_rounded;
+    }
+    if (lower.contains('وقت') || lower.contains('time') || lower.contains('موعد')) {
+      return Icons.access_time_rounded;
+    }
+    if (lower.contains('جولة') || lower.contains('round') || lower.contains('stage')) {
+      return Icons.format_list_numbered_rounded;
+    }
+    return Icons.info_outline_rounded;
   }
 }

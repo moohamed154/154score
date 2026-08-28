@@ -163,7 +163,7 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/stadium/:id/:slug',
         builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '1';
+          final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
           return GenericProfileView(
             id: id,
@@ -178,7 +178,7 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/referee/:id/:slug',
         builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '1';
+          final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
           return GenericProfileView(
             id: id,
@@ -193,7 +193,7 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/commentator/:id/:slug',
         builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '1';
+          final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
           return GenericProfileView(
             id: id,

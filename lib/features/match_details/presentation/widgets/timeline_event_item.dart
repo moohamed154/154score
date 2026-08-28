@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/match_event_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
 
 class TimelineEventItem extends StatelessWidget {
@@ -20,14 +21,12 @@ class TimelineEventItem extends StatelessWidget {
     final hPadding = isSmall ? AppDimensions.sm : AppDimensions.lg;
 
     final isHome = event.isHomeTeam;
-
-    // Check if it's a period/whistle event (e.g., Half-time / Full-time whistle)
-    final isPeriodEvent = _isPeriodEvent(event.type);
+    final isPeriodEvent = _isPeriodEvent(event.type, event.playerName);
 
     if (isPeriodEvent) {
       return Container(
         margin: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: isDark
               ? AppColors.darkCardElevated
@@ -52,25 +51,26 @@ class TimelineEventItem extends StatelessWidget {
                 event.playerName.isNotEmpty
                     ? event.playerName
                     : _localizeEventType(event.type, l10n),
-                style:
-                    AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (event.minute.isNotEmpty) ...[
+            if (event.minute.isNotEmpty &&
+                !event.minute.contains('-') &&
+                event.minute != '0') ...[
               const SizedBox(width: 6),
               Text(
-                '(${event.minute}\')',
+                '(${MatchEventHelper.sanitizeMinute(event.minute)}\')',
                 style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -82,6 +82,8 @@ class TimelineEventItem extends StatelessWidget {
         ),
       );
     }
+
+    final sanitizedMinute = MatchEventHelper.sanitizeMinute(event.minute);
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 6),
@@ -116,16 +118,15 @@ class TimelineEventItem extends StatelessWidget {
               ),
             ),
             child: Text(
-              event.minute.isNotEmpty ? '${event.minute}\'' : '•',
-              style:
-                  AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: isSmall ? 10 : 12,
-                    color: AppColors.primary,
-                  ),
+              sanitizedMinute.isNotEmpty ? '$sanitizedMinute\'' : '•',
+              style: AppTypography.getBodySmall(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: isSmall ? 10 : 12,
+                color: AppColors.primary,
+              ),
             ),
           ),
 
@@ -155,12 +156,15 @@ class TimelineEventItem extends StatelessWidget {
     required bool isSmall,
     required AppLocalizations l10n,
   }) {
-    final (icon, iconColor, eventLabel) = _getEventConfig(event.type, l10n);
+    final (icon, iconColor, eventLabel) = _getEventConfig(
+      event.type,
+      event.secondaryPlayerName,
+      l10n,
+    );
 
     final textWidget = Column(
-      crossAxisAlignment: isHome
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
+      crossAxisAlignment:
+          isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         // Player Name & Score
@@ -175,17 +179,16 @@ class TimelineEventItem extends StatelessWidget {
                   Flexible(
                     child: Text(
                       event.playerName,
-                      style:
-                          AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 12 : 14,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
+                      style: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmall ? 12 : 14,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
                       textAlign: TextAlign.end,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -196,17 +199,16 @@ class TimelineEventItem extends StatelessWidget {
                   Flexible(
                     child: Text(
                       event.playerName,
-                      style:
-                          AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 12 : 14,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
+                      style: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmall ? 12 : 14,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
                       textAlign: TextAlign.start,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -226,9 +228,8 @@ class TimelineEventItem extends StatelessWidget {
           const SizedBox(height: 2),
           Row(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: isHome
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
+            mainAxisAlignment:
+                isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: isHome
                 ? [
                     Flexible(
@@ -278,16 +279,15 @@ class TimelineEventItem extends StatelessWidget {
           const SizedBox(height: 1),
           Text(
             event.secondaryPlayerName!,
-            style:
-                AppTypography.getBodySmall(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontSize: isSmall ? 10 : 11,
-                  color: isDark
-                      ? AppColors.darkTextMuted
-                      : AppColors.lightTextMuted,
-                ),
+            style: AppTypography.getBodySmall(
+              isDark: isDark,
+              isArabic: isArabic,
+            ).copyWith(
+              fontSize: isSmall ? 10 : 11,
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
+            ),
             textAlign: isHome ? TextAlign.end : TextAlign.start,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -317,9 +317,8 @@ class TimelineEventItem extends StatelessWidget {
     );
 
     return Row(
-      mainAxisAlignment: isHome
-          ? MainAxisAlignment.end
-          : MainAxisAlignment.start,
+      mainAxisAlignment:
+          isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: isHome
           ? [
               Flexible(child: textWidget),
@@ -352,13 +351,18 @@ class TimelineEventItem extends StatelessWidget {
     );
   }
 
-  bool _isPeriodEvent(String type) {
-    final lower = type.toLowerCase();
-    return lower.contains('whistle') ||
+  bool _isPeriodEvent(String type, String text) {
+    final lower = '$type $text'.toLowerCase();
+    return lower.contains('start-end-match') ||
+        lower.contains('start_end') ||
+        lower.contains('whistle') ||
         lower.contains('period') ||
         lower.contains('match-start') ||
         lower.contains('half-time') ||
         lower.contains('full-time') ||
+        lower.contains('منتصف المباراة') ||
+        lower.contains('بدأت المباراة') ||
+        lower.contains('انتهت المباراة') ||
         lower == 'ht' ||
         lower == 'ft';
   }
@@ -376,9 +380,11 @@ class TimelineEventItem extends StatelessWidget {
 
   (IconData, Color, String?) _getEventConfig(
     String type,
+    String? subtitle,
     AppLocalizations l10n,
   ) {
-    final lower = type.toLowerCase();
+    final lower = '$type ${subtitle ?? ''}'.toLowerCase();
+
     if (lower.contains('own_goal') ||
         lower.contains('own-goal') ||
         lower.contains('هدف عكسي')) {
@@ -387,8 +393,18 @@ class TimelineEventItem extends StatelessWidget {
         AppColors.redCard,
         l10n.isArabic ? 'هدف في مرماه' : 'Own Goal',
       );
+    } else if (lower.contains('goal-x') ||
+        lower.contains('تسلل') ||
+        lower.contains('إلغاء') ||
+        lower.contains('disallowed')) {
+      return (
+        Icons.sports_soccer_rounded,
+        AppColors.redCard,
+        l10n.isArabic ? 'هدف ملغى' : 'Disallowed Goal',
+      );
     } else if (lower.contains('penalty_goal') ||
         lower.contains('penalty-goal') ||
+        lower.contains('ضربة جزاء') ||
         lower.contains('ركلة جزاء ناجحة')) {
       return (
         Icons.sports_soccer_rounded,
@@ -413,9 +429,13 @@ class TimelineEventItem extends StatelessWidget {
         AppColors.redCard,
         l10n.isArabic ? 'إنذار ثانٍ / طرد' : '2nd Yellow / Red',
       );
-    } else if (lower.contains('yellow') || lower.contains('صفراء')) {
+    } else if (lower.contains('yellow') ||
+        lower.contains('صفراء') ||
+        lower.contains('إنذار')) {
       return (Icons.rectangle_rounded, AppColors.yellowCard, null);
-    } else if (lower.contains('red') || lower.contains('حمراء')) {
+    } else if (lower.contains('red') ||
+        lower.contains('حمراء') ||
+        lower.contains('طرد')) {
       return (Icons.rectangle_rounded, AppColors.redCard, null);
     } else if (lower.contains('sub') || lower.contains('تبديل')) {
       return (Icons.swap_horiz_rounded, AppColors.substitution, null);

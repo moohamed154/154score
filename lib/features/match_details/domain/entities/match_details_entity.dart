@@ -4,7 +4,7 @@ class MatchEventEntity extends Equatable {
   final String minute;
   final String playerName;
   final String? secondaryPlayerName;
-  final String type; // goal, yellow_card, red_card, substitution, var
+  final String type; // goal, yellow_card, red_card, substitution, var, start-end-match
   final bool isHomeTeam;
   final String? score;
 
@@ -63,23 +63,44 @@ class MatchInfoSectionEntity extends Equatable {
   List<Object?> get props => [section, items];
 }
 
+typedef MatchInfoEntity = MatchInfoItemEntity;
+
 class MatchInfoItemEntity extends Equatable {
   final String title;
   final String content;
-  final String? id;
+  final String? entityType; // 'stadium', 'referee', 'commentator'
+  final String? entityId;
   final String? slug;
   final String? link;
+
+  String? get id => entityId;
 
   const MatchInfoItemEntity({
     required this.title,
     required this.content,
-    this.id,
+    String? id,
+    String? entityId,
+    this.entityType,
     this.slug,
     this.link,
-  });
+  }) : entityId = entityId ?? id;
+
+  bool get canNavigate =>
+      entityType != null &&
+      entityId != null &&
+      entityId!.isNotEmpty &&
+      entityId != '0' &&
+      entityId != 'null';
 
   @override
-  List<Object?> get props => [title, content, id, slug, link];
+  List<Object?> get props => [
+    title,
+    content,
+    entityType,
+    entityId,
+    slug,
+    link,
+  ];
 }
 
 class MatchNewsItemEntity extends Equatable {

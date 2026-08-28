@@ -1,5 +1,6 @@
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/match_minute_parser.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
 
@@ -39,71 +40,121 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         queryParameters: {'lang': lang},
       );
 
+      final rawEvents = _extractRawEvents(response);
       final events = <MatchEventEntity>[];
-      if (response is Map && response['data'] is List) {
-        final list = response['data'] as List;
-        for (final section in list) {
-          if (section is Map && section['items'] != null) {
-            final items = section['items'];
-            List rawEventList = [];
 
-            if (items is Map) {
-              if (items['all_events'] is List) {
-                rawEventList = items['all_events'] as List;
-              } else if (items['featured_events'] is List) {
-                rawEventList = items['featured_events'] as List;
-              }
-            } else if (items is List) {
-              rawEventList = items;
-            }
+      for (final e in rawEvents) {
+        final teamStr = e['team']?.toString().toLowerCase();
+        final isHome =
+            teamStr == 'team-a' ||
+            teamStr == 'team_a' ||
+            teamStr == 'team1' ||
+            teamStr == 'team-1' ||
+            teamStr == 'team_1' ||
+            teamStr == 'home' ||
+            teamStr == 'home_team' ||
+            teamStr == '1' ||
+            e['is_home'] == true ||
+            e['isHome'] == true;
 
-            for (final e in rawEventList) {
-              if (e is Map) {
-                final teamStr = e['team']?.toString().toLowerCase();
-                final isHome =
-                    teamStr == 'team-a' ||
-                    teamStr == 'home' ||
-                    e['is_home'] == true;
+        final playerName =
+            e['text']?.toString() ??
+            e['player']?.toString() ??
+            e['name']?.toString() ??
+            e['player_name']?.toString() ??
+            '';
 
-                final playerName =
-                    e['text']?.toString() ??
-                    e['player']?.toString() ??
-                    e['name']?.toString() ??
-                    '';
+        final secondaryName =
+            e['subtitle']?.toString() ??
+            e['assist']?.toString() ??
+            e['player_out']?.toString() ??
+            e['secondary_player']?.toString();
 
-                final secondaryName =
-                    e['subtitle']?.toString() ??
-                    e['assist']?.toString() ??
-                    e['player_out']?.toString();
+        final rawTime = e['time']?.toString();
+        final rawMinute = e['minute']?.toString();
 
-                final minuteStr =
-                    e['time']?.toString() ?? e['minute']?.toString() ?? '';
+        final parsedMinute = MatchMinuteParser.parse(
+          (rawTime != null && rawTime.trim().isNotEmpty) ? rawTime : rawMinute,
+        );
 
-                final typeStr = e['type']?.toString() ?? 'event';
-                final scoreStr = e['score']?.toString();
+        final isStartEnd =
+            e['is_start_end'] == true ||
+            e['is_start_end'] == 1 ||
+            e['type'] == 'start-end-match' ||
+            parsedMinute.isPeriodMarker;
 
-                events.add(
-                  MatchEventEntity(
-                    minute: minuteStr,
-                    playerName: playerName,
-                    secondaryPlayerName:
-                        (secondaryName != null && secondaryName.isNotEmpty)
-                        ? secondaryName
-                        : null,
-                    type: typeStr,
-                    isHomeTeam: isHome,
-                    score: scoreStr,
-                  ),
-                );
-              }
-            }
-          }
-        }
+        final typeStr =
+            e['type']?.toString() ??
+            (isStartEnd ? 'start-end-match' : 'event');
+
+        final scoreStr = e['score']?.toString();
+
+        events.add(
+          MatchEventEntity(
+            minute: parsedMinute.formatted,
+            playerName: playerName,
+            secondaryPlayerName:
+                (secondaryName != null && secondaryName.isNotEmpty)
+                    ? secondaryName
+                    : null,
+            type: typeStr,
+            isHomeTeam: isHome,
+            score: scoreStr,
+          ),
+        );
       }
+
       return events;
     } catch (_) {
       return [];
     }
+  }
+
+  /// Traverses any production API envelope (List, Map, nested items, all_events, flat arrays)
+  /// to extract raw event maps without missing items.
+  List<Map<String, dynamic>> _extractRawEvents(dynamic json) {
+    final results = <Map<String, dynamic>>[];
+
+    void process(dynamic node) {
+      if (node == null) return;
+
+      if (node is List) {
+        for (final item in node) {
+          process(item);
+        }
+      } else if (node is Map) {
+        final map = Map<String, dynamic>.from(node);
+
+        // Check if this map represents an event record
+        final hasEventFields =
+            map.containsKey('text') ||
+            map.containsKey('player') ||
+            map.containsKey('player_name') ||
+            map.containsKey('time') ||
+            map.containsKey('minute') ||
+            map.containsKey('is_start_end') ||
+            (map.containsKey('type') && map['type'] != 'section');
+
+        if (hasEventFields &&
+            !map.containsKey('items') &&
+            !map.containsKey('all_events')) {
+          results.add(map);
+          return;
+        }
+
+        // Otherwise traverse nested containers
+        if (map.containsKey('data')) process(map['data']);
+        if (map.containsKey('items')) process(map['items']);
+        if (map.containsKey('all_events')) process(map['all_events']);
+        if (map.containsKey('featured_events')) {
+          process(map['featured_events']);
+        }
+        if (map.containsKey('events')) process(map['events']);
+      }
+    }
+
+    process(json);
+    return results;
   }
 
   @override
@@ -122,7 +173,6 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         final list = response['data'] as List;
         for (final entry in list) {
           if (entry is Map) {
-            // Check if entry is a Section containing items
             final sectionName =
                 entry['section']?.toString() ??
                 entry['name']?.toString() ??
@@ -136,7 +186,6 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                 }
               }
             } else {
-              // Direct flat stat item fallback
               _parseAndAddStatItem(entry, stats, category: sectionName);
             }
           }
@@ -222,15 +271,56 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             final items = itemsRaw
                 .map((it) {
                   if (it is Map) {
+                    final title = it['title']?.toString() ?? '';
+                    final content =
+                        it['content']?.toString() ??
+                        it['name']?.toString() ??
+                        '';
+
+                    String? id =
+                        it['id']?.toString() ??
+                        it['entity_id']?.toString() ??
+                        it['referee_id']?.toString() ??
+                        it['stadium_id']?.toString() ??
+                        it['commentator_id']?.toString();
+                    String? slug =
+                        it['slug']?.toString() ?? it['entity_slug']?.toString();
+                    final link = it['link']?.toString();
+
+                    String? entityType = _detectEntityType(title, link);
+
+                    // If id or slug are not explicitly present, extract from link if available
+                    if (link != null && link.isNotEmpty) {
+                      final linkMatch = RegExp(
+                        r'/(referee|commentator|stadium)/(\d+)/?([^/?#]*)',
+                      ).firstMatch(link);
+                      if (linkMatch != null) {
+                        entityType ??= linkMatch.group(1);
+                        id ??= linkMatch.group(2);
+                        final linkSlug = linkMatch.group(3);
+                        if (slug == null || slug.isEmpty) {
+                          if (linkSlug != null && linkSlug.isNotEmpty) {
+                            slug = linkSlug;
+                          }
+                        }
+                      }
+                    }
+
+                    // Fallback slug from content if entity is navigable
+                    if ((slug == null || slug.isEmpty) && content.isNotEmpty) {
+                      slug = content
+                          .trim()
+                          .toLowerCase()
+                          .replaceAll(RegExp(r'\s+'), '-');
+                    }
+
                     return MatchInfoItemEntity(
-                      title: it['title']?.toString() ?? '',
-                      content:
-                          it['content']?.toString() ??
-                          it['name']?.toString() ??
-                          '',
-                      id: it['id']?.toString(),
-                      slug: it['slug']?.toString(),
-                      link: it['link']?.toString(),
+                      title: title,
+                      content: content,
+                      entityType: entityType,
+                      entityId: id,
+                      slug: slug,
+                      link: link,
                     );
                   }
                   return const MatchInfoItemEntity(title: '', content: '');
@@ -248,6 +338,26 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     } catch (_) {
       return [];
     }
+  }
+
+  String? _detectEntityType(String title, String? link) {
+    if (link != null && link.isNotEmpty) {
+      if (link.contains('/referee/')) return 'referee';
+      if (link.contains('/commentator/')) return 'commentator';
+      if (link.contains('/stadium/')) return 'stadium';
+    }
+    final lower = title.toLowerCase();
+    if (lower.contains('حكم') || lower.contains('referee')) return 'referee';
+    if (lower.contains('معلق') || lower.contains('commentator')) {
+      return 'commentator';
+    }
+    if (lower.contains('ملعب') ||
+        lower.contains('stadium') ||
+        lower.contains('استاد') ||
+        lower.contains('venue')) {
+      return 'stadium';
+    }
+    return null;
   }
 
   @override

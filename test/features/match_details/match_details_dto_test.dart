@@ -60,7 +60,7 @@ void main() {
       expect(events[0].playerName, 'اياغو أسباس');
       expect(events[0].secondaryPlayerName, 'ميغيل رومان');
       expect(events[0].isHomeTeam, isTrue);
-      expect(events[0].minute, '14’');
+      expect(events[0].minute, '14');
       expect(events[0].type, 'goal');
 
       expect(events[1].playerName, 'أنتي بوديمير');

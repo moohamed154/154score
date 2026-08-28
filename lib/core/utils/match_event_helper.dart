@@ -1,4 +1,5 @@
 import '../../features/match_details/domain/entities/match_details_entity.dart';
+import 'match_minute_parser.dart';
 
 class MatchEventHelper {
   MatchEventHelper._();
@@ -26,7 +27,8 @@ class MatchEventHelper {
   }
 
   static String _generateEventKey(MatchEventEntity event) {
-    final min = event.minute.trim().toLowerCase();
+    final parsed = MatchMinuteParser.parse(event.minute);
+    final min = parsed.formatted.toLowerCase();
     final team = event.isHomeTeam ? 'home' : 'away';
     final type = event.type.toLowerCase();
     final player = event.playerName.trim().toLowerCase();
@@ -35,36 +37,54 @@ class MatchEventHelper {
   }
 
   static int _compareEvents(MatchEventEntity a, MatchEventEntity b) {
-    final minA = _extractMinute(a.minute);
-    final minB = _extractMinute(b.minute);
+    final weightA = _getEventSortWeight(a);
+    final weightB = _getEventSortWeight(b);
 
-    if (minA != minB) {
-      return minA.compareTo(minB);
+    if (weightA != weightB) {
+      return weightA.compareTo(weightB);
     }
 
-    final extraA = _extractExtraMinute(a.minute);
-    final extraB = _extractExtraMinute(b.minute);
-
-    return extraA.compareTo(extraB);
+    // Preserve deterministic ordering for events at the same minute
+    return a.playerName.compareTo(b.playerName);
   }
 
-  static int _extractMinute(String minuteStr) {
-    final clean = minuteStr.replaceAll("'", '').trim();
-    if (clean.contains('+')) {
-      final parts = clean.split('+');
-      return int.tryParse(parts[0].trim()) ?? 0;
+  static double _getEventSortWeight(MatchEventEntity event) {
+    final textLower = '${event.type} ${event.playerName}'.toLowerCase();
+
+    // Check for period/whistle markers
+    if (textLower.contains('بدأت') ||
+        textLower.contains('بداية اللقاء') ||
+        textLower.contains('kickoff') ||
+        textLower.contains('match-start')) {
+      return -1.0;
     }
-    return int.tryParse(clean) ?? 0;
+    if (textLower.contains('منتصف المباراة') ||
+        textLower.contains('نهاية الشوط الأول') ||
+        textLower.contains('half-time') ||
+        event.type == 'ht') {
+      return 45.5;
+    }
+    if (textLower.contains('بداية الشوط الثاني') ||
+        textLower.contains('2nd half')) {
+      return 45.8;
+    }
+    if (textLower.contains('نهاية الوقت الأصلي')) {
+      return 90.5;
+    }
+    if (textLower.contains('انتهت') ||
+        textLower.contains('نهاية المباراة') ||
+        textLower.contains('full-time') ||
+        event.type == 'ft') {
+      return 999.0;
+    }
+
+    final parsed = MatchMinuteParser.parse(event.minute);
+    return parsed.sortWeight;
   }
 
-  static int _extractExtraMinute(String minuteStr) {
-    final clean = minuteStr.replaceAll("'", '').trim();
-    if (clean.contains('+')) {
-      final parts = clean.split('+');
-      if (parts.length > 1) {
-        return int.tryParse(parts[1].trim()) ?? 0;
-      }
-    }
-    return 0;
+  /// Sanitizes minute string by delegating to MatchMinuteParser
+  static String sanitizeMinute(String minuteStr) {
+    final parsed = MatchMinuteParser.parse(minuteStr);
+    return parsed.formatted;
   }
 }

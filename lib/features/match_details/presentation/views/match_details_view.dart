@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../matches/domain/entities/match_entity.dart';
-import '../../domain/entities/match_details_entity.dart';
 import '../bloc/match_details_bloc.dart';
 import '../bloc/match_details_event.dart';
 import '../bloc/match_details_state.dart';
+import '../../domain/entities/match_details_entity.dart';
+import '../widgets/lineup_unavailable_widget.dart';
 import '../widgets/match_header_banner.dart';
 import '../widgets/match_info_card.dart';
 import '../widgets/stat_comparison_bar.dart';
 import '../widgets/timeline_event_item.dart';
+
+// Filter for Events tab: الأبرز (Highlights) vs كل الأحداث (All Events)
+enum _EventFilter { highlights, all }
 
 class MatchDetailsView extends StatefulWidget {
   final String matchId;
@@ -30,12 +34,16 @@ class MatchDetailsView extends StatefulWidget {
 
 class _MatchDetailsViewState extends State<MatchDetailsView>
     with SingleTickerProviderStateMixin {
+  // Main tabs: الأحداث | التفاصيل | التشكيلة | الإحصائيات | الترتيب | الأخبار
   late TabController _tabController;
+
+  // Events tab inner filter
+  _EventFilter _eventFilter = _EventFilter.highlights;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     context.read<MatchDetailsBloc>().add(LoadMatchDetailsEvent(widget.matchId));
   }
 
@@ -57,6 +65,20 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(
+            isArabic
+                ? Icons.arrow_forward_ios_rounded
+                : Icons.arrow_back_ios_rounded,
+          ),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
         title: Text(
           '${fallbackMatch.team1} vs ${fallbackMatch.team2}',
           style: AppTypography.getBodyLarge(
@@ -66,12 +88,18 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_rounded),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
         builder: (context, state) {
           return Column(
             children: [
-              // Top Score Hero Banner
+              // ── Top Score Hero Banner ──────────────────────────────────
               MatchHeaderBanner(
                 match: fallbackMatch,
                 liveScore1: state.liveScore1,
@@ -81,7 +109,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                 penaltyScore2: fallbackMatch.penaltyScore2,
               ),
 
-              // Sticky Sports Tab Bar
+              // ── Main Horizontal Scrollable Tab Bar ─────────────────────
               Container(
                 color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                 child: TabBar(
@@ -99,24 +127,25 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                     isArabic: isArabic,
                   ).copyWith(fontWeight: FontWeight.w700),
                   tabs: [
-                    Tab(text: l10n.translate('tab_overview')),
-                    Tab(text: l10n.translate('tab_events')),
-                    Tab(text: l10n.translate('tab_stats')),
-                    Tab(text: l10n.translate('tab_info')),
-                    Tab(text: l10n.translate('tab_news')),
+                    Tab(text: isArabic ? 'الأحداث' : 'Events'),
+                    Tab(text: isArabic ? 'التفاصيل' : 'Details'),
+                    Tab(text: isArabic ? 'التشكيلة' : 'Lineup'),
+                    Tab(text: isArabic ? 'الإحصائيات' : 'Stats'),
+                    Tab(text: isArabic ? 'الترتيب' : 'Standings'),
+                    Tab(text: isArabic ? 'الأخبار' : 'News'),
                   ],
                 ),
               ),
 
               const Divider(height: 1),
 
-              // Tab Views with RefreshIndicator
+              // ── Tab Content ────────────────────────────────────────────
               Expanded(
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: () async {
                     context.read<MatchDetailsBloc>().add(
-                      LoadMatchDetailsEvent(widget.matchId),
+                      LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
                     );
                   },
                   child: state.status == MatchDetailsStatus.loading
@@ -128,18 +157,31 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                       : state.status == MatchDetailsStatus.error
                       ? ErrorView(
                           message: state.errorMessage,
-                          onRetry: () => context.read<MatchDetailsBloc>().add(
-                            LoadMatchDetailsEvent(widget.matchId),
-                          ),
+                          onRetry: () =>
+                              context.read<MatchDetailsBloc>().add(
+                                LoadMatchDetailsEvent(widget.matchId),
+                              ),
                         )
                       : TabBarView(
                           controller: _tabController,
                           children: [
-                            _buildOverviewTab(context, state, fallbackMatch),
-                            _buildEventsTab(context, state),
-                            _buildStatsTab(context, state),
-                            _buildInfoTab(context, state),
-                            _buildNewsTab(context, state),
+                            // 1. الأحداث (Events with Video chips, Highlights/All filter, Timeline & Stats Preview)
+                            _buildEventsTab(context, state, fallbackMatch, isDark, isArabic),
+
+                            // 2. التفاصيل (Details / Match Info)
+                            _buildDetailsTab(context, state, isDark, isArabic),
+
+                            // 3. التشكيلة (Lineup)
+                            const LineupUnavailableWidget(),
+
+                            // 4. الإحصائيات (Full Statistics)
+                            _buildStatsTab(context, state, isDark, isArabic),
+
+                            // 5. الترتيب (Standings)
+                            _buildStandingsTab(context, isDark, isArabic),
+
+                            // 6. الأخبار (News)
+                            _buildNewsTab(context, state, isDark, isArabic),
                           ],
                         ),
                 ),
@@ -151,244 +193,449 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     );
   }
 
-  Widget _buildOverviewTab(
+  // ── Tab 1: الأحداث (Events) ────────────────────────────────────────────────
+  Widget _buildEventsTab(
     BuildContext context,
     MatchDetailsState state,
     MatchEntity match,
+    bool isDark,
+    bool isArabic,
   ) {
-    final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
+    // Filter events based on selected filter
+    final displayedEvents = state.events.where((e) {
+      if (_eventFilter == _EventFilter.all) return true;
+      // Highlights: Goals, disallowed goals, penalties, red cards, second yellows, and period markers
+      final t = e.type.toLowerCase();
+      return t.contains('goal') ||
+          t.contains('penalty') ||
+          t.contains('red') ||
+          t.contains('start-end') ||
+          t.contains('period') ||
+          t.contains('whistle') ||
+          t == 'goal-x';
+    }).toList();
+
     return ListView(
+      key: const PageStorageKey('events_tab_list'),
       padding: EdgeInsets.all(hMargin),
       children: [
-        // Quick Stats summary if available
+        // ── Video Highlights Summary Chips ───────────────────────────────
+        if (state.news.isNotEmpty) ...[
+          _buildVideoSummaryChips(state.news, isDark, isArabic),
+          const SizedBox(height: AppDimensions.md),
+        ],
+
+        // ── Section Title & Filter (الأحداث + [الأبرز | كل الأحداث]) ─────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              isArabic ? 'الأحداث' : 'Events',
+              style: AppTypography.getHeadingMedium(
+                isDark: isDark,
+                isArabic: isArabic,
+              ),
+            ),
+            _buildEventFilterSelector(isDark, isArabic),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.sm),
+
+        // ── Events Timeline Container ────────────────────────────────────
+        if (displayedEvents.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: EmptyView(
+              titleKey: 'no_events',
+              icon: Icons.timeline_rounded,
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              children: displayedEvents.map((e) => TimelineEventItem(event: e)).toList(),
+            ),
+          ),
+
+        const SizedBox(height: AppDimensions.lg),
+
+        // ── Mini Statistics Preview Card (from screenshot 3) ─────────────
         if (state.stats.isNotEmpty) ...[
           Text(
-            l10n.translate('tab_stats'),
+            isArabic ? 'الإحصائيات' : 'Statistics',
             style: AppTypography.getHeadingMedium(
               isDark: isDark,
               isArabic: isArabic,
             ),
           ),
           const SizedBox(height: AppDimensions.sm),
-          ...state.stats.take(4).map((stat) => StatComparisonBar(stat: stat)),
+          _buildMiniStatsPreviewCard(state.stats, match, isDark, isArabic),
           const SizedBox(height: AppDimensions.lg),
         ],
-
-        // Quick Events summary if available
-        if (state.events.isNotEmpty) ...[
-          Text(
-            l10n.translate('tab_events'),
-            style: AppTypography.getHeadingMedium(
-              isDark: isDark,
-              isArabic: isArabic,
-            ),
-          ),
-          const SizedBox(height: AppDimensions.sm),
-          ...state.events.take(5).map((e) => TimelineEventItem(event: e)),
-          const SizedBox(height: AppDimensions.lg),
-        ],
-
-        // Quick Details cards
-        if (state.details.isNotEmpty)
-          ...state.details.take(2).map((sec) => MatchInfoCard(section: sec)),
-
-        if (state.events.isEmpty &&
-            state.stats.isEmpty &&
-            state.details.isEmpty)
-          EmptyView(
-            titleKey: 'tab_overview',
-            customMessage: l10n.translate('status_not_started'),
-            icon: Icons.sports_soccer_rounded,
-          ),
       ],
     );
   }
 
-  Widget _buildEventsTab(BuildContext context, MatchDetailsState state) {
-    if (state.events.isEmpty) {
-      return const EmptyView(
-        titleKey: 'no_events',
-        icon: Icons.timeline_rounded,
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.md),
-      itemCount: state.events.length,
-      itemBuilder: (context, index) {
-        return TimelineEventItem(event: state.events[index]);
-      },
+  // ── Event Filter Selector: [ الأبرز | كل الأحداث ] ─────────────────────────
+  Widget _buildEventFilterSelector(bool isDark, bool isArabic) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildFilterPill(
+            key: const ValueKey('filter_highlights'),
+            label: isArabic ? 'الأبرز' : 'Highlights',
+            isSelected: _eventFilter == _EventFilter.highlights,
+            isDark: isDark,
+            isArabic: isArabic,
+            onTap: () => setState(() => _eventFilter = _EventFilter.highlights),
+          ),
+          const SizedBox(width: 4),
+          _buildFilterPill(
+            key: const ValueKey('filter_all'),
+            label: isArabic ? 'كل الأحداث' : 'All Events',
+            isSelected: _eventFilter == _EventFilter.all,
+            isDark: isDark,
+            isArabic: isArabic,
+            onTap: () => setState(() => _eventFilter = _EventFilter.all),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildStatsTab(BuildContext context, MatchDetailsState state) {
-    final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = l10n.isArabic;
-    final hMargin = AppDimensions.getHorizontalMargin(context);
-
-    if (state.stats.isEmpty) {
-      return const EmptyView(
-        titleKey: 'no_stats',
-        icon: Icons.bar_chart_rounded,
-      );
-    }
-
-    // Group stats by category if multiple sections exist
-    final categoryMap = <String, List<MatchStatItemEntity>>{};
-    for (final s in state.stats) {
-      final cat =
-          s.category ?? (isArabic ? 'إحصائيات عامة' : 'General Statistics');
-      categoryMap.putIfAbsent(cat, () => []).add(s);
-    }
-
-    if (categoryMap.length <= 1) {
-      return ListView.builder(
-        padding: EdgeInsets.symmetric(
-          horizontal: hMargin,
-          vertical: AppDimensions.md,
+  Widget _buildFilterPill({
+    required Key key,
+    required String label,
+    required bool isSelected,
+    required bool isDark,
+    required bool isArabic,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      key: key,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
         ),
-        itemCount: state.stats.length,
-        itemBuilder: (context, index) {
-          return StatComparisonBar(stat: state.stats[index]);
-        },
-      );
-    }
-
-    return ListView(
-      padding: EdgeInsets.symmetric(
-        horizontal: hMargin,
-        vertical: AppDimensions.md,
-      ),
-      children: categoryMap.entries.map((entry) {
-        final categoryTitle = entry.key;
-        final items = entry.value;
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: AppDimensions.md),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : AppColors.lightCard,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-            ),
+        child: Text(
+          label,
+          style: AppTypography.getBodySmall(
+            isDark: isSelected ? true : isDark,
+            isArabic: isArabic,
+          ).copyWith(
+            fontWeight: FontWeight.w700,
+            color: isSelected
+                ? Colors.white
+                : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
-                child: Text(
-                  categoryTitle,
-                  style:
-                      AppTypography.getBodyLarge(
+        ),
+      ),
+    );
+  }
+
+  // ── Video Highlights Summary Chips ─────────────────────────────────────────
+  Widget _buildVideoSummaryChips(
+    List<MatchNewsItemEntity> news,
+    bool isDark,
+    bool isArabic,
+  ) {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: news.take(4).length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final item = news[index];
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.video_library_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  item.title.isNotEmpty ? item.title : (isArabic ? 'ملخص المباراة' : 'Highlights'),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ── Mini Statistics Preview Card (from screenshot 3) ───────────────────────
+  Widget _buildMiniStatsPreviewCard(
+    List<MatchStatItemEntity> stats,
+    MatchEntity match,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final previewStats = stats.take(3).toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ...previewStats.map((st) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  // Team 1 Home Value
+                  SizedBox(
+                    width: 36,
+                    child: Text(
+                      st.homeValue,
+                      style: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.start,
+                    ),
+                  ),
+
+                  // Stat Title Center
+                  Expanded(
+                    child: Text(
+                      st.title,
+                      style: AppTypography.getBodyMedium(
                         isDark: isDark,
                         isArabic: isArabic,
                       ).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                       ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                  // Team 2 Away Value
+                  SizedBox(
+                    width: 36,
+                    child: Text(
+                      st.awayValue,
+                      style: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+
+          const Divider(height: 20),
+
+          // "أظهر المزيد" (Show more) Button
+          InkWell(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+            onTap: () {
+              // Animate to Statistics tab (Index 3)
+              _tabController.animateTo(3);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Center(
+                child: Text(
+                  isArabic ? 'أظهر المزيد' : 'Show More',
+                  style: AppTypography.getBodyMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
-              const Divider(height: 1),
-              ...items.map((stat) => StatComparisonBar(stat: stat)),
-              const SizedBox(height: 6),
-            ],
+            ),
           ),
-        );
-      }).toList(),
+        ],
+      ),
     );
   }
 
-  Widget _buildInfoTab(BuildContext context, MatchDetailsState state) {
+  // ── Tab 2: التفاصيل (Details / Match Info) ──────────────────────────────────
+  Widget _buildDetailsTab(
+    BuildContext context,
+    MatchDetailsState state,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
     if (state.details.isEmpty) {
       return const EmptyView(
-        titleKey: 'tab_info',
+        titleKey: 'tab_overview',
         icon: Icons.info_outline_rounded,
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.md),
-      itemCount: state.details.length,
-      itemBuilder: (context, index) {
-        return MatchInfoCard(section: state.details[index]);
-      },
+    return ListView(
+      key: const PageStorageKey('details_tab_list'),
+      padding: EdgeInsets.all(hMargin),
+      children: [
+        ...state.details.map((sec) => MatchInfoCard(section: sec)),
+      ],
     );
   }
 
-  Widget _buildNewsTab(BuildContext context, MatchDetailsState state) {
-    final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = l10n.isArabic;
+  // ── Tab 4: الإحصائيات (Full Statistics) ────────────────────────────────────
+  Widget _buildStatsTab(
+    BuildContext context,
+    MatchDetailsState state,
+    bool isDark,
+    bool isArabic,
+  ) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
-    final isSmall = AppDimensions.isSmallScreen(context);
 
-    if (state.news.isEmpty) {
+    if (state.stats.isEmpty) {
       return const EmptyView(
-        titleKey: 'no_matches_date',
-        customMessage: 'No news found for this match',
-        icon: Icons.newspaper_rounded,
+        titleKey: 'tab_stats',
+        icon: Icons.bar_chart_rounded,
       );
     }
 
     return ListView.builder(
+      key: const PageStorageKey('stats_tab_list'),
+      padding: EdgeInsets.all(hMargin),
+      itemCount: state.stats.length,
+      itemBuilder: (context, index) {
+        return StatComparisonBar(stat: state.stats[index]);
+      },
+    );
+  }
+
+  // ── Tab 5: الترتيب (Standings) ─────────────────────────────────────────────
+  Widget _buildStandingsTab(
+    BuildContext context,
+    bool isDark,
+    bool isArabic,
+  ) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.format_list_numbered_rounded,
+              size: 48,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isArabic ? 'جدول الترتيب متاح في صفحة البطولة' : 'Standings available in League view',
+              style: AppTypography.getBodyLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Tab 6: الأخبار (News) ──────────────────────────────────────────────────
+  Widget _buildNewsTab(
+    BuildContext context,
+    MatchDetailsState state,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    if (state.news.isEmpty) {
+      return const EmptyView(
+        titleKey: 'tab_news',
+        icon: Icons.article_rounded,
+      );
+    }
+
+    return ListView.separated(
+      key: const PageStorageKey('news_tab_list'),
       padding: EdgeInsets.all(hMargin),
       itemCount: state.news.length,
+      separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.sm),
       itemBuilder: (context, index) {
         final item = state.news[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: AppDimensions.md),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : AppColors.lightCard,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        return Card(
+          child: ListTile(
+            leading: item.image != null && item.image!.isNotEmpty
+                ? Image.network(
+                    item.image!,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.article_rounded),
+                  )
+                : const Icon(Icons.article_rounded),
+            title: Text(
+              item.title,
+              style: AppTypography.getBodyMedium(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.w600),
             ),
-          ),
-          child: Row(
-            children: [
-              if (item.image != null)
-                AppImage(
-                  imageUrl: item.image,
-                  width: isSmall ? 70 : 90,
-                  height: 70,
-                  borderRadius: AppDimensions.radiusMd,
-                ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        style: AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(fontWeight: FontWeight.w600),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (item.date != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          item.date!,
-                          style: AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            subtitle: item.date != null
+                ? Text(
+                    item.date!,
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ),
+                  )
+                : null,
           ),
         );
       },
