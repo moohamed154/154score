@@ -77,8 +77,11 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
     required String lang,
     String? date,
   }) async {
-    final queryParams = <String, dynamic>{'lang': lang, 'champ_id': leagueId};
-    if (date != null) {
+    final queryParams = <String, dynamic>{'lang': lang};
+    if (leagueId.isNotEmpty) {
+      queryParams['league_id'] = leagueId;
+    }
+    if (date != null && date.isNotEmpty) {
       queryParams['date'] = date;
     }
 
@@ -93,15 +96,34 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
       final rawLeagues = response['data'] as List;
       for (final l in rawLeagues) {
         if (l is Map) {
-          final lId = l['id']?.toString();
-          if (lId == leagueId || leagueId.isEmpty) {
+          final lId = l['league_id']?.toString() ?? l['id']?.toString();
+          if (leagueId.isEmpty || lId == leagueId) {
+            final lTitle =
+                l['league_title']?.toString() ??
+                l['title']?.toString() ??
+                l['name']?.toString();
+            final lLogo =
+                l['league_logo']?.toString() ?? l['logo']?.toString();
             final lMatches = l['matches'] as List? ?? [];
+
             for (final m in lMatches) {
               if (m is Map<String, dynamic>) {
-                matches.add(MatchDto.fromJson(m).toEntity());
+                matches.add(
+                  MatchDto.fromJson(
+                    m,
+                    leagueTitle: lTitle,
+                    leagueLogo: lLogo,
+                    leagueId: lId,
+                  ).toEntity(),
+                );
               } else if (m is Map) {
                 matches.add(
-                  MatchDto.fromJson(Map<String, dynamic>.from(m)).toEntity(),
+                  MatchDto.fromJson(
+                    Map<String, dynamic>.from(m),
+                    leagueTitle: lTitle,
+                    leagueLogo: lLogo,
+                    leagueId: lId,
+                  ).toEntity(),
                 );
               }
             }

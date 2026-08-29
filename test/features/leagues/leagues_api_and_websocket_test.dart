@@ -1,0 +1,177 @@
+import 'dart:async';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:ysscores/core/constants/api_endpoints.dart';
+import 'package:ysscores/core/network/api_client.dart';
+import 'package:ysscores/core/storage/local_storage_service.dart';
+import 'package:ysscores/core/websocket/websocket_event.dart';
+import 'package:ysscores/core/websocket/websocket_service.dart';
+import 'package:ysscores/features/leagues/data/datasources/leagues_remote_datasource.dart';
+import 'package:ysscores/features/leagues/data/repositories/leagues_repository_impl.dart';
+import 'package:ysscores/features/leagues/presentation/bloc/league_bloc.dart';
+import 'package:ysscores/features/leagues/presentation/bloc/league_state.dart';
+import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
+import 'package:ysscores/features/standings/data/datasources/standings_remote_datasource.dart';
+
+class MockLocalStorageService implements LocalStorageService {
+  @override
+  Future<void> init() async {}
+  @override
+  String getLanguage() => 'ar';
+  @override
+  Future<bool> setLanguage(String langCode) async => true;
+  @override
+  String getThemeMode() => 'dark';
+  @override
+  Future<bool> setThemeMode(String themeMode) async => true;
+  @override
+  String getTimeFormat() => '24h';
+  @override
+  Future<bool> setTimeFormat(String format) async => true;
+  @override
+  int getTimezoneOffset() => 0;
+  @override
+  Future<bool> setTimezoneOffset(int offset) async => true;
+  @override
+  List<String> getFavoriteTeams() => [];
+  @override
+  Future<bool> toggleFavoriteTeam(String teamName) async => true;
+  @override
+  bool isFavoriteTeam(String teamName) => false;
+  @override
+  List<String> getFavoriteCompetitions() => [];
+  @override
+  Future<bool> toggleFavoriteCompetition(String compName) async => true;
+  @override
+  bool isFavoriteCompetition(String compName) => false;
+  @override
+  List<String> getFavoriteMatches() => [];
+  @override
+  Future<bool> toggleFavoriteMatch(String matchId) async => true;
+  @override
+  bool isFavoriteMatch(String matchId) => false;
+}
+
+class FakeWebSocketService extends Mock implements WebSocketService {
+  final _controller = StreamController<LiveMatchUpdate>.broadcast();
+
+  void emitUpdate(LiveMatchUpdate update) {
+    _controller.add(update);
+  }
+
+  @override
+  Stream<LiveMatchUpdate> get liveMatchesStream => _controller.stream;
+  @override
+  Stream<LiveMatchUpdate> get updatesStream => _controller.stream;
+  @override
+  void dispose() {
+    _controller.close();
+  }
+}
+
+void main() {
+  late ApiClient apiClient;
+  late StandingsRemoteDataSource standingsDataSource;
+  late LeaguesRemoteDataSource leaguesDataSource;
+  late LeaguesRepositoryImpl repository;
+  late MockLocalStorageService storageService;
+
+  setUpAll(() {
+    apiClient = ApiClient();
+    standingsDataSource = StandingsRemoteDataSourceImpl(apiClient);
+    leaguesDataSource = LeaguesRemoteDataSourceImpl(apiClient, standingsDataSource);
+    repository = LeaguesRepositoryImpl(leaguesDataSource);
+    storageService = MockLocalStorageService();
+  });
+
+  group('154Score Leagues API & Realtime WebSocket Tests', () {
+    test('1. Verify League Endpoints URLs', () {
+      expect(ApiEndpoints.leagueStandings('938652'), '/api/leagues/938652/standings');
+      expect(ApiEndpoints.leagueTopScorers('938652'), '/api/leagues/938652/top-scorers');
+    });
+
+    test('2. Live API: GET /api/leagues/{id}/standings', () async {
+      final res = await repository.getLeagueStandings('938652', lang: 'ar');
+      expect(res.isSuccess, isTrue);
+      final standings = res.dataOrNull!;
+      expect(standings.leagueId, '938652');
+      expect(standings.rows, isNotEmpty);
+      expect(standings.rows.first.teamName, isNotEmpty);
+      expect(standings.rows.first.position, 1);
+    });
+
+    test('3. Live API: GET /api/leagues/{id}/top-scorers', () async {
+      final res = await repository.getLeagueTopScorers('938652', lang: 'ar');
+      expect(res.isSuccess, isTrue);
+      expect(res.dataOrNull, isA<List>());
+    });
+
+    test('4. Live API: GET /api/matches with league_id filter', () async {
+      final res = await repository.getLeagueMatches('938652', lang: 'ar');
+      expect(res.isSuccess, isTrue);
+      final matches = res.dataOrNull!;
+      expect(matches, isA<List>());
+      if (matches.isNotEmpty) {
+        expect(matches.first.team1, isNotEmpty);
+        expect(matches.first.team2, isNotEmpty);
+      }
+    });
+
+    test('5. Real-Time WebSocket: LeagueBloc updates live match in real time', () async {
+      final fakeWs = FakeWebSocketService();
+      final bloc = LeagueBloc(
+        repository: repository,
+        localStorageService: storageService,
+        webSocketService: fakeWs,
+        leagueId: '938652',
+      );
+
+      // Seed with sample initial match
+      bloc.emit(
+        const LeagueState(
+          leagueId: '938652',
+          status: LeagueStatus.success,
+          matches: [
+            MatchEntity(
+              id: '5868040',
+              team1: 'إشبيلية',
+              team2: 'أتلتيكو مدريد',
+              score1: '0',
+              score2: '0',
+              status: 'مباشر',
+              statusCode: 'LIVE',
+              minute: '10',
+            ),
+          ],
+        ),
+      );
+
+      // Emit real-time WebSocket goal update
+      fakeWs.emitUpdate(
+        const LiveMatchUpdate(
+          matchId: '5868040',
+          team1: 'إشبيلية',
+          team2: 'أتلتيكو مدريد',
+          score1: '1',
+          score2: '3',
+          status: 'الشوط الثاني',
+          statusCode: 'LIVE',
+          minute: '69',
+          period: '2nd_half',
+          extraTime: '+00:00',
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(bloc.state.matches.first.score1, '1');
+      expect(bloc.state.matches.first.score2, '3');
+      expect(bloc.state.matches.first.status, 'الشوط الثاني');
+      expect(bloc.state.matches.first.minute, '69');
+      expect(bloc.state.matches.first.period, '2nd_half');
+
+      await bloc.close();
+      fakeWs.dispose();
+    });
+  });
+}

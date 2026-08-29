@@ -141,6 +141,7 @@ Future<void> initDependencies() async {
     (leagueId, extra) => LeagueBloc(
       repository: sl(),
       localStorageService: sl(),
+      webSocketService: sl(),
       leagueId: leagueId,
       initialTitle: extra?['title']?.toString(),
       initialLogo: extra?['logo']?.toString(),

@@ -25,3 +25,12 @@ class ChangeLeagueTabEvent extends LeagueEvent {
   @override
   List<Object?> get props => [tabIndex];
 }
+
+class LeagueLiveMatchReceivedEvent extends LeagueEvent {
+  final dynamic update;
+
+  const LeagueLiveMatchReceivedEvent(this.update);
+
+  @override
+  List<Object?> get props => [update];
+}
