@@ -122,11 +122,16 @@ class LiveMatchUpdate extends Equatable {
   final String? leagueId;
   final String? team1;
   final String? team2;
+  final String? team1Logo;
+  final String? team2Logo;
   final String? score1;
   final String? score2;
   final String? time;
   final String? status;
+  final String? statusCode;
   final String? minute;
+  final String? period;
+  final String? extraTime;
   final String? eventType; // goal, card, substitution, etc.
   final String? playerName;
   final int? timestamp;
@@ -139,11 +144,16 @@ class LiveMatchUpdate extends Equatable {
     this.leagueId,
     this.team1,
     this.team2,
+    this.team1Logo,
+    this.team2Logo,
     this.score1,
     this.score2,
     this.time,
     this.status,
+    this.statusCode,
     this.minute,
+    this.period,
+    this.extraTime,
     this.eventType,
     this.playerName,
     this.timestamp,
@@ -153,16 +163,25 @@ class LiveMatchUpdate extends Equatable {
 
   /// Deterministic fingerprint for duplicate-event suppression
   String get fingerprint {
-    return '${matchId ?? ''}_${score1 ?? ''}_${score2 ?? ''}_${status ?? ''}_${minute ?? ''}_${eventType ?? ''}_${playerName ?? ''}';
+    return '${matchId ?? ''}_${score1 ?? ''}_${score2 ?? ''}_${status ?? ''}_${statusCode ?? ''}_${minute ?? ''}_${eventType ?? ''}_${playerName ?? ''}';
   }
 
-  factory LiveMatchUpdate.fromJson(Map<String, dynamic> json) {
+  factory LiveMatchUpdate.fromJson(
+    Map<String, dynamic> json, {
+    String? defaultLeagueTitle,
+    String? defaultLeagueId,
+  }) {
     int? parsedTimestamp;
     if (json['timestamp'] != null) {
       parsedTimestamp = int.tryParse(json['timestamp'].toString());
-    } else if (json['updated_at'] != null) {
-      final dt = DateTime.tryParse(json['updated_at'].toString());
-      if (dt != null) parsedTimestamp = dt.millisecondsSinceEpoch;
+    } else if (json['updated_at'] != null || json['updatedAt'] != null) {
+      final raw = json['updated_at'] ?? json['updatedAt'];
+      if (raw is int) {
+        parsedTimestamp = raw;
+      } else {
+        final dt = DateTime.tryParse(raw.toString());
+        if (dt != null) parsedTimestamp = dt.millisecondsSinceEpoch;
+      }
     }
 
     int? parsedSequence;
@@ -172,18 +191,74 @@ class LiveMatchUpdate extends Equatable {
       );
     }
 
+    // Teams extraction
+    Map? homeTeamMap;
+    Map? awayTeamMap;
+    if (json['teams'] is Map) {
+      if (json['teams']['home'] is Map) homeTeamMap = json['teams']['home'] as Map;
+      if (json['teams']['away'] is Map) awayTeamMap = json['teams']['away'] as Map;
+    }
+
+    final t1 =
+        json['team_1']?.toString() ??
+        homeTeamMap?['name']?.toString() ??
+        json['home_team']?.toString();
+    final t2 =
+        json['team_2']?.toString() ??
+        awayTeamMap?['name']?.toString() ??
+        json['away_team']?.toString();
+
+    final t1Logo =
+        json['team_1_logo']?.toString() ??
+        homeTeamMap?['logo']?.toString() ??
+        json['home_logo']?.toString();
+    final t2Logo =
+        json['team_2_logo']?.toString() ??
+        awayTeamMap?['logo']?.toString() ??
+        json['away_logo']?.toString();
+
+    // Scores extraction
+    String? s1;
+    String? s2;
+    if (json['score'] is Map) {
+      final sMap = json['score'] as Map;
+      if (sMap['home'] != null) s1 = sMap['home'].toString();
+      if (sMap['away'] != null) s2 = sMap['away'].toString();
+    }
+    s1 ??= json['score_1']?.toString() ?? json['home_score']?.toString();
+    s2 ??= json['score_2']?.toString() ?? json['away_score']?.toString();
+    if (s1 == 'null') s1 = null;
+    if (s2 == 'null') s2 = null;
+
+    // League extraction
+    Map? leagueMap;
+    if (json['league'] is Map) leagueMap = json['league'] as Map;
+    final lTitle =
+        defaultLeagueTitle ??
+        json['league_title']?.toString() ??
+        leagueMap?['name']?.toString() ??
+        json['league']?.toString();
+    final lId =
+        defaultLeagueId ??
+        json['league_id']?.toString() ??
+        leagueMap?['id']?.toString();
+
     return LiveMatchUpdate(
-      matchId: json['id']?.toString() ?? json['match_id']?.toString(),
-      leagueTitle:
-          json['league_title']?.toString() ?? json['league']?.toString(),
-      leagueId: json['league_id']?.toString(),
-      team1: json['team_1']?.toString() ?? json['home_team']?.toString(),
-      team2: json['team_2']?.toString() ?? json['away_team']?.toString(),
-      score1: json['score_1']?.toString() ?? json['home_score']?.toString(),
-      score2: json['score_2']?.toString() ?? json['away_score']?.toString(),
+      matchId: json['match_id']?.toString() ?? json['id']?.toString(),
+      leagueTitle: lTitle,
+      leagueId: lId,
+      team1: t1,
+      team2: t2,
+      team1Logo: t1Logo,
+      team2Logo: t2Logo,
+      score1: s1,
+      score2: s2,
       time: json['time']?.toString(),
       status: json['status']?.toString(),
+      statusCode: json['status_code']?.toString(),
       minute: json['minute']?.toString(),
+      period: json['period']?.toString(),
+      extraTime: json['extra_time']?.toString(),
       eventType: json['event_type']?.toString() ?? json['type']?.toString(),
       playerName: json['player_name']?.toString() ?? json['player']?.toString(),
       timestamp: parsedTimestamp,
@@ -199,11 +274,16 @@ class LiveMatchUpdate extends Equatable {
     leagueId,
     team1,
     team2,
+    team1Logo,
+    team2Logo,
     score1,
     score2,
     time,
     status,
+    statusCode,
     minute,
+    period,
+    extraTime,
     eventType,
     playerName,
     timestamp,

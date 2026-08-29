@@ -52,15 +52,35 @@ class RealtimeMergeEngine {
           final newStatus = (update.status != null && update.status!.isNotEmpty)
               ? update.status
               : m.status;
+          final newStatusCode = (update.statusCode != null && update.statusCode!.isNotEmpty)
+              ? update.statusCode
+              : m.statusCode;
           final newMinute = (update.minute != null && update.minute!.isNotEmpty)
               ? update.minute
               : m.minute;
+          final newPeriod = (update.period != null && update.period!.isNotEmpty)
+              ? update.period
+              : m.period;
+          final newExtraTime = (update.extraTime != null && update.extraTime!.isNotEmpty)
+              ? update.extraTime
+              : m.extraTime;
+          final newTeam1Logo = (update.team1Logo != null && update.team1Logo!.isNotEmpty)
+              ? update.team1Logo
+              : m.team1Logo;
+          final newTeam2Logo = (update.team2Logo != null && update.team2Logo!.isNotEmpty)
+              ? update.team2Logo
+              : m.team2Logo;
 
           return m.copyWith(
             score1: newScore1,
             score2: newScore2,
             status: newStatus,
+            statusCode: newStatusCode,
             minute: newMinute,
+            period: newPeriod,
+            extraTime: newExtraTime,
+            team1Logo: newTeam1Logo,
+            team2Logo: newTeam2Logo,
           );
         }
         return m;

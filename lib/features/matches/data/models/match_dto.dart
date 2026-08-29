@@ -7,6 +7,8 @@ class MatchDto {
   final String team2;
   final String? team1Logo;
   final String? team2Logo;
+  final String? team1Id;
+  final String? team2Id;
   final String? score1;
   final String? score2;
   final String? penaltyScore1;
@@ -22,6 +24,7 @@ class MatchDto {
   final String? statusCode;
   final String? minute;
   final String? period;
+  final String? extraTime;
   final String? leagueTitle;
   final String? leagueLogo;
   final String? leagueId;
@@ -33,6 +36,8 @@ class MatchDto {
     required this.team2,
     this.team1Logo,
     this.team2Logo,
+    this.team1Id,
+    this.team2Id,
     this.score1,
     this.score2,
     this.penaltyScore1,
@@ -48,6 +53,7 @@ class MatchDto {
     this.statusCode,
     this.minute,
     this.period,
+    this.extraTime,
     this.leagueTitle,
     this.leagueLogo,
     this.leagueId,
@@ -61,7 +67,7 @@ class MatchDto {
     String? leagueId,
     String? date,
   }) {
-    // 1. Team Names
+    // 1. Team Names & IDs
     Map? homeTeamMap;
     Map? awayTeamMap;
     if (json['teams'] is Map) {
@@ -83,6 +89,15 @@ class MatchDto {
         awayTeamMap?['name']?.toString() ??
         json['away_team']?.toString() ??
         'Team 2';
+
+    final t1Id =
+        json['team_1_id']?.toString() ??
+        homeTeamMap?['id']?.toString() ??
+        json['home_team_id']?.toString();
+    final t2Id =
+        json['team_2_id']?.toString() ??
+        awayTeamMap?['id']?.toString() ??
+        json['away_team_id']?.toString();
 
     // 2. Stable Match ID
     final rawId =
@@ -224,6 +239,8 @@ class MatchDto {
       team2: t2,
       team1Logo: logo1,
       team2Logo: logo2,
+      team1Id: t1Id,
+      team2Id: t2Id,
       score1: s1,
       score2: s2,
       penaltyScore1: pen1,
@@ -237,6 +254,7 @@ class MatchDto {
       statusCode: json['status_code']?.toString(),
       minute: json['minute']?.toString(),
       period: json['period']?.toString(),
+      extraTime: json['extra_time']?.toString(),
       leagueTitle: lTitle,
       leagueLogo: lLogo,
       leagueId: lId,
@@ -251,6 +269,8 @@ class MatchDto {
       team2: team2,
       team1Logo: team1Logo,
       team2Logo: team2Logo,
+      team1Id: team1Id,
+      team2Id: team2Id,
       score1: score1,
       score2: score2,
       penaltyScore1: penaltyScore1,
@@ -259,9 +279,14 @@ class MatchDto {
       halfTimeScore2: halfTimeScore2,
       extraTimeScore1: extraTimeScore1,
       extraTimeScore2: extraTimeScore2,
+      aggregateScore1: aggregateScore1,
+      aggregateScore2: aggregateScore2,
       time: time,
       status: status,
+      statusCode: statusCode,
       minute: minute,
+      period: period,
+      extraTime: extraTime,
       leagueTitle: leagueTitle,
       leagueLogo: leagueLogo,
       leagueId: leagueId,

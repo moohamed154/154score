@@ -120,7 +120,8 @@ class WebSocketServiceImpl implements WebSocketService {
   SocketConnectionState get currentStatus => _currentStatus;
 
   String get _currentTransport {
-    if (_socket == null || _currentStatus != SocketConnectionState.connected) {
+    if (_socket?.connected != true &&
+        _currentStatus != SocketConnectionState.connected) {
       return 'none';
     }
     try {
@@ -266,6 +267,7 @@ class WebSocketServiceImpl implements WebSocketService {
       _reconnectAttempts = 0;
       _lastConnectedAt = DateTime.now();
       _lastError = null;
+      _updateStatus(SocketConnectionState.connected);
 
       if (connectStartTime != null) {
         _latencyMs = DateTime.now().difference(connectStartTime).inMilliseconds;
@@ -277,7 +279,6 @@ class WebSocketServiceImpl implements WebSocketService {
         );
       }
 
-      _updateStatus(SocketConnectionState.connected);
       _resubscribeAll();
     });
 
@@ -388,15 +389,29 @@ class WebSocketServiceImpl implements WebSocketService {
 
     try {
       if (data is Map) {
-        _dispatchLiveMatch(Map<String, dynamic>.from(data));
-      } else if (data is List) {
-        for (final item in data) {
-          if (item is Map) {
-            _dispatchLiveMatch(Map<String, dynamic>.from(item));
-          } else {
-            _eventsIgnored++;
+        final map = Map<String, dynamic>.from(data);
+        // Case 1: Standard API Envelope {"success": true, "data": [...]}
+        if (map['data'] is List) {
+          _processLiveMatchesList(map['data'] as List);
+        } else if (map['matches'] is List) {
+          // Case 2: Single League Group {"league_title": "...", "matches": [...]}
+          final lTitle = map['league_title']?.toString() ?? map['title']?.toString();
+          final lId = map['league_id']?.toString() ?? map['id']?.toString();
+          for (final m in map['matches']) {
+            if (m is Map) {
+              _dispatchLiveMatch(
+                Map<String, dynamic>.from(m),
+                defaultLeagueTitle: lTitle,
+                defaultLeagueId: lId,
+              );
+            }
           }
+        } else {
+          // Case 3: Direct single Match map
+          _dispatchLiveMatch(map);
         }
+      } else if (data is List) {
+        _processLiveMatchesList(data);
       } else {
         _eventsIgnored++;
       }
@@ -409,8 +424,43 @@ class WebSocketServiceImpl implements WebSocketService {
     _emitHealth();
   }
 
-  void _dispatchLiveMatch(Map<String, dynamic> map) {
-    final update = LiveMatchUpdate.fromJson(map);
+  void _processLiveMatchesList(List list) {
+    for (final item in list) {
+      if (item is Map) {
+        final itemMap = Map<String, dynamic>.from(item);
+        if (itemMap['matches'] is List) {
+          // League Group item
+          final lTitle = itemMap['league_title']?.toString() ?? itemMap['title']?.toString();
+          final lId = itemMap['league_id']?.toString() ?? itemMap['id']?.toString();
+          for (final m in itemMap['matches']) {
+            if (m is Map) {
+              _dispatchLiveMatch(
+                Map<String, dynamic>.from(m),
+                defaultLeagueTitle: lTitle,
+                defaultLeagueId: lId,
+              );
+            }
+          }
+        } else {
+          // Direct Match item
+          _dispatchLiveMatch(itemMap);
+        }
+      } else {
+        _eventsIgnored++;
+      }
+    }
+  }
+
+  void _dispatchLiveMatch(
+    Map<String, dynamic> map, {
+    String? defaultLeagueTitle,
+    String? defaultLeagueId,
+  }) {
+    final update = LiveMatchUpdate.fromJson(
+      map,
+      defaultLeagueTitle: defaultLeagueTitle,
+      defaultLeagueId: defaultLeagueId,
+    );
 
     // Duplicate event protection
     final fp = update.fingerprint;

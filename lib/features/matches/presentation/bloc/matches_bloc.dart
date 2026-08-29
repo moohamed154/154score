@@ -68,7 +68,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final lang = localStorageService.getLanguage();
     final offset = localStorageService.getTimezoneOffset();
 
-    final result = await repository.getMatches(
+    final result = await repository.getMatchesByDate(
       date: dateStr,
       lang: lang,
       utcOffset: offset,

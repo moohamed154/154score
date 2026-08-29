@@ -56,10 +56,13 @@ void main() {
       'emits [loading, success] when LoadMatchesEvent succeeds',
       build: () {
         when(
-          () => mockRepository.getMatches(
+          () => mockRepository.getMatchesByDate(
             date: any(named: 'date'),
             lang: any(named: 'lang'),
             utcOffset: any(named: 'utcOffset'),
+            status: any(named: 'status'),
+            leagueId: any(named: 'leagueId'),
+            sort: any(named: 'sort'),
           ),
         ).thenAnswer((_) async => const ApiSuccess(testLeagues));
 

@@ -83,12 +83,12 @@ class HomeCubit extends Cubit<HomeState> {
 
     try {
       final results = await Future.wait([
-        _matchesRepository.getMatches(
+        _matchesRepository.getMatchesByDate(
           date: dateStr,
           lang: lang,
           utcOffset: offset,
         ),
-        _matchesRepository.getLiveMatches(lang: lang),
+        _matchesRepository.getLiveMatchesFlat(lang: lang, utcOffset: offset),
         _videosRepository.getVideos(champId: 'all', lang: lang),
         _transfersRepository.getTransfers(lang: lang),
       ]);

@@ -6,6 +6,8 @@ class MatchEntity extends Equatable {
   final String team2;
   final String? team1Logo;
   final String? team2Logo;
+  final String? team1Id;
+  final String? team2Id;
   final String? score1;
   final String? score2;
   final String? penaltyScore1;
@@ -18,7 +20,10 @@ class MatchEntity extends Equatable {
   final String? aggregateScore2;
   final String? time;
   final String? status;
+  final String? statusCode;
   final String? minute;
+  final String? period;
+  final String? extraTime;
   final String? leagueTitle;
   final String? leagueLogo;
   final String? leagueId;
@@ -31,6 +36,8 @@ class MatchEntity extends Equatable {
     required this.team2,
     this.team1Logo,
     this.team2Logo,
+    this.team1Id,
+    this.team2Id,
     this.score1,
     this.score2,
     this.penaltyScore1,
@@ -43,7 +50,10 @@ class MatchEntity extends Equatable {
     this.aggregateScore2,
     this.time,
     this.status,
+    this.statusCode,
     this.minute,
+    this.period,
+    this.extraTime,
     this.leagueTitle,
     this.leagueLogo,
     this.leagueId,
@@ -69,6 +79,8 @@ class MatchEntity extends Equatable {
     String? team2,
     String? team1Logo,
     String? team2Logo,
+    String? team1Id,
+    String? team2Id,
     String? score1,
     String? score2,
     String? penaltyScore1,
@@ -81,7 +93,10 @@ class MatchEntity extends Equatable {
     String? aggregateScore2,
     String? time,
     String? status,
+    String? statusCode,
     String? minute,
+    String? period,
+    String? extraTime,
     String? leagueTitle,
     String? leagueLogo,
     String? leagueId,
@@ -94,6 +109,8 @@ class MatchEntity extends Equatable {
       team2: team2 ?? this.team2,
       team1Logo: team1Logo ?? this.team1Logo,
       team2Logo: team2Logo ?? this.team2Logo,
+      team1Id: team1Id ?? this.team1Id,
+      team2Id: team2Id ?? this.team2Id,
       score1: score1 ?? this.score1,
       score2: score2 ?? this.score2,
       penaltyScore1: penaltyScore1 ?? this.penaltyScore1,
@@ -106,7 +123,10 @@ class MatchEntity extends Equatable {
       aggregateScore2: aggregateScore2 ?? this.aggregateScore2,
       time: time ?? this.time,
       status: status ?? this.status,
+      statusCode: statusCode ?? this.statusCode,
       minute: minute ?? this.minute,
+      period: period ?? this.period,
+      extraTime: extraTime ?? this.extraTime,
       leagueTitle: leagueTitle ?? this.leagueTitle,
       leagueLogo: leagueLogo ?? this.leagueLogo,
       leagueId: leagueId ?? this.leagueId,
@@ -122,6 +142,8 @@ class MatchEntity extends Equatable {
     team2,
     team1Logo,
     team2Logo,
+    team1Id,
+    team2Id,
     score1,
     score2,
     penaltyScore1,
@@ -134,7 +156,10 @@ class MatchEntity extends Equatable {
     aggregateScore2,
     time,
     status,
+    statusCode,
     minute,
+    period,
+    extraTime,
     leagueTitle,
     leagueLogo,
     leagueId,

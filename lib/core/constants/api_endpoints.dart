@@ -26,6 +26,8 @@ class ApiEndpoints {
 
   // 2. Matches Operations
   static const String matches = '/api/matches';
+  static const String matchesLive = '/api/matches/live';
+  static String matchesByDate(String date) => '/api/matches/date/$date';
   static String matchDetails(String id) => '/api/matches/$id/details';
   static String matchEvents(String id) => '/api/matches/$id/events';
   static String matchStats(String id) => '/api/matches/$id/stats';
