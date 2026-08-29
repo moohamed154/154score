@@ -74,21 +74,35 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       utcOffset: offset,
     );
 
+    try {
+      webSocketService.recordRestFallback(
+        isActive:
+            _fallbackPollingTimer != null && _fallbackPollingTimer!.isActive,
+        refreshedAt: DateTime.now(),
+      );
+    } catch (_) {}
+
     result.fold(
       onSuccess: (leagues) {
-        final liveCount = _calculateLiveCount(leagues);
+        final reconciledLeagues =
+            RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(
+              restLeagues: leagues,
+              currentLeagues: state.allLeagues,
+            );
+
+        final liveCount = _calculateLiveCount(reconciledLeagues);
         final filtered = _applyFilters(
-          leagues: leagues,
+          leagues: reconciledLeagues,
           filter: state.activeFilter,
           query: state.searchQuery,
         );
 
         emit(
           state.copyWith(
-            status: leagues.isEmpty
+            status: reconciledLeagues.isEmpty
                 ? MatchesStatus.empty
                 : MatchesStatus.success,
-            allLeagues: leagues,
+            allLeagues: reconciledLeagues,
             filteredLeagues: filtered,
             selectedDate: event.date,
             liveMatchesCount: liveCount,
@@ -186,8 +200,19 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   ) {
     if (event.status == SocketConnectionState.connected) {
       _stopFallbackPolling();
+      try {
+        webSocketService.recordRestFallback(isActive: false);
+      } catch (_) {}
+      // Refresh REST snapshot to heal any gap during disconnect
+      if (state.status == MatchesStatus.success ||
+          state.status == MatchesStatus.empty) {
+        add(LoadMatchesEvent(date: state.selectedDate, isRefresh: true));
+      }
     } else if (event.status == SocketConnectionState.disconnected ||
         event.status == SocketConnectionState.error) {
+      try {
+        webSocketService.recordRestFallback(isActive: true);
+      } catch (_) {}
       _startFallbackPolling();
     }
   }

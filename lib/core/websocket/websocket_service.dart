@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import '../constants/api_endpoints.dart';
+import '../network/network_info.dart';
 import 'websocket_event.dart';
 
 abstract class WebSocketService {
@@ -34,10 +35,13 @@ abstract class WebSocketService {
   String get activeChannel;
 
   void handleAppLifecycleState(AppLifecycleState state);
+  void recordRestFallback({required bool isActive, DateTime? refreshedAt});
   void dispose();
 }
 
 class WebSocketServiceImpl implements WebSocketService {
+  final NetworkInfo? _networkInfo;
+
   io.Socket? _socket;
   String _activeChannel = ApiEndpoints.wsChannelMatchesAr;
   String _activeTransfersChannel = ApiEndpoints.wsChannelTransfersAr;
@@ -54,6 +58,15 @@ class WebSocketServiceImpl implements WebSocketService {
   String? _lastError;
   int _totalEventsReceived = 0;
   int _duplicateEventsSuppressed = 0;
+  int _staleEventsSuppressed = 0;
+  int _eventsIgnored = 0;
+  String? _lastEventName;
+  DateTime? _lastEventTimestamp;
+  int? _latencyMs;
+  bool _restFallbackActive = false;
+  DateTime? _lastRestRefreshAt;
+
+  StreamSubscription? _connectivitySubscription;
 
   // Deduplication & Ordering Cache (Bounded size 250)
   final Queue<String> _recentFingerprints = Queue<String>();
@@ -72,12 +85,60 @@ class WebSocketServiceImpl implements WebSocketService {
   final StreamController<MatchDetailRealtimeUpdate> _matchDetailsController =
       StreamController<MatchDetailRealtimeUpdate>.broadcast();
 
+  WebSocketServiceImpl({NetworkInfo? networkInfo})
+    // ignore: prefer_initializing_formals
+    : _networkInfo = networkInfo {
+    _initConnectivityListener();
+  }
+
+  void _initConnectivityListener() {
+    if (_networkInfo != null) {
+      _connectivitySubscription = _networkInfo.onConnectivityChanged.listen((
+        hasConnection,
+      ) {
+        if (hasConnection) {
+          if (_currentStatus != SocketConnectionState.connected &&
+              !_isConnecting) {
+            if (kDebugMode) {
+              debugPrint(
+                '[WS] Network connectivity restored. Checking socket connection...',
+              );
+            }
+            connect();
+          }
+        } else {
+          if (kDebugMode) {
+            debugPrint('[WS] Network connection lost.');
+          }
+          _updateStatus(SocketConnectionState.disconnected);
+        }
+      });
+    }
+  }
+
   @override
   SocketConnectionState get currentStatus => _currentStatus;
+
+  String get _currentTransport {
+    if (_socket == null || _currentStatus != SocketConnectionState.connected) {
+      return 'none';
+    }
+    try {
+      final engine = _socket?.io.engine;
+      final transportName = engine?.transport?.name;
+      if (transportName != null && transportName.isNotEmpty) {
+        return transportName;
+      }
+    } catch (_) {}
+    return 'websocket';
+  }
 
   @override
   WebSocketConnectionHealth get currentHealth => WebSocketConnectionHealth(
     state: _currentStatus,
+    currentTransport: _currentTransport,
+    socketId: _socket?.id,
+    latencyMs: _latencyMs,
     lastConnectedAt: _lastConnectedAt,
     lastDisconnectedAt: _lastDisconnectedAt,
     reconnectAttempts: _reconnectAttempts,
@@ -85,6 +146,12 @@ class WebSocketServiceImpl implements WebSocketService {
     activeSubscriptions: Set.unmodifiable(_getAllActiveRooms()),
     totalEventsReceived: _totalEventsReceived,
     duplicateEventsSuppressed: _duplicateEventsSuppressed,
+    staleEventsSuppressed: _staleEventsSuppressed,
+    eventsIgnored: _eventsIgnored,
+    lastEventName: _lastEventName,
+    lastEventTimestamp: _lastEventTimestamp,
+    restFallbackActive: _restFallbackActive,
+    lastRestRefreshAt: _lastRestRefreshAt,
   );
 
   @override
@@ -114,6 +181,15 @@ class WebSocketServiceImpl implements WebSocketService {
     );
   }
 
+  @override
+  void recordRestFallback({required bool isActive, DateTime? refreshedAt}) {
+    _restFallbackActive = isActive;
+    if (refreshedAt != null) {
+      _lastRestRefreshAt = refreshedAt;
+    }
+    _emitHealth();
+  }
+
   Set<String> _getAllActiveRooms() {
     final allRooms = <String>{_activeChannel};
     allRooms.addAll(_staticSubscriptions);
@@ -123,6 +199,21 @@ class WebSocketServiceImpl implements WebSocketService {
       }
     }
     return allRooms;
+  }
+
+  bool _isValidRoom(String room) {
+    if (room.isEmpty) return false;
+    if (room == ApiEndpoints.wsChannelMatchesAr ||
+        room == ApiEndpoints.wsChannelEn ||
+        room == ApiEndpoints.wsChannelTransfersAr ||
+        room == 'transfers_en') {
+      return true;
+    }
+    if (room.startsWith('match:')) {
+      final idPart = room.substring('match:'.length);
+      return idPart.isNotEmpty && RegExp(r'^[0-9a-zA-Z_-]+$').hasMatch(idPart);
+    }
+    return false;
   }
 
   @override
@@ -138,6 +229,8 @@ class WebSocketServiceImpl implements WebSocketService {
         );
       }
 
+      final startTime = DateTime.now();
+
       _socket = io.io(
         ApiEndpoints.websocketUrl,
         io.OptionBuilder()
@@ -152,7 +245,7 @@ class WebSocketServiceImpl implements WebSocketService {
             .build(),
       );
 
-      _setupSocketListeners();
+      _setupSocketListeners(startTime);
     } catch (e) {
       _lastError = e.toString();
       if (kDebugMode) {
@@ -162,7 +255,7 @@ class WebSocketServiceImpl implements WebSocketService {
     }
   }
 
-  void _setupSocketListeners() {
+  void _setupSocketListeners([DateTime? connectStartTime]) {
     final socket = _socket;
     if (socket == null) return;
 
@@ -174,8 +267,14 @@ class WebSocketServiceImpl implements WebSocketService {
       _lastConnectedAt = DateTime.now();
       _lastError = null;
 
+      if (connectStartTime != null) {
+        _latencyMs = DateTime.now().difference(connectStartTime).inMilliseconds;
+      }
+
       if (kDebugMode) {
-        debugPrint('[WS] Connected successfully to Socket.IO backend');
+        debugPrint(
+          '[WS] Connected successfully to Socket.IO backend (transport: $_currentTransport, latency: ${_latencyMs}ms)',
+        );
       }
 
       _updateStatus(SocketConnectionState.connected);
@@ -249,16 +348,22 @@ class WebSocketServiceImpl implements WebSocketService {
 
     // 1. Live Matches Update Event
     socket.on('live_matches_update', (data) {
+      _lastEventName = 'live_matches_update';
+      _lastEventTimestamp = DateTime.now();
       _processLiveMatchesUpdate(data);
     });
 
     // 2. Transfers Update Event
     socket.on('transfers_update', (data) {
+      _lastEventName = 'transfers_update';
+      _lastEventTimestamp = DateTime.now();
       _processTransfersUpdate(data);
     });
 
     // 3. Match Detail Update Event
     socket.on('match_update', (data) {
+      _lastEventName = 'match_update';
+      _lastEventTimestamp = DateTime.now();
       _processMatchUpdate(data);
     });
 
@@ -267,14 +372,18 @@ class WebSocketServiceImpl implements WebSocketService {
       if (event == 'live_matches_update' ||
           event == 'transfers_update' ||
           event == 'match_update') {
-        return; // Already processed
+        return;
       }
       _handleGenericIncomingEvent(event, data);
     });
   }
 
   void _processLiveMatchesUpdate(dynamic data) {
-    if (data == null) return;
+    if (data == null) {
+      _eventsIgnored++;
+      _emitHealth();
+      return;
+    }
     _totalEventsReceived++;
 
     try {
@@ -284,14 +393,20 @@ class WebSocketServiceImpl implements WebSocketService {
         for (final item in data) {
           if (item is Map) {
             _dispatchLiveMatch(Map<String, dynamic>.from(item));
+          } else {
+            _eventsIgnored++;
           }
         }
+      } else {
+        _eventsIgnored++;
       }
     } catch (e) {
+      _eventsIgnored++;
       if (kDebugMode) {
         debugPrint('[WS] Error processing live_matches_update: $e');
       }
     }
+    _emitHealth();
   }
 
   void _dispatchLiveMatch(Map<String, dynamic> map) {
@@ -304,10 +419,11 @@ class WebSocketServiceImpl implements WebSocketService {
       return;
     }
 
-    // Out-of-order check
+    // Out-of-order sequence/timestamp check
     if (update.matchId != null && update.timestamp != null) {
       final lastTime = _matchSequenceVersions[update.matchId!];
       if (lastTime != null && update.timestamp! < lastTime) {
+        _staleEventsSuppressed++;
         if (kDebugMode) {
           debugPrint(
             '[WS] Out-of-order update ignored for match ${update.matchId}',
@@ -324,7 +440,11 @@ class WebSocketServiceImpl implements WebSocketService {
   }
 
   void _processTransfersUpdate(dynamic data) {
-    if (data == null) return;
+    if (data == null) {
+      _eventsIgnored++;
+      _emitHealth();
+      return;
+    }
     _totalEventsReceived++;
 
     try {
@@ -334,14 +454,20 @@ class WebSocketServiceImpl implements WebSocketService {
         for (final item in data) {
           if (item is Map) {
             _dispatchTransfer(Map<String, dynamic>.from(item));
+          } else {
+            _eventsIgnored++;
           }
         }
+      } else {
+        _eventsIgnored++;
       }
     } catch (e) {
+      _eventsIgnored++;
       if (kDebugMode) {
         debugPrint('[WS] Error processing transfers_update: $e');
       }
     }
+    _emitHealth();
   }
 
   void _dispatchTransfer(Map<String, dynamic> map) {
@@ -359,7 +485,11 @@ class WebSocketServiceImpl implements WebSocketService {
   }
 
   void _processMatchUpdate(dynamic data) {
-    if (data == null) return;
+    if (data == null) {
+      _eventsIgnored++;
+      _emitHealth();
+      return;
+    }
     _totalEventsReceived++;
 
     try {
@@ -367,7 +497,10 @@ class WebSocketServiceImpl implements WebSocketService {
         final update = MatchDetailRealtimeUpdate.fromJson(
           Map<String, dynamic>.from(data),
         );
-        if (update.matchId.isEmpty) return;
+        if (update.matchId.isEmpty) {
+          _eventsIgnored++;
+          return;
+        }
 
         final fp = update.eventFingerprint;
         if (_isDuplicateEvent(fp)) {
@@ -378,12 +511,16 @@ class WebSocketServiceImpl implements WebSocketService {
         if (!_matchDetailsController.isClosed) {
           _matchDetailsController.add(update);
         }
+      } else {
+        _eventsIgnored++;
       }
     } catch (e) {
+      _eventsIgnored++;
       if (kDebugMode) {
         debugPrint('[WS] Error processing match_update: $e');
       }
     }
+    _emitHealth();
   }
 
   void _handleGenericIncomingEvent(String event, dynamic data) {
@@ -395,13 +532,16 @@ class WebSocketServiceImpl implements WebSocketService {
         if (map.containsKey('score_1') ||
             map.containsKey('home_score') ||
             map.containsKey('team_1')) {
+          _totalEventsReceived++;
           _dispatchLiveMatch(map);
         } else if (map.containsKey('player_name') &&
             (map.containsKey('to_team_name') || map.containsKey('fee'))) {
+          _totalEventsReceived++;
           _dispatchTransfer(map);
         }
       }
     } catch (_) {}
+    _emitHealth();
   }
 
   bool _isDuplicateEvent(String fingerprint) {
@@ -426,17 +566,21 @@ class WebSocketServiceImpl implements WebSocketService {
 
     final allRooms = _getAllActiveRooms();
     for (final room in allRooms) {
-      if (kDebugMode) {
-        debugPrint('[WS] Emitting subscribe for room: $room');
+      if (_isValidRoom(room)) {
+        if (kDebugMode) {
+          debugPrint('[WS] Emitting subscribe for room: $room');
+        }
+        socket.emit('subscribe', room);
       }
-      socket.emit('subscribe', room);
     }
   }
 
   @override
   void connect({String? initialChannel}) {
     if (initialChannel != null && initialChannel.isNotEmpty) {
-      _activeChannel = initialChannel;
+      if (_isValidRoom(initialChannel)) {
+        _activeChannel = initialChannel;
+      }
     }
 
     if (_socket == null) {
@@ -467,6 +611,13 @@ class WebSocketServiceImpl implements WebSocketService {
 
   @override
   void subscribeToChannel(String channel) {
+    if (!_isValidRoom(channel)) {
+      if (kDebugMode) {
+        debugPrint('[WS] Rejected invalid room name: $channel');
+      }
+      return;
+    }
+
     _staticSubscriptions.add(channel);
     if (_socket?.connected == true) {
       if (kDebugMode) {
@@ -492,6 +643,13 @@ class WebSocketServiceImpl implements WebSocketService {
   @override
   void joinMatchRoom(String matchId) {
     final room = ApiEndpoints.wsMatchRoom(matchId);
+    if (!_isValidRoom(room)) {
+      if (kDebugMode) {
+        debugPrint('[WS] Rejected invalid match room: $room');
+      }
+      return;
+    }
+
     final count = _roomReferenceCounts[room] ?? 0;
     _roomReferenceCounts[room] = count + 1;
 
@@ -606,6 +764,7 @@ class WebSocketServiceImpl implements WebSocketService {
   @override
   void dispose() {
     _isConnecting = false;
+    _connectivitySubscription?.cancel();
     try {
       _socket?.dispose();
     } catch (_) {}

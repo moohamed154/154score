@@ -105,13 +105,36 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
                   ? health.activeSubscriptions.join(', ')
                   : widget.webSocketService.activeChannel;
 
-              return _buildDiagTile(
-                title: l10n.translate('diag_ws_status'),
-                value:
-                    '$wsStatus | Rooms: [$rooms] | Events: ${health.totalEventsReceived}',
-                isSuccess: health.state == SocketConnectionState.connected,
-                isDark: isDark,
-                isArabic: isArabic,
+              return Column(
+                children: [
+                  _buildDiagTile(
+                    title: l10n.translate('diag_ws_status'),
+                    value:
+                        '$wsStatus (Transport: ${health.currentTransport}${health.latencyMs != null ? ', ${health.latencyMs}ms' : ''})',
+                    isSuccess: health.state == SocketConnectionState.connected,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildDiagTile(
+                    title: 'Active Rooms & Events',
+                    value:
+                        'Rooms: [$rooms]\nEvents: ${health.totalEventsReceived} (Dupes: ${health.duplicateEventsSuppressed}, Stale: ${health.staleEventsSuppressed})',
+                    isSuccess: true,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildDiagTile(
+                    title: 'REST Fallback Status',
+                    value: health.restFallbackActive
+                        ? 'ACTIVE (Polling Enabled)'
+                        : 'INACTIVE (Realtime Healthy)',
+                    isSuccess: !health.restFallbackActive,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
+                ],
               );
             },
           ),

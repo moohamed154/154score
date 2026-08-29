@@ -1,41 +1,48 @@
-# 154Score Real-Time WebSocket Integration Changelog
+# 154Score Real-Time WebSocket Integration & Hardening Changelog
 
 ### lib/core/websocket/websocket_event.dart
 - **OLD**: Simple `LiveMatchUpdate` model and basic `SocketConnectionState` enum.
-- **NEW**: Strongly typed `LiveMatchUpdate`, `TransferUpdate`, `MatchDetailRealtimeUpdate`, and `WebSocketConnectionHealth` models with deterministic fingerprinting and timestamp/version fields.
-- **REASON**: Support multi-room domain event parsing, duplicate protection, and connection observability.
+- **NEW**: Hardened `LiveMatchUpdate`, `TransferUpdate`, `MatchDetailRealtimeUpdate`, and `WebSocketConnectionHealth` models with deterministic composite fingerprinting, timestamp/sequence version fields, transport identifier, latency tracking, and REST fallback telemetry.
+- **REASON**: Comprehensive event typing, out-of-order rejection, duplicate suppression, and rich observability.
 - **TEST**: `test/core/websocket/websocket_unit_tests.dart` PASS.
 
 ---
 
 ### lib/core/websocket/websocket_service.dart
-- **OLD**: Minimal Socket.IO service without reference counted rooms or health tracking.
-- **NEW**: Centralized production-grade Socket.IO service with exponential backoff (1s-30s), subscription registry with room reference counting, deduplication caching (size 250), out-of-order sequence protection, event routers, and app lifecycle handlers.
-- **REASON**: Ensure robust real-time communication without memory leaks, duplicate connections, or dropped subscriptions on reconnect.
-- **TEST**: `test/core/websocket/production_websocket_test.dart` PASS.
+- **OLD**: Basic Socket.IO service.
+- **NEW**: Hardened `WebSocketServiceImpl` with:
+  - Network connectivity integration (`NetworkInfo`)
+  - Exponential backoff (1s-30s)
+  - Reference-counted room registry with malicious string validation
+  - LRU deduplication cache (size 250)
+  - Sequence and timestamp ordering checks
+  - Active transport & latency telemetry
+  - App lifecycle awareness
+- **REASON**: High-reliability single-socket real-time core with zero leaks.
+- **TEST**: `test/core/websocket/production_websocket_test.dart` & `test/core/websocket/websocket_chaos_stress_test.dart` PASS.
 
 ---
 
 ### lib/core/utils/realtime_merge_engine.dart
-- **OLD**: Ad-hoc match list copying and manual mapping in BLoC.
-- **NEW**: Dedicated `RealtimeMergeEngine` with `mergeMatchesWithRealtime`, `mergeMatchDetailsEvents`, and `mergeTransfersWithRealtime`.
-- **REASON**: Reusable, pure-function data merging preserving unchanged fields, preventing null coercion/NaN, and re-sorting live matches cleanly.
+- **OLD**: Ad-hoc match updates.
+- **NEW**: Pure-function merge engine for matches, match events, and transfers.
+- **REASON**: Preserves all untouched REST snapshot fields, re-sorts matches safely, and prevents NaN or null string coercion.
 - **TEST**: `test/core/websocket/websocket_unit_tests.dart` PASS.
 
 ---
 
 ### lib/features/matches/presentation/bloc/matches_bloc.dart & matches_event.dart
-- **OLD**: Basic event listening without connection-state awareness or fallback polling.
-- **NEW**: Integrated with `RealtimeMergeEngine`, listens to `statusStream` to start fallback polling on disconnect, and cancels polling on reconnect.
-- **REASON**: Maintain fresh match data regardless of WebSocket health without hammering server when WebSocket is active.
+- **OLD**: Uncontrolled polling and simple socket listening.
+- **NEW**: Integrated with `RealtimeMergeEngine`, listens to `statusStream` to start fallback polling on disconnect, stops polling on reconnect, and triggers a healing REST refresh upon reconnecting.
+- **REASON**: Guarantees fresh match state without redundant REST calls when WebSocket is healthy.
 - **TEST**: `test/features/matches/matches_bloc_test.dart` PASS.
 
 ---
 
 ### lib/features/match_details/presentation/bloc/match_details_bloc.dart & match_details_event.dart
-- **OLD**: Listened only to generic `updatesStream`.
-- **NEW**: Listens to dedicated `matchUpdatesStream(matchId)`, handles `MatchDetailSocketUpdateEvent`, and leaves `match:{id}` room cleanly on `close()`.
-- **REASON**: Low-latency match events, cards, and goals delivered only to active viewers.
+- **OLD**: Listened to generic stream without room lifecycle safety.
+- **NEW**: Manages room `match:{matchId}` with reference counting, listens to `matchUpdatesStream(matchId)`, merges events via `RealtimeMergeEngine`, and cleans up on close.
+- **REASON**: Real-time match-specific goals, cards, and status delivered with zero room leaks.
 - **TEST**: `test/features/match_details/match_events_real_api_test.dart` PASS.
 
 ---
@@ -49,17 +56,17 @@
 ---
 
 ### lib/core/di/injection_container.dart
-- **OLD**: `TransfersBloc` initialized without `WebSocketService`.
-- **NEW**: `WebSocketService` injected into `TransfersBloc`.
-- **REASON**: Connect Transfers feature to real-time events.
-- **TEST**: Verified via app compilation and DI tests.
+- **OLD**: `WebSocketService` initialized without `NetworkInfo`, and `TransfersBloc` initialized without `WebSocketService`.
+- **NEW**: `NetworkInfo` passed to `WebSocketService` singleton; `WebSocketService` injected into `TransfersBloc`.
+- **REASON**: Seamless dependency injection across network and feature layers.
+- **TEST**: Full app compilation and test pass.
 
 ---
 
 ### lib/features/settings/presentation/widgets/diagnostics_sheet.dart
-- **OLD**: Rendered static connection string.
-- **NEW**: Live `StreamBuilder` rendering active rooms, real-time connection status, and event counters.
-- **REASON**: Observability and diagnostic visibility.
+- **OLD**: Static connection text.
+- **NEW**: Live `StreamBuilder` rendering transport (`websocket`/`polling`), latency, active rooms, total events, duplicates suppressed, stale events ignored, and REST fallback status.
+- **REASON**: Real-time observability and diagnostic visibility.
 - **TEST**: `flutter analyze` PASS.
 
 ---
@@ -68,4 +75,4 @@
 - **OLD**: `StatelessWidget` without lifecycle observer.
 - **NEW**: `StatefulWidget` with `WidgetsBindingObserver` routing lifecycle changes to `WebSocketService`.
 - **REASON**: Automatic reconnection upon app resume.
-- **TEST**: Full test suite PASS.
+- **TEST**: `test/core/websocket/websocket_chaos_stress_test.dart` PASS.

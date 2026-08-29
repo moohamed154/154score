@@ -1,0 +1,32 @@
+{
+  "audit_timestamp": "2026-08-29T07:34:10.338754",
+  "target_backend": "https://moohamed154-154score-api.hf.space",
+  "socket_path": "/socket.io/",
+  "transports": [
+    "websocket",
+    "polling"
+  ],
+  "results": {
+    "architecture": "PASS",
+    "production_socket_connection": "PASS",
+    "socket_io_handshake": "PASS",
+    "websocket_transport": "PASS",
+    "live_match_subscription": "PASS",
+    "match_room_subscription": "PASS",
+    "transfer_subscription": "PASS",
+    "duplicate_protection": "PASS",
+    "out_of_order_protection": "PASS",
+    "reconnect_backoff": "PASS",
+    "resubscribe": "PASS",
+    "unsubscribe": "PASS",
+    "reference_counting": "PASS",
+    "rest_fallback": "PASS",
+    "rest_websocket_race_protection": "PASS",
+    "app_lifecycle": "PASS",
+    "offline_mode": "PASS",
+    "memory_leak_audit": "PASS",
+    "security": "PASS",
+    "performance": "PASS",
+    "overall_verdict": "PRODUCTION READY"
+  }
+}

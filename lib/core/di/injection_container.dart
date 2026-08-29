@@ -66,7 +66,7 @@ Future<void> initDependencies() async {
   );
 
   sl.registerLazySingleton<WebSocketService>(() {
-    final service = WebSocketServiceImpl();
+    final service = WebSocketServiceImpl(networkInfo: sl());
     service.initialize();
     return service;
   });

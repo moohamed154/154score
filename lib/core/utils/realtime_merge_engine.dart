@@ -106,6 +106,89 @@ class RealtimeMergeEngine {
     return RealtimeMergeResult(data: updatedLeagues, isUpdated: true);
   }
 
+  /// Reconciles incoming REST leagues snapshot with existing state to prevent
+  /// older in-flight REST responses from rolling back newer WebSocket realtime updates.
+  static List<LeagueGroupEntity> reconcileRestLeaguesWithRealtime({
+    required List<LeagueGroupEntity> restLeagues,
+    required List<LeagueGroupEntity> currentLeagues,
+  }) {
+    if (currentLeagues.isEmpty) return restLeagues;
+
+    // Index current matches by ID
+    final currentMatchesMap = <String, MatchEntity>{};
+    for (final l in currentLeagues) {
+      for (final m in l.matches) {
+        currentMatchesMap[m.id] = m;
+      }
+    }
+
+    final reconciled = restLeagues.map((league) {
+      final matches = league.matches.map((restMatch) {
+        final currentMatch = currentMatchesMap[restMatch.id];
+        if (currentMatch == null) return restMatch;
+
+        // Compare match progress/score to ensure NEWER DATA ALWAYS WINS
+        final restPhase = MatchStatusHelper.parseStatus(
+          restMatch.status,
+          minute: restMatch.minute,
+          time: restMatch.time,
+        );
+        final currPhase = MatchStatusHelper.parseStatus(
+          currentMatch.status,
+          minute: currentMatch.minute,
+          time: currentMatch.time,
+        );
+
+        final currIsLive = MatchStatusHelper.isLive(currPhase);
+        final restIsUpcoming = MatchStatusHelper.isUpcoming(restPhase);
+
+        if (currIsLive && restIsUpcoming) {
+          // Current state is live from WS; delayed REST snapshot says upcoming -> keep live state
+          return restMatch.copyWith(
+            score1: currentMatch.score1,
+            score2: currentMatch.score2,
+            status: currentMatch.status,
+            minute: currentMatch.minute,
+          );
+        }
+
+        // If current state has higher scores or progressed minute, preserve current state
+        final currGoals =
+            (int.tryParse(currentMatch.score1 ?? '0') ?? 0) +
+            (int.tryParse(currentMatch.score2 ?? '0') ?? 0);
+        final restGoals =
+            (int.tryParse(restMatch.score1 ?? '0') ?? 0) +
+            (int.tryParse(restMatch.score2 ?? '0') ?? 0);
+
+        final currMin =
+            int.tryParse(
+              currentMatch.minute?.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+            ) ??
+            0;
+        final restMin =
+            int.tryParse(
+              restMatch.minute?.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+            ) ??
+            0;
+
+        if (currGoals > restGoals || (currIsLive && currMin > restMin)) {
+          return restMatch.copyWith(
+            score1: currentMatch.score1 ?? restMatch.score1,
+            score2: currentMatch.score2 ?? restMatch.score2,
+            status: currentMatch.status ?? restMatch.status,
+            minute: currentMatch.minute ?? restMatch.minute,
+          );
+        }
+
+        return restMatch;
+      }).toList();
+
+      return league.copyWith(matches: matches);
+    }).toList();
+
+    return reconciled;
+  }
+
   /// Merges incremental MatchDetailRealtimeUpdate events into existing match events
   static RealtimeMergeResult<List<MatchEventEntity>> mergeMatchDetailsEvents({
     required List<MatchEventEntity> existingEvents,

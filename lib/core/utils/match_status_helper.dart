@@ -92,6 +92,10 @@ class MatchStatusHelper {
         s.contains('جارية') ||
         s.contains('playing') ||
         s.contains('شوط') ||
+        s.contains('first half') ||
+        s.contains('second half') ||
+        s.contains('1st half') ||
+        s.contains('2nd half') ||
         s.contains("'") ||
         (minute != null && minute.isNotEmpty)) {
       return MatchPhase.live;

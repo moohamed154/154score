@@ -11,9 +11,12 @@ enum SocketConnectionState {
 // Backward compatibility alias
 typedef SocketConnectionStatus = SocketConnectionState;
 
-/// Tracks comprehensive connection health metrics for diagnostics and observability
+/// Comprehensive connection health and observability metrics
 class WebSocketConnectionHealth extends Equatable {
   final SocketConnectionState state;
+  final String currentTransport; // 'websocket', 'polling', 'none'
+  final String? socketId;
+  final int? latencyMs;
   final DateTime? lastConnectedAt;
   final DateTime? lastDisconnectedAt;
   final int reconnectAttempts;
@@ -21,9 +24,18 @@ class WebSocketConnectionHealth extends Equatable {
   final Set<String> activeSubscriptions;
   final int totalEventsReceived;
   final int duplicateEventsSuppressed;
+  final int staleEventsSuppressed;
+  final int eventsIgnored;
+  final String? lastEventName;
+  final DateTime? lastEventTimestamp;
+  final bool restFallbackActive;
+  final DateTime? lastRestRefreshAt;
 
   const WebSocketConnectionHealth({
     this.state = SocketConnectionState.disconnected,
+    this.currentTransport = 'none',
+    this.socketId,
+    this.latencyMs,
     this.lastConnectedAt,
     this.lastDisconnectedAt,
     this.reconnectAttempts = 0,
@@ -31,10 +43,19 @@ class WebSocketConnectionHealth extends Equatable {
     this.activeSubscriptions = const {},
     this.totalEventsReceived = 0,
     this.duplicateEventsSuppressed = 0,
+    this.staleEventsSuppressed = 0,
+    this.eventsIgnored = 0,
+    this.lastEventName,
+    this.lastEventTimestamp,
+    this.restFallbackActive = false,
+    this.lastRestRefreshAt,
   });
 
   WebSocketConnectionHealth copyWith({
     SocketConnectionState? state,
+    String? currentTransport,
+    String? socketId,
+    int? latencyMs,
     DateTime? lastConnectedAt,
     DateTime? lastDisconnectedAt,
     int? reconnectAttempts,
@@ -42,9 +63,18 @@ class WebSocketConnectionHealth extends Equatable {
     Set<String>? activeSubscriptions,
     int? totalEventsReceived,
     int? duplicateEventsSuppressed,
+    int? staleEventsSuppressed,
+    int? eventsIgnored,
+    String? lastEventName,
+    DateTime? lastEventTimestamp,
+    bool? restFallbackActive,
+    DateTime? lastRestRefreshAt,
   }) {
     return WebSocketConnectionHealth(
       state: state ?? this.state,
+      currentTransport: currentTransport ?? this.currentTransport,
+      socketId: socketId ?? this.socketId,
+      latencyMs: latencyMs ?? this.latencyMs,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
       lastDisconnectedAt: lastDisconnectedAt ?? this.lastDisconnectedAt,
       reconnectAttempts: reconnectAttempts ?? this.reconnectAttempts,
@@ -53,12 +83,22 @@ class WebSocketConnectionHealth extends Equatable {
       totalEventsReceived: totalEventsReceived ?? this.totalEventsReceived,
       duplicateEventsSuppressed:
           duplicateEventsSuppressed ?? this.duplicateEventsSuppressed,
+      staleEventsSuppressed:
+          staleEventsSuppressed ?? this.staleEventsSuppressed,
+      eventsIgnored: eventsIgnored ?? this.eventsIgnored,
+      lastEventName: lastEventName ?? this.lastEventName,
+      lastEventTimestamp: lastEventTimestamp ?? this.lastEventTimestamp,
+      restFallbackActive: restFallbackActive ?? this.restFallbackActive,
+      lastRestRefreshAt: lastRestRefreshAt ?? this.lastRestRefreshAt,
     );
   }
 
   @override
   List<Object?> get props => [
     state,
+    currentTransport,
+    socketId,
+    latencyMs,
     lastConnectedAt,
     lastDisconnectedAt,
     reconnectAttempts,
@@ -66,6 +106,12 @@ class WebSocketConnectionHealth extends Equatable {
     activeSubscriptions,
     totalEventsReceived,
     duplicateEventsSuppressed,
+    staleEventsSuppressed,
+    eventsIgnored,
+    lastEventName,
+    lastEventTimestamp,
+    restFallbackActive,
+    lastRestRefreshAt,
   ];
 }
 
