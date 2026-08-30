@@ -86,11 +86,21 @@ void main() {
 
   group('154Score Leagues API & Realtime WebSocket Tests', () {
     test('1. Verify League Endpoints URLs', () {
+      expect(ApiEndpoints.leagueProfile('938652'), '/api/leagues/938652');
       expect(ApiEndpoints.leagueStandings('938652'), '/api/leagues/938652/standings');
       expect(ApiEndpoints.leagueTopScorers('938652'), '/api/leagues/938652/top-scorers');
+      expect(ApiEndpoints.leagueMatches('938652'), '/api/leagues/938652/matches');
     });
 
-    test('2. Live API: GET /api/leagues/{id}/standings', () async {
+    test('2. Live API: GET /api/leagues/{id} (Profile Overview)', () async {
+      final res = await repository.getLeagueProfile('938652', lang: 'ar');
+      expect(res.isSuccess, isTrue);
+      if (res.dataOrNull != null) {
+        expect(res.dataOrNull, isA<Map>());
+      }
+    });
+
+    test('3. Live API: GET /api/leagues/{id}/standings', () async {
       final res = await repository.getLeagueStandings('938652', lang: 'ar');
       expect(res.isSuccess, isTrue);
       final standings = res.dataOrNull!;
@@ -100,13 +110,13 @@ void main() {
       expect(standings.rows.first.position, 1);
     });
 
-    test('3. Live API: GET /api/leagues/{id}/top-scorers', () async {
+    test('4. Live API: GET /api/leagues/{id}/top-scorers', () async {
       final res = await repository.getLeagueTopScorers('938652', lang: 'ar');
       expect(res.isSuccess, isTrue);
       expect(res.dataOrNull, isA<List>());
     });
 
-    test('4. Live API: GET /api/matches with league_id filter', () async {
+    test('5. Live API: GET /api/matches with league_id filter', () async {
       final res = await repository.getLeagueMatches('938652', lang: 'ar');
       expect(res.isSuccess, isTrue);
       final matches = res.dataOrNull!;

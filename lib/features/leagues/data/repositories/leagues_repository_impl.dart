@@ -54,4 +54,17 @@ class LeaguesRepositoryImpl implements LeaguesRepository {
       return ApiFailure(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<ApiResult<Map<String, dynamic>?>> getLeagueProfile(
+    String leagueId, {
+    required String lang,
+  }) async {
+    try {
+      final res = await _dataSource.getLeagueProfile(leagueId, lang: lang);
+      return ApiSuccess(res);
+    } catch (e) {
+      return ApiFailure(ServerFailure(e.toString()));
+    }
+  }
 }

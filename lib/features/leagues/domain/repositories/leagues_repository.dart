@@ -19,4 +19,9 @@ abstract class LeaguesRepository {
     required String lang,
     String? date,
   });
+
+  Future<ApiResult<Map<String, dynamic>?>> getLeagueProfile(
+    String leagueId, {
+    required String lang,
+  });
 }

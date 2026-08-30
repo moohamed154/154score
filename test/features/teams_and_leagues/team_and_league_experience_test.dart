@@ -179,6 +179,18 @@ class MockLeaguesRepository implements LeaguesRepository {
       ),
     ]);
   }
+
+  @override
+  Future<ApiResult<Map<String, dynamic>?>> getLeagueProfile(
+    String leagueId, {
+    required String lang,
+  }) async {
+    return const ApiSuccess({
+      'country': 'إسبانيا',
+      'current_season': {'season_name': '2026/2027'},
+      'name': 'الدوري الإسباني',
+    });
+  }
 }
 
 class MockTeamsRepository implements TeamsRepository {

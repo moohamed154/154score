@@ -11,6 +11,8 @@ class LeagueState extends Equatable {
   final String leagueId;
   final String? leagueTitle;
   final String? leagueLogo;
+  final String? country;
+  final String? season;
   final LeagueStandingsEntity? standings;
   final List<TopScorerEntity> topScorers;
   final List<MatchEntity> matches;
@@ -22,6 +24,8 @@ class LeagueState extends Equatable {
     required this.leagueId,
     this.leagueTitle,
     this.leagueLogo,
+    this.country,
+    this.season,
     this.standings,
     this.topScorers = const [],
     this.matches = const [],
@@ -34,6 +38,8 @@ class LeagueState extends Equatable {
     String? leagueId,
     String? leagueTitle,
     String? leagueLogo,
+    String? country,
+    String? season,
     LeagueStandingsEntity? standings,
     List<TopScorerEntity>? topScorers,
     List<MatchEntity>? matches,
@@ -45,6 +51,8 @@ class LeagueState extends Equatable {
       leagueId: leagueId ?? this.leagueId,
       leagueTitle: leagueTitle ?? this.leagueTitle,
       leagueLogo: leagueLogo ?? this.leagueLogo,
+      country: country ?? this.country,
+      season: season ?? this.season,
       standings: standings ?? this.standings,
       topScorers: topScorers ?? this.topScorers,
       matches: matches ?? this.matches,
@@ -59,6 +67,8 @@ class LeagueState extends Equatable {
     leagueId,
     leagueTitle,
     leagueLogo,
+    country,
+    season,
     standings,
     topScorers,
     matches,

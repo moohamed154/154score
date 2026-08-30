@@ -233,6 +233,26 @@ class MatchDto {
         json['league_id']?.toString() ??
         leagueMap?['id']?.toString();
 
+    // Parse score from status string if not already present (e.g. "انتهت المباراة 5 - 2")
+    String? rawStatus = json['status']?.toString();
+    String? rawTime = json['time']?.toString();
+
+    if (rawStatus != null && (s1 == null || s2 == null)) {
+      final scoreMatch = RegExp(r'(\d+)\s*[-:]\s*(\d+)').firstMatch(rawStatus);
+      if (scoreMatch != null) {
+        s1 ??= scoreMatch.group(1);
+        s2 ??= scoreMatch.group(2);
+        rawStatus = 'انتهت';
+      }
+    }
+
+    if (rawStatus != null &&
+        (rawTime == null || rawTime == '-' || rawTime.isEmpty) &&
+        rawStatus.contains(RegExp(r'\d+:\d+'))) {
+      rawTime = rawStatus;
+      rawStatus = 'لم تبدأ';
+    }
+
     return MatchDto(
       id: effectiveId,
       team1: t1,
@@ -249,8 +269,8 @@ class MatchDto {
       halfTimeScore2: ht2,
       extraTimeScore1: et1,
       extraTimeScore2: et2,
-      time: json['time']?.toString() ?? '-',
-      status: json['status']?.toString() ?? 'Not Started',
+      time: rawTime ?? '-',
+      status: rawStatus ?? 'Not Started',
       statusCode: json['status_code']?.toString(),
       minute: json['minute']?.toString(),
       period: json['period']?.toString(),

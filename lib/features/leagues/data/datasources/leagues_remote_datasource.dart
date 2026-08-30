@@ -23,6 +23,11 @@ abstract class LeaguesRemoteDataSource {
     required String lang,
     String? date,
   });
+
+  Future<Map<String, dynamic>?> getLeagueProfile(
+    String leagueId, {
+    required String lang,
+  });
 }
 
 class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
@@ -51,8 +56,22 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
 
     final list = <TopScorerEntity>[];
 
-    if (response is Map && response['data'] is List) {
-      final rawList = response['data'] as List;
+    if (response is Map && response['data'] != null) {
+      final data = response['data'];
+      List rawList = [];
+
+      if (data is List) {
+        rawList = data;
+      } else if (data is Map) {
+        if (data['goals'] is List) {
+          rawList = data['goals'] as List;
+        } else if (data['scorers'] is List) {
+          rawList = data['scorers'] as List;
+        } else if (data['table'] is List) {
+          rawList = data['table'] as List;
+        }
+      }
+
       for (int i = 0; i < rawList.length; i++) {
         final item = rawList[i];
         if (item is Map<String, dynamic>) {
@@ -71,12 +90,75 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
     return list;
   }
 
+  String _normalizeLeagueId(String id) {
+    return switch (id) {
+      '937599' || '284' => '6811', // Premier League
+      '938652' || '285' => '1933', // LaLiga
+      '936357' || '287' => '3734', // Serie A
+      '938769' || '286' => '2606', // Bundesliga
+      '943230' || '288' => '12048', // UEFA Champions League
+      _ => id,
+    };
+  }
+
   @override
   Future<List<MatchEntity>> getMatches(
     String leagueId, {
     required String lang,
     String? date,
   }) async {
+    final candidateIds = <String>{
+      if (leagueId.isNotEmpty) _normalizeLeagueId(leagueId),
+      if (leagueId.isNotEmpty) leagueId,
+    };
+
+    // 1. Try dedicated championship matches endpoint with candidate IDs
+    for (final candidateId in candidateIds) {
+      try {
+        final directResponse = await _client.get(
+          ApiEndpoints.leagueMatches(candidateId),
+          queryParameters: {'lang': lang},
+        );
+
+        if (directResponse is Map && directResponse['data'] != null) {
+          final data = directResponse['data'];
+          List rawMatches = [];
+          String? leagueTitle;
+          String? leagueLogo;
+
+          if (data is List) {
+            rawMatches = data;
+          } else if (data is Map) {
+            leagueTitle =
+                data['name']?.toString() ?? data['league_title']?.toString();
+            leagueLogo =
+                data['logo']?.toString() ?? data['league_logo']?.toString();
+            if (data['matches'] is List) {
+              rawMatches = data['matches'] as List;
+            }
+          }
+
+          if (rawMatches.isNotEmpty) {
+            final matches = <MatchEntity>[];
+            for (final m in rawMatches) {
+              if (m is Map) {
+                matches.add(
+                  MatchDto.fromJson(
+                    Map<String, dynamic>.from(m),
+                    leagueTitle: leagueTitle,
+                    leagueLogo: leagueLogo,
+                    leagueId: leagueId,
+                  ).toEntity(),
+                );
+              }
+            }
+            return matches;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fallback to general matches endpoint filtered by league_id
     final queryParams = <String, dynamic>{'lang': lang};
     if (leagueId.isNotEmpty) {
       queryParams['league_id'] = leagueId;
@@ -97,35 +179,33 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
       for (final l in rawLeagues) {
         if (l is Map) {
           final lId = l['league_id']?.toString() ?? l['id']?.toString();
-          if (leagueId.isEmpty || lId == leagueId) {
-            final lTitle =
-                l['league_title']?.toString() ??
-                l['title']?.toString() ??
-                l['name']?.toString();
-            final lLogo =
-                l['league_logo']?.toString() ?? l['logo']?.toString();
-            final lMatches = l['matches'] as List? ?? [];
+          final lTitle =
+              l['league_title']?.toString() ??
+              l['title']?.toString() ??
+              l['name']?.toString();
+          final lLogo =
+              l['league_logo']?.toString() ?? l['logo']?.toString();
+          final lMatches = l['matches'] as List? ?? [];
 
-            for (final m in lMatches) {
-              if (m is Map<String, dynamic>) {
-                matches.add(
-                  MatchDto.fromJson(
-                    m,
-                    leagueTitle: lTitle,
-                    leagueLogo: lLogo,
-                    leagueId: lId,
-                  ).toEntity(),
-                );
-              } else if (m is Map) {
-                matches.add(
-                  MatchDto.fromJson(
-                    Map<String, dynamic>.from(m),
-                    leagueTitle: lTitle,
-                    leagueLogo: lLogo,
-                    leagueId: lId,
-                  ).toEntity(),
-                );
-              }
+          for (final m in lMatches) {
+            if (m is Map<String, dynamic>) {
+              matches.add(
+                MatchDto.fromJson(
+                  m,
+                  leagueTitle: lTitle,
+                  leagueLogo: lLogo,
+                  leagueId: lId,
+                ).toEntity(),
+              );
+            } else if (m is Map) {
+              matches.add(
+                MatchDto.fromJson(
+                  Map<String, dynamic>.from(m),
+                  leagueTitle: lTitle,
+                  leagueLogo: lLogo,
+                  leagueId: lId,
+                ).toEntity(),
+              );
             }
           }
         }
@@ -133,5 +213,30 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
     }
 
     return matches;
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getLeagueProfile(
+    String leagueId, {
+    required String lang,
+  }) async {
+    final candidateIds = <String>{
+      if (leagueId.isNotEmpty) _normalizeLeagueId(leagueId),
+      if (leagueId.isNotEmpty) leagueId,
+    };
+
+    for (final candidateId in candidateIds) {
+      try {
+        final response = await _client.get(
+          ApiEndpoints.leagueProfile(candidateId),
+          queryParameters: {'lang': lang},
+        );
+
+        if (response is Map && response['data'] is Map) {
+          return Map<String, dynamic>.from(response['data'] as Map);
+        }
+      } catch (_) {}
+    }
+    return null;
   }
 }

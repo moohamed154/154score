@@ -54,6 +54,10 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
     final lang = localStorageService.getLanguage();
 
     try {
+      final profileFuture = repository.getLeagueProfile(
+        event.leagueId,
+        lang: lang,
+      );
       final standingsFuture = repository.getLeagueStandings(
         event.leagueId,
         lang: lang,
@@ -67,27 +71,51 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
         lang: lang,
       );
 
-      final standingsRes = await standingsFuture;
-      final scorersRes = await scorersFuture;
-      final matchesRes = await matchesFuture;
+      final results = await Future.wait([
+        profileFuture,
+        standingsFuture,
+        scorersFuture,
+        matchesFuture,
+      ]);
 
-      final standings = standingsRes.dataOrNull;
-      final scorers = scorersRes.dataOrNull ?? [];
-      final matches = matchesRes.dataOrNull ?? [];
+      final profileRes = results[0] as dynamic;
+      final standingsRes = results[1] as dynamic;
+      final scorersRes = results[2] as dynamic;
+      final matchesRes = results[3] as dynamic;
+
+      final profileMap = profileRes?.dataOrNull as Map<String, dynamic>?;
+      final standings = standingsRes?.dataOrNull as dynamic;
+      final scorers = (scorersRes?.dataOrNull ?? []) as List<dynamic>;
+      final matches = (matchesRes?.dataOrNull ?? []) as List<dynamic>;
+
+      final profileCountry = profileMap?['country']?.toString();
+      String? profileSeason;
+      if (profileMap?['current_season'] is Map) {
+        profileSeason =
+            profileMap!['current_season']['season_name']?.toString() ??
+            profileMap['current_season']['name']?.toString();
+      }
+      final profileLogo = profileMap?['logo']?.toString();
+      final profileName = profileMap?['name']?.toString();
 
       final effectiveTitle =
-          standings?.leagueTitle.isNotEmpty == true &&
-              standings?.leagueTitle != 'League Standings'
-          ? standings!.leagueTitle
-          : (state.leagueTitle ?? 'League');
+          profileName?.isNotEmpty == true
+              ? profileName!
+              : (standings?.leagueTitle.isNotEmpty == true &&
+                      standings?.leagueTitle != 'League Standings'
+                  ? standings!.leagueTitle
+                  : (state.leagueTitle ?? 'League'));
 
       emit(
         state.copyWith(
           status: LeagueStatus.success,
           leagueTitle: effectiveTitle,
+          leagueLogo: profileLogo ?? state.leagueLogo,
+          country: profileCountry ?? state.country,
+          season: profileSeason ?? state.season,
           standings: standings,
-          topScorers: scorers,
-          matches: matches,
+          topScorers: scorers.cast(),
+          matches: matches.cast(),
           errorMessage: null,
         ),
       );

@@ -87,6 +87,8 @@ class _LeagueViewState extends State<LeagueView>
                   return LeagueHeaderCard(
                     title: title,
                     logo: state.leagueLogo ?? widget.initialLogo,
+                    country: state.country,
+                    season: state.season,
                     isFavorite: isFav,
                     onFavoriteTap: () {
                       context.read<FavoritesCubit>().toggleCompetition(title);
