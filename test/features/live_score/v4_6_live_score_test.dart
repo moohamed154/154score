@@ -14,18 +14,64 @@ import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
 import 'package:ysscores/features/matches/presentation/widgets/league_section_widget.dart';
 import 'package:ysscores/features/matches/presentation/widgets/match_card.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ysscores/core/storage/local_storage_service.dart';
+import 'package:ysscores/features/favorites/presentation/cubit/favorites_cubit.dart';
+
+class _MockStorageForLiveScore implements LocalStorageService {
+  @override
+  Future<void> init() async {}
+  @override
+  String getLanguage() => 'ar';
+  @override
+  Future<bool> setLanguage(String langCode) async => true;
+  @override
+  String getThemeMode() => 'dark';
+  @override
+  Future<bool> setThemeMode(String themeMode) async => true;
+  @override
+  String getTimeFormat() => '24h';
+  @override
+  Future<bool> setTimeFormat(String format) async => true;
+  @override
+  int getTimezoneOffset() => 0;
+  @override
+  Future<bool> setTimezoneOffset(int offset) async => true;
+  @override
+  List<String> getFavoriteTeams() => [];
+  @override
+  Future<bool> toggleFavoriteTeam(String teamName) async => true;
+  @override
+  bool isFavoriteTeam(String teamName) => false;
+  @override
+  List<String> getFavoriteCompetitions() => [];
+  @override
+  Future<bool> toggleFavoriteCompetition(String compName) async => true;
+  @override
+  bool isFavoriteCompetition(String compName) => false;
+  @override
+  List<String> getFavoriteMatches() => [];
+  @override
+  Future<bool> toggleFavoriteMatch(String matchId) async => true;
+  @override
+  bool isFavoriteMatch(String matchId) => false;
+}
+
 Widget createTestApp(Widget child, {Locale locale = const Locale('ar')}) {
-  return MaterialApp(
-    locale: locale,
-    supportedLocales: AppLocalizations.supportedLocales,
-    localizationsDelegates: const [
-      AppLocalizations.delegate,
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ],
-    theme: ThemeData.dark(),
-    home: Scaffold(body: child),
+  return BlocProvider<FavoritesCubit>(
+    create: (_) => FavoritesCubit(_MockStorageForLiveScore()),
+    child: MaterialApp(
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: ThemeData.dark(),
+      home: Scaffold(body: child),
+    ),
   );
 }
 

@@ -22,12 +22,14 @@ class LeagueView extends StatefulWidget {
   final String leagueId;
   final String? initialTitle;
   final String? initialLogo;
+  final int initialTabIndex;
 
   const LeagueView({
     super.key,
     required this.leagueId,
     this.initialTitle,
     this.initialLogo,
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -41,7 +43,11 @@ class _LeagueViewState extends State<LeagueView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 3),
+    );
     context.read<LeagueBloc>().add(LoadLeagueDetailsEvent(widget.leagueId));
   }
 

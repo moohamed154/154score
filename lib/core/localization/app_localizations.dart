@@ -108,8 +108,12 @@ class AppLocalizations {
       'info_round': 'Round / Gameweek',
       'info_venue': 'Venue',
 
-      // Standings
-      'standings_title': 'League Standings',
+      // Standings & Championships
+      'standings_title': 'Championships',
+      'search_championship': 'Search Championship',
+      'long_press_reorder_hint': 'Long press any championship to modify its order',
+      'favorite_championships': 'Favorite Championships',
+      'all_championships': 'All Championships',
       'standings_pos': '#',
       'standings_team': 'Team',
       'standings_played': 'MP',
@@ -284,8 +288,12 @@ class AppLocalizations {
       'info_round': 'الجولة / الدور',
       'info_venue': 'الموقع',
 
-      // Standings
-      'standings_title': 'جدول الترتيب',
+      // Standings & Championships
+      'standings_title': 'البطولات والترتيب',
+      'search_championship': 'البحث عن بطولة',
+      'long_press_reorder_hint': 'اضغط مطولاً على أي بطولة لتعديل ترتيبها',
+      'favorite_championships': 'البطولات المفضلة',
+      'all_championships': 'جميع البطولات',
       'standings_pos': '#',
       'standings_team': 'الفريق',
       'standings_played': 'لعب',

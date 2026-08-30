@@ -107,12 +107,16 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
+          final tabParam = state.uri.queryParameters['tab'];
+          final initialTab = extra?['tab'] as int? ??
+              (tabParam != null ? int.tryParse(tabParam) ?? 0 : 0);
           return BlocProvider(
             create: (_) => sl<LeagueBloc>(param1: id, param2: extra),
             child: LeagueView(
               leagueId: id,
               initialTitle: extra?['title']?.toString(),
               initialLogo: extra?['logo']?.toString(),
+              initialTabIndex: initialTab,
             ),
           );
         },

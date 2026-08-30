@@ -39,7 +39,8 @@ class ApiEndpoints {
   static String commentator(String id, String slug) =>
       '/api/commentator/$id/$slug';
 
-  // 4. Content Operations
+  // 4. Content & Search Operations
+  static const String search = '/api/search';
   static const String transfers = '/api/transfers';
   static const String videos = '/api/videos';
   static String videoDetails(String id) => '/api/videos/$id';
