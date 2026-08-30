@@ -9,6 +9,7 @@ import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
+import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/widgets/match_card.dart';
 import '../../../standings/presentation/widgets/standings_table.dart';
 import '../bloc/league_bloc.dart';
@@ -250,12 +251,64 @@ class _LeagueViewState extends State<LeagueView>
       );
     }
 
-    return ListView.builder(
+    // Group matches by Date or Status Category
+    final groupedMatches = <String, List<MatchEntity>>{};
+
+    for (final MatchEntity match in state.matches) {
+      final statusStr = match.status;
+      final isFinished = statusStr?.contains('انتهت') == true ||
+          statusStr?.contains('FT') == true;
+      final dateKey = (match.date != null && match.date!.isNotEmpty)
+          ? match.date!
+          : (isFinished
+              ? (isArabic ? 'المباريات السابقة' : 'Finished Matches')
+              : (isArabic ? 'المباريات القادمة' : 'Upcoming Matches'));
+
+      groupedMatches.putIfAbsent(dateKey, () => <MatchEntity>[]).add(match);
+    }
+
+    return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: state.matches.length,
-      itemBuilder: (context, index) {
-        return MatchCard(match: state.matches[index]);
-      },
+      children: groupedMatches.entries.map((entry) {
+        final headerText = entry.key;
+        final List<MatchEntity> matches = entry.value;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    headerText,
+                    style: AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ...matches.map((MatchEntity m) => MatchCard(key: ValueKey(m.id), match: m)),
+            const SizedBox(height: 8),
+          ],
+        );
+      }).toList(),
     );
   }
 

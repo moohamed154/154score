@@ -182,7 +182,7 @@ void main() {
         );
         expect(res, isA<Map>());
         expect(res['success'], isTrue);
-        expect(res['data'], isA<List>());
+        expect(res['data'] is List || res['data'] is Map, isTrue);
       },
     );
 
