@@ -46,6 +46,8 @@ class ApiEndpoints {
   static String videoDetails(String id) => '/api/videos/$id';
 
   // 5. League Operations
+  static const String rank = '/api/rank';
+  static const String leagues = '/api/leagues';
   static String leagueProfile(String id) => '/api/leagues/$id';
   static String leagueStandings(String id) => '/api/leagues/$id/standings';
   static String leagueTopScorers(String id) => '/api/leagues/$id/top-scorers';

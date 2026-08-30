@@ -86,10 +86,23 @@ void main() {
 
   group('154Score Leagues API & Realtime WebSocket Tests', () {
     test('1. Verify League Endpoints URLs', () {
+      expect(ApiEndpoints.rank, '/api/rank');
+      expect(ApiEndpoints.leagues, '/api/leagues');
       expect(ApiEndpoints.leagueProfile('938652'), '/api/leagues/938652');
       expect(ApiEndpoints.leagueStandings('938652'), '/api/leagues/938652/standings');
       expect(ApiEndpoints.leagueTopScorers('938652'), '/api/leagues/938652/top-scorers');
       expect(ApiEndpoints.leagueMatches('938652'), '/api/leagues/938652/matches');
+    });
+
+    test('1.1. Live API: GET /api/rank (getRankingsList)', () async {
+      final res = await apiClient.get(ApiEndpoints.rank, queryParameters: {'lang': 'ar'});
+      expect(res, isNotNull);
+      final map = res as Map<String, dynamic>;
+      expect(map['success'], isTrue);
+      final data = map['data'] as Map<String, dynamic>;
+      expect(data['featured'], isA<List>());
+      expect(data['leagues'], isA<List>());
+      expect((data['featured'] as List).isNotEmpty, isTrue);
     });
 
     test('2. Live API: GET /api/leagues/{id} (Profile Overview)', () async {
