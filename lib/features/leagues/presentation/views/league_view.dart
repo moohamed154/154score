@@ -290,6 +290,18 @@ class _LeagueViewState extends State<LeagueView>
     DateTime currentUpcomingDate = DateTime.now();
     int lastUpcomingMinutes = -1;
 
+    DateTime currentPastDate = DateTime.now().subtract(
+      Duration(
+        days: (DateTime.now().weekday == DateTime.sunday)
+            ? 7
+            : (DateTime.now().weekday == DateTime.monday
+                ? 1
+                : DateTime.now().weekday % 7),
+      ),
+    );
+    int finishedCountInCurrentDay = 0;
+    int currentDayCapacity = 4;
+
     for (final match in matches) {
       final status = match.status;
       final isFinished = status?.contains('انتهت') == true ||
@@ -328,8 +340,29 @@ class _LeagueViewState extends State<LeagueView>
         final headerKey = formatDayHeader(currentUpcomingDate);
         grouped.putIfAbsent(headerKey, () => <MatchEntity>[]).add(match);
       } else {
-        final headerKey =
-            isArabic ? 'المباريات السابقة' : 'Finished Matches';
+        if (finishedCountInCurrentDay >= currentDayCapacity) {
+          finishedCountInCurrentDay = 0;
+          if (currentPastDate.weekday == DateTime.sunday) {
+            currentPastDate =
+                currentPastDate.subtract(const Duration(days: 1));
+            currentDayCapacity = 5;
+          } else if (currentPastDate.weekday == DateTime.saturday) {
+            currentPastDate =
+                currentPastDate.subtract(const Duration(days: 6));
+            currentDayCapacity = 3;
+          } else if (currentPastDate.weekday == DateTime.friday) {
+            currentPastDate =
+                currentPastDate.subtract(const Duration(days: 5));
+            currentDayCapacity = 4;
+          } else {
+            currentPastDate =
+                currentPastDate.subtract(const Duration(days: 1));
+            currentDayCapacity = 4;
+          }
+        }
+
+        finishedCountInCurrentDay++;
+        final headerKey = formatDayHeader(currentPastDate);
         grouped.putIfAbsent(headerKey, () => <MatchEntity>[]).add(match);
       }
     }
