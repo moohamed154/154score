@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -7,6 +8,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../domain/entities/match_entity.dart';
 import 'match_card.dart';
 
@@ -102,7 +104,47 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
+
+                // League Favorite Star Button
+                BlocBuilder<FavoritesCubit, FavoritesState>(
+                  builder: (context, favState) {
+                    final isFav =
+                        favState.favoriteCompetitions.contains(
+                          widget.league.leagueTitle,
+                        ) ||
+                        (widget.league.leagueId != null &&
+                            favState.favoriteCompetitions.contains(
+                              widget.league.leagueId,
+                            ));
+
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusFull,
+                      ),
+                      onTap: () {
+                        context.read<FavoritesCubit>().toggleCompetition(
+                          widget.league.leagueTitle,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Icon(
+                          isFav
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          size: 18,
+                          color: isFav
+                              ? AppColors.yellowCard
+                              : (isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 6),
 
                 // Match count & Live count & Expand/Collapse Trigger
                 InkWell(

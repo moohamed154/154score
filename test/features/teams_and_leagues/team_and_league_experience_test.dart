@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ysscores/core/localization/app_localizations.dart';
 import 'package:ysscores/core/network/api_result.dart';
 import 'package:ysscores/core/storage/local_storage_service.dart';
+import 'package:ysscores/features/favorites/presentation/cubit/favorites_cubit.dart';
 import 'package:ysscores/features/leagues/domain/entities/top_scorer_entity.dart';
 import 'package:ysscores/features/leagues/domain/repositories/leagues_repository.dart';
 import 'package:ysscores/features/leagues/presentation/bloc/league_bloc.dart';
@@ -239,17 +240,20 @@ class MockTeamsRepository implements TeamsRepository {
 }
 
 Widget createTestApp(Widget child, {Locale locale = const Locale('ar')}) {
-  return MaterialApp(
-    locale: locale,
-    supportedLocales: AppLocalizations.supportedLocales,
-    localizationsDelegates: const [
-      AppLocalizations.delegate,
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ],
-    theme: ThemeData.dark(),
-    home: child,
+  return BlocProvider<FavoritesCubit>(
+    create: (_) => FavoritesCubit(MockLocalStorageService()),
+    child: MaterialApp(
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: ThemeData.dark(),
+      home: child,
+    ),
   );
 }
 

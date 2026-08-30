@@ -113,6 +113,8 @@ class MatchCard extends StatelessWidget {
                       if (hasScores) ...[
                         Row(
                           mainAxisSize: MainAxisSize.min,
+                          textDirection:
+                              isArabic ? TextDirection.rtl : TextDirection.ltr,
                           children: [
                             AnimatedScoreText(
                               score: score1Str,

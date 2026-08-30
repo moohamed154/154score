@@ -11,6 +11,8 @@ class LeagueHeaderCard extends StatelessWidget {
   final String? logo;
   final String? country;
   final String? season;
+  final bool isFavorite;
+  final VoidCallback? onFavoriteTap;
 
   const LeagueHeaderCard({
     super.key,
@@ -18,6 +20,8 @@ class LeagueHeaderCard extends StatelessWidget {
     this.logo,
     this.country,
     this.season,
+    this.isFavorite = false,
+    this.onFavoriteTap,
   });
 
   @override
@@ -128,6 +132,29 @@ class LeagueHeaderCard extends StatelessWidget {
               ],
             ),
           ),
+
+          // Favorite Button
+          if (onFavoriteTap != null) ...[
+            const SizedBox(width: 8),
+            InkWell(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              onTap: onFavoriteTap,
+              child: Padding(
+                padding: const EdgeInsets.all(6.0),
+                child: Icon(
+                  isFavorite
+                      ? Icons.star_rounded
+                      : Icons.star_border_rounded,
+                  color: isFavorite
+                      ? AppColors.yellowCard
+                      : (isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted),
+                  size: isSmall ? 22 : 26,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

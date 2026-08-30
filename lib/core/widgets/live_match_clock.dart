@@ -82,7 +82,13 @@ class _LiveMatchClockState extends State<LiveMatchClock>
 
     if (widget.minute != null && widget.minute!.isNotEmpty) {
       final clean = widget.minute!.replaceAll("'", '').trim();
-      final base = int.tryParse(clean.split('+')[0]);
+      if (clean.contains('+')) {
+        _displayString = "$clean'";
+        final base = int.tryParse(clean.split('+')[0]);
+        if (base != null) _currentMinute = base;
+        return;
+      }
+      final base = int.tryParse(clean);
       if (base != null) {
         _currentMinute = base;
       }
@@ -161,6 +167,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
 
     return Row(
       mainAxisSize: MainAxisSize.min,
+      textDirection: TextDirection.ltr,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (isLive && widget.showLiveDot) ...[
@@ -177,7 +184,11 @@ class _LiveMatchClockState extends State<LiveMatchClock>
           ),
           const SizedBox(width: 4),
         ],
-        Text(label, style: widget.textStyle ?? defaultStyle),
+        Text(
+          label,
+          style: widget.textStyle ?? defaultStyle,
+          textDirection: TextDirection.ltr,
+        ),
       ],
     );
   }

@@ -56,6 +56,7 @@ class MatchScoreWidget extends StatelessWidget {
         // Main Match Score
         Row(
           mainAxisSize: MainAxisSize.min,
+          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
           children: [
             AnimatedScoreText(score: s1, isLarge: isLarge, isLive: isLive),
             Padding(

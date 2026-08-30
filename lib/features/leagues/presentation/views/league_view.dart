@@ -8,6 +8,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../matches/presentation/widgets/match_card.dart';
 import '../../../standings/presentation/widgets/standings_table.dart';
 import '../bloc/league_bloc.dart';
@@ -77,9 +78,21 @@ class _LeagueViewState extends State<LeagueView>
           body: Column(
             children: [
               // League Hero Header
-              LeagueHeaderCard(
-                title: title,
-                logo: state.leagueLogo ?? widget.initialLogo,
+              BlocBuilder<FavoritesCubit, FavoritesState>(
+                builder: (context, favState) {
+                  final isFav =
+                      favState.favoriteCompetitions.contains(title) ||
+                      favState.favoriteCompetitions.contains(widget.leagueId);
+
+                  return LeagueHeaderCard(
+                    title: title,
+                    logo: state.leagueLogo ?? widget.initialLogo,
+                    isFavorite: isFav,
+                    onFavoriteTap: () {
+                      context.read<FavoritesCubit>().toggleCompetition(title);
+                    },
+                  );
+                },
               ),
 
               // Tab Bar
