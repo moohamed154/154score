@@ -235,6 +235,108 @@ class _LeagueViewState extends State<LeagueView>
     );
   }
 
+  Map<String, List<MatchEntity>> _groupLeagueMatches(
+    List<MatchEntity> matches,
+    bool isArabic,
+  ) {
+    final grouped = <String, List<MatchEntity>>{};
+    if (matches.isEmpty) return grouped;
+
+    String formatDayHeader(DateTime dt) {
+      final arabicDays = [
+        'الاثنين',
+        'الثلاثاء',
+        'الأربعاء',
+        'الخميس',
+        'الجمعة',
+        'السبت',
+        'الأحد',
+      ];
+      final englishDays = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
+      final dayName = isArabic
+          ? arabicDays[dt.weekday - 1]
+          : englishDays[dt.weekday - 1];
+      final dayStr = dt.day.toString().padLeft(2, '0');
+      final monthStr = dt.month.toString().padLeft(2, '0');
+      final yearStr = dt.year.toString();
+      return '$dayName $dayStr-$monthStr-$yearStr';
+    }
+
+    int parseTimeMinutes(String? timeStr) {
+      if (timeStr == null || timeStr.isEmpty || timeStr == '-') return 0;
+      final clean = timeStr.trim();
+      final match =
+          RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?').firstMatch(clean);
+      if (match == null) return 0;
+      var h = int.tryParse(match.group(1) ?? '0') ?? 0;
+      final m = int.tryParse(match.group(2) ?? '0') ?? 0;
+      final period = match.group(3);
+      if ((period == 'م' || period?.toUpperCase() == 'PM') && h < 12) {
+        h += 12;
+      } else if ((period == 'ص' || period?.toUpperCase() == 'AM') && h == 12) {
+        h = 0;
+      }
+      return h * 60 + m;
+    }
+
+    DateTime currentUpcomingDate = DateTime.now();
+    int lastUpcomingMinutes = -1;
+
+    for (final match in matches) {
+      final status = match.status;
+      final isFinished = status?.contains('انتهت') == true ||
+          status?.contains('FT') == true;
+
+      if (match.date != null && match.date!.isNotEmpty) {
+        grouped.putIfAbsent(match.date!, () => <MatchEntity>[]).add(match);
+        continue;
+      }
+
+      if (!isFinished) {
+        final matchMinutes = parseTimeMinutes(match.time);
+        if (lastUpcomingMinutes != -1 && matchMinutes < lastUpcomingMinutes) {
+          // Time dropped -> next match day
+          final daysToAdd = (currentUpcomingDate.weekday == DateTime.friday)
+              ? 1
+              : (currentUpcomingDate.weekday == DateTime.saturday)
+                  ? 1
+                  : (currentUpcomingDate.weekday == DateTime.sunday)
+                      ? 5
+                      : (DateTime.friday - currentUpcomingDate.weekday + 7) % 7;
+          currentUpcomingDate = currentUpcomingDate.add(
+            Duration(days: daysToAdd > 0 ? daysToAdd : 1),
+          );
+        } else if (lastUpcomingMinutes != -1 &&
+            matchMinutes == lastUpcomingMinutes &&
+            currentUpcomingDate.day == DateTime.now().day) {
+          final daysToFriday =
+              (DateTime.friday - currentUpcomingDate.weekday + 7) % 7;
+          currentUpcomingDate = currentUpcomingDate.add(
+            Duration(days: daysToFriday > 0 ? daysToFriday : 4),
+          );
+        }
+
+        lastUpcomingMinutes = matchMinutes;
+        final headerKey = formatDayHeader(currentUpcomingDate);
+        grouped.putIfAbsent(headerKey, () => <MatchEntity>[]).add(match);
+      } else {
+        final headerKey =
+            isArabic ? 'المباريات السابقة' : 'Finished Matches';
+        grouped.putIfAbsent(headerKey, () => <MatchEntity>[]).add(match);
+      }
+    }
+
+    return grouped;
+  }
+
   Widget _buildMatchesTab(
     BuildContext context,
     LeagueState state,
@@ -251,21 +353,7 @@ class _LeagueViewState extends State<LeagueView>
       );
     }
 
-    // Group matches by Date or Status Category
-    final groupedMatches = <String, List<MatchEntity>>{};
-
-    for (final MatchEntity match in state.matches) {
-      final statusStr = match.status;
-      final isFinished = statusStr?.contains('انتهت') == true ||
-          statusStr?.contains('FT') == true;
-      final dateKey = (match.date != null && match.date!.isNotEmpty)
-          ? match.date!
-          : (isFinished
-              ? (isArabic ? 'المباريات السابقة' : 'Finished Matches')
-              : (isArabic ? 'المباريات القادمة' : 'Upcoming Matches'));
-
-      groupedMatches.putIfAbsent(dateKey, () => <MatchEntity>[]).add(match);
-    }
+    final groupedMatches = _groupLeagueMatches(state.matches, isArabic);
 
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -304,7 +392,9 @@ class _LeagueViewState extends State<LeagueView>
                 ],
               ),
             ),
-            ...matches.map((MatchEntity m) => MatchCard(key: ValueKey(m.id), match: m)),
+            ...matches.map(
+              (MatchEntity m) => MatchCard(key: ValueKey(m.id), match: m),
+            ),
             const SizedBox(height: 8),
           ],
         );
