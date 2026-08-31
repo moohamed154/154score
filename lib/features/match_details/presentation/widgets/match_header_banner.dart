@@ -199,6 +199,8 @@ class MatchHeaderBanner extends StatelessWidget {
                     const SizedBox(height: 6),
                     StatusPill(
                       status: effectiveStatus,
+                      minute: match.minute,
+                      extraTime: match.extraTime,
                       time: match.time,
                       compact: isSmall,
                     ),

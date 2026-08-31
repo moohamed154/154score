@@ -282,7 +282,9 @@ class MatchDto {
       statusCode: json['status_code']?.toString(),
       minute: json['minute']?.toString(),
       period: json['period']?.toString(),
-      extraTime: json['extra_time']?.toString(),
+      extraTime: (json['extra_time'] is! Map && json['extra_time'] != null && json['extra_time'] != 'null')
+          ? json['extra_time']?.toString()
+          : (json['added_time']?.toString() ?? json['stoppage_time']?.toString() ?? json['injury_time']?.toString()),
       leagueTitle: lTitle,
       leagueLogo: lLogo,
       leagueId: lId,

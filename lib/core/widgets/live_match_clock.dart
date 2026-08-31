@@ -10,6 +10,7 @@ import '../utils/match_status_helper.dart';
 class LiveMatchClock extends StatefulWidget {
   final String? status;
   final String? minute;
+  final String? extraTime;
   final String? time;
   final bool showLiveDot;
   final TextStyle? textStyle;
@@ -20,6 +21,7 @@ class LiveMatchClock extends StatefulWidget {
     super.key,
     this.status,
     this.minute,
+    this.extraTime,
     this.time,
     this.showLiveDot = true,
     this.textStyle,
@@ -67,6 +69,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.status != widget.status ||
         oldWidget.minute != widget.minute ||
+        oldWidget.extraTime != widget.extraTime ||
         oldWidget.time != widget.time) {
       _syncClock();
       _startTimerIfNeeded();
@@ -77,10 +80,14 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     final phase = MatchStatusHelper.parseStatus(
       widget.status,
       minute: widget.minute,
+      extraTime: widget.extraTime,
       time: widget.time,
     );
 
-    if (widget.minute != null && widget.minute!.isNotEmpty) {
+    int? minuteNum;
+    if (widget.minute != null &&
+        widget.minute!.isNotEmpty &&
+        widget.minute != 'null') {
       final clean = widget.minute!.replaceAll("'", '').trim();
       if (clean.contains('+')) {
         _displayString = "$clean'";
@@ -91,11 +98,27 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       final base = int.tryParse(clean);
       if (base != null) {
         _currentMinute = base;
+        minuteNum = base;
       }
     }
 
-    if (phase == MatchPhase.live && _currentMinute > 0) {
-      _displayString = "$_currentMinute'";
+    final formattedExtra = MatchStatusHelper.formatExtraTime(
+      widget.extraTime,
+      minute: minuteNum ?? _currentMinute,
+    );
+
+    if (phase == MatchPhase.live) {
+      if (_currentMinute > 0) {
+        if (formattedExtra != null) {
+          _displayString = "$_currentMinute' $formattedExtra";
+        } else {
+          _displayString = "$_currentMinute'";
+        }
+      } else if (formattedExtra != null) {
+        _displayString = formattedExtra;
+      } else {
+        _displayString = '';
+      }
     } else {
       _displayString = '';
     }
@@ -106,18 +129,27 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     final phase = MatchStatusHelper.parseStatus(
       widget.status,
       minute: widget.minute,
+      extraTime: widget.extraTime,
       time: widget.time,
     );
 
     if (!_isInTest &&
         phase == MatchPhase.live &&
         _currentMinute > 0 &&
-        _currentMinute < 120) {
+        _currentMinute < 125) {
       _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
         if (mounted) {
           setState(() {
             _currentMinute++;
-            _displayString = "$_currentMinute'";
+            final formattedExtra = MatchStatusHelper.formatExtraTime(
+              widget.extraTime,
+              minute: _currentMinute,
+            );
+            if (formattedExtra != null) {
+              _displayString = "$_currentMinute' $formattedExtra";
+            } else {
+              _displayString = "$_currentMinute'";
+            }
           });
         }
       });
@@ -140,6 +172,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     final phase = MatchStatusHelper.parseStatus(
       widget.status,
       minute: widget.minute,
+      extraTime: widget.extraTime,
       time: widget.time,
     );
 
@@ -151,6 +184,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
             phase,
             widget.status,
             minute: widget.minute,
+            extraTime: widget.extraTime,
             time: widget.time,
             isArabic: isArabic,
           );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ysscores/core/utils/match_status_helper.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
@@ -9,12 +10,16 @@ import 'live_pulse_badge.dart';
 
 class StatusPill extends StatelessWidget {
   final String? status;
+  final String? minute;
+  final String? extraTime;
   final String? time;
   final bool compact;
 
   const StatusPill({
     super.key,
     required this.status,
+    this.minute,
+    this.extraTime,
     this.time,
     this.compact = false,
   });
@@ -25,10 +30,26 @@ class StatusPill extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
-    final isLive = ScoreHelper.isLiveStatus(status);
-    final isFinished = ScoreHelper.isFinishedStatus(status);
+    final phase = MatchStatusHelper.parseStatus(
+      status,
+      minute: minute,
+      extraTime: extraTime,
+      time: time,
+    );
+    final isLive = MatchStatusHelper.isLive(phase);
+    final isFinished =
+        ScoreHelper.isFinishedStatus(status) || phase == MatchPhase.finished;
 
     if (isLive) {
+      final liveLabel = MatchStatusHelper.getDisplayLabel(
+        phase,
+        status,
+        minute: minute,
+        extraTime: extraTime,
+        time: time,
+        isArabic: isArabic,
+      );
+
       return Container(
         padding: EdgeInsets.symmetric(
           horizontal: compact ? 6 : 8,
@@ -42,7 +63,7 @@ class StatusPill extends StatelessWidget {
             width: 0.8,
           ),
         ),
-        child: LivePulseBadge(minute: status, showText: true),
+        child: LivePulseBadge(minute: liveLabel, showText: true),
       );
     }
 

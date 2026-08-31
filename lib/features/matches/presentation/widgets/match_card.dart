@@ -167,6 +167,7 @@ class MatchCard extends StatelessWidget {
                       LiveMatchClock(
                         status: match.status,
                         minute: match.minute,
+                        extraTime: match.extraTime,
                         time: match.time,
                         showLiveDot: true,
                         textStyle:

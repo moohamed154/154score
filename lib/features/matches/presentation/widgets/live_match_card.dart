@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ysscores/core/widgets/live_match_clock.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -8,7 +9,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/animated_score_text.dart';
 import '../../../../core/widgets/app_image.dart';
-import '../../../../core/widgets/live_pulse_badge.dart';
 import '../../domain/entities/match_entity.dart';
 
 class LiveMatchCard extends StatelessWidget {
@@ -96,7 +96,13 @@ class LiveMatchCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    LivePulseBadge(minute: match.status, showText: true),
+                    LiveMatchClock(
+                      status: match.status,
+                      minute: match.minute,
+                      extraTime: match.extraTime,
+                      time: match.time,
+                      showLiveDot: true,
+                    ),
                   ],
                 ),
 

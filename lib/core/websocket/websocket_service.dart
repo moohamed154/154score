@@ -192,7 +192,13 @@ class WebSocketServiceImpl implements WebSocketService {
   }
 
   Set<String> _getAllActiveRooms() {
-    final allRooms = <String>{_activeChannel};
+    final allRooms = <String>{
+      ApiEndpoints.wsChannelMatchesAr,
+      ApiEndpoints.wsChannelEn,
+      ApiEndpoints.wsChannelTransfersAr,
+      'transfers_en',
+      _activeChannel,
+    };
     allRooms.addAll(_staticSubscriptions);
     for (final entry in _roomReferenceCounts.entries) {
       if (entry.value > 0) {
@@ -615,11 +621,13 @@ class WebSocketServiceImpl implements WebSocketService {
     if (socket == null || socket.connected != true) return;
 
     final allRooms = _getAllActiveRooms();
-    for (final room in allRooms) {
-      if (_isValidRoom(room)) {
-        if (kDebugMode) {
-          debugPrint('[WS] Emitting subscribe for room: $room');
-        }
+    final validRooms = allRooms.where(_isValidRoom).toList();
+    if (validRooms.isNotEmpty) {
+      if (kDebugMode) {
+        debugPrint('[WS] Subscribing to rooms: $validRooms');
+      }
+      socket.emit('subscribe', validRooms);
+      for (final room in validRooms) {
         socket.emit('subscribe', room);
       }
     }
@@ -674,6 +682,7 @@ class WebSocketServiceImpl implements WebSocketService {
         debugPrint('[WS] Subscribing to channel: $channel');
       }
       _socket?.emit('subscribe', channel);
+      _socket?.emit('subscribe', [channel]);
     }
     _emitHealth();
   }
@@ -686,6 +695,7 @@ class WebSocketServiceImpl implements WebSocketService {
         debugPrint('[WS] Unsubscribing from channel: $channel');
       }
       _socket?.emit('unsubscribe', channel);
+      _socket?.emit('unsubscribe', [channel]);
     }
     _emitHealth();
   }
@@ -709,6 +719,7 @@ class WebSocketServiceImpl implements WebSocketService {
         debugPrint('[WS] Joining room: $room (ref count: 1)');
       }
       _socket?.emit('subscribe', room);
+      _socket?.emit('subscribe', [room]);
     }
     _emitHealth();
   }
@@ -725,6 +736,7 @@ class WebSocketServiceImpl implements WebSocketService {
           debugPrint('[WS] Leaving room: $room (ref count: 0)');
         }
         _socket?.emit('unsubscribe', room);
+        _socket?.emit('unsubscribe', [room]);
       }
     } else {
       _roomReferenceCounts[room] = count - 1;
