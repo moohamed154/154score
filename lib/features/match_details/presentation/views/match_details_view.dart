@@ -1,12 +1,11 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -81,7 +80,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       }
 
       final pngBytes = byteData.buffer.asUint8List();
-      final tempDir = await getTemporaryDirectory();
+      final tempDir = Directory.systemTemp;
       final cleanId = match.id.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '');
       final file = File('${tempDir.path}/154score_match_$cleanId.png');
       await file.writeAsBytes(pngBytes);
@@ -90,33 +89,75 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           ? '⚽ تابع مباراة ${match.team1} ضد ${match.team2} وتغطية المباريات والتشكيلات لحظة بلحظة عبر تطبيق 154Score!\n\n📲 حمّل التطبيق الآن واستمتع بتغطية المباريات المباشرة:\nhttps://154score.com'
           : '⚽ Follow ${match.team1} vs ${match.team2} live scores, events, and lineups with 154Score app!\n\n📲 Download the app now:\nhttps://154score.com';
 
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [
-            XFile(
-              file.path,
-              mimeType: 'image/png',
-              name: '154score_$cleanId.png',
-            ),
-          ],
-          text: shareText,
-        ),
-      );
-    } catch (e) {
-      debugPrint('[Share] Error sharing match screenshot: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.isArabic
-                  ? 'تعذر مشاركة لقطة الشاشة'
-                  : 'Unable to share match screenshot',
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: AppColors.liveRed,
+      try {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [
+              XFile(
+                file.path,
+                mimeType: 'image/png',
+                name: '154score_$cleanId.png',
+              ),
+            ],
+            text: shareText,
           ),
         );
+      } catch (shareErr) {
+        debugPrint('[Share] Native share unavailable, copying to clipboard: $shareErr');
+        await Clipboard.setData(ClipboardData(text: shareText));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.isArabic
+                          ? 'تم نسخ تفاصيل ورابط المباراة للمشاركة بنجاح'
+                          : 'Match details & link copied to clipboard successfully',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.primary,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
       }
+    } catch (e) {
+      debugPrint('[Share] Error sharing match screenshot: $e');
+      final shareText = l10n.isArabic
+          ? '⚽ تابع مباراة ${match.team1} ضد ${match.team2} عبر تطبيق 154Score!\nhttps://154score.com'
+          : '⚽ Follow ${match.team1} vs ${match.team2} on 154Score!\nhttps://154score.com';
+      try {
+        await Clipboard.setData(ClipboardData(text: shareText));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.isArabic
+                          ? 'تم نسخ رابط المباراة إلى الحافظة'
+                          : 'Match link copied to clipboard',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.primary,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (_) {}
     } finally {
       if (mounted) {
         setState(() {
@@ -149,19 +190,21 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     bool isDark,
     bool isArabic,
   ) {
-    final leagueTitle = _getEffectiveLeagueTitle(match, state);
-    if (leagueTitle.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    final effectiveTitle = _getEffectiveLeagueTitle(match, state);
+    final displayTitle = effectiveTitle.isNotEmpty
+        ? effectiveTitle
+        : (isArabic ? 'مركز المباراة' : 'Match Center');
+
+    final effectiveLogo = match.leagueLogo;
 
     return InkWell(
       borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
       onTap: () {
-        if (match.leagueId != null || leagueTitle.isNotEmpty) {
+        if (match.leagueId != null || effectiveTitle.isNotEmpty) {
           final lId = match.leagueId ?? '937599';
           context.push(
             '/league/$lId',
-            extra: {'title': leagueTitle, 'logo': match.leagueLogo},
+            extra: {'title': displayTitle, 'logo': effectiveLogo},
           );
         }
       },
@@ -171,9 +214,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (match.leagueLogo != null && match.leagueLogo!.isNotEmpty) ...[
+            if (effectiveLogo != null && effectiveLogo.isNotEmpty) ...[
               AppImage(
-                imageUrl: match.leagueLogo,
+                imageUrl: effectiveLogo,
                 width: 20,
                 height: 20,
                 borderRadius: 4,
@@ -184,27 +227,20 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
             ],
             Flexible(
               child: Text(
-                leagueTitle,
+                displayTitle,
                 style: AppTypography.getBodyLarge(
                   isDark: isDark,
                   isArabic: isArabic,
                 ).copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              isArabic
-                  ? Icons.chevron_left_rounded
-                  : Icons.chevron_right_rounded,
-              size: 16,
-              color: isDark
-                  ? AppColors.darkTextMuted
-                  : AppColors.lightTextMuted,
             ),
           ],
         ),
