@@ -116,13 +116,14 @@ class _LineupTabViewState extends State<LineupTabView> {
 
                   const SizedBox(height: 16),
 
-                  // 2. Bench & Squad Details below pitch
+                  // 2. Bench & Squad Details below pitch (team toggle button hidden here since pitch has it above)
                   LineupSquadListWidget(
                     home: home,
                     away: away,
                     selectedTeamIndex: _selectedTeamIndex,
                     onTeamChanged: (idx) =>
                         setState(() => _selectedTeamIndex = idx),
+                    showTeamSwitcher: false,
                   ),
                 ] else ...[
                   // Dedicated List View (Starters, Bench, Coaches, Injuries)

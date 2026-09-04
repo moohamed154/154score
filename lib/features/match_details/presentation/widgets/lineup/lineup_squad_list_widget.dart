@@ -14,6 +14,7 @@ class LineupSquadListWidget extends StatefulWidget {
   final TeamLineupEntity away;
   final int? selectedTeamIndex;
   final ValueChanged<int>? onTeamChanged;
+  final bool showTeamSwitcher;
 
   const LineupSquadListWidget({
     super.key,
@@ -21,6 +22,7 @@ class LineupSquadListWidget extends StatefulWidget {
     required this.away,
     this.selectedTeamIndex,
     this.onTeamChanged,
+    this.showTeamSwitcher = true,
   });
 
   @override
@@ -53,9 +55,10 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     return Column(
       children: [
         // Team Segmented Tab Switcher
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 8),
-          child: Container(
+        if (widget.showTeamSwitcher)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 8),
+            child: Container(
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
