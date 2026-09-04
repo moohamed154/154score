@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/commentator_resolver.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
 
@@ -185,12 +186,25 @@ class MatchInfoCard extends StatelessWidget {
   void _handleNavigation(BuildContext context, MatchInfoItemEntity item) {
     if (!item.canNavigate) return;
 
-    final id =
+    var id =
         (item.entityId != null &&
             item.entityId!.isNotEmpty &&
             item.entityId != 'null')
         ? item.entityId!
         : '0';
+
+    final isCommentator = item.entityType?.toLowerCase() == 'commentator' ||
+        item.title.toLowerCase().contains('commentator') ||
+        item.title.contains('معلق');
+
+    if (isCommentator && (id == '0' || id.isEmpty)) {
+      final resolvedId = CommentatorResolver.resolveId(item.content) ??
+          CommentatorResolver.resolveId(item.slug);
+      if (resolvedId != null) {
+        id = resolvedId;
+      }
+    }
+
     final rawSlug = (item.slug != null && item.slug!.isNotEmpty)
         ? item.slug!
         : item.content.trim().replaceAll(RegExp(r'\s+'), '-');

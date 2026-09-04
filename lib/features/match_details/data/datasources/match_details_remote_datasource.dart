@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/commentator_resolver.dart';
 import '../../../../core/utils/match_minute_parser.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
@@ -373,13 +374,11 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                     // Resolve known commentators when backend omits id/slug
                     if (entityType == 'commentator' &&
                         (id == null || id.isEmpty || id == '0')) {
-                      if (content.contains('عبدالله الغامدي') ||
-                          content.toLowerCase().contains('alghamedi') ||
-                          (slug != null && slug.contains('الغامدي')) ||
-                          (slug != null &&
-                              slug.toLowerCase().contains('alghamedi'))) {
-                        id = '54';
-                        slug = 'Abdallah-Alghamedi';
+                      final resolvedId = CommentatorResolver.resolveId(content) ??
+                          CommentatorResolver.resolveId(slug);
+                      if (resolvedId != null) {
+                        id = resolvedId;
+                        slug = CommentatorResolver.getSlug(resolvedId);
                       }
                     }
 

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ysscores/core/errors/failures.dart';
 import 'package:ysscores/core/network/api_result.dart';
+import 'package:ysscores/core/utils/commentator_resolver.dart';
 import 'package:ysscores/features/profiles/domain/entities/profile_entity.dart';
 import 'package:ysscores/features/profiles/domain/repositories/profiles_repository.dart';
 
@@ -239,6 +240,20 @@ void main() {
       expect(entity.voiceUrl, equals('رابط البث الصوتي'));
       expect(entity.sections.length, equals(1));
       expect(entity.sections.first.items.length, equals(5));
+    });
+
+    // ── 8. CommentatorResolver resolution tests ──────────────────────────
+    test('CommentatorResolver maps Arabic names and slugs to correct IDs', () {
+      expect(CommentatorResolver.resolveId('أحمد عبده'), equals('21'));
+      expect(CommentatorResolver.resolveId('احمد عبده'), equals('21'));
+      expect(CommentatorResolver.resolveId('ahmed-abdou'), equals('21'));
+      expect(CommentatorResolver.resolveId('عبدالله الغامدي'), equals('54'));
+      expect(CommentatorResolver.resolveId('Abdallah-Alghamedi'), equals('54'));
+      expect(CommentatorResolver.resolveId('عصام الشوالي'), equals('56'));
+      expect(CommentatorResolver.resolveId('فارس عوض'), equals('2'));
+      expect(CommentatorResolver.resolveId('خليل البلوشي'), equals('6'));
+      expect(CommentatorResolver.resolveId('حفيظ دراجي'), equals('7'));
+      expect(CommentatorResolver.resolveId('رؤوف خليف'), equals('1'));
     });
   });
 }

@@ -1,5 +1,6 @@
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_result.dart';
+import '../../../../core/utils/commentator_resolver.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profiles_repository.dart';
@@ -104,11 +105,11 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
 
     // Resolve known commentators when navigation arrives with missing or 0 id
     if (effectiveId == '0' || effectiveId.isEmpty) {
-      if (cleanSlug.toLowerCase().contains('alghamedi') ||
-          cleanSlug.contains('الغامدي') ||
-          cleanSlug.toLowerCase().contains('abdallah')) {
-        effectiveId = '54';
-        effectiveSlug = 'Abdallah-Alghamedi';
+      final resolvedId = CommentatorResolver.resolveId(cleanSlug) ??
+          CommentatorResolver.resolveId(slug);
+      if (resolvedId != null) {
+        effectiveId = resolvedId;
+        effectiveSlug = CommentatorResolver.getSlug(resolvedId);
       }
     }
 
