@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/di/injection_container.dart';
 import '../../features/favorites/presentation/views/favorites_view.dart';
 import '../../features/home/presentation/views/home_view.dart';
+
 import '../../features/leagues/presentation/bloc/league_bloc.dart';
 import '../../features/leagues/presentation/views/league_view.dart';
 import '../../features/match_details/presentation/bloc/match_details_bloc.dart';
@@ -83,8 +84,28 @@ class AppRouter {
               ),
             ],
           ),
+          // Branch 5: Favorites
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/favorites',
+                builder: (context, state) => const FavoritesView(),
+              ),
+            ],
+          ),
+
+          // Branch 6: Search
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/search',
+                builder: (context, state) => const GlobalSearchView(),
+              ),
+            ],
+          ),
         ],
       ),
+
 
       // Match Details
       GoRoute(
@@ -207,12 +228,6 @@ class AppRouter {
         },
       ),
 
-      // Favorites
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/favorites',
-        builder: (context, state) => const FavoritesView(),
-      ),
 
       // Settings
       GoRoute(
@@ -221,12 +236,7 @@ class AppRouter {
         builder: (context, state) => const SettingsView(),
       ),
 
-      // Global Search
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/search',
-        builder: (context, state) => const GlobalSearchView(),
-      ),
+
     ],
   );
 }

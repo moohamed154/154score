@@ -98,6 +98,13 @@ class AppScaffold extends StatelessWidget {
                 activeIcon: const Icon(Icons.video_library_rounded),
                 label: l10n.translate('nav_videos'),
               ),
+
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.more_horiz_outlined),
+                activeIcon: const Icon(Icons.more_horiz_rounded),
+                label: l10n.translate('nav_settings'),
+              ),
+
             ],
           ),
         );
@@ -106,11 +113,17 @@ class AppScaffold extends StatelessWidget {
   }
 
   void _onTap(BuildContext context, int index) {
+    // Index 5 = More / Settings — push as overlay, not a shell branch
+    if (index == 5) {
+      context.push('/settings');
+      return;
+    }
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
   }
+
 
   List<NavigationRailDestination> _buildRailDestinations(
     AppLocalizations l10n,
@@ -152,6 +165,16 @@ class AppScaffold extends StatelessWidget {
         selectedIcon: const Icon(Icons.video_library_rounded),
         label: Text(l10n.translate('nav_videos')),
       ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.favorite_border_rounded),
+        selectedIcon: const Icon(Icons.favorite_rounded),
+        label: Text(l10n.translate('nav_favorites')),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.search_outlined),
+        selectedIcon: const Icon(Icons.search_rounded),
+        label: Text(l10n.translate('nav_search')),
+      ),
     ];
   }
 
@@ -175,6 +198,8 @@ class AppScaffold extends StatelessWidget {
       (Icons.table_chart_rounded, l10n.translate('nav_standings'), 2, null),
       (Icons.swap_horiz_rounded, l10n.translate('nav_transfers'), 3, null),
       (Icons.video_library_rounded, l10n.translate('nav_videos'), 4, null),
+      (Icons.favorite_rounded, l10n.translate('nav_favorites'), 5, null),
+      (Icons.search_rounded, l10n.translate('nav_search'), 6, null),
     ];
 
     return Container(

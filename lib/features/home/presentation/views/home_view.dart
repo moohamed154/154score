@@ -29,16 +29,6 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  final List<(String, String, String)> _popularCompetitions = [
-    ('937599', 'Premier League', 'الدوري الإنجليزي'),
-    ('938652', 'LaLiga', 'الدوري الإسباني'),
-    ('936357', 'Serie A', 'الدوري الإيطالي'),
-    ('938769', 'Bundesliga', 'الدوري الألماني'),
-    ('904988', 'Champions League', 'دوري أبطال أوروبا'),
-    ('943009', 'Egyptian League', 'الدوري المصري'),
-    ('941825', 'Saudi League', 'دوري روشن'),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -187,11 +177,6 @@ class _HomeViewState extends State<HomeView> {
                       isArabic,
                     ),
 
-                    // 3. Popular Competitions Quick Chips
-                    _buildPopularCompetitionsSection(context, isDark, isArabic),
-
-                    const SizedBox(height: 8),
-
                     // 4. Matches for Selected Date
                     _buildMatchesSection(
                       context,
@@ -275,61 +260,6 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
         const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildPopularCompetitionsSection(
-    BuildContext context,
-    bool isDark,
-    bool isArabic,
-  ) {
-    final l10n = AppLocalizations.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: l10n.translate('popular_competitions')),
-        SizedBox(
-          height: 42,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
-            itemCount: _popularCompetitions.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final item = _popularCompetitions[index];
-              final title = isArabic ? item.$3 : item.$2;
-
-              return ActionChip(
-                avatar: const Icon(
-                  Icons.emoji_events_outlined,
-                  size: 16,
-                  color: AppColors.primary,
-                ),
-                label: Text(
-                  title,
-                  style: AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(fontWeight: FontWeight.w600),
-                ),
-                backgroundColor: isDark
-                    ? AppColors.darkCard
-                    : AppColors.lightCard,
-                side: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                ),
-                onPressed: () {
-                  context.push('/standings/${item.$1}');
-                },
-              );
-            },
-          ),
-        ),
       ],
     );
   }
