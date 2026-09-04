@@ -47,13 +47,13 @@ class PitchPlayerNode extends StatelessWidget {
               children: [
                 // Circular Avatar
                 Container(
-                  width: 38,
-                  height: 38,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: ringColor,
-                      width: 2.0,
+                      width: 2.2,
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -67,11 +67,11 @@ class PitchPlayerNode extends StatelessWidget {
                     child: (player.photo != null && player.photo!.isNotEmpty)
                         ? CachedNetworkImage(
                             imageUrl: player.photo!,
-                            width: 38,
-                            height: 38,
+                            width: 44,
+                            height: 44,
                             fit: BoxFit.cover,
-                            memCacheWidth: 80,
-                            memCacheHeight: 80,
+                            memCacheWidth: 90,
+                            memCacheHeight: 90,
                             placeholder: (_, __) => _buildFallbackJersey(ringColor),
                             errorWidget: (_, __, ___) =>
                                 _buildFallbackJersey(ringColor),
@@ -87,12 +87,12 @@ class PitchPlayerNode extends StatelessWidget {
                     left: isArabic ? null : -3,
                     right: isArabic ? -3 : null,
                     child: Container(
-                      width: 15,
-                      height: 15,
+                      width: 16.5,
+                      height: 16.5,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF59E0B),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1),
+                        border: Border.all(color: Colors.white, width: 1.2),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.4),
@@ -104,7 +104,7 @@ class PitchPlayerNode extends StatelessWidget {
                       child: Text(
                         isArabic ? 'ق' : 'C',
                         style: (isArabic ? GoogleFonts.cairo : GoogleFonts.outfit)(
-                          fontSize: 8.5,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w900,
                           color: Colors.black,
                           height: 1.0,
@@ -119,13 +119,13 @@ class PitchPlayerNode extends StatelessWidget {
                     bottom: -5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 4.5,
-                        vertical: 1.0,
+                        horizontal: 5.5,
+                        vertical: 1.2,
                       ),
                       decoration: BoxDecoration(
                         color: _getRatingColor(player.rating!),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.white, width: 0.7),
+                        border: Border.all(color: Colors.white, width: 0.8),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.35),
@@ -136,7 +136,7 @@ class PitchPlayerNode extends StatelessWidget {
                       child: Text(
                         player.rating!,
                         style: GoogleFonts.outfit(
-                          fontSize: 8.5,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                           height: 1.1,
@@ -149,8 +149,8 @@ class PitchPlayerNode extends StatelessWidget {
                     bottom: -5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 4.5,
-                        vertical: 0.5,
+                        horizontal: 5.0,
+                        vertical: 1.0,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.75),
@@ -163,7 +163,7 @@ class PitchPlayerNode extends StatelessWidget {
                       child: Text(
                         '#${player.number}',
                         style: GoogleFonts.outfit(
-                          fontSize: 8,
+                          fontSize: 9,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                           height: 1.1,
@@ -174,14 +174,14 @@ class PitchPlayerNode extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 5),
+            const SizedBox(height: 4.5),
 
             // Player Short Name Tag
             Container(
-              constraints: const BoxConstraints(maxWidth: 68),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+              constraints: const BoxConstraints(maxWidth: 76),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.65),
+                color: Colors.black.withValues(alpha: 0.68),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.25),
@@ -191,10 +191,10 @@ class PitchPlayerNode extends StatelessWidget {
               child: Text(
                 _getShortName(player.name),
                 style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                   color: Colors.white,
-                  height: 1.1,
+                  height: 1.15,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -215,12 +215,12 @@ class PitchPlayerNode extends StatelessWidget {
           ? Text(
               '${player.number}',
               style: GoogleFonts.outfit(
-                fontSize: 13,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w800,
                 color: ringColor,
               ),
             )
-          : const Icon(Icons.person, size: 20, color: Colors.white70),
+          : const Icon(Icons.person, size: 22, color: Colors.white70),
     );
   }
 
