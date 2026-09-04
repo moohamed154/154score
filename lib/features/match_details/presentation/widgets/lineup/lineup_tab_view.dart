@@ -261,7 +261,7 @@ class _LineupTabViewState extends State<LineupTabView> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: const AspectRatio(
-                aspectRatio: 1 / 1.48,
+                aspectRatio: 1 / 1.90,
                 child: SkeletonLoader(
                   width: 560,
                   height: 800,
