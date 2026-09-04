@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:ysscores/core/utils/match_status_helper.dart';
 
 import '../constants/app_colors.dart';

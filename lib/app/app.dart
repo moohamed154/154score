@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../core/di/injection_container.dart';
 import '../core/localization/app_localizations.dart';
@@ -72,9 +71,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                 supportedLocales: AppLocalizations.supportedLocales,
                 localizationsDelegates: const [
                   AppLocalizations.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
+                  ...GlobalMaterialLocalizations.delegates,
                 ],
               );
             },

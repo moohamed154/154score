@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ysscores/core/localization/app_localizations.dart';
 import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
@@ -22,8 +21,7 @@ void main() {
       const MaterialApp(
         localizationsDelegates: [
           AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
         ],
         supportedLocales: [Locale('en')],
         home: Scaffold(body: MatchCard(match: match)),
