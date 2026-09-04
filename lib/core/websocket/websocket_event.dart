@@ -417,32 +417,94 @@ class MatchDetailRealtimeUpdate extends Equatable {
     return '${matchId}_${eventMinute ?? minute ?? ''}_${eventType ?? ''}_${eventPlayer ?? ''}_$isHomeTeam';
   }
 
-  factory MatchDetailRealtimeUpdate.fromJson(Map<String, dynamic> json) {
+  factory MatchDetailRealtimeUpdate.fromJson(
+    Map<String, dynamic> json, {
+    String? fallbackMatchId,
+  }) {
     int? parsedTimestamp;
     if (json['timestamp'] != null) {
       parsedTimestamp = int.tryParse(json['timestamp'].toString());
+    } else if (json['updatedAt'] != null) {
+      parsedTimestamp = int.tryParse(json['updatedAt'].toString());
+    }
+
+    final Map<String, dynamic> payload = (json['data'] is Map)
+        ? Map<String, dynamic>.from(json['data'] as Map)
+        : json;
+
+    String parsedMatchId = (json['id'] ??
+            json['match_id'] ??
+            json['matchId'] ??
+            payload['id'] ??
+            payload['match_id'] ??
+            payload['matchId'] ??
+            '')
+        .toString();
+
+    if (parsedMatchId.isEmpty && json['channel'] != null) {
+      final ch = json['channel'].toString();
+      if (ch.startsWith('match:')) {
+        parsedMatchId = ch.substring('match:'.length);
+      }
+    }
+
+    if (parsedMatchId.isEmpty && fallbackMatchId != null) {
+      parsedMatchId = fallbackMatchId;
+    }
+
+    String? s1 =
+        payload['score_1']?.toString() ?? payload['home_score']?.toString();
+    String? s2 =
+        payload['score_2']?.toString() ?? payload['away_score']?.toString();
+    String? st = payload['status']?.toString();
+    final min = payload['minute']?.toString();
+
+    // If backend sent scraped sections list: {"data": [{"section": "معلومات اللقاء", "items": [...]}]}
+    if (json['data'] is List) {
+      final list = json['data'] as List;
+      for (final sec in list) {
+        if (sec is Map && sec['items'] is List) {
+          for (final item in sec['items']) {
+            if (item is Map) {
+              final t = item['title']?.toString() ?? '';
+              final c = item['content']?.toString() ?? '';
+              if (t.contains('النتيجة') || t.toLowerCase().contains('score')) {
+                final parts = c.split(RegExp(r'[-–:]'));
+                if (parts.length == 2) {
+                  s1 ??= parts[0].trim();
+                  s2 ??= parts[1].trim();
+                }
+              }
+              if (t.contains('حالة') || t.toLowerCase().contains('status')) {
+                st ??= c.trim();
+              }
+            }
+          }
+        }
+      }
     }
 
     final isHome =
-        json['is_home'] == true ||
-        json['team'] == '1' ||
-        json['team'] == 'home' ||
-        json['team_type'] == 'home';
+        payload['is_home'] == true ||
+        payload['team'] == '1' ||
+        payload['team'] == 'home' ||
+        payload['team_type'] == 'home';
 
     return MatchDetailRealtimeUpdate(
-      matchId: (json['id'] ?? json['match_id'] ?? json['matchId'] ?? '')
-          .toString(),
-      score1: json['score_1']?.toString() ?? json['home_score']?.toString(),
-      score2: json['score_2']?.toString() ?? json['away_score']?.toString(),
-      status: json['status']?.toString(),
-      minute: json['minute']?.toString(),
-      eventType: json['event_type']?.toString() ?? json['type']?.toString(),
+      matchId: parsedMatchId,
+      score1: s1,
+      score2: s2,
+      status: st,
+      minute: min,
+      eventType:
+          payload['event_type']?.toString() ?? payload['type']?.toString(),
       eventPlayer:
-          json['player_name']?.toString() ?? json['player']?.toString(),
+          payload['player_name']?.toString() ?? payload['player']?.toString(),
       eventAssist:
-          json['assist_player']?.toString() ?? json['assist']?.toString(),
+          payload['assist_player']?.toString() ??
+          payload['assist']?.toString(),
       eventMinute:
-          json['event_minute']?.toString() ?? json['minute']?.toString(),
+          payload['event_minute']?.toString() ?? payload['minute']?.toString(),
       isHomeTeam: isHome,
       timestamp: parsedTimestamp,
       rawPayload: json,

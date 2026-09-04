@@ -34,6 +34,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
     // 1. Join room: match:{matchId}
     try {
+      webSocketService.connect();
       webSocketService.joinMatchRoom(matchId);
     } catch (_) {}
 

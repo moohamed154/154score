@@ -70,11 +70,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(
-            isArabic
-                ? Icons.arrow_forward_ios_rounded
-                : Icons.arrow_back_ios_rounded,
-          ),
+          icon: const Icon(Icons.arrow_back_ios_rounded),
           onPressed: () {
             if (context.canPop()) {
               context.pop();

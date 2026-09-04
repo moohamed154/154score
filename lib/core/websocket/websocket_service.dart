@@ -550,8 +550,18 @@ class WebSocketServiceImpl implements WebSocketService {
 
     try {
       if (data is Map) {
+        String? fallbackId;
+        final activeMatchRooms = _roomReferenceCounts.entries
+            .where((e) => e.key.startsWith('match:') && e.value > 0)
+            .map((e) => e.key.substring('match:'.length))
+            .toList();
+        if (activeMatchRooms.length == 1) {
+          fallbackId = activeMatchRooms.first;
+        }
+
         final update = MatchDetailRealtimeUpdate.fromJson(
           Map<String, dynamic>.from(data),
+          fallbackMatchId: fallbackId,
         );
         if (update.matchId.isEmpty) {
           _eventsIgnored++;
