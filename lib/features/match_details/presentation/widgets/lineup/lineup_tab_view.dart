@@ -30,6 +30,7 @@ class LineupTabView extends StatefulWidget {
 
 class _LineupTabViewState extends State<LineupTabView> {
   _LineupViewMode _viewMode = _LineupViewMode.pitch;
+  int _selectedTeamIndex = 0; // 0 = Home, 1 = Away
 
   @override
   Widget build(BuildContext context) {
@@ -105,15 +106,33 @@ class _LineupTabViewState extends State<LineupTabView> {
                 // Active View Body
                 if (_viewMode == _LineupViewMode.pitch) ...[
                   // 1. Tactical Pitch Board
-                  MatchPitchWidget(home: home, away: away),
+                  MatchPitchWidget(
+                    home: home,
+                    away: away,
+                    selectedTeamIndex: _selectedTeamIndex,
+                    onTeamChanged: (idx) =>
+                        setState(() => _selectedTeamIndex = idx),
+                  ),
 
                   const SizedBox(height: 16),
 
                   // 2. Bench & Squad Details below pitch
-                  LineupSquadListWidget(home: home, away: away),
+                  LineupSquadListWidget(
+                    home: home,
+                    away: away,
+                    selectedTeamIndex: _selectedTeamIndex,
+                    onTeamChanged: (idx) =>
+                        setState(() => _selectedTeamIndex = idx),
+                  ),
                 ] else ...[
                   // Dedicated List View (Starters, Bench, Coaches, Injuries)
-                  LineupSquadListWidget(home: home, away: away),
+                  LineupSquadListWidget(
+                    home: home,
+                    away: away,
+                    selectedTeamIndex: _selectedTeamIndex,
+                    onTeamChanged: (idx) =>
+                        setState(() => _selectedTeamIndex = idx),
+                  ),
                 ],
               ],
             ),
@@ -261,10 +280,10 @@ class _LineupTabViewState extends State<LineupTabView> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: const AspectRatio(
-                aspectRatio: 1 / 1.90,
+                aspectRatio: 1 / 1.40,
                 child: SkeletonLoader(
                   width: 560,
-                  height: 800,
+                  height: 500,
                   borderRadius: AppDimensions.radiusLg,
                 ),
               ),

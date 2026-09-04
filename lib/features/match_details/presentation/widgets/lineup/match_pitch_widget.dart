@@ -7,177 +7,285 @@ import 'package:ysscores/features/match_details/domain/entities/match_details_en
 import 'pitch_painter.dart';
 import 'pitch_player_node.dart';
 
-/// Interactive tactical pitch board displaying starting XI formations for both Home & Away teams.
-class MatchPitchWidget extends StatelessWidget {
+/// Interactive tactical pitch board displaying starting XI for a selected team
+/// with a dedicated segmented toggle to seamlessly switch between Home & Away teams.
+class MatchPitchWidget extends StatefulWidget {
   final TeamLineupEntity home;
   final TeamLineupEntity away;
+  final int? selectedTeamIndex;
+  final ValueChanged<int>? onTeamChanged;
 
   const MatchPitchWidget({
     super.key,
     required this.home,
     required this.away,
+    this.selectedTeamIndex,
+    this.onTeamChanged,
   });
+
+  @override
+  State<MatchPitchWidget> createState() => _MatchPitchWidgetState();
+}
+
+class _MatchPitchWidgetState extends State<MatchPitchWidget> {
+  int _internalTeamIndex = 0;
+
+  int get _currentIndex => widget.selectedTeamIndex ?? _internalTeamIndex;
+
+  void _onSelectTeam(int index) {
+    if (widget.onTeamChanged != null) {
+      widget.onTeamChanged!(index);
+    } else {
+      setState(() => _internalTeamIndex = index);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = Directionality.of(context) == TextDirection.rtl;
 
+    final currentTeam = _currentIndex == 0 ? widget.home : widget.away;
+    final isHome = _currentIndex == 0;
+    final ringColor = isHome
+        ? const Color(0xFF10B981)
+        : const Color(0xFF38BDF8);
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
-        child: Container(
-          margin: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.md,
-            vertical: AppDimensions.sm,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-              width: 1.5,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 1. Team Segmented Toggle Switcher (Home vs Away)
+            _buildTeamToggleBar(
+              isDark: isDark,
+              isArabic: isArabic,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg - 1),
-            child: AspectRatio(
-              aspectRatio: 1 / 1.90,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // 1. Custom Football Turf & Line Markings
-                  RepaintBoundary(
-                    child: CustomPaint(
-                      painter: PitchPainter(isDark: isDark),
-                    ),
-                  ),
 
-                  // 2. Team Formations Layout
-                  Column(
-                    children: [
-                      // Away Team Half (Top Half, Goal at Top)
-                      Expanded(
-                        child: _buildTeamHalf(
-                          team: away,
-                          isHome: false,
-                          isDark: isDark,
-                          isArabic: isArabic,
+            const SizedBox(height: 10),
+
+            // 2. Interactive Football Pitch Turf
+            GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity != null) {
+                  if (details.primaryVelocity! < -200) {
+                    // Swiped left
+                    _onSelectTeam(isArabic ? 0 : 1);
+                  } else if (details.primaryVelocity! > 200) {
+                    // Swiped right
+                    _onSelectTeam(isArabic ? 1 : 0);
+                  }
+                }
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.md,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg - 1),
+                  child: AspectRatio(
+                    aspectRatio: 1 / 1.40,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Pitch turf & markings
+                        RepaintBoundary(
+                          child: CustomPaint(
+                            painter: PitchPainter(isDark: isDark),
+                          ),
                         ),
-                      ),
 
-                      // Halfway Line Inset Spacing
-                      const SizedBox(height: 14),
-
-                      // Home Team Half (Bottom Half, Goal at Bottom)
-                      Expanded(
-                        child: _buildTeamHalf(
-                          team: home,
-                          isHome: true,
-                          isDark: isDark,
-                          isArabic: isArabic,
+                        // Active Team Tactical Formation (Animated on toggle)
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(opacity: animation, child: child);
+                          },
+                          child: KeyedSubtree(
+                            key: ValueKey<int>(_currentIndex),
+                            child: _buildSingleTeamPitch(
+                              team: currentTeam,
+                              isHome: isHome,
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
 
-                  // 3. Away Team Floating Banner (Top)
-                  Positioned(
-                    top: 10,
-                    left: 12,
-                    right: 12,
-                    child: _buildTeamBadge(
-                      team: away,
-                      isHome: false,
-                      isDark: isDark,
-                      isArabic: isArabic,
+                        // Floating Header Badge (Team name & formation)
+                        Positioned(
+                          top: 10,
+                          left: 12,
+                          right: 12,
+                          child: _buildFloatingHeader(
+                            team: currentTeam,
+                            isHome: isHome,
+                            ringColor: ringColor,
+                            isArabic: isArabic,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-
-                  // 4. Home Team Floating Banner (Bottom)
-                  Positioned(
-                    bottom: 10,
-                    left: 12,
-                    right: 12,
-                    child: _buildTeamBadge(
-                      team: home,
-                      isHome: true,
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTeamBadge({
-    required TeamLineupEntity team,
-    required bool isHome,
+  /// Segmented team toggle tab bar above the pitch board.
+  Widget _buildTeamToggleBar({
     required bool isDark,
     required bool isArabic,
   }) {
-    final ringColor = isHome
-        ? const Color(0xFF10B981)
-        : const Color(0xFF38BDF8);
-
-    return Align(
-      alignment: isHome ? Alignment.bottomCenter : Alignment.topCenter,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(20),
+          color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           border: Border.all(
-            color: ringColor.withValues(alpha: 0.6),
-            width: 1.0,
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 4,
+        ),
+        padding: const EdgeInsets.all(3),
+        child: Row(
+          children: [
+            // Home Team Tab
+            Expanded(
+              child: _buildTeamToggleItem(
+                team: widget.home,
+                isSelected: _currentIndex == 0,
+                isHome: true,
+                accentColor: const Color(0xFF10B981),
+                isDark: isDark,
+                isArabic: isArabic,
+                onTap: () => _onSelectTeam(0),
+              ),
+            ),
+            const SizedBox(width: 4),
+            // Away Team Tab
+            Expanded(
+              child: _buildTeamToggleItem(
+                team: widget.away,
+                isSelected: _currentIndex == 1,
+                isHome: false,
+                accentColor: const Color(0xFF38BDF8),
+                isDark: isDark,
+                isArabic: isArabic,
+                onTap: () => _onSelectTeam(1),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTeamToggleItem({
+    required TeamLineupEntity team,
+    required bool isSelected,
+    required bool isHome,
+    required Color accentColor,
+    required bool isDark,
+    required bool isArabic,
+    required VoidCallback onTap,
+  }) {
+    final displayName = team.displayName.isNotEmpty
+        ? team.displayName
+        : (team.teamName ?? (isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? const Color(0xFF1E293B) : Colors.white)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+          border: isSelected
+              ? Border.all(color: accentColor.withValues(alpha: 0.7), width: 1.2)
+              : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.18),
+                    blurRadius: 6,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              team.displayName.isNotEmpty
-                  ? team.displayName
-                  : (team.teamName ?? (isHome ? 'Home' : 'Away')),
-              style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+            // Team indicator dot
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: isSelected ? accentColor : accentColor.withValues(alpha: 0.4),
+                shape: BoxShape.circle,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(width: 6),
+
+            // Team Name
+            Flexible(
+              child: Text(
+                displayName,
+                style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected
+                      ? (isDark ? Colors.white : AppColors.lightTextPrimary)
+                      : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+            // Formation Pill
             if (team.formation != null && team.formation!.isNotEmpty) ...[
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 5.5, vertical: 1.0),
                 decoration: BoxDecoration(
-                  color: ringColor.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10),
+                  color: isSelected
+                      ? accentColor.withValues(alpha: 0.22)
+                      : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   team.formation!,
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: ringColor,
+                    color: isSelected
+                        ? accentColor
+                        : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
                   ),
                 ),
               ),
@@ -188,18 +296,115 @@ class MatchPitchWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamHalf({
+  /// Floating badge inside pitch showing active team name and formation.
+  Widget _buildFloatingHeader({
+    required TeamLineupEntity team,
+    required bool isHome,
+    required Color ringColor,
+    required bool isArabic,
+  }) {
+    final displayName = team.displayName.isNotEmpty
+        ? team.displayName
+        : (team.teamName ?? (isHome ? 'Home' : 'Away'));
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Team Name Pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: ringColor.withValues(alpha: 0.6),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                displayName,
+                style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (team.formation != null && team.formation!.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: ringColor.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    team.formation!,
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: ringColor,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // Coach info (if available)
+        if (team.coach != null && team.coach!.name != null && team.coach!.name!.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.sports_rounded, size: 12, color: ringColor),
+                const SizedBox(width: 4),
+                Text(
+                  team.coach!.name!,
+                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Tactical board layout for a single team attacking UP (GK at bottom, Strikers at top).
+  Widget _buildSingleTeamPitch({
     required TeamLineupEntity team,
     required bool isHome,
     required bool isDark,
     required bool isArabic,
   }) {
-    final rows = _groupPlayersIntoTacticalRows(team, isHome: isHome);
+    final rows = _groupSingleTeamTacticalRows(team);
 
     return Padding(
-      padding: EdgeInsets.only(
-        top: isHome ? 6.0 : 34.0,
-        bottom: isHome ? 34.0 : 6.0,
+      padding: const EdgeInsets.only(
+        top: 36.0,
+        bottom: 12.0,
         left: 8.0,
         right: 8.0,
       ),
@@ -223,27 +428,21 @@ class MatchPitchWidget extends StatelessWidget {
     );
   }
 
-  /// Partitions the starting XI into rows ordered from top to bottom.
+  /// Partitions a team's starting XI into tactical rows from Top (Strikers) to Bottom (Goalkeeper).
   ///
-  /// For Away (top half):
-  ///   Row 0: Goalkeeper (at top goal)
-  ///   Row 1: Defenders
+  /// Team attacks UPwards:
+  ///   Row 0: Forwards / Strikers (near opponent's goal)
+  ///   Row 1: Attacking Midfielders
   ///   Row 2: Defensive Midfielders
-  ///   Row 3+: Attacking Midfielders / Forwards (near center line)
-  ///
-  /// For Home (bottom half):
-  ///   Row 0+: Forwards / Attacking Midfielders (near center line)
-  ///   Row 1: Defensive Midfielders
-  ///   Row 2: Defenders
-  ///   Row 3: Goalkeeper (at bottom goal)
-  static List<List<LineupPlayerEntity>> _groupPlayersIntoTacticalRows(
-    TeamLineupEntity team, {
-    required bool isHome,
-  }) {
+  ///   Row 3: Defenders
+  ///   Row 4: Goalkeeper (defending bottom goal)
+  static List<List<LineupPlayerEntity>> _groupSingleTeamTacticalRows(
+    TeamLineupEntity team,
+  ) {
     final starters = List<LineupPlayerEntity>.from(team.startingXi);
     if (starters.isEmpty) return [];
 
-    // 1. Isolate Goalkeepers
+    // 1. Isolate Goalkeepers & Outfield
     final gkList = <LineupPlayerEntity>[];
     final outfield = <LineupPlayerEntity>[];
 
@@ -268,18 +467,16 @@ class MatchPitchWidget extends StatelessWidget {
             : outfield.length - currentIndex;
         final line = outfield.sublist(currentIndex, currentIndex + take);
         if (line.isNotEmpty) {
-          line.sort((a, b) => isHome
-              ? (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0)
-              : (b.formationPosition ?? 0).compareTo(a.formationPosition ?? 0));
+          line.sort((a, b) =>
+              (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
           tacticalLines.add(line);
         }
         currentIndex += take;
       }
       if (currentIndex < outfield.length) {
         final leftover = outfield.sublist(currentIndex);
-        leftover.sort((a, b) => isHome
-            ? (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0)
-            : (b.formationPosition ?? 0).compareTo(a.formationPosition ?? 0));
+        leftover.sort((a, b) =>
+            (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
         if (tacticalLines.isNotEmpty) {
           tacticalLines.last.addAll(leftover);
         } else {
@@ -288,12 +485,8 @@ class MatchPitchWidget extends StatelessWidget {
       }
     } else {
       // Fallback: Group outfield by positionCode (D, M, F)
-      final defenders = outfield
-          .where((p) => p.positionCode == 'D')
-          .toList();
-      final midfielders = outfield
-          .where((p) => p.positionCode == 'M')
-          .toList();
+      final defenders = outfield.where((p) => p.positionCode == 'D').toList();
+      final midfielders = outfield.where((p) => p.positionCode == 'M').toList();
       final forwards = outfield
           .where((p) =>
               p.positionCode == 'F' ||
@@ -301,15 +494,12 @@ class MatchPitchWidget extends StatelessWidget {
               (!defenders.contains(p) && !midfielders.contains(p)))
           .toList();
 
-      defenders.sort((a, b) => isHome
-          ? (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0)
-          : (b.formationPosition ?? 0).compareTo(a.formationPosition ?? 0));
-      midfielders.sort((a, b) => isHome
-          ? (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0)
-          : (b.formationPosition ?? 0).compareTo(a.formationPosition ?? 0));
-      forwards.sort((a, b) => isHome
-          ? (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0)
-          : (b.formationPosition ?? 0).compareTo(a.formationPosition ?? 0));
+      defenders.sort((a, b) =>
+          (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
+      midfielders.sort((a, b) =>
+          (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
+      forwards.sort((a, b) =>
+          (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
 
       if (defenders.isNotEmpty) tacticalLines.add(defenders);
       if (midfielders.isNotEmpty) tacticalLines.add(midfielders);
@@ -320,25 +510,20 @@ class MatchPitchWidget extends StatelessWidget {
       }
     }
 
-    if (isHome) {
-      // Home Half (attacks UP): Forwards (nearest to center) -> Midfielders -> Defenders -> Goalkeeper (bottom)
-      final homeRows = <List<LineupPlayerEntity>>[];
-      for (int i = tacticalLines.length - 1; i >= 0; i--) {
-        homeRows.add(tacticalLines[i]);
-      }
-      if (gkList.isNotEmpty) {
-        homeRows.add(gkList);
-      }
-      return homeRows;
-    } else {
-      // Away Half (attacks DOWN): Goalkeeper (top) -> Defenders -> Midfielders -> Forwards (nearest to center)
-      final awayRows = <List<LineupPlayerEntity>>[];
-      if (gkList.isNotEmpty) {
-        awayRows.add(gkList);
-      }
-      awayRows.addAll(tacticalLines);
-      return awayRows;
+    // Outfield tacticalLines are ordered Defenders -> Midfielders -> Strikers.
+    // Order for Column (Top to Bottom):
+    //   Row 0 (Top): Strikers (tacticalLines.last)
+    //   ...
+    //   Row N-1: Defenders (tacticalLines.first)
+    //   Row N (Bottom): Goalkeeper
+    final rows = <List<LineupPlayerEntity>>[];
+    for (int i = tacticalLines.length - 1; i >= 0; i--) {
+      rows.add(tacticalLines[i]);
     }
+    if (gkList.isNotEmpty) {
+      rows.add(gkList);
+    }
+    return rows;
   }
 
   static List<int>? _parseFormationCounts(String? formation) {

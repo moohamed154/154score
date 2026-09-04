@@ -12,11 +12,15 @@ import 'package:ysscores/features/match_details/domain/entities/match_details_en
 class LineupSquadListWidget extends StatefulWidget {
   final TeamLineupEntity home;
   final TeamLineupEntity away;
+  final int? selectedTeamIndex;
+  final ValueChanged<int>? onTeamChanged;
 
   const LineupSquadListWidget({
     super.key,
     required this.home,
     required this.away,
+    this.selectedTeamIndex,
+    this.onTeamChanged,
   });
 
   @override
@@ -24,7 +28,17 @@ class LineupSquadListWidget extends StatefulWidget {
 }
 
 class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
-  int _selectedTeamIndex = 0; // 0 = Home, 1 = Away
+  int _internalTeamIndex = 0;
+
+  int get _selectedTeamIndex => widget.selectedTeamIndex ?? _internalTeamIndex;
+
+  void _onSelectTeam(int index) {
+    if (widget.onTeamChanged != null) {
+      widget.onTeamChanged!(index);
+    } else {
+      setState(() => _internalTeamIndex = index);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +74,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                     isSelected: _selectedTeamIndex == 0,
                     isDark: isDark,
                     isArabic: isArabic,
-                    onTap: () => setState(() => _selectedTeamIndex = 0),
+                    onTap: () => _onSelectTeam(0),
                   ),
                 ),
                 Expanded(
@@ -72,7 +86,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                     isSelected: _selectedTeamIndex == 1,
                     isDark: isDark,
                     isArabic: isArabic,
-                    onTap: () => setState(() => _selectedTeamIndex = 1),
+                    onTap: () => _onSelectTeam(1),
                   ),
                 ),
               ],

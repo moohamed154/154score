@@ -699,8 +699,14 @@ void main() {
         expect(find.text('ريال مدريد'), findsWidgets);
         expect(find.text('برشلونة'), findsWidgets);
 
-        // Verify player node exists on pitch
+        // Verify player node exists for home team on pitch
         expect(find.text('مبابي'), findsWidgets);
+
+        // Toggle to away team (Barcelona)
+        await tester.tap(find.text('برشلونة').first);
+        await tester.pumpAndSettle();
+
+        // Verify player node exists for away team on pitch
         expect(find.text('يامال'), findsWidgets);
       },
     );
@@ -996,9 +1002,8 @@ void main() {
       // Pitch board is present
       expect(find.byType(MatchPitchWidget), findsOneWidget);
 
-      // Verify players from all lines including strikers are rendered
+      // Verify Home team (Real Betis) players across tactical lines are rendered
       expect(find.text('فاييس'), findsWidgets);
-      expect(find.text('كورتوا'), findsWidgets);
       expect(find.text('غارسيا'), findsWidgets);
       expect(find.text('بيليرين'), findsWidgets);
       expect(find.text('روكا'), findsWidgets);
@@ -1007,6 +1012,13 @@ void main() {
       expect(find.text('إيسكو'), findsWidgets);
       expect(find.text('أنتوني'), findsWidgets);
       expect(find.text('هيرنانديز'), findsWidgets);
+
+      // Toggle to Away team (Real Madrid)
+      await tester.tap(find.text('ريال مدريد').first);
+      await tester.pumpAndSettle();
+
+      // Verify Away team (Real Madrid) players are now rendered on pitch
+      expect(find.text('كورتوا'), findsWidgets);
       expect(find.text('مبابي'), findsWidgets);
     });
 
