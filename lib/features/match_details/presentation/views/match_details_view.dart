@@ -1,11 +1,19 @@
-import 'package:material_ui/material_ui.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/utils/url_helper.dart';
@@ -44,6 +52,166 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   // Events tab inner filter
   _EventFilter _eventFilter = _EventFilter.highlights;
 
+  bool _isSharing = false;
+  final GlobalKey _screenBoundaryKey = GlobalKey();
+
+  Future<void> _shareMatch(MatchEntity match, AppLocalizations l10n) async {
+    if (_isSharing) return;
+
+    setState(() {
+      _isSharing = true;
+    });
+
+    try {
+      final boundary =
+          _screenBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+
+      if (boundary == null) {
+        throw Exception('Render boundary is not available');
+      }
+
+      final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
+      final ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+
+      if (byteData == null) {
+        throw Exception('Failed to generate image data');
+      }
+
+      final pngBytes = byteData.buffer.asUint8List();
+      final tempDir = await getTemporaryDirectory();
+      final cleanId = match.id.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '');
+      final file = File('${tempDir.path}/154score_match_$cleanId.png');
+      await file.writeAsBytes(pngBytes);
+
+      final shareText = l10n.isArabic
+          ? '⚽ تابع مباراة ${match.team1} ضد ${match.team2} وتغطية المباريات والتشكيلات لحظة بلحظة عبر تطبيق 154Score!\n\n📲 حمّل التطبيق الآن واستمتع بتغطية المباريات المباشرة:\nhttps://154score.com'
+          : '⚽ Follow ${match.team1} vs ${match.team2} live scores, events, and lineups with 154Score app!\n\n📲 Download the app now:\nhttps://154score.com';
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile(
+              file.path,
+              mimeType: 'image/png',
+              name: '154score_$cleanId.png',
+            ),
+          ],
+          text: shareText,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Share] Error sharing match screenshot: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.isArabic
+                  ? 'تعذر مشاركة لقطة الشاشة'
+                  : 'Unable to share match screenshot',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: AppColors.liveRed,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSharing = false;
+        });
+      }
+    }
+  }
+
+  String _getEffectiveLeagueTitle(MatchEntity match, MatchDetailsState state) {
+    if (match.leagueTitle != null && match.leagueTitle!.isNotEmpty) {
+      return match.leagueTitle!;
+    }
+    for (final section in state.details) {
+      for (final item in section.items) {
+        if (item.title.contains('البطولة') ||
+            item.title.toLowerCase().contains('competition') ||
+            item.title.toLowerCase().contains('league')) {
+          return item.content;
+        }
+      }
+    }
+    return '';
+  }
+
+  Widget _buildAppBarLeagueBadge(
+    BuildContext context,
+    MatchEntity match,
+    MatchDetailsState state,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final leagueTitle = _getEffectiveLeagueTitle(match, state);
+    if (leagueTitle.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+      onTap: () {
+        if (match.leagueId != null || leagueTitle.isNotEmpty) {
+          final lId = match.leagueId ?? '937599';
+          context.push(
+            '/league/$lId',
+            extra: {'title': leagueTitle, 'logo': match.leagueLogo},
+          );
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (match.leagueLogo != null && match.leagueLogo!.isNotEmpty) ...[
+              AppImage(
+                imageUrl: match.leagueLogo,
+                width: 20,
+                height: 20,
+                borderRadius: 4,
+                fit: BoxFit.contain,
+                placeholderIcon: Icons.emoji_events_outlined,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Flexible(
+              child: Text(
+                leagueTitle,
+                style: AppTypography.getBodyLarge(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              isArabic
+                  ? Icons.chevron_left_rounded
+                  : Icons.chevron_right_rounded,
+              size: 16,
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +237,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded),
           onPressed: () {
@@ -79,118 +248,160 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
             }
           },
         ),
-        title: Text(
-          '${fallbackMatch.team1} vs ${fallbackMatch.team2}',
-          style: AppTypography.getBodyLarge(
-            isDark: isDark,
-            isArabic: isArabic,
-          ).copyWith(fontWeight: FontWeight.w700),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        title: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
+          buildWhen: (prev, curr) => prev.details != curr.details,
+          builder: (context, state) {
+            return _buildAppBarLeagueBadge(
+              context,
+              fallbackMatch,
+              state,
+              isDark,
+              isArabic,
+            );
+          },
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.share_rounded), onPressed: () {}),
+          _isSharing
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.share_rounded),
+                  tooltip: isArabic ? 'مشاركة المباراة' : 'Share Match',
+                  onPressed: () => _shareMatch(fallbackMatch, l10n),
+                ),
         ],
       ),
-      body: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
-        builder: (context, state) {
-          return Column(
-            children: [
-              // ── Top Score Hero Banner ──────────────────────────────────
-              MatchHeaderBanner(
-                match: fallbackMatch,
-                liveScore1: state.liveScore1,
-                liveScore2: state.liveScore2,
-                liveStatus: state.liveStatus,
-                penaltyScore1: fallbackMatch.penaltyScore1,
-                penaltyScore2: fallbackMatch.penaltyScore2,
-              ),
+      body: RepaintBoundary(
+        key: _screenBoundaryKey,
+        child: Container(
+          color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          child: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
+            builder: (context, state) {
+              return Column(
+                children: [
+                  // ── Top Score Hero Banner ──────────────────────────────────
+                  MatchHeaderBanner(
+                    match: fallbackMatch,
+                    liveScore1: state.liveScore1,
+                    liveScore2: state.liveScore2,
+                    liveStatus: state.liveStatus,
+                    penaltyScore1: fallbackMatch.penaltyScore1,
+                    penaltyScore2: fallbackMatch.penaltyScore2,
+                  ),
 
-              // ── Main Horizontal Scrollable Tab Bar ─────────────────────
-              Container(
-                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                child: TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  indicatorColor: AppColors.primary,
-                  indicatorWeight: 3,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: isDark
-                      ? AppColors.darkTextMuted
-                      : AppColors.lightTextMuted,
-                  labelStyle: AppTypography.getBodyMedium(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(fontWeight: FontWeight.w700),
-                  tabs: [
-                    Tab(text: isArabic ? 'الأحداث' : 'Events'),
-                    Tab(text: isArabic ? 'التفاصيل' : 'Details'),
-                    Tab(text: isArabic ? 'التشكيلة' : 'Lineups'),
-                    Tab(text: isArabic ? 'الإحصائيات' : 'Stats'),
-                    Tab(text: isArabic ? 'الترتيب' : 'Standings'),
-                    Tab(text: isArabic ? 'الأخبار' : 'News'),
-                  ],
-                ),
-              ),
+                  // ── Main Horizontal Scrollable Tab Bar ─────────────────────
+                  Container(
+                    color: isDark
+                        ? AppColors.darkSurface
+                        : AppColors.lightSurface,
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      indicatorColor: AppColors.primary,
+                      indicatorWeight: 3,
+                      labelColor: AppColors.primary,
+                      unselectedLabelColor: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                      labelStyle: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w700),
+                      tabs: [
+                        Tab(text: isArabic ? 'الأحداث' : 'Events'),
+                        Tab(text: isArabic ? 'التفاصيل' : 'Details'),
+                        Tab(text: isArabic ? 'التشكيلة' : 'Lineups'),
+                        Tab(text: isArabic ? 'الإحصائيات' : 'Stats'),
+                        Tab(text: isArabic ? 'الترتيب' : 'Standings'),
+                        Tab(text: isArabic ? 'الأخبار' : 'News'),
+                      ],
+                    ),
+                  ),
 
-              const Divider(height: 1),
+                  const Divider(height: 1),
 
-              // ── Tab Content ────────────────────────────────────────────
-              Expanded(
-                child: RefreshIndicator(
-                  color: AppColors.primary,
-                  onRefresh: () async {
-                    context.read<MatchDetailsBloc>().add(
-                      LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
-                    );
-                  },
-                  child: state.status == MatchDetailsStatus.loading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
+                  // ── Tab Content ────────────────────────────────────────────
+                  Expanded(
+                    child: RefreshIndicator(
+                      color: AppColors.primary,
+                      onRefresh: () async {
+                        context.read<MatchDetailsBloc>().add(
+                          LoadMatchDetailsEvent(
+                            widget.matchId,
+                            isRefresh: true,
                           ),
-                        )
-                      : state.status == MatchDetailsStatus.error
-                      ? ErrorView(
-                          message: state.errorMessage,
-                          onRetry: () => context.read<MatchDetailsBloc>().add(
-                            LoadMatchDetailsEvent(widget.matchId),
-                          ),
-                        )
-                      : TabBarView(
-                          controller: _tabController,
-                          children: [
-                            // 1. الأحداث (Events with Video chips, Highlights/All filter, Timeline & Stats Preview)
-                            _buildEventsTab(
-                              context,
-                              state,
-                              fallbackMatch,
-                              isDark,
-                              isArabic,
+                        );
+                      },
+                      child: state.status == MatchDetailsStatus.loading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : state.status == MatchDetailsStatus.error
+                          ? ErrorView(
+                              message: state.errorMessage,
+                              onRetry: () => context
+                                  .read<MatchDetailsBloc>()
+                                  .add(LoadMatchDetailsEvent(widget.matchId)),
+                            )
+                          : TabBarView(
+                              controller: _tabController,
+                              children: [
+                                // 1. الأحداث (Events with Video chips, Highlights/All filter, Timeline & Stats Preview)
+                                _buildEventsTab(
+                                  context,
+                                  state,
+                                  fallbackMatch,
+                                  isDark,
+                                  isArabic,
+                                ),
+
+                                // 2. التفاصيل (Details / Match Info)
+                                _buildDetailsTab(
+                                  context,
+                                  state,
+                                  isDark,
+                                  isArabic,
+                                ),
+
+                                // 3. التشكيلة (Lineup)
+                                LineupTabView(matchId: widget.matchId),
+
+                                // 4. الإحصائيات (Full Statistics)
+                                _buildStatsTab(
+                                  context,
+                                  state,
+                                  isDark,
+                                  isArabic,
+                                ),
+
+                                // 5. الترتيب (Standings)
+                                _buildStandingsTab(context, isDark, isArabic),
+
+                                // 6. الأخبار (News)
+                                _buildNewsTab(context, state, isDark, isArabic),
+                              ],
                             ),
-
-                            // 2. التفاصيل (Details / Match Info)
-                            _buildDetailsTab(context, state, isDark, isArabic),
-
-                            // 3. التشكيلة (Lineup)
-                            LineupTabView(matchId: widget.matchId),
-
-                            // 4. الإحصائيات (Full Statistics)
-                            _buildStatsTab(context, state, isDark, isArabic),
-
-                            // 5. الترتيب (Standings)
-                            _buildStandingsTab(context, isDark, isArabic),
-
-                            // 6. الأخبار (News)
-                            _buildNewsTab(context, state, isDark, isArabic),
-                          ],
-                        ),
-                ),
-              ),
-            ],
-          );
-        },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }

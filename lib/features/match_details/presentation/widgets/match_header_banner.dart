@@ -18,6 +18,7 @@ class MatchHeaderBanner extends StatelessWidget {
   final String? liveStatus;
   final String? penaltyScore1;
   final String? penaltyScore2;
+  final bool showLeagueBadge;
 
   const MatchHeaderBanner({
     super.key,
@@ -27,6 +28,7 @@ class MatchHeaderBanner extends StatelessWidget {
     this.liveStatus,
     this.penaltyScore1,
     this.penaltyScore2,
+    this.showLeagueBadge = false,
   });
 
   @override
@@ -61,68 +63,69 @@ class MatchHeaderBanner extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Tappable League Badge
-          InkWell(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-            onTap: () {
-              if (match.leagueId != null || match.leagueTitle != null) {
-                final lId = match.leagueId ?? '937599';
-                context.push(
-                  '/league/$lId',
-                  extra: {'title': match.leagueTitle, 'logo': match.leagueLogo},
-                );
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (match.leagueLogo != null) ...[
-                    AppImage(
-                      imageUrl: match.leagueLogo,
-                      width: 18,
-                      height: 18,
-                      borderRadius: 4,
-                      fit: BoxFit.contain,
-                      placeholderIcon: Icons.emoji_events_outlined,
+          if (showLeagueBadge) ...[
+            // Tappable League Badge
+            InkWell(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+              onTap: () {
+                if (match.leagueId != null || match.leagueTitle != null) {
+                  final lId = match.leagueId ?? '937599';
+                  context.push(
+                    '/league/$lId',
+                    extra: {'title': match.leagueTitle, 'logo': match.leagueLogo},
+                  );
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (match.leagueLogo != null) ...[
+                      AppImage(
+                        imageUrl: match.leagueLogo,
+                        width: 18,
+                        height: 18,
+                        borderRadius: 4,
+                        fit: BoxFit.contain,
+                        placeholderIcon: Icons.emoji_events_outlined,
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Flexible(
+                      child: Text(
+                        match.leagueTitle ?? 'Match Center',
+                        style:
+                            AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: isSmall ? 11 : 12,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
+                    Icon(
+                      isArabic
+                          ? Icons.chevron_left_rounded
+                          : Icons.chevron_right_rounded,
+                      size: 14,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
                   ],
-                  Flexible(
-                    child: Text(
-                      match.leagueTitle ?? 'Match Center',
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: isSmall ? 11 : 12,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    isArabic
-                        ? Icons.chevron_left_rounded
-                        : Icons.chevron_right_rounded,
-                    size: 14,
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-
-          SizedBox(height: isSmall ? 8 : 14),
+            SizedBox(height: isSmall ? 8 : 14),
+          ],
 
           // Teams and Score Lineup
           Row(
