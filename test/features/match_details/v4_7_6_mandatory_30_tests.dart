@@ -150,6 +150,8 @@ void main() {
     ).thenAnswer((_) async => const ApiSuccess(sampleDetails));
     when(() => repo.getNews(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getLineups(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(null));
   });
 
   group('Phase 9 — All 30 Mandatory Regression Tests', () {

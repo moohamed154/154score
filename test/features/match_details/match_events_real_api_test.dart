@@ -147,6 +147,8 @@ void main() {
     ).thenAnswer((_) async => const ApiSuccess(sampleDetails));
     when(() => repo.getNews(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getLineups(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(null));
   });
 
   group('V4.7.4 Mandatory Regression Tests (1 to 15)', () {

@@ -70,6 +70,8 @@ void main() {
     ).thenAnswer((_) async => const ApiSuccess([]));
     when(() => repo.getNews(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getLineups(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(null));
   });
 
   group('Match Tabs Structure — V4.7.6 Reference Match Tabs', () {

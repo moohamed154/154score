@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/network/api_result.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/match_event_helper.dart';
 import '../../../../core/utils/realtime_merge_engine.dart';
@@ -73,11 +75,25 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         utcOffset: offset,
       );
       final newsFuture = repository.getNews(event.matchId, lang: lang);
+      Future<ApiResult<MatchLineupEntity?>>? lineupsFuture;
+      try {
+        lineupsFuture = repository.getLineups(event.matchId, lang: lang);
+      } catch (_) {
+        lineupsFuture = null;
+      }
 
       final eventsRes = (await eventsFuture).dataOrNull ?? [];
       final statsRes = (await statsFuture).dataOrNull ?? [];
       final detailsRes = (await detailsFuture).dataOrNull ?? [];
       final newsRes = (await newsFuture).dataOrNull ?? [];
+      MatchLineupEntity? lineupsRes;
+      if (lineupsFuture != null) {
+        try {
+          lineupsRes = (await lineupsFuture).dataOrNull;
+        } catch (_) {
+          lineupsRes = null;
+        }
+      }
 
       emit(
         state.copyWith(
@@ -86,6 +102,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           stats: statsRes,
           details: detailsRes,
           news: newsRes,
+          lineup: lineupsRes,
           errorMessage: null,
         ),
       );

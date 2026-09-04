@@ -32,6 +32,7 @@ class ApiEndpoints {
   static String matchEvents(String id) => '/api/matches/$id/events';
   static String matchStats(String id) => '/api/matches/$id/stats';
   static String matchNews(String id) => '/api/matches/$id/news';
+  static String matchLineups(String id) => '/api/matches/$id/lineups';
 
   // 3. Profiles Operations
   static String stadium(String id, String slug) => '/api/stadium/$id/$slug';

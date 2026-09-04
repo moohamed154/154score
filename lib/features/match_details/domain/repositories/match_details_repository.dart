@@ -19,4 +19,8 @@ abstract class MatchDetailsRepository {
     String matchId, {
     required String lang,
   });
+  Future<ApiResult<MatchLineupEntity?>> getLineups(
+    String matchId, {
+    required String lang,
+  });
 }

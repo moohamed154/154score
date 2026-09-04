@@ -64,4 +64,17 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
       return const ApiSuccess([]);
     }
   }
+
+  @override
+  Future<ApiResult<MatchLineupEntity?>> getLineups(
+    String matchId, {
+    required String lang,
+  }) async {
+    try {
+      final data = await _remoteDataSource.getLineups(matchId, lang: lang);
+      return ApiSuccess(data);
+    } catch (e) {
+      return const ApiSuccess(null);
+    }
+  }
 }

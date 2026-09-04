@@ -198,6 +198,33 @@ class AppLocalizations {
       'search_no_results': 'No results found matching your search.',
       'clear': 'Clear',
       'close': 'Close',
+
+      // Lineup Tab
+      'tab_lineup': 'Lineup',
+      'confirmed_lineup': 'Confirmed Lineup',
+      'probable_lineup': 'Probable Lineup',
+      'formation': 'Formation',
+      'starting_xi': 'Starting XI',
+      'substitutes': 'Substitutes',
+      'coach': 'Coach',
+      'manager': 'Manager',
+      'injuries_absences': 'Absences & Injuries',
+      'pitch_view': 'Pitch',
+      'list_view': 'List',
+      'captain_short': 'C',
+      'goalkeepers': 'Goalkeepers',
+      'defenders': 'Defenders',
+      'midfielders': 'Midfielders',
+      'forwards': 'Forwards',
+      'lineup_unavailable_title': 'Lineups Not Available',
+      'lineup_unavailable_desc':
+          'Lineup data is not yet available.\nLineups are typically announced 1 hour before kickoff.',
+      'refresh_lineup': 'Check for Updates',
+      'player_details': 'Player Details',
+      'starter': 'Starter',
+      'substitute': 'Substitute',
+      'captain': 'Captain',
+      'rating': 'Rating',
     },
     'ar': {
       'app_name': '154Score',
@@ -378,6 +405,33 @@ class AppLocalizations {
       'search_no_results': 'لم نتمكن من العثور على نتائج لبحثك.',
       'clear': 'مسح',
       'close': 'إغلاق',
+
+      // Lineup Tab
+      'tab_lineup': 'التشكيلة',
+      'confirmed_lineup': 'تشكيلة مؤكدة',
+      'probable_lineup': 'تشكيلة متوقعة',
+      'formation': 'خطة اللعب',
+      'starting_xi': 'التشكيلة الأساسية',
+      'substitutes': 'البدلاء',
+      'coach': 'المدرب',
+      'manager': 'المدير الفني',
+      'injuries_absences': 'الغيابات والإصابات',
+      'pitch_view': 'الملعب',
+      'list_view': 'القائمة',
+      'captain_short': 'ق',
+      'goalkeepers': 'حراسة المرمى',
+      'defenders': 'الدفاع',
+      'midfielders': 'الوسط',
+      'forwards': 'الهجوم',
+      'lineup_unavailable_title': 'التشكيلات غير متاحة حالياً',
+      'lineup_unavailable_desc':
+          'بيانات التشكيلة غير متوفرة حالياً.\nعادة ما يتم الإعلان عن التشكيلات قبل ساعة من انطلاق المباراة.',
+      'refresh_lineup': 'التحقق من التحديثات',
+      'player_details': 'معلومات اللاعب',
+      'starter': 'أساسي',
+      'substitute': 'بديل',
+      'captain': 'قائد الفريق',
+      'rating': 'التقييم',
     },
   };
 
@@ -386,6 +440,23 @@ class AppLocalizations {
         _localizedValues['en']?[key] ??
         key;
   }
+
+  // Convenience Lineup Getters
+  String get tabLineup => translate('tab_lineup');
+  String get confirmedLineup => translate('confirmed_lineup');
+  String get probableLineup => translate('probable_lineup');
+  String get formation => translate('formation');
+  String get startingXi => translate('starting_xi');
+  String get substitutes => translate('substitutes');
+  String get coach => translate('coach');
+  String get manager => translate('manager');
+  String get injuriesAbsences => translate('injuries_absences');
+  String get pitchView => translate('pitch_view');
+  String get listView => translate('list_view');
+  String get captainShort => translate('captain_short');
+  String get lineupUnavailableTitle => translate('lineup_unavailable_title');
+  String get lineupUnavailableDesc => translate('lineup_unavailable_desc');
+  String get refreshLineup => translate('refresh_lineup');
 }
 
 class _AppLocalizationsDelegate

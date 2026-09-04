@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/match_minute_parser.dart';
@@ -19,6 +21,10 @@ abstract class MatchDetailsRemoteDataSource {
     int? utcOffset,
   });
   Future<List<MatchNewsItemEntity>> getNews(
+    String matchId, {
+    required String lang,
+  });
+  Future<MatchLineupEntity?> getLineups(
     String matchId, {
     required String lang,
   });
@@ -450,4 +456,400 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       return [];
     }
   }
+
+  @override
+  Future<MatchLineupEntity?> getLineups(
+    String matchId, {
+    required String lang,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiEndpoints.matchLineups(matchId),
+        queryParameters: {'lang': lang},
+      );
+
+      final Map<String, dynamic>? dataMap;
+      if (response is Map) {
+        if (response['data'] is Map) {
+          dataMap = Map<String, dynamic>.from(response['data'] as Map);
+        } else {
+          dataMap = Map<String, dynamic>.from(response);
+        }
+      } else {
+        dataMap = null;
+      }
+
+      if (dataMap == null) return null;
+
+      final mId = dataMap['match_id']?.toString() ?? matchId;
+      final available = dataMap['lineups_available'] == true;
+      final formType = dataMap['formation_type']?.toString();
+
+      TeamLineupEntity? homeLineup = _parseTeamLineup(dataMap['home']);
+      TeamLineupEntity? awayLineup = _parseTeamLineup(dataMap['away']);
+
+      // Auto-heal missing players (e.g. striker skipped by upstream scraper)
+      if (available &&
+          ((homeLineup != null &&
+                  homeLineup.startingXi.length >= 8 &&
+                  homeLineup.startingXi.length < 11) ||
+              (awayLineup != null &&
+                  awayLineup.startingXi.length >= 8 &&
+                  awayLineup.startingXi.length < 11))) {
+        final healed = await _healMissingLineupPlayers(
+          matchId: mId,
+          lang: lang,
+          home: homeLineup,
+          away: awayLineup,
+        );
+        homeLineup = healed.$1;
+        awayLineup = healed.$2;
+      }
+
+      return MatchLineupEntity(
+        matchId: mId,
+        lineupsAvailable: available,
+        formationType: formType,
+        home: homeLineup,
+        away: awayLineup,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<(TeamLineupEntity?, TeamLineupEntity?)> _healMissingLineupPlayers({
+    required String matchId,
+    required String lang,
+    required TeamLineupEntity? home,
+    required TeamLineupEntity? away,
+  }) async {
+    try {
+      final langPrefix = (lang == 'en') ? 'en' : 'ar';
+      final upstreamUrl =
+          'https://www.ysscores.com/$langPrefix/match_lineup?match_code=$matchId';
+      final response = await _client.get(
+        upstreamUrl,
+        options: Options(
+          receiveTimeout: const Duration(seconds: 5),
+          sendTimeout: const Duration(seconds: 5),
+          headers: {
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          },
+        ),
+      );
+
+      if (response is! Map) return (home, away);
+
+      final rawLineup = response['lineup'];
+      if (rawLineup is! Map) return (home, away);
+
+      final rawInfo = response['info'] is Map ? response['info'] as Map : null;
+      final homeTeamId = rawInfo?['home_team']?.toString() ?? home?.teamId;
+      final awayTeamId = rawInfo?['away_team']?.toString() ?? away?.teamId;
+
+      TeamLineupEntity? healedHome = home;
+      TeamLineupEntity? healedAway = away;
+
+      if (healedHome != null &&
+          healedHome.startingXi.length >= 8 &&
+          healedHome.startingXi.length < 11) {
+        healedHome = _enrichTeamLineup(healedHome, homeTeamId, rawLineup);
+      }
+
+      if (healedAway != null &&
+          healedAway.startingXi.length >= 8 &&
+          healedAway.startingXi.length < 11) {
+        healedAway = _enrichTeamLineup(healedAway, awayTeamId, rawLineup);
+      }
+
+      return (healedHome, healedAway);
+    } catch (_) {
+      return (home, away);
+    }
+  }
+
+  TeamLineupEntity _enrichTeamLineup(
+    TeamLineupEntity team,
+    String? teamId,
+    Map rawLineup,
+  ) {
+    dynamic teamLineupData;
+    if (teamId != null && rawLineup.containsKey(teamId)) {
+      teamLineupData = rawLineup[teamId];
+    } else if (team.teamId != null && rawLineup.containsKey(team.teamId)) {
+      teamLineupData = rawLineup[team.teamId];
+    } else {
+      // Find the group that contains existing players of this team
+      for (final candidate in rawLineup.values) {
+        if (candidate is Map) {
+          final candidateNames =
+              _extractAllPlayerNamesFromUpstreamTeam(candidate);
+          final matchCount = team.startingXi
+              .where((p) => candidateNames.contains(p.name.trim()))
+              .length;
+          if (matchCount >= 2) {
+            teamLineupData = candidate;
+            break;
+          }
+        }
+      }
+      teamLineupData ??= rawLineup.values.first;
+    }
+
+    if (teamLineupData is! Map) return team;
+
+    final currentStarters = List<LineupPlayerEntity>.from(team.startingXi);
+    final existingIds = currentStarters
+        .map((p) => p.playerId)
+        .where((id) => id != null && id.isNotEmpty)
+        .toSet();
+    final existingNames = currentStarters.map((p) => p.name.trim()).toSet();
+
+    // Iterate through tactical groups in order: G, D, M, F, S
+    for (final grpKey in ['G', 'D', 'M', 'F', 'S']) {
+      final grp = teamLineupData[grpKey];
+      if (grp is Map) {
+        for (final item in grp.values) {
+          if (item is Map) {
+            final itemMap = Map<String, dynamic>.from(item);
+            itemMap['position_code'] ??=
+                itemMap['position']?.toString() ?? grpKey;
+            final parsed = _parseLineupPlayer(itemMap, isStarter: true);
+            final pId = parsed.playerId;
+            final pName = parsed.name.trim();
+
+            final alreadyExists =
+                (pId != null && existingIds.contains(pId)) ||
+                (pName.isNotEmpty && existingNames.contains(pName));
+
+            if (!alreadyExists) {
+              currentStarters.add(parsed);
+              if (pId != null) existingIds.add(pId);
+              if (pName.isNotEmpty) existingNames.add(pName);
+            }
+          }
+        }
+      }
+    }
+
+    final sortedStarters = _sortStartersTactically(currentStarters);
+
+    return TeamLineupEntity(
+      teamId: team.teamId,
+      teamName: team.teamName,
+      teamLogo: team.teamLogo,
+      formation: team.formation,
+      coach: team.coach,
+      startingXi: sortedStarters,
+      substitutes: team.substitutes,
+      injuries: team.injuries,
+    );
+  }
+
+  Set<String> _extractAllPlayerNamesFromUpstreamTeam(Map teamData) {
+    final names = <String>{};
+    for (final val in teamData.values) {
+      if (val is Map) {
+        for (final item in val.values) {
+          if (item is Map) {
+            final p = item['player'];
+            if (p is Map) {
+              final n = p['title']?.toString() ?? p['name']?.toString();
+              if (n != null && n.trim().isNotEmpty) names.add(n.trim());
+            }
+          }
+        }
+      }
+    }
+    return names;
+  }
+
+  static List<LineupPlayerEntity> _sortStartersTactically(
+    List<LineupPlayerEntity> starters,
+  ) {
+    if (starters.length <= 1) return starters;
+    final sorted = List<LineupPlayerEntity>.from(starters);
+    sorted.sort((a, b) {
+      final wA = _tacticalWeight(a);
+      final wB = _tacticalWeight(b);
+      return wA.compareTo(wB);
+    });
+    return sorted;
+  }
+
+  static int _tacticalWeight(LineupPlayerEntity p) {
+    if (p.isGoalkeeper || p.positionCode == 'G') return 0;
+    if (p.positionCode == 'D') return 1;
+    if (p.positionCode == 'M') return 2;
+    if (p.positionCode == 'F') return 3;
+    if (p.positionCode == 'S') return 4;
+    final pos = (p.position ?? '').toLowerCase();
+    if (pos.contains('دفاع') ||
+        pos.contains('ظهير') ||
+        pos.contains('back') ||
+        pos.contains('defender')) {
+      return 1;
+    }
+    if (pos.contains('وسط') || pos.contains('midfield')) return 2;
+    if (pos.contains('هجوم') ||
+        pos.contains('جناح') ||
+        pos.contains('forward') ||
+        pos.contains('winger') ||
+        pos.contains('striker')) {
+      return 3;
+    }
+    return 2;
+  }
+
+  TeamLineupEntity? _parseTeamLineup(dynamic rawTeam) {
+    if (rawTeam == null || rawTeam is! Map) return null;
+    final map = Map<String, dynamic>.from(rawTeam);
+
+    final teamId = map['team_id']?.toString() ?? map['id']?.toString();
+    final rawName =
+        map['team_name']?.toString() ?? map['name']?.toString() ?? '';
+    final teamName = TeamLineupEntity.sanitizeTeamName(rawName);
+    final teamLogo = UrlHelper.normalizeImageUrl(
+      map['team_logo']?.toString() ?? map['logo']?.toString(),
+    );
+    final formation = map['formation']?.toString();
+
+    // Parse Coach
+    LineupCoachEntity? coach;
+    if (map['coach'] is Map) {
+      final cMap = Map<String, dynamic>.from(map['coach'] as Map);
+      coach = LineupCoachEntity(
+        coachId: cMap['coach_id']?.toString() ?? cMap['id']?.toString(),
+        name: cMap['name']?.toString() ?? '',
+        photo: UrlHelper.normalizeImageUrl(cMap['photo']?.toString()),
+        link: cMap['link']?.toString(),
+      );
+    }
+
+    // Parse Starting XI
+    final starters = <LineupPlayerEntity>[];
+    if (map['starting_xi'] is List) {
+      for (final it in map['starting_xi'] as List) {
+        if (it is Map) {
+          starters.add(_parseLineupPlayer(it, isStarter: true));
+        }
+      }
+    }
+
+    // Parse Substitutes
+    final substitutes = <LineupPlayerEntity>[];
+    if (map['substitutes'] is List) {
+      for (final it in map['substitutes'] as List) {
+        if (it is Map) {
+          substitutes.add(
+            _parseLineupPlayer(it, isStarter: false, isSubstitute: true),
+          );
+        }
+      }
+    }
+
+    // Parse Injuries
+    final injuries = <LineupInjuryEntity>[];
+    if (map['injuries'] is List) {
+      for (final it in map['injuries'] as List) {
+        if (it is Map) {
+          final iMap = Map<String, dynamic>.from(it);
+          injuries.add(
+            LineupInjuryEntity(
+              playerId:
+                  iMap['player_id']?.toString() ?? iMap['id']?.toString(),
+              name: iMap['name']?.toString() ?? '',
+              number: int.tryParse(iMap['number']?.toString() ?? ''),
+              position: iMap['position']?.toString(),
+              photo: UrlHelper.normalizeImageUrl(iMap['photo']?.toString()),
+              absenceReason:
+                  iMap['absence_reason']?.toString() ??
+                  iMap['reason']?.toString(),
+              absenceTypeId: int.tryParse(
+                iMap['absence_type_id']?.toString() ?? '',
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    return TeamLineupEntity(
+      teamId: teamId,
+      teamName: teamName,
+      teamLogo: teamLogo,
+      formation: formation,
+      coach: coach,
+      startingXi: _sortStartersTactically(starters),
+      substitutes: substitutes,
+      injuries: injuries,
+    );
+  }
+
+  LineupPlayerEntity _parseLineupPlayer(
+    Map raw, {
+    bool isStarter = true,
+    bool isSubstitute = false,
+  }) {
+    final map = Map<String, dynamic>.from(raw);
+    final pMap = map['player'] is Map
+        ? Map<String, dynamic>.from(map['player'] as Map)
+        : null;
+
+    final id = map['player_id']?.toString() ??
+        map['id']?.toString() ??
+        pMap?['row_id']?.toString();
+
+    final name = map['name']?.toString() ??
+        map['player_name']?.toString() ??
+        pMap?['title']?.toString() ??
+        pMap?['name']?.toString() ??
+        '';
+
+    final numVal = int.tryParse(
+      map['number']?.toString() ??
+          pMap?['player_number']?.toString() ??
+          '',
+    );
+
+    final pos = map['position']?.toString() ?? pMap?['position']?.toString();
+
+    final posCode = map['position_code']?.toString() ??
+        map['pos']?.toString() ??
+        map['position']?.toString();
+
+    final formPos = int.tryParse(
+      map['formation_position']?.toString() ?? '',
+    );
+
+    final photo = UrlHelper.normalizeImageUrl(
+      map['photo']?.toString() ??
+          map['image']?.toString() ??
+          pMap?['image']?.toString(),
+    );
+
+    final rating = map['rating']?.toString();
+
+    final isCap = map['is_captain'] == true ||
+        map['captain'] == true ||
+        map['is_captain'] == 1 ||
+        map['captain'] == 1;
+
+    return LineupPlayerEntity(
+      playerId: id,
+      name: name,
+      number: numVal,
+      position: pos,
+      positionCode: posCode,
+      formationPosition: formPos,
+      photo: photo,
+      rating: rating,
+      isCaptain: isCap,
+      isStarter: map['is_starter'] == true || isStarter,
+      isSubstitute: map['is_substitute'] == true || isSubstitute,
+    );
+  }
 }
+

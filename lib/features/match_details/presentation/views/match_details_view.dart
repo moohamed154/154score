@@ -17,7 +17,7 @@ import '../bloc/match_details_bloc.dart';
 import '../bloc/match_details_event.dart';
 import '../bloc/match_details_state.dart';
 import '../../domain/entities/match_details_entity.dart';
-import '../widgets/lineup_unavailable_widget.dart';
+import '../widgets/lineup/lineup_tab_view.dart';
 import '../widgets/match_header_banner.dart';
 import '../widgets/match_info_card.dart';
 import '../widgets/stat_comparison_bar.dart';
@@ -178,7 +178,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                             _buildDetailsTab(context, state, isDark, isArabic),
 
                             // 3. التشكيلة (Lineup)
-                            const LineupUnavailableWidget(),
+                            LineupTabView(matchId: widget.matchId),
 
                             // 4. الإحصائيات (Full Statistics)
                             _buildStatsTab(context, state, isDark, isArabic),
