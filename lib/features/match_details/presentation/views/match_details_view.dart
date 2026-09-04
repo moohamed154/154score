@@ -105,28 +105,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       } catch (shareErr) {
         debugPrint('[Share] Native share unavailable, copying to clipboard: $shareErr');
         await Clipboard.setData(ClipboardData(text: shareText));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.isArabic
-                          ? 'تم نسخ تفاصيل ورابط المباراة للمشاركة بنجاح'
-                          : 'Match details & link copied to clipboard successfully',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: AppColors.primary,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
       }
     } catch (e) {
       debugPrint('[Share] Error sharing match screenshot: $e');
@@ -135,28 +113,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           : '⚽ Follow ${match.team1} vs ${match.team2} on 154Score!\nhttps://154score.com';
       try {
         await Clipboard.setData(ClipboardData(text: shareText));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.isArabic
-                          ? 'تم نسخ رابط المباراة إلى الحافظة'
-                          : 'Match link copied to clipboard',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: AppColors.primary,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
       } catch (_) {}
     } finally {
       if (mounted) {
