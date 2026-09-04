@@ -789,8 +789,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LineupEmptyStateWidget), findsOneWidget);
-      expect(find.text('التشكيلات غير متاحة حالياً'), findsOneWidget);
-      expect(find.text('التحقق من التحديثات'), findsOneWidget);
+      expect(find.text('لم يتم الإعلان عن التشكيلة بعد'), findsOneWidget);
+      expect(find.text('تحديث التشكيلة'), findsOneWidget);
     });
 
     testWidgets('4. Zero-overflow audit on compact 320px screen', (

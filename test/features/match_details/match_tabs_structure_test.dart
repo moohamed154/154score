@@ -200,7 +200,7 @@ void main() {
       await tester.tap(find.text('التشكيلة'));
       await tester.pumpAndSettle();
 
-      expect(find.text('التشكيلات غير متاحة حالياً'), findsOneWidget);
+      expect(find.text('لم يتم الإعلان عن التشكيلة بعد'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

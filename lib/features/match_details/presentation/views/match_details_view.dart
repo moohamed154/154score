@@ -130,7 +130,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                   tabs: [
                     Tab(text: isArabic ? 'الأحداث' : 'Events'),
                     Tab(text: isArabic ? 'التفاصيل' : 'Details'),
-                    Tab(text: isArabic ? 'التشكيلة' : 'Lineup'),
+                    Tab(text: isArabic ? 'التشكيلة' : 'Lineups'),
                     Tab(text: isArabic ? 'الإحصائيات' : 'Stats'),
                     Tab(text: isArabic ? 'الترتيب' : 'Standings'),
                     Tab(text: isArabic ? 'الأخبار' : 'News'),
