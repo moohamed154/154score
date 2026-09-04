@@ -16,7 +16,6 @@ import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../matches/presentation/widgets/horizontal_date_selector.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
-import '../../../settings/presentation/cubit/settings_cubits.dart';
 import '../../../transfers/presentation/widgets/transfer_card.dart';
 import '../../../videos/presentation/widgets/video_card.dart';
 import '../cubit/home_cubit.dart';
@@ -48,89 +47,93 @@ class _HomeViewState extends State<HomeView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(8),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight + 68 + topPadding),
+        child: BlocBuilder<MatchesBloc, MatchesState>(
+          builder: (context, matchesState) {
+            return Material(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              elevation: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Status bar spacer
+                  SizedBox(height: topPadding),
+
+                  // Top toolbar row
+                  SizedBox(
+                    height: kToolbarHeight,
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 16),
+                        // Logo + Title
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.sports_soccer_rounded,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '154Score',
+                          style: AppTypography.getHeadingLarge(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Search Icon
+                        IconButton(
+                          icon: const Icon(Icons.search_rounded),
+                          tooltip: l10n.translate('nav_search'),
+                          onPressed: () => context.push('/search'),
+                        ),
+                        // Filter Icon
+                        IconButton(
+                          icon: const Icon(Icons.filter_alt_outlined),
+                          onPressed: () {},
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                    ),
+                  ),
+
+                  // Date strip — inline, no background, no border
+                  HorizontalDateSelector(
+                    selectedDate: matchesState.selectedDate,
+                    onDateSelected: (date) {
+                      context.read<MatchesBloc>().add(
+                        LoadMatchesEvent(date: date),
+                      );
+                    },
+                  ),
+
+                  // Bottom divider
+                  Divider(
+                    height: 1,
+                    thickness: 0.8,
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
+                ],
               ),
-              child: const Icon(
-                Icons.sports_soccer_rounded,
-                color: Colors.black,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              '154Score',
-              style: AppTypography.getHeadingLarge(
-                isDark: isDark,
-                isArabic: isArabic,
-              ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
-            ),
-          ],
+            );
+          },
         ),
-        actions: [
-          // Search Icon
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            tooltip: l10n.translate('nav_search'),
-            onPressed: () => context.push('/search'),
-          ),
-
-          // Theme Toggle
-          BlocBuilder<ThemeCubit, ThemeMode>(
-            builder: (context, themeMode) {
-              final isCurrentlyDark =
-                  themeMode == ThemeMode.dark ||
-                  (themeMode == ThemeMode.system &&
-                      Theme.of(context).brightness == Brightness.dark);
-              return IconButton(
-                icon: Icon(
-                  isCurrentlyDark
-                      ? Icons.light_mode_rounded
-                      : Icons.dark_mode_rounded,
-                ),
-                onPressed: () {
-                  context.read<ThemeCubit>().setThemeMode(
-                    isCurrentlyDark ? ThemeMode.light : ThemeMode.dark,
-                  );
-                },
-              );
-            },
-          ),
-
-          // Language Toggle
-          IconButton(
-            icon: Text(
-              isArabic ? 'EN' : 'عربي',
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-            ),
-            onPressed: () {
-              final newLang = isArabic ? 'en' : 'ar';
-              context.read<LocaleCubit>().setLocale(Locale(newLang));
-              context.read<HomeCubit>().loadHomeData(isRefresh: true);
-              context.read<MatchesBloc>().add(
-                LoadMatchesEvent(
-                  date: context.read<MatchesBloc>().state.selectedDate,
-                  isRefresh: true,
-                ),
-              );
-            },
-          ),
-
-          // Settings Icon
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: l10n.translate('nav_settings'),
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
       ),
+
+
       body: BlocBuilder<MatchesBloc, MatchesState>(
         builder: (context, matchesState) {
           return BlocBuilder<HomeCubit, HomeState>(
@@ -157,19 +160,9 @@ class _HomeViewState extends State<HomeView> {
                 child: ListView(
                   padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
                   children: [
-                    // 1. Horizontal Date Strip
-                    HorizontalDateSelector(
-                      selectedDate: matchesState.selectedDate,
-                      onDateSelected: (date) {
-                        context.read<MatchesBloc>().add(
-                          LoadMatchesEvent(date: date),
-                        );
-                      },
-                    ),
-
                     const SizedBox(height: 12),
 
-                    // 2. LIVE NOW Section (if any live matches)
+                    // 1. LIVE NOW Section (if any live matches)
                     _buildLiveNowSection(
                       context,
                       matchesState,
@@ -177,7 +170,7 @@ class _HomeViewState extends State<HomeView> {
                       isArabic,
                     ),
 
-                    // 4. Matches for Selected Date
+                    // 2. Matches for Selected Date
                     _buildMatchesSection(
                       context,
                       matchesState,
@@ -187,12 +180,12 @@ class _HomeViewState extends State<HomeView> {
 
                     const SizedBox(height: 16),
 
-                    // 5. Featured Highlights & Videos
+                    // 3. Featured Highlights & Videos
                     _buildVideosSection(context, homeState, isDark, isArabic),
 
                     const SizedBox(height: 16),
 
-                    // 6. Latest Transfer News
+                    // 4. Latest Transfer News
                     _buildTransfersSection(
                       context,
                       homeState,
@@ -208,6 +201,7 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
+
 
   Widget _buildLiveNowSection(
     BuildContext context,

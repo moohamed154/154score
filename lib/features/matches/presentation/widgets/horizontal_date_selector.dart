@@ -45,19 +45,11 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
           d.day == widget.selectedDate.day,
     );
 
-    return Container(
+    return SizedBox(
       height: 68,
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-            width: 0.8,
-          ),
-        ),
-      ),
       child: Center(
         child: ConstrainedBox(
+
           constraints: const BoxConstraints(maxWidth: 600),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
@@ -214,6 +206,20 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
 
                 const SizedBox(width: 4),
 
+                // Previous Day Arrow
+                _buildArrowButton(
+                  context: context,
+                  isDark: isDark,
+                  icon: Icons.chevron_left_rounded,
+                  onTap: () {
+                    final prev = widget.selectedDate.subtract(const Duration(days: 1));
+                    widget.onDateSelected(prev);
+                  },
+                ),
+
+
+                const SizedBox(width: 2),
+
                 // Calendar Picker Icon Button
                 Material(
                   color: Colors.transparent,
@@ -269,6 +275,20 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                     ),
                   ),
                 ),
+
+                const SizedBox(width: 2),
+
+                // Next Day Arrow
+                _buildArrowButton(
+                  context: context,
+                  isDark: isDark,
+                  icon: Icons.chevron_right_rounded,
+                  onTap: () {
+                    final next = widget.selectedDate.add(const Duration(days: 1));
+                    widget.onDateSelected(next);
+                  },
+                ),
+
               ],
             ),
           ),
@@ -276,4 +296,35 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
       ),
     );
   }
+
+  Widget _buildArrowButton({
+    required BuildContext context,
+    required bool isDark,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+          ),
+        ),
+      ),
+    );
+  }
 }
+
