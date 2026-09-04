@@ -146,11 +146,43 @@ class _GenericProfileViewState extends State<GenericProfileView> {
   Widget _buildContent(BuildContext context, bool isDark, bool isArabic) {
     final p = _profile!;
     final hMargin = AppDimensions.getHorizontalMargin(context);
+    final hasHighlights = _hasHighlights(p);
 
-    // Filter sections to avoid rendering empty sections or sections that only contain image/flag URLs
-    final visibleSections = p.sections.where((sec) {
-      return sec.items.any((it) => it.content.isNotEmpty);
-    }).toList();
+    // Exclude redundant sections ("معلومات البطاقة" and "معلومات أخرى") when their items
+    // are already prominently presented in the Hero, Voice Player, and Highlights Grid.
+    final visibleSections = p.sections.map((sec) {
+      final sLower = sec.section.toLowerCase();
+      final isRedundantSection = sLower.contains('بطاقة') ||
+          sLower.contains('card') ||
+          sLower.contains('أخرى') ||
+          sLower.contains('more info') ||
+          sLower.contains('معلومات المعلق') ||
+          sLower.contains('commentator information');
+
+      if (hasHighlights && isRedundantSection) {
+        return const ProfileSectionEntity(section: '', items: []);
+      }
+
+      // Filter out items already showcased in hero or highlights grid
+      final cleanItems = sec.items.where((it) {
+        if (it.content.isEmpty) return false;
+        final t = it.title.toLowerCase();
+        if (t == 'الاسم' || t == 'name') return false;
+        if (t.contains('الانجليزي') || t.contains('english')) return false;
+        if (hasHighlights) {
+          if (t.contains('القناة') || t.contains('channel')) return false;
+          if (t.contains('الدولة') || t.contains('country') || t.contains('جنسية')) return false;
+          if (t.contains('الميلاد') || t.contains('birth') || t.contains('عمر') || t.contains('age')) return false;
+          if (t.contains('لغة') || t.contains('language')) return false;
+        }
+        if (p.voiceUrl != null && (t.contains('صوت') || t.contains('voice') || t.contains('audio'))) {
+          return false;
+        }
+        return true;
+      }).toList();
+
+      return ProfileSectionEntity(section: sec.section, items: cleanItems);
+    }).where((sec) => sec.section.isNotEmpty && sec.items.isNotEmpty).toList();
 
     return ListView(
       padding: EdgeInsets.all(hMargin),
@@ -170,13 +202,13 @@ class _GenericProfileViewState extends State<GenericProfileView> {
         ],
 
         // Quick Highlights Grid (Channel, Country, Age, Language)
-        if (_hasHighlights(p)) ...[
+        if (hasHighlights) ...[
           _buildHighlightsGrid(context, p, isDark, isArabic),
           const SizedBox(height: AppDimensions.md),
         ],
 
-        // Detail Sections
-        if (visibleSections.isEmpty && !_hasHighlights(p))
+        // Detail Sections (only if any unique non-redundant sections exist)
+        if (visibleSections.isEmpty && !hasHighlights)
           const EmptyView(
             titleKey: 'tab_info',
             customMessage: 'No further details available',
@@ -186,6 +218,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           ...visibleSections.map((sec) {
             return _buildSectionCard(context, sec, isDark, isArabic);
           }),
+
+        const SizedBox(height: AppDimensions.lg),
       ],
     );
   }
