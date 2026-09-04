@@ -162,6 +162,35 @@ class UrlHelper {
     }
   }
 
+  /// Safely launches any external URL in the browser or external application.
+  static Future<bool> launchExternalUrl(
+    String? url, {
+    BuildContext? context,
+    String? fallbackErrorMessage,
+  }) async {
+    if (url == null || url.trim().isEmpty) return false;
+    final trimmed = url.trim();
+    final uri = Uri.tryParse(
+      trimmed.startsWith('http://') || trimmed.startsWith('https://')
+          ? trimmed
+          : 'https://$trimmed',
+    );
+    if (uri == null || !uri.hasScheme) return false;
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(fallbackErrorMessage ?? 'تعذر فتح الرابط'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return false;
+    }
+  }
+
   /// Safely decodes a URI component or slug without throwing an [ArgumentError] on illegal percent encodings.
   static String safeDecodeComponent(String input) {
     if (input.isEmpty) return input;

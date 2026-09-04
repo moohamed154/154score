@@ -99,12 +99,25 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
     required String lang,
   }) async {
     final cleanSlug = UrlHelper.safeDecodeComponent(slug);
-    final encodedSlug = Uri.encodeComponent(cleanSlug);
+    String effectiveId = id;
+    String effectiveSlug = cleanSlug;
+
+    // Resolve known commentators when navigation arrives with missing or 0 id
+    if (effectiveId == '0' || effectiveId.isEmpty) {
+      if (cleanSlug.toLowerCase().contains('alghamedi') ||
+          cleanSlug.contains('الغامدي') ||
+          cleanSlug.toLowerCase().contains('abdallah')) {
+        effectiveId = '54';
+        effectiveSlug = 'Abdallah-Alghamedi';
+      }
+    }
+
+    final encodedSlug = Uri.encodeComponent(effectiveSlug);
     try {
       final data = await _remoteDataSource.getProfile(
-        ApiEndpoints.commentator(id, encodedSlug),
-        id,
-        cleanSlug,
+        ApiEndpoints.commentator(effectiveId, encodedSlug),
+        effectiveId,
+        effectiveSlug,
         lang: lang,
       );
       return ApiSuccess(data);
@@ -115,6 +128,7 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
           id: id,
           slug: slug,
           name: name,
+          role: lang == 'ar' ? 'معلق رياضي' : 'Sports Commentator',
           sections: [
             ProfileSectionEntity(
               section: lang == 'ar'

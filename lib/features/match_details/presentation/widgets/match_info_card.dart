@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
 
 class MatchInfoCard extends StatelessWidget {
@@ -190,11 +191,11 @@ class MatchInfoCard extends StatelessWidget {
             item.entityId != 'null')
         ? item.entityId!
         : '0';
-    final slug = (item.slug != null && item.slug!.isNotEmpty)
+    final rawSlug = (item.slug != null && item.slug!.isNotEmpty)
         ? item.slug!
-        : Uri.encodeComponent(
-            item.content.trim().replaceAll(RegExp(r'\s+'), '-'),
-          );
+        : item.content.trim().replaceAll(RegExp(r'\s+'), '-');
+    final cleanSlug = UrlHelper.safeDecodeComponent(rawSlug);
+    final slug = Uri.encodeComponent(cleanSlug);
 
     final type = item.entityType?.toLowerCase();
     String finalRoute = '';

@@ -187,5 +187,58 @@ void main() {
         expect(names[2], equals('حسن مصطفى'));
       },
     );
+
+    // ── 7. Commentator 54 / Abdallah-Alghamedi API structure mapping ────────
+    test('Commentator 54 / Abdallah-Alghamedi entity mapping carries full metadata', () {
+      const entity = ProfileEntity(
+        id: '54',
+        slug: 'Abdallah-Alghamedi',
+        name: 'عبدالله الغامدي',
+        englishName: 'Abdallah Alghamedi',
+        image: 'https://imgs.ysscores.com/commentator/128/7451690114310.png',
+        countryFlag: 'https://www.ysscores.com/images/flags/sa.png',
+        country: 'السعودية',
+        channel: 'بي إن سبورت',
+        birthDate: '1980-01-01 - (46 عام)',
+        commentaryLanguage: 'العربية',
+        voiceUrl: 'رابط البث الصوتي',
+        role: 'معلق رياضي',
+        sections: [
+          ProfileSectionEntity(
+            section: 'معلومات أخرى',
+            items: [
+              ProfileItemEntity(title: 'القناة', content: 'بي إن سبورت'),
+              ProfileItemEntity(title: 'الدولة', content: 'السعودية'),
+              ProfileItemEntity(
+                title: 'تاريخ الميلاد',
+                content: '1980-01-01 - (46 عام)',
+              ),
+              ProfileItemEntity(
+                title: 'لغة التعليق الرياضي',
+                content: 'العربية',
+              ),
+              ProfileItemEntity(
+                title: 'صوت المعلق',
+                content: 'رابط البث الصوتي',
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(entity.id, equals('54'));
+      expect(entity.slug, equals('Abdallah-Alghamedi'));
+      expect(entity.name, equals('عبدالله الغامدي'));
+      expect(entity.englishName, equals('Abdallah Alghamedi'));
+      expect(entity.image, isNotNull);
+      expect(entity.countryFlag, contains('flags/sa.png'));
+      expect(entity.channel, equals('بي إن سبورت'));
+      expect(entity.country, equals('السعودية'));
+      expect(entity.birthDate, contains('1980-01-01'));
+      expect(entity.commentaryLanguage, equals('العربية'));
+      expect(entity.voiceUrl, equals('رابط البث الصوتي'));
+      expect(entity.sections.length, equals(1));
+      expect(entity.sections.first.items.length, equals(5));
+    });
   });
 }

@@ -29,8 +29,15 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
     );
 
     String name = UrlHelper.slugToName(slug);
+    String? englishName;
     String? image;
     String? flag;
+    String? country;
+    String? channel;
+    String? birthDate;
+    String? commentaryLanguage;
+    String? voiceUrl;
+    String? role;
     final sections = <ProfileSectionEntity>[];
 
     if (response is Map && response['data'] is List) {
@@ -43,22 +50,85 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
 
           for (final it in rawItems) {
             if (it is Map) {
-              final title = it['title']?.toString() ?? '';
-              final content = it['content']?.toString() ?? '';
+              final title =
+                  (it['title'] ?? it['label'] ?? '').toString().trim();
+              final content =
+                  (it['content'] ?? it['value'] ?? '').toString().trim();
+              final icon = it['icon']?.toString();
+              final link = (it['link'] ?? it['url'])?.toString();
 
-              if (title.toLowerCase() == 'name' ||
-                  title.toLowerCase() == 'الاسم') {
-                name = content;
-              } else if (title.toLowerCase() == 'image' ||
-                  title.toLowerCase() == 'الصورة') {
+              if (title.isEmpty && content.isEmpty) continue;
+
+              final tLower = title.toLowerCase();
+
+              // Check if item is an image or flag URL
+              final isImageItem =
+                  tLower == 'image' ||
+                  tLower == 'photo' ||
+                  title == 'الصورة' ||
+                  title.contains('صورة') ||
+                  content.contains('imgs.ysscores.com');
+
+              final isFlagItem =
+                  tLower.contains('flag') ||
+                  tLower.contains('country logo') ||
+                  title.contains('شعار الدولة') ||
+                  title.contains('علم') ||
+                  content.contains('/flags/');
+
+              if (isImageItem) {
                 image = UrlHelper.normalizeImageUrl(content);
-              } else if (title.toLowerCase().contains('flag') ||
-                  title.toLowerCase().contains('country logo') ||
-                  title.toLowerCase().contains('شعار الدولة') ||
-                  title.toLowerCase().contains('علم')) {
+                continue; // Do not display raw image URL as text row
+              }
+
+              if (isFlagItem) {
                 flag = UrlHelper.normalizeImageUrl(content);
-              } else if (title.isNotEmpty && content.isNotEmpty) {
-                items.add(ProfileItemEntity(title: title, content: content));
+                continue; // Do not display raw flag URL as text row
+              }
+
+              // Extract key entity attributes
+              if (tLower == 'name' || title == 'الاسم') {
+                if (content.isNotEmpty) name = content;
+              } else if (tLower.contains('english') ||
+                  title.contains('الانجليزي')) {
+                if (content.isNotEmpty) englishName = content;
+              } else if (tLower == 'country' ||
+                  tLower == 'nationality' ||
+                  title == 'الدولة' ||
+                  title == 'الجنسية') {
+                if (content.isNotEmpty) country = content;
+              } else if (tLower.contains('channel') ||
+                  tLower.contains('network') ||
+                  title.contains('القناة') ||
+                  title.contains('شبكة')) {
+                if (content.isNotEmpty) channel = content;
+              } else if (tLower.contains('birth') ||
+                  tLower.contains('age') ||
+                  title.contains('الميلاد') ||
+                  title.contains('العمر')) {
+                if (content.isNotEmpty) birthDate = content;
+              } else if (tLower.contains('language') || title.contains('لغة')) {
+                if (content.isNotEmpty) commentaryLanguage = content;
+              } else if (tLower.contains('voice') ||
+                  tLower.contains('audio') ||
+                  title.contains('صوت')) {
+                if (content.isNotEmpty) voiceUrl = link ?? content;
+              } else if (tLower == 'role' ||
+                  title.contains('الصفة') ||
+                  title.contains('المهنة')) {
+                if (content.isNotEmpty) role = content;
+              }
+
+              // Retain valid text items in sections
+              if (title.isNotEmpty && content.isNotEmpty) {
+                items.add(
+                  ProfileItemEntity(
+                    title: title,
+                    content: content,
+                    icon: icon,
+                    link: link,
+                  ),
+                );
               }
             }
           }
@@ -74,8 +144,15 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
       id: id,
       slug: slug,
       name: name,
+      englishName: englishName,
       image: image,
       countryFlag: flag,
+      country: country,
+      channel: channel,
+      birthDate: birthDate,
+      commentaryLanguage: commentaryLanguage,
+      voiceUrl: voiceUrl,
+      role: role,
       sections: sections,
     );
   }

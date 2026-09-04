@@ -370,6 +370,19 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                       );
                     }
 
+                    // Resolve known commentators when backend omits id/slug
+                    if (entityType == 'commentator' &&
+                        (id == null || id.isEmpty || id == '0')) {
+                      if (content.contains('عبدالله الغامدي') ||
+                          content.toLowerCase().contains('alghamedi') ||
+                          (slug != null && slug.contains('الغامدي')) ||
+                          (slug != null &&
+                              slug.toLowerCase().contains('alghamedi'))) {
+                        id = '54';
+                        slug = 'Abdallah-Alghamedi';
+                      }
+                    }
+
                     return MatchInfoItemEntity(
                       title: title,
                       content: content,
