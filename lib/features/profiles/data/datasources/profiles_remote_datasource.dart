@@ -28,7 +28,7 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
       queryParameters: {'lang': lang},
     );
 
-    String name = Uri.decodeComponent(slug).replaceAll('-', ' ');
+    String name = UrlHelper.slugToName(slug);
     String? image;
     String? flag;
     final sections = <ProfileSectionEntity>[];

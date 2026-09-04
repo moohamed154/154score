@@ -57,43 +57,51 @@ class _GenericProfileViewState extends State<GenericProfileView> {
       _errorMessage = null;
     });
 
-    final lang = sl<LocalStorageService>().getLanguage();
-    final repo = sl<ProfilesRepository>();
+    try {
+      final lang = sl<LocalStorageService>().getLanguage();
+      final repo = sl<ProfilesRepository>();
 
-    final result = await switch (widget.type) {
-      ProfileType.stadium => repo.getStadiumProfile(
-        widget.id,
-        widget.slug,
-        lang: lang,
-      ),
-      ProfileType.referee => repo.getRefereeProfile(
-        widget.id,
-        widget.slug,
-        lang: lang,
-      ),
-      ProfileType.commentator => repo.getCommentatorProfile(
-        widget.id,
-        widget.slug,
-        lang: lang,
-      ),
-    };
+      final result = await switch (widget.type) {
+        ProfileType.stadium => repo.getStadiumProfile(
+          widget.id,
+          widget.slug,
+          lang: lang,
+        ),
+        ProfileType.referee => repo.getRefereeProfile(
+          widget.id,
+          widget.slug,
+          lang: lang,
+        ),
+        ProfileType.commentator => repo.getCommentatorProfile(
+          widget.id,
+          widget.slug,
+          lang: lang,
+        ),
+      };
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    result.fold(
-      onSuccess: (p) {
-        setState(() {
-          _profile = p;
-          _isLoading = false;
-        });
-      },
-      onFailure: (f) {
-        setState(() {
-          _errorMessage = f.message;
-          _isLoading = false;
-        });
-      },
-    );
+      result.fold(
+        onSuccess: (p) {
+          setState(() {
+            _profile = p;
+            _isLoading = false;
+          });
+        },
+        onFailure: (f) {
+          setState(() {
+            _errorMessage = f.message;
+            _isLoading = false;
+          });
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override

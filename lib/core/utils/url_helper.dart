@@ -161,4 +161,24 @@ class UrlHelper {
       return false;
     }
   }
+
+  /// Safely decodes a URI component or slug without throwing an [ArgumentError] on illegal percent encodings.
+  static String safeDecodeComponent(String input) {
+    if (input.isEmpty) return input;
+    try {
+      return Uri.decodeComponent(input);
+    } catch (_) {
+      try {
+        return Uri.decodeFull(input);
+      } catch (_) {
+        return input;
+      }
+    }
+  }
+
+  /// Converts a URL slug into a clean human-readable name safely.
+  static String slugToName(String slug) {
+    if (slug.isEmpty) return slug;
+    return safeDecodeComponent(slug).replaceAll('-', ' ').trim();
+  }
 }

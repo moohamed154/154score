@@ -1,5 +1,6 @@
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_result.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profiles_repository.dart';
 import '../datasources/profiles_remote_datasource.dart';
@@ -15,16 +16,18 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
     String slug, {
     required String lang,
   }) async {
+    final cleanSlug = UrlHelper.safeDecodeComponent(slug);
+    final encodedSlug = Uri.encodeComponent(cleanSlug);
     try {
       final data = await _remoteDataSource.getProfile(
-        ApiEndpoints.stadium(id, slug),
+        ApiEndpoints.stadium(id, encodedSlug),
         id,
-        slug,
+        cleanSlug,
         lang: lang,
       );
       return ApiSuccess(data);
     } catch (_) {
-      final name = Uri.decodeComponent(slug).replaceAll('-', ' ');
+      final name = UrlHelper.slugToName(slug);
       return ApiSuccess(
         ProfileEntity(
           id: id,
@@ -52,16 +55,18 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
     String slug, {
     required String lang,
   }) async {
+    final cleanSlug = UrlHelper.safeDecodeComponent(slug);
+    final encodedSlug = Uri.encodeComponent(cleanSlug);
     try {
       final data = await _remoteDataSource.getProfile(
-        ApiEndpoints.referee(id, slug),
+        ApiEndpoints.referee(id, encodedSlug),
         id,
-        slug,
+        cleanSlug,
         lang: lang,
       );
       return ApiSuccess(data);
     } catch (_) {
-      final name = Uri.decodeComponent(slug).replaceAll('-', ' ');
+      final name = UrlHelper.slugToName(slug);
       return ApiSuccess(
         ProfileEntity(
           id: id,
@@ -93,16 +98,18 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
     String slug, {
     required String lang,
   }) async {
+    final cleanSlug = UrlHelper.safeDecodeComponent(slug);
+    final encodedSlug = Uri.encodeComponent(cleanSlug);
     try {
       final data = await _remoteDataSource.getProfile(
-        ApiEndpoints.commentator(id, slug),
+        ApiEndpoints.commentator(id, encodedSlug),
         id,
-        slug,
+        cleanSlug,
         lang: lang,
       );
       return ApiSuccess(data);
     } catch (_) {
-      final name = Uri.decodeComponent(slug).replaceAll('-', ' ');
+      final name = UrlHelper.slugToName(slug);
       return ApiSuccess(
         ProfileEntity(
           id: id,
