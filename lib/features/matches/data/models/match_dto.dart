@@ -250,16 +250,19 @@ class MatchDto {
         leagueMap?['name']?.toString() ??
         json['league_name']?.toString();
 
-    final rawLLogo =
-        leagueLogo ??
-        json['league_logo']?.toString() ??
-        leagueMap?['logo']?.toString();
-    final lLogo = UrlHelper.normalizeImageUrl(rawLLogo);
-
     final lId =
         leagueId ??
         json['league_id']?.toString() ??
         leagueMap?['id']?.toString();
+
+    final rawLLogo =
+        leagueLogo ??
+        json['league_logo']?.toString() ??
+        leagueMap?['logo']?.toString();
+    final lLogo = UrlHelper.resolveChampionshipLogo(
+      lId,
+      currentLogo: UrlHelper.normalizeImageUrl(rawLLogo),
+    );
 
     return MatchDto(
       id: effectiveId,
@@ -345,9 +348,12 @@ class LeagueGroupDto {
         json['title']?.toString() ??
         json['name']?.toString() ??
         'Competition';
-    final rawLogo = json['league_logo']?.toString() ?? json['logo']?.toString();
-    final logo = UrlHelper.normalizeImageUrl(rawLogo);
     final id = json['league_id']?.toString() ?? json['id']?.toString();
+    final rawLogo = json['league_logo']?.toString() ?? json['logo']?.toString();
+    final logo = UrlHelper.resolveChampionshipLogo(
+      id,
+      currentLogo: UrlHelper.normalizeImageUrl(rawLogo),
+    );
 
     final rawMatches = json['matches'] as List? ?? [];
     final matchesList = rawMatches.map((m) {

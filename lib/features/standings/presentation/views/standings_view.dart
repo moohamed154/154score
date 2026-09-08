@@ -574,7 +574,8 @@ class _StandingsViewState extends State<StandingsView> {
                             : const Color(0xFFF1F3F7),
                     padding: const EdgeInsets.all(4),
                     child:
-                        (normalizedLogo != null && normalizedLogo.isNotEmpty)
+                        (normalizedLogo != null &&
+                                UrlHelper.isValidImageUrl(normalizedLogo))
                             ? CachedNetworkImage(
                               imageUrl: normalizedLogo,
                               memCacheWidth: 64,

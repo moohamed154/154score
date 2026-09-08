@@ -6,6 +6,7 @@ import 'package:ysscores/core/constants/app_colors.dart';
 import 'package:ysscores/core/constants/app_dimensions.dart';
 import 'package:ysscores/core/constants/app_typography.dart';
 import 'package:ysscores/core/localization/app_localizations.dart';
+import 'package:ysscores/core/utils/url_helper.dart';
 import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
 
 /// Renders a single player node positioned tactically on the pitch board.
@@ -64,7 +65,8 @@ class PitchPlayerNode extends StatelessWidget {
                     ],
                   ),
                   child: ClipOval(
-                    child: (player.photo != null && player.photo!.isNotEmpty)
+                    child: (player.photo != null &&
+                            UrlHelper.isValidImageUrl(player.photo))
                         ? CachedNetworkImage(
                             imageUrl: player.photo!,
                             width: 44,
@@ -290,7 +292,8 @@ class PitchPlayerNode extends StatelessWidget {
                         border: Border.all(color: AppColors.primary, width: 2),
                       ),
                       child: ClipOval(
-                        child: (p.photo != null && p.photo!.isNotEmpty)
+                        child: (p.photo != null &&
+                                UrlHelper.isValidImageUrl(p.photo))
                             ? CachedNetworkImage(
                                 imageUrl: p.photo!,
                                 width: 60,

@@ -9,7 +9,11 @@ class UrlHelper {
   static String? normalizeImageUrl(String? url) {
     if (url == null) return null;
     final trimmed = url.trim();
-    if (trimmed.isEmpty || trimmed == 'null' || trimmed == 'undefined') {
+    if (trimmed.isEmpty ||
+        trimmed == 'null' ||
+        trimmed == 'undefined' ||
+        trimmed == '0' ||
+        trimmed == '-1') {
       return null;
     }
 
@@ -29,6 +33,22 @@ class UrlHelper {
       return 'https://www.ysscores.com$trimmed';
     }
 
+    // Only resolve known CDN relative filenames (e.g. numeric filenames "9541690196746.png" or paths like "teams/150/...")
+    if (trimmed.endsWith('.png') ||
+        trimmed.endsWith('.jpg') ||
+        trimmed.endsWith('.jpeg') ||
+        trimmed.endsWith('.webp')) {
+      if (RegExp(r'^\d+\.(png|jpg|jpeg|webp)$', caseSensitive: false).hasMatch(trimmed)) {
+        return 'https://imgs.ysscores.com/teams/150/$trimmed';
+      } else if (trimmed.startsWith('teams/') ||
+          trimmed.startsWith('player/') ||
+          trimmed.startsWith('championship/') ||
+          trimmed.startsWith('flags/') ||
+          trimmed.startsWith('country/')) {
+        return 'https://imgs.ysscores.com/$trimmed';
+      }
+    }
+
     return trimmed;
   }
 
@@ -36,8 +56,55 @@ class UrlHelper {
   static bool isValidImageUrl(String? url) {
     final normalized = normalizeImageUrl(url);
     if (normalized == null) return false;
-    return normalized.startsWith('https://') ||
-        normalized.startsWith('http://');
+
+    final lower = normalized.toLowerCase();
+
+    // 1. Android ImageDecoder cannot decode SVGs (causes DecodeException 'unimplemented')
+    if (lower.endsWith('.svg') || lower.contains('.svg?')) {
+      return false;
+    }
+
+    // 2. Reject known broken CDN paths that return HTTP 200 text/html (<!-- 404 -->)
+    if (lower.contains('/champ/64/')) {
+      return false;
+    }
+
+    final uri = Uri.tryParse(normalized);
+    if (uri == null ||
+        (!uri.isScheme('http') && !uri.isScheme('https')) ||
+        !uri.hasAuthority) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Resolves canonical championship logo for known competitions if current logo is missing or broken.
+  static String? resolveChampionshipLogo(String? leagueId, {String? currentLogo}) {
+    if (currentLogo != null && isValidImageUrl(currentLogo)) {
+      return currentLogo;
+    }
+    return switch (leagueId) {
+      '12048' || '943230' || '288' || '904988' =>
+        'https://imgs.ysscores.com/championship/128/5171696546919.png', // UEFA Champions League
+      '6811' || '937599' || '284' =>
+        'https://imgs.ysscores.com/championship/128/3411694791422.png', // Premier League
+      '1933' || '938652' || '285' =>
+        'https://imgs.ysscores.com/championship/128/8641690196626.png', // LaLiga
+      '3734' || '936357' || '287' =>
+        'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
+      '2606' || '938769' || '286' =>
+        'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
+      '1985' || '937873' =>
+        'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
+      '7167' || '941825' =>
+        'https://imgs.ysscores.com/championship/128/2121751062605.png', // Saudi Pro League
+      '88013' || '59771441' =>
+        'https://imgs.ysscores.com/championship/128/5481703687014.png', // Supercopa
+      '943009' =>
+        'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
+      _ => null,
+    };
   }
 
   /// Normalizes video URLs from various API fields and video providers.

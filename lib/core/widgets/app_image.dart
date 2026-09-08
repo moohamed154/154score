@@ -32,10 +32,10 @@ class AppImage extends StatelessWidget {
         ? AppColors.darkTextMuted
         : AppColors.lightTextMuted;
 
-    final safeWidth = (width != null && width!.isFinite && !width!.isNaN)
+    final safeWidth = (width != null && width!.isFinite && !width!.isNaN && width! > 0)
         ? width
         : null;
-    final safeHeight = (height != null && height!.isFinite && !height!.isNaN)
+    final safeHeight = (height != null && height!.isFinite && !height!.isNaN && height! > 0)
         ? height
         : null;
 
@@ -46,8 +46,8 @@ class AppImage extends StatelessWidget {
         ? (safeWidth * 0.4).clamp(12.0, 36.0)
         : 16.0;
 
-    final cacheW = (safeWidth != null) ? (safeWidth * 2).toInt() : null;
-    final cacheH = (safeHeight != null) ? (safeHeight * 2).toInt() : null;
+    final cacheW = (safeWidth != null && safeWidth > 0) ? (safeWidth * 2).toInt() : null;
+    final cacheH = (safeHeight != null && safeHeight > 0) ? (safeHeight * 2).toInt() : null;
 
     final normalizedUrl = UrlHelper.normalizeImageUrl(imageUrl);
 

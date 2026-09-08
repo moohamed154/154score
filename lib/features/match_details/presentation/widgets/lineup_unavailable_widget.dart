@@ -5,35 +5,14 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 
-/// Displayed when lineup data is not available from the API.
+/// Displayed when lineup data is not yet published or unavailable for a match.
 ///
-/// ## API Limitation (documented for future developers)
+/// Note: The backend API officially supports lineups via:
+///   - `GET /api/matches/{id}/lineups` (and `/api/matches/{id}/lineup`)
+/// Returning formations, starting XIs, substitutes, coaches, ratings, and tactical positions.
 ///
-/// As of V4.7.3, the production API (`https://moohamed154-154score-api.hf.space`)
-/// does NOT expose a lineup endpoint. The following endpoints were checked and
-/// confirmed to contain NO lineup/player data:
-///
-///   - `GET /api/matches/{id}/details`  → venue, referee, commentator, channel only
-///   - `GET /api/matches/{id}/events`   → goals, cards, substitutions timeline only
-///   - `GET /api/matches/{id}/stats`    → possession, shots, fouls, passes only
-///
-/// When the API adds lineup support, implement:
-///   - `GET /api/matches/{id}/lineup`   (expected future endpoint)
-///   - Expected response fields:
-///       - `home.formation` (e.g., "4-3-3")
-///       - `away.formation`
-///       - `home.starting_xi[]` → `{number, name, position, x, y}`
-///       - `away.starting_xi[]` → `{number, name, position, x, y}`
-///       - `home.bench[]`       → `{number, name, position}`
-///       - `away.bench[]`       → `{number, name, position}`
-///       - `home.coach`         → `{name, photo?}`
-///       - `away.coach`         → `{name, photo?}`
-///
-/// See `MatchDetailsRemoteDataSource` to add the new method.
-/// See `MatchDetailsRepository` (domain) to add the interface.
-/// See `MatchDetailsRepositoryImpl` (data) to implement.
-/// See `MatchDetailsState` to add lineup fields.
-/// See `MatchDetailsBloc._onLoadMatchDetails` to fetch in parallel.
+/// This widget is only shown when upstream data has not yet published the lineups
+/// for an upcoming or unconfirmed fixture.
 class LineupUnavailableWidget extends StatelessWidget {
   const LineupUnavailableWidget({super.key});
 

@@ -24,7 +24,7 @@ class ApiEndpoints {
   static const String health = '/api/health';
   static const String serverHealth = '/api/config?type=health';
 
-  // 2. Matches Operations
+  // 2. Matches & Predictions Operations
   static const String matches = '/api/matches';
   static const String matchesLive = '/api/matches/live';
   static String matchesByDate(String date) => '/api/matches/date/$date';
@@ -33,26 +33,92 @@ class ApiEndpoints {
   static String matchStats(String id) => '/api/matches/$id/stats';
   static String matchNews(String id) => '/api/matches/$id/news';
   static String matchLineups(String id) => '/api/matches/$id/lineups';
+  static String matchLineup(String id) => '/api/matches/$id/lineup';
+  static String matchPredictions(String id) => '/api/matches/$id/predictions';
+  static String predictions(String id) => '/api/predictions/$id';
 
-  // 3. Profiles Operations
-  static String stadium(String id, String slug) => '/api/stadium/$id/$slug';
-  static String referee(String id, String slug) => '/api/referee/$id/$slug';
-  static String commentator(String id, String slug) =>
-      '/api/commentator/$id/$slug';
+  // 3. News Operations
+  static const String news = '/api/news';
+  static String newsDetails(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/news/$id/$slug'
+          : '/api/news/$id';
 
-  // 4. Content & Search Operations
+  // 4. Teams Operations
+  static String teamProfile(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/teams/$id/$slug'
+          : '/api/teams/$id';
+  static String teamPlayers(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/teams/$id/$slug/players'
+          : '/api/teams/$id/players';
+  static String teamMatches(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/teams/$id/$slug/matches'
+          : '/api/teams/$id/matches';
+  static String teamStandings(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/teams/$id/$slug/standings'
+          : '/api/teams/$id/standings';
+
+  // 5. Players Operations
+  static String playerProfile(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/players/$id/$slug'
+          : '/api/players/$id';
+
+  // 6. Profiles Operations (Stadium, Referee, Commentator)
+  static String stadium(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/stadium/$id/$slug'
+          : '/api/stadium/$id';
+  static String referee(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/referee/$id/$slug'
+          : '/api/referee/$id';
+  static String commentator(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/commentator/$id/$slug'
+          : '/api/commentator/$id';
+
+  // 7. Content & Search Operations
   static const String search = '/api/search';
   static const String transfers = '/api/transfers';
   static const String videos = '/api/videos';
   static String videoDetails(String id) => '/api/videos/$id';
 
-  // 5. League Operations
+  // 8. League Operations & Aliases
   static const String rank = '/api/rank';
   static const String leagues = '/api/leagues';
-  static String leagueProfile(String id) => '/api/leagues/$id';
-  static String leagueStandings(String id) => '/api/leagues/$id/standings';
-  static String leagueTopScorers(String id) => '/api/leagues/$id/top-scorers';
-  static String leagueMatches(String id) => '/api/leagues/$id/matches';
-  static String leagueNews(String id) => '/api/leagues/$id/news';
-  static String leagueTeams(String id) => '/api/leagues/$id/teams';
+  static const String championships = '/api/championships';
+  static const String competitions = '/api/competitions';
+  static String leagueProfile(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/leagues/$id/$slug'
+          : '/api/leagues/$id';
+  static String leagueStandings(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/leagues/$id/$slug/standings'
+          : '/api/leagues/$id/standings';
+  static String leagueTopScorers(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/leagues/$id/$slug/top-scorers'
+          : '/api/leagues/$id/top-scorers';
+  static String leagueScorers(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/leagues/$id/$slug/scorers'
+          : '/api/leagues/$id/scorers';
+  static String leagueMatches(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/leagues/$id/$slug/matches'
+          : '/api/leagues/$id/matches';
+  static String leagueNews(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/leagues/$id/$slug/news'
+          : '/api/leagues/$id/news';
+  static String leagueTeams(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/leagues/$id/$slug/teams'
+          : '/api/leagues/$id/teams';
 }
