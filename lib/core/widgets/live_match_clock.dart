@@ -37,6 +37,10 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     with SingleTickerProviderStateMixin {
   Timer? _timer;
   int _currentMinute = 0;
+  int _elapsedExtraSeconds = 0;
+  int _totalExtraMinutes = 0;
+  String _displayMinute = '';
+  String? _displayExtra;
   String _displayString = '';
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -88,54 +92,185 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     );
 
     int? minuteNum;
+    _currentMinute = 0;
+    _elapsedExtraSeconds = 0;
+    _totalExtraMinutes = 0;
+    _displayMinute = '';
+    _displayExtra = null;
+    _displayString = '';
+
+    // 1. Check if extraTime is provided in widget.extraTime (e.g. "02:00 / 5", "02:00  / 5", "5", "+3")
+    if (widget.extraTime != null &&
+        widget.extraTime!.isNotEmpty &&
+        widget.extraTime != 'null') {
+      final clean = widget.extraTime!.trim();
+      if (clean.contains('/')) {
+        final parts = clean.split('/');
+        final elapsedPart = parts.first.replaceAll('+', '').trim();
+        final totalPart = parts.last.trim();
+        _totalExtraMinutes = int.tryParse(totalPart) ?? 0;
+        if (elapsedPart.contains(':')) {
+          final timeParts = elapsedPart.split(':');
+          final m = int.tryParse(timeParts[0]) ?? 0;
+          final s = int.tryParse(timeParts[1]) ?? 0;
+          _elapsedExtraSeconds = m * 60 + s;
+        } else {
+          final m = int.tryParse(elapsedPart) ?? 0;
+          _elapsedExtraSeconds = m * 60;
+        }
+      } else if (clean.contains(':')) {
+        // e.g. "+02:00" or "02:00"
+        final cleanTime = clean.replaceAll('+', '').trim();
+        final timeParts = cleanTime.split(':');
+        final m = int.tryParse(timeParts[0]) ?? 0;
+        final s = int.tryParse(timeParts[1]) ?? 0;
+        _elapsedExtraSeconds = m * 60 + s;
+      } else {
+        final numMatch = RegExp(r'(\d+)').firstMatch(clean);
+        if (numMatch != null) {
+          final val = int.tryParse(numMatch.group(1)!) ?? 0;
+          if (val > 0) {
+            _totalExtraMinutes = val;
+          }
+        }
+      }
+    }
+
+    // 2. Parse widget.minute (which may be "90", "45", "90+3", "45+2'")
     if (widget.minute != null &&
         widget.minute!.isNotEmpty &&
         widget.minute != 'null') {
       final clean = widget.minute!.replaceAll("'", '').trim();
       if (clean.contains('+')) {
-        _displayString = "$clean'";
-        final base = int.tryParse(clean.split('+')[0]);
-        if (base != null) _currentMinute = base;
-        return;
+        final parts = clean.split('+');
+        final base = int.tryParse(parts[0].trim());
+        final extra = int.tryParse(parts[1].trim());
+        if (base != null) {
+          _currentMinute = base;
+          minuteNum = base;
+        }
+        if (extra != null && extra > 0) {
+          if (_totalExtraMinutes == 0) _totalExtraMinutes = extra;
+          if (_elapsedExtraSeconds == 0) _elapsedExtraSeconds = extra * 60;
+        }
+      } else {
+        final base = int.tryParse(clean);
+        if (base != null) {
+          _currentMinute = base;
+          minuteNum = base;
+        }
       }
-      final base = int.tryParse(clean);
-      if (base != null) {
-        _currentMinute = base;
-        minuteNum = base;
-      }
-    } else if (MatchStatusHelper.isLive(phase) &&
+    }
+
+    // 3. Fallback or stoppage elapsed calculation from kick-off time
+    if (MatchStatusHelper.isLive(phase) &&
         widget.time != null &&
         widget.time!.isNotEmpty &&
         widget.time != '-') {
-      final estimatedNum = MatchStatusHelper.estimateMinuteNumber(
+      final estimated = MatchStatusHelper.estimateMatchMinutes(
         time: widget.time,
         status: widget.status,
         period: widget.period,
       );
-      if (estimatedNum != null) {
-        _currentMinute = estimatedNum;
-        minuteNum = estimatedNum;
+
+      if (_currentMinute == 0 && estimated.minute > 0) {
+        _currentMinute = estimated.minute;
+        minuteNum = estimated.minute;
+      }
+
+      final isStoppageMinute = (_currentMinute == 45 || _currentMinute >= 90);
+      if (isStoppageMinute && _elapsedExtraSeconds == 0 && estimated.extraMinute > 0) {
+        _elapsedExtraSeconds = estimated.extraMinute * 60;
       }
     }
 
-    final formattedExtra = MatchStatusHelper.formatExtraTime(
-      widget.extraTime,
-      minute: minuteNum ?? _currentMinute,
-    );
+    // 4. Default total extra time if stoppage is active
+    final p = (widget.period ?? '').toLowerCase();
+    final s = (widget.status ?? '').toLowerCase();
+    final is1stHalf = p.contains('1st') ||
+        s.contains('الأول') ||
+        s.contains('الاول') ||
+        s.contains('first');
+
+    int baseMinute = _currentMinute;
+    if (is1stHalf && _currentMinute >= 45) {
+      baseMinute = 45;
+    } else if (_currentMinute >= 90 && _currentMinute < 105) {
+      baseMinute = 90;
+    } else if (_currentMinute >= 105 && _currentMinute < 120) {
+      baseMinute = 105;
+    } else if (_currentMinute >= 120) {
+      baseMinute = 120;
+    }
+
+    final isStoppageMinute = (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120);
+    final hasExtra = _totalExtraMinutes > 0 ||
+        _elapsedExtraSeconds > 0 ||
+        (widget.extraTime != null &&
+            widget.extraTime!.isNotEmpty &&
+            widget.extraTime != 'null' &&
+            widget.extraTime != '+00:00' &&
+            widget.extraTime != '00:00' &&
+            widget.extraTime != '0');
+
+    if (isStoppageMinute && hasExtra) {
+      if (_totalExtraMinutes == 0) {
+        final elapsedM = _elapsedExtraSeconds ~/ 60;
+        final defaultTotal = baseMinute == 45 ? 3 : 5;
+        _totalExtraMinutes = elapsedM > defaultTotal ? elapsedM + 1 : defaultTotal;
+      }
+    }
+
+    _updateDisplay(phase, minuteNum: minuteNum);
+  }
+
+  void _updateDisplay(MatchPhase phase, {int? minuteNum}) {
+    final m = minuteNum ?? _currentMinute;
+
+    final p = (widget.period ?? '').toLowerCase();
+    final s = (widget.status ?? '').toLowerCase();
+    final is1stHalf = p.contains('1st') ||
+        s.contains('الأول') ||
+        s.contains('الاول') ||
+        s.contains('first');
+
+    int baseMinute = m;
+    if (is1stHalf && m >= 45) {
+      baseMinute = 45;
+    } else if (m >= 90 && m < 105) {
+      baseMinute = 90;
+    } else if (m >= 105 && m < 120) {
+      baseMinute = 105;
+    } else if (m >= 120) {
+      baseMinute = 120;
+    }
+
+    final isExtraPeriod =
+        (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120) &&
+        (_totalExtraMinutes > 0 || _elapsedExtraSeconds > 0 || m > baseMinute);
 
     if (MatchStatusHelper.isLive(phase)) {
-      if (_currentMinute > 0) {
-        if (formattedExtra != null) {
-          _displayString = "$_currentMinute' $formattedExtra";
-        } else {
-          _displayString = "$_currentMinute'";
-        }
-      } else if (formattedExtra != null) {
-        _displayString = formattedExtra;
+      if (isExtraPeriod) {
+        _displayMinute = '$baseMinute';
+        final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
+        final ss = (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
+        final total = _totalExtraMinutes > 0
+            ? _totalExtraMinutes
+            : (baseMinute == 45 ? 3 : 5);
+        _displayExtra = '$mm:$ss  / $total';
+        _displayString = '$_displayMinute\n$_displayExtra';
+      } else if (m > 0) {
+        _displayMinute = "$m'";
+        _displayExtra = null;
+        _displayString = "$m'";
       } else {
+        _displayMinute = '';
+        _displayExtra = null;
         _displayString = '';
       }
     } else {
+      _displayMinute = '';
+      _displayExtra = null;
       _displayString = '';
     }
   }
@@ -150,25 +285,64 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     );
 
     if (!_isInTest &&
-        phase == MatchPhase.live &&
+        MatchStatusHelper.isLive(phase) &&
         _currentMinute > 0 &&
-        _currentMinute < 125) {
-      _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-        if (mounted) {
-          setState(() {
-            _currentMinute++;
-            final formattedExtra = MatchStatusHelper.formatExtraTime(
-              widget.extraTime,
-              minute: _currentMinute,
-            );
-            if (formattedExtra != null) {
-              _displayString = "$_currentMinute' $formattedExtra";
-            } else {
-              _displayString = "$_currentMinute'";
-            }
-          });
-        }
-      });
+        _currentMinute < 130) {
+      final p = (widget.period ?? '').toLowerCase();
+      final s = (widget.status ?? '').toLowerCase();
+      final is1stHalf = p.contains('1st') ||
+          s.contains('الأول') ||
+          s.contains('الاول') ||
+          s.contains('first');
+
+      int baseMinute = _currentMinute;
+      if (is1stHalf && _currentMinute >= 45) {
+        baseMinute = 45;
+      } else if (_currentMinute >= 90 && _currentMinute < 105) {
+        baseMinute = 90;
+      } else if (_currentMinute >= 105 && _currentMinute < 120) {
+        baseMinute = 105;
+      } else if (_currentMinute >= 120) {
+        baseMinute = 120;
+      }
+
+      final isExtraPeriod =
+          (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120) &&
+          (_totalExtraMinutes > 0 || _elapsedExtraSeconds > 0 || _currentMinute > baseMinute);
+
+      if (isExtraPeriod) {
+        // Run 1-second ticker during extra time to update MM:SS in real time
+        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (mounted) {
+            setState(() {
+              _elapsedExtraSeconds++;
+              if (_elapsedExtraSeconds ~/ 60 >= _totalExtraMinutes) {
+                _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
+              }
+              _updateDisplay(phase);
+            });
+          }
+        });
+      } else {
+        // Run standard 1-minute ticker during regular time
+        _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+          if (mounted) {
+            setState(() {
+              if (is1stHalf && _currentMinute >= 45) {
+                _currentMinute = 45;
+                _startTimerIfNeeded(); // Switch to seconds ticker
+              } else if (_currentMinute >= 90) {
+                _currentMinute = 90;
+                _startTimerIfNeeded(); // Switch to seconds ticker
+              } else {
+                _currentMinute++;
+              }
+
+              _updateDisplay(phase);
+            });
+          }
+        });
+      }
     }
   }
 
@@ -194,6 +368,70 @@ class _LiveMatchClockState extends State<LiveMatchClock>
 
     final isLive = MatchStatusHelper.isLive(phase);
 
+    final defaultStyle =
+        AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
+          fontWeight: FontWeight.w700,
+          color: isLive
+              ? AppColors.liveRed
+              : (isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary),
+        );
+
+    final textStyle = widget.textStyle ?? defaultStyle;
+
+    // Two-line layout for extra time: Line 1 = "90", Line 2 = "02:00  / 5"
+    if (_displayExtra != null && _displayExtra!.isNotEmpty) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            textDirection: TextDirection.ltr,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (isLive && widget.showLiveDot) ...[
+                FadeTransition(
+                  opacity: _pulseAnimation,
+                  child: Container(
+                    width: 5,
+                    height: 5,
+                    decoration: const BoxDecoration(
+                      color: AppColors.liveRed,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 3),
+              ],
+              Text(
+                _displayMinute.isNotEmpty ? _displayMinute : '90',
+                style: textStyle.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: textStyle.fontSize ?? 11,
+                  height: 1.1,
+                ),
+                textDirection: TextDirection.ltr,
+              ),
+            ],
+          ),
+          const SizedBox(height: 1),
+          Text(
+            _displayExtra!,
+            style: textStyle.copyWith(
+              fontSize: ((textStyle.fontSize ?? 11) - 2.0).clamp(8.0, 10.0),
+              fontWeight: FontWeight.w700,
+              color: isLive ? AppColors.liveRed : null,
+              letterSpacing: 0.2,
+              height: 1.1,
+            ),
+            textDirection: TextDirection.ltr,
+          ),
+        ],
+      );
+    }
+
     final label = _displayString.isNotEmpty
         ? _displayString
         : MatchStatusHelper.getDisplayLabel(
@@ -205,16 +443,6 @@ class _LiveMatchClockState extends State<LiveMatchClock>
             period: widget.period,
             isArabic: isArabic,
           );
-
-    final defaultStyle =
-        AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-          fontWeight: FontWeight.w700,
-          color: isLive
-              ? AppColors.liveRed
-              : (isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary),
-        );
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -237,7 +465,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         ],
         Text(
           label,
-          style: widget.textStyle ?? defaultStyle,
+          style: textStyle,
           textDirection: TextDirection.ltr,
         ),
       ],

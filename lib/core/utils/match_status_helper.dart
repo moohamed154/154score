@@ -162,7 +162,11 @@ class MatchStatusHelper {
     }
   }
 
-  static String? formatExtraTime(String? extraTime, {int? minute}) {
+  static String? formatExtraTime(
+    String? extraTime, {
+    int? minute,
+    int? elapsedSeconds,
+  }) {
     if (extraTime == null || extraTime.isEmpty || extraTime == 'null') {
       return null;
     }
@@ -173,7 +177,8 @@ class MatchStatusHelper {
         clean == '+00' ||
         clean == '0' ||
         clean == '+00:00 / 0' ||
-        clean == '+00:00 / 00') {
+        clean == '+00:00 / 00' ||
+        clean == '+00:00  / 0') {
       return null;
     }
 
@@ -184,26 +189,43 @@ class MatchStatusHelper {
       }
     }
 
-    // Handle "+00:00 / 10" or "01:23 / 5" -> "+10'"
+    // 1. Handle "+00:00 / 10" or "02:00 / 5" or "02:00  / 5" or "01:23 / 5"
     if (clean.contains('/')) {
       final parts = clean.split('/');
-      final total = parts.last.trim();
-      if (total.isNotEmpty && total != '0' && total != '00' && total != '00:00') {
-        final totalNum = int.tryParse(total);
-        return totalNum != null ? '+$totalNum\'' : '+$total';
+      final elapsedPart = parts.first.replaceAll('+', '').trim();
+      final totalPart = parts.last.trim();
+      final totalNum = int.tryParse(totalPart);
+
+      if (elapsedSeconds != null && totalNum != null) {
+        final mm = (elapsedSeconds ~/ 60).toString().padLeft(2, '0');
+        final ss = (elapsedSeconds % 60).toString().padLeft(2, '0');
+        return '$mm:$ss  / $totalNum';
+      }
+
+      if (elapsedPart.isNotEmpty &&
+          elapsedPart != '00:00' &&
+          elapsedPart != '0') {
+        final formattedElapsed =
+            elapsedPart.contains(':') ? elapsedPart : '0$elapsedPart:00';
+        return '$formattedElapsed  / $totalPart';
+      }
+      if (totalNum != null && totalNum > 0) {
+        return '00:00  / $totalNum';
       }
       return null;
     }
 
-    if (clean.startsWith('+')) {
-      final withoutPlus = clean.substring(1).trim();
-      if (withoutPlus == '00:00' || withoutPlus == '0' || withoutPlus == '00') {
-        return null;
-      }
-      return clean;
+    // 2. Handle numeric total extra time e.g. "5", "+5", "2", "+2"
+    final cleanDigits = clean.replaceAll(RegExp(r'[^0-9]'), '').trim();
+    final totalNum = int.tryParse(cleanDigits);
+    if (totalNum != null && totalNum > 0) {
+      final sec = elapsedSeconds ?? 0;
+      final mm = (sec ~/ 60).toString().padLeft(2, '0');
+      final ss = (sec % 60).toString().padLeft(2, '0');
+      return '$mm:$ss  / $totalNum';
     }
 
-    return '+$clean';
+    return clean.endsWith("'") ? '+$clean' : '+$clean\'';
   }
 
   /// Parses a time string into minutes since midnight (0 - 1439).
@@ -223,6 +245,74 @@ class MatchStatusHelper {
     }
     return h * 60 + m;
   }
+
+  /// Estimates the current match base minute and extra time minute based on kick-off time and current time.
+  static ({int minute, int extraMinute}) estimateMatchMinutes({
+    required String? time,
+    String? status,
+    String? period,
+    DateTime? now,
+  }) {
+    final startMins = parseTimeToMinutes(time);
+    if (startMins == null) return (minute: 0, extraMinute: 0);
+
+    final current = now ?? DateTime.now();
+    final currentMins = current.hour * 60 + current.minute;
+    var elapsed = currentMins - startMins;
+
+    // Handle midnight wrap-around (e.g. kick-off 23:30, current 00:15 -> 45 mins elapsed)
+    if (elapsed < -720) {
+      elapsed += 1440;
+    } else if (elapsed < 0) {
+      return (minute: 1, extraMinute: 0);
+    }
+
+    final s = (status ?? '').toLowerCase();
+    final p = (period ?? '').toLowerCase();
+
+    final is1stHalf =
+        p.contains('1st') ||
+        s.contains('الأول') ||
+        s.contains('الاول') ||
+        s.contains('first');
+    final is2ndHalf =
+        p.contains('2nd') || s.contains('الثاني') || s.contains('second');
+    final isHt =
+        p.contains('ht') ||
+        s.contains('استراحة') ||
+        s.contains('بين الشوطين') ||
+        s.contains('half time');
+
+    if (isHt) return (minute: 45, extraMinute: 0);
+
+    if (is1stHalf) {
+      if (elapsed <= 0) return (minute: 1, extraMinute: 0);
+      if (elapsed <= 45) return (minute: elapsed, extraMinute: 0);
+      if (elapsed <= 52) return (minute: 45, extraMinute: elapsed - 45);
+      // Beyond 52 mins in 1st half: match is in half-time break
+      return (minute: 45, extraMinute: 0);
+    }
+
+    if (is2ndHalf) {
+      final secondHalfElapsed =
+          elapsed > 60 ? elapsed - 60 : (elapsed > 45 ? elapsed - 45 : 0);
+      final min = 45 + secondHalfElapsed;
+      if (min < 46) return (minute: 46, extraMinute: 0);
+      if (min <= 90) return (minute: min, extraMinute: 0);
+      if (min <= 102) return (minute: 90, extraMinute: min - 90);
+      return (minute: 90, extraMinute: 5);
+    }
+
+    // Generic live match
+    if (elapsed <= 0) return (minute: 1, extraMinute: 0);
+    if (elapsed <= 45) return (minute: elapsed, extraMinute: 0);
+    if (elapsed <= 60) return (minute: 45, extraMinute: 0);
+    final secHalfMin = 45 + (elapsed - 60);
+    if (secHalfMin <= 90) return (minute: secHalfMin, extraMinute: 0);
+    if (secHalfMin <= 102) return (minute: 90, extraMinute: secHalfMin - 90);
+    return (minute: 90, extraMinute: 5);
+  }
+
 
   /// Estimates the current match minute as an integer based on kick-off time and current time.
   static int? estimateMinuteNumber({
@@ -332,8 +422,11 @@ class MatchStatusHelper {
     if (is1stHalf) {
       if (elapsed <= 0) return "1'";
       if (elapsed <= 45) return "$elapsed'";
-      final extra = elapsed - 45;
-      return "45' +$extra'";
+      if (elapsed <= 52) {
+        final extra = elapsed - 45;
+        return "45' +$extra'";
+      }
+      return isArabic ? 'استراحة' : 'HT';
     }
 
     if (is2ndHalf) {
@@ -342,7 +435,7 @@ class MatchStatusHelper {
       final min = 45 + secondHalfElapsed;
       if (min < 46) return "46'";
       if (min <= 90) return "$min'";
-      final extra = min - 90;
+      final extra = (min - 90).clamp(1, 15);
       return "90' +$extra'";
     }
 
@@ -352,7 +445,7 @@ class MatchStatusHelper {
     if (elapsed <= 60) return isArabic ? 'استراحة' : 'HT';
     final secHalfMin = 45 + (elapsed - 60);
     if (secHalfMin <= 90) return "$secHalfMin'";
-    final extra = secHalfMin - 90;
+    final extra = (secHalfMin - 90).clamp(1, 15);
     return "90' +$extra'";
   }
 

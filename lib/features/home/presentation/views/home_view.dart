@@ -243,7 +243,7 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
         SizedBox(
-          height: 148,
+          height: 156,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
