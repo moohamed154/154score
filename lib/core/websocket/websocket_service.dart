@@ -177,8 +177,10 @@ class WebSocketServiceImpl implements WebSocketService {
 
   @override
   Stream<MatchDetailRealtimeUpdate> matchUpdatesStream(String matchId) {
+    final cleanTarget = matchId.replaceAll('match:', '').trim();
     return _matchDetailsController.stream.where(
-      (update) => update.matchId == matchId,
+      (update) =>
+          update.matchId.replaceAll('match:', '').trim() == cleanTarget,
     );
   }
 
@@ -192,13 +194,7 @@ class WebSocketServiceImpl implements WebSocketService {
   }
 
   Set<String> _getAllActiveRooms() {
-    final allRooms = <String>{
-      ApiEndpoints.wsChannelMatchesAr,
-      ApiEndpoints.wsChannelEn,
-      ApiEndpoints.wsChannelTransfersAr,
-      'transfers_en',
-      _activeChannel,
-    };
+    final allRooms = <String>{_activeChannel};
     allRooms.addAll(_staticSubscriptions);
     for (final entry in _roomReferenceCounts.entries) {
       if (entry.value > 0) {
@@ -377,6 +373,11 @@ class WebSocketServiceImpl implements WebSocketService {
       'events',
       'stats_update',
       'lineup_update',
+      'goal',
+      'card',
+      'substitution',
+      'match_status',
+      'score_update',
     ];
 
     for (final ev in matchEventNames) {
@@ -399,6 +400,20 @@ class WebSocketServiceImpl implements WebSocketService {
         _lastEventTimestamp = DateTime.now();
         _processMatchUpdate(data, eventName: event);
         return;
+      }
+      // If we are currently subscribed to a match room and incoming event contains match data
+      final hasActiveMatchRoom = _roomReferenceCounts.values.any((c) => c > 0);
+      if (hasActiveMatchRoom && data is Map) {
+        final m = Map<String, dynamic>.from(data);
+        if (m.containsKey('match_id') ||
+            m.containsKey('matchId') ||
+            m.containsKey('event_type') ||
+            (m.containsKey('minute') && m.containsKey('score_1'))) {
+          _lastEventName = event;
+          _lastEventTimestamp = DateTime.now();
+          _processMatchUpdate(data, eventName: event);
+          return;
+        }
       }
       _handleGenericIncomingEvent(event, data);
     });
@@ -683,6 +698,11 @@ class WebSocketServiceImpl implements WebSocketService {
       socket.emit('subscribe', validRooms);
       for (final room in validRooms) {
         socket.emit('subscribe', room);
+        socket.emit('subscribe', [room]);
+        if (room.startsWith('match:')) {
+          socket.emit('join', room);
+          socket.emit('join_room', room);
+        }
       }
     }
   }

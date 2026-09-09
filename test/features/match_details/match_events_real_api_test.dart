@@ -438,8 +438,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('فيديو'), findsOneWidget);
       expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+      expect(find.text('فيديو'), findsNothing);
     });
 
     // ── 17. StatusPill with live extra time shows base minute and stoppage ────

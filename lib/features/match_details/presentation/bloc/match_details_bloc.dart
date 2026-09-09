@@ -21,27 +21,33 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
   StreamSubscription? _liveMatchSubscription;
   StreamSubscription? _matchRoomSubscription;
   Timer? _debounceRefreshTimer;
+  Timer? _liveFallbackTimer;
+
+  static String _cleanId(String? id) =>
+      id?.replaceAll('match:', '').trim() ?? '';
 
   MatchDetailsBloc({
     required this.repository,
     required this.webSocketService,
     required this.localStorageService,
     required String matchId,
-  }) : super(MatchDetailsState(matchId: matchId)) {
+  }) : super(MatchDetailsState(matchId: _cleanId(matchId))) {
     on<LoadMatchDetailsEvent>(_onLoadMatchDetails);
     on<ChangeTabEvent>(_onChangeTab);
     on<LiveMatchDetailUpdateEvent>(_onLiveMatchDetailUpdate);
     on<MatchDetailSocketUpdateEvent>(_onMatchDetailSocketUpdate);
 
+    final cleanTarget = _cleanId(matchId);
+
     // 1. Join room: match:{matchId}
     try {
       webSocketService.connect();
-      webSocketService.joinMatchRoom(matchId);
+      webSocketService.joinMatchRoom(cleanTarget);
     } catch (_) {}
 
     // 2. Listen to dedicated match updates stream
     try {
-      final stream = webSocketService.matchUpdatesStream(matchId);
+      final stream = webSocketService.matchUpdatesStream(cleanTarget);
       _matchRoomSubscription = stream.listen((update) {
         add(MatchDetailSocketUpdateEvent(update));
       });
@@ -50,11 +56,18 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     // 3. Listen to general live matches stream for match updates
     try {
       _liveMatchSubscription = webSocketService.updatesStream.listen((update) {
-        if (update.matchId == matchId) {
+        if (_cleanId(update.matchId) == cleanTarget) {
           add(LiveMatchDetailUpdateEvent(update));
         }
       });
     } catch (_) {}
+
+    // 4. Background fallback periodic refresh every 25 seconds for live matches
+    _liveFallbackTimer = Timer.periodic(const Duration(seconds: 25), (_) {
+      if (!isClosed) {
+        add(LoadMatchDetailsEvent(state.matchId, isRefresh: true));
+      }
+    });
   }
 
   Future<void> _onLoadMatchDetails(
@@ -127,7 +140,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     Emitter<MatchDetailsState> emit,
   ) {
     final update = event.update;
-    if (update.matchId != null && update.matchId == state.matchId) {
+    if (update.matchId != null && _cleanId(update.matchId) == _cleanId(state.matchId)) {
       List<MatchEventEntity> updatedEvents = state.events;
       if (update.eventType != null && update.eventType!.isNotEmpty) {
         final newEvent = MatchEventEntity(
@@ -156,6 +169,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           liveScore1: update.score1 ?? state.liveScore1,
           liveScore2: update.score2 ?? state.liveScore2,
           liveStatus: update.status ?? state.liveStatus,
+          liveMinute: update.minute ?? state.liveMinute,
+          liveExtraTime: update.extraTime ?? state.liveExtraTime,
+          livePeriod: update.period ?? state.livePeriod,
           events: updatedEvents,
         ),
       );
@@ -169,7 +185,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     Emitter<MatchDetailsState> emit,
   ) {
     final update = event.update;
-    if (update.matchId == state.matchId) {
+    if (_cleanId(update.matchId) == _cleanId(state.matchId)) {
       final mergeResult = RealtimeMergeEngine.mergeMatchDetailsEvents(
         existingEvents: state.events,
         update: update,
@@ -180,6 +196,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           liveScore1: update.score1 ?? state.liveScore1,
           liveScore2: update.score2 ?? state.liveScore2,
           liveStatus: update.status ?? state.liveStatus,
+          liveMinute: update.minute ?? state.liveMinute,
+          liveExtraTime: update.extraTime ?? state.liveExtraTime,
+          livePeriod: update.period ?? state.livePeriod,
           events: mergeResult.isUpdated ? mergeResult.data : state.events,
         ),
       );
@@ -200,6 +219,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
   @override
   Future<void> close() {
     _debounceRefreshTimer?.cancel();
+    _liveFallbackTimer?.cancel();
     try {
       webSocketService.leaveMatchRoom(state.matchId);
     } catch (_) {}

@@ -389,6 +389,8 @@ class MatchDetailRealtimeUpdate extends Equatable {
   final String? score2;
   final String? status;
   final String? minute;
+  final String? extraTime;
+  final String? period;
   final String? eventType;
   final String? eventPlayer;
   final String? eventAssist;
@@ -404,6 +406,8 @@ class MatchDetailRealtimeUpdate extends Equatable {
     this.score2,
     this.status,
     this.minute,
+    this.extraTime,
+    this.period,
     this.eventType,
     this.eventPlayer,
     this.eventAssist,
@@ -416,7 +420,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
 
   /// Deterministic fingerprint for event deduplication
   String get eventFingerprint {
-    return '${matchId}_${eventMinute ?? minute ?? ''}_${eventType ?? ''}_${eventPlayer ?? ''}_$isHomeTeam';
+    return '${matchId}_${score1 ?? ''}_${score2 ?? ''}_${status ?? ''}_${minute ?? ''}_${extraTime ?? ''}_${eventMinute ?? ''}_${eventType ?? ''}_${eventPlayer ?? ''}_$isHomeTeam';
   }
 
   factory MatchDetailRealtimeUpdate.fromJson(
@@ -434,32 +438,51 @@ class MatchDetailRealtimeUpdate extends Equatable {
         ? Map<String, dynamic>.from(json['data'] as Map)
         : json;
 
-    String parsedMatchId = (json['id'] ??
+    String parsedMatchId = (
             json['match_id'] ??
             json['matchId'] ??
-            payload['id'] ??
             payload['match_id'] ??
             payload['matchId'] ??
+            fallbackMatchId ??
+            json['id'] ??
+            payload['id'] ??
             '')
-        .toString();
+        .toString()
+        .replaceAll('match:', '')
+        .trim();
 
     if (parsedMatchId.isEmpty && json['channel'] != null) {
       final ch = json['channel'].toString();
       if (ch.startsWith('match:')) {
-        parsedMatchId = ch.substring('match:'.length);
+        parsedMatchId = ch.substring('match:'.length).trim();
       }
     }
 
     if (parsedMatchId.isEmpty && fallbackMatchId != null) {
-      parsedMatchId = fallbackMatchId;
+      parsedMatchId = fallbackMatchId.replaceAll('match:', '').trim();
     }
 
     String? s1 =
         payload['score_1']?.toString() ?? payload['home_score']?.toString();
     String? s2 =
         payload['score_2']?.toString() ?? payload['away_score']?.toString();
+    if (payload['score'] is Map) {
+      final sMap = payload['score'] as Map;
+      if (sMap['home'] != null) s1 ??= sMap['home'].toString();
+      if (sMap['away'] != null) s2 ??= sMap['away'].toString();
+    }
     String? st = payload['status']?.toString();
-    final min = payload['minute']?.toString();
+    final min = payload['minute']?.toString() ?? json['minute']?.toString();
+    final period = payload['period']?.toString() ?? json['period']?.toString();
+    final extraTime = (payload['extra_time'] is! Map &&
+            payload['extra_time'] != null &&
+            payload['extra_time'] != 'null')
+        ? payload['extra_time']?.toString()
+        : (payload['added_time']?.toString() ??
+            payload['stoppage_time']?.toString() ??
+            payload['injury_time']?.toString() ??
+            json['extra_time']?.toString() ??
+            json['added_time']?.toString());
 
     // If backend sent scraped sections list: {"data": [{"section": "معلومات اللقاء", "items": [...]}]}
     if (json['data'] is List) {
@@ -498,6 +521,8 @@ class MatchDetailRealtimeUpdate extends Equatable {
       score2: s2,
       status: st,
       minute: min,
+      extraTime: extraTime,
+      period: period,
       eventType:
           payload['event_type']?.toString() ?? payload['type']?.toString(),
       eventPlayer:
@@ -523,6 +548,8 @@ class MatchDetailRealtimeUpdate extends Equatable {
     score2,
     status,
     minute,
+    extraTime,
+    period,
     eventType,
     eventPlayer,
     eventAssist,

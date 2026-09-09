@@ -195,9 +195,11 @@ class TimelineEventItem extends StatelessWidget {
       l10n,
     );
 
-    final isSub = event.type.toLowerCase().contains('sub') ||
+    final isSub =
+        event.type.toLowerCase().contains('sub') ||
         event.type.toLowerCase().contains('تبديل');
-    final hasSecondary = event.secondaryPlayerName != null &&
+    final hasSecondary =
+        event.secondaryPlayerName != null &&
         event.secondaryPlayerName!.trim().isNotEmpty;
 
     // For substitution events, the player coming IN is displayed on top,
@@ -215,14 +217,19 @@ class TimelineEventItem extends StatelessWidget {
           : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Player Name & Score
+        // Player Name & Score & Video
         Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: isHome
               ? [
                   if (event.score != null && event.score!.isNotEmpty) ...[
                     _buildScorePill(event.score!, isDark),
                     const SizedBox(width: 4),
+                  ],
+                  if (event.hasVideo) ...[
+                    _buildVideoBadge(context, isDark, isArabic, isSmall),
+                    const SizedBox(width: 5),
                   ],
                   Flexible(
                     child: Text(
@@ -264,6 +271,10 @@ class TimelineEventItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (event.hasVideo) ...[
+                    const SizedBox(width: 5),
+                    _buildVideoBadge(context, isDark, isArabic, isSmall),
+                  ],
                   if (event.score != null && event.score!.isNotEmpty) ...[
                     const SizedBox(width: 4),
                     _buildScorePill(event.score!, isDark),
@@ -272,7 +283,9 @@ class TimelineEventItem extends StatelessWidget {
         ),
 
         // Event Type / Secondary Player / Substitution In-Out
-        if (isSub && subPlayerOutName != null && subPlayerOutName.isNotEmpty) ...[
+        if (isSub &&
+            subPlayerOutName != null &&
+            subPlayerOutName.isNotEmpty) ...[
           const SizedBox(height: 2),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -370,12 +383,9 @@ class TimelineEventItem extends StatelessWidget {
       mainAxisAlignment: isHome
           ? MainAxisAlignment.end
           : MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: isHome
           ? [
-              if (event.hasVideo) ...[
-                _buildVideoBadge(context, isDark, isArabic, isSmall),
-                SizedBox(width: isSmall ? 6 : 8),
-              ],
               Flexible(child: textWidget),
               SizedBox(width: isSmall ? 6 : 8),
               iconWidget,
@@ -384,10 +394,6 @@ class TimelineEventItem extends StatelessWidget {
               iconWidget,
               SizedBox(width: isSmall ? 6 : 8),
               Flexible(child: textWidget),
-              if (event.hasVideo) ...[
-                SizedBox(width: isSmall ? 6 : 8),
-                _buildVideoBadge(context, isDark, isArabic, isSmall),
-              ],
             ],
     );
   }
@@ -409,42 +415,32 @@ class TimelineEventItem extends StatelessWidget {
     bool isArabic,
     bool isSmall,
   ) {
+    final size = isSmall ? 20.0 : 22.0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _handleVideoNavigation(context),
         borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
         child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isSmall ? 5 : 7,
-            vertical: isSmall ? 2 : 3,
-          ),
+          width: size,
+          height: size,
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+            shape: BoxShape.circle,
             border: Border.all(
               color: AppColors.primary.withValues(alpha: 0.5),
               width: 0.8,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 1.5),
+              child: Icon(
                 Icons.play_arrow_rounded,
                 size: isSmall ? 13 : 15,
                 color: AppColors.primary,
               ),
-              const SizedBox(width: 2),
-              Text(
-                isArabic ? 'فيديو' : 'Video',
-                style: TextStyle(
-                  fontSize: isSmall ? 9 : 10,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

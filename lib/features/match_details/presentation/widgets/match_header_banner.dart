@@ -17,6 +17,9 @@ class MatchHeaderBanner extends StatelessWidget {
   final String? liveScore1;
   final String? liveScore2;
   final String? liveStatus;
+  final String? liveMinute;
+  final String? liveExtraTime;
+  final String? livePeriod;
   final String? penaltyScore1;
   final String? penaltyScore2;
   final bool showLeagueBadge;
@@ -27,6 +30,9 @@ class MatchHeaderBanner extends StatelessWidget {
     this.liveScore1,
     this.liveScore2,
     this.liveStatus,
+    this.liveMinute,
+    this.liveExtraTime,
+    this.livePeriod,
     this.penaltyScore1,
     this.penaltyScore2,
     this.showLeagueBadge = false,
@@ -44,10 +50,14 @@ class MatchHeaderBanner extends StatelessWidget {
     final p1 = penaltyScore1 ?? match.penaltyScore1;
     final p2 = penaltyScore2 ?? match.penaltyScore2;
     final effectiveStatus = liveStatus ?? match.status;
+    final effectiveMinute = liveMinute ?? match.minute;
+    final effectiveExtraTime = liveExtraTime ?? match.extraTime;
+    final effectivePeriod = livePeriod ?? match.period;
+
     final phase = MatchStatusHelper.parseStatus(
       effectiveStatus,
-      minute: match.minute,
-      extraTime: match.extraTime,
+      minute: effectiveMinute,
+      extraTime: effectiveExtraTime,
       time: match.time,
       date: match.date,
       score1: s1,
@@ -213,10 +223,10 @@ class MatchHeaderBanner extends StatelessWidget {
                     const SizedBox(height: 6),
                     StatusPill(
                       status: effectiveStatus,
-                      minute: match.minute,
-                      extraTime: match.extraTime,
+                      minute: effectiveMinute,
+                      extraTime: effectiveExtraTime,
                       time: match.time,
-                      period: match.period,
+                      period: effectivePeriod,
                       date: match.date,
                       score1: s1,
                       score2: s2,
