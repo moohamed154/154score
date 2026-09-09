@@ -7,6 +7,13 @@ class DateFormatter {
     return DateFormat('yyyy-MM-dd').format(date);
   }
 
+  static bool isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
   static String formatDayHeader(DateTime date, {required bool isArabic}) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

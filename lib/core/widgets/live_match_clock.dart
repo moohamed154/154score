@@ -267,7 +267,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120) &&
         (_totalExtraMinutes > 0 || _elapsedExtraSeconds > 0 || m > baseMinute);
 
-    if (MatchStatusHelper.isLive(phase)) {
+    if (MatchStatusHelper.isInPlay(phase)) {
       if (isExtraPeriod) {
         _displayMinute = '$baseMinute';
         final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
@@ -306,7 +306,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     );
 
     if (!_isInTest &&
-        MatchStatusHelper.isLive(phase) &&
+        MatchStatusHelper.isInPlay(phase) &&
         _currentMinute > 0 &&
         _currentMinute < 130) {
       final p = (widget.period ?? '').toLowerCase();
@@ -477,12 +477,15 @@ class _LiveMatchClockState extends State<LiveMatchClock>
             isArabic: isArabic,
           );
 
+    final showDot =
+        isLive && widget.showLiveDot && MatchStatusHelper.isInPlay(phase);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       textDirection: TextDirection.ltr,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (isLive && widget.showLiveDot) ...[
+        if (showDot) ...[
           FadeTransition(
             opacity: _pulseAnimation,
             child: Container(

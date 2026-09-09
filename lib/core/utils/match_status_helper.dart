@@ -172,6 +172,11 @@ class MatchStatusHelper {
         phase == MatchPhase.penalties;
   }
 
+  /// Whether the match is actively in-play (clock is ticking)
+  static bool isInPlay(MatchPhase phase) {
+    return phase == MatchPhase.live || phase == MatchPhase.extraTime;
+  }
+
   static bool isFinished(MatchPhase phase) {
     return phase == MatchPhase.finished;
   }

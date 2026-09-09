@@ -47,6 +47,57 @@ class StatusPill extends StatelessWidget {
       score1: score1,
       score2: score2,
     );
+
+    if (phase == MatchPhase.halfTime) {
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 10,
+          vertical: compact ? 3 : 5,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFC107).withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+          border: Border.all(
+            color: const Color(0xFFFFC107).withValues(alpha: 0.5),
+            width: 0.8,
+          ),
+        ),
+        child: Text(
+          isArabic ? 'استراحة' : 'HT',
+          style: TextStyle(
+            fontSize: compact ? 10 : 12,
+            fontWeight: FontWeight.w700,
+            color: isDark ? const Color(0xFFFFC107) : const Color(0xFFD97706),
+          ),
+        ),
+      );
+    }
+
+    if (phase == MatchPhase.penalties) {
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 10,
+          vertical: compact ? 3 : 5,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.5),
+            width: 0.8,
+          ),
+        ),
+        child: Text(
+          isArabic ? 'ركلات الترجيح' : 'PEN',
+          style: TextStyle(
+            fontSize: compact ? 10 : 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.primary,
+          ),
+        ),
+      );
+    }
+
     final isLive = MatchStatusHelper.isLive(phase);
     final isFinished =
         ScoreHelper.isFinishedStatus(status) || phase == MatchPhase.finished;

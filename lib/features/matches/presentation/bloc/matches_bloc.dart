@@ -67,12 +67,19 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final dateStr = DateFormatter.toApiDateString(event.date);
     final lang = localStorageService.getLanguage();
     final offset = localStorageService.getTimezoneOffset();
+    final isToday = DateFormatter.isToday(event.date);
 
-    final result = await repository.getMatchesByDate(
+    final matchesFuture = repository.getMatchesByDate(
       date: dateStr,
       lang: lang,
       utcOffset: offset,
     );
+    final liveFuture = isToday
+        ? repository.getLiveMatchesFlat(lang: lang, utcOffset: offset)
+        : null;
+
+    final result = await matchesFuture;
+    final liveResult = liveFuture != null ? await liveFuture : null;
 
     try {
       webSocketService.recordRestFallback(
@@ -84,9 +91,19 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
     result.fold(
       onSuccess: (leagues) {
+        var populatedLeagues = leagues;
+        if (liveResult != null) {
+          liveResult.fold(
+            onSuccess: (liveList) {
+              populatedLeagues = _overlayLiveMatches(leagues, liveList);
+            },
+            onFailure: (_) {},
+          );
+        }
+
         final reconciledLeagues =
             RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(
-              restLeagues: leagues,
+              restLeagues: populatedLeagues,
               currentLeagues: state.allLeagues,
             );
 
@@ -236,6 +253,66 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   void _stopFallbackPolling() {
     _fallbackPollingTimer?.cancel();
     _fallbackPollingTimer = null;
+  }
+
+  List<LeagueGroupEntity> _overlayLiveMatches(
+    List<LeagueGroupEntity> leagues,
+    List<MatchEntity> liveMatches,
+  ) {
+    if (liveMatches.isEmpty) return leagues;
+
+    final liveById = <String, MatchEntity>{};
+    for (final m in liveMatches) {
+      liveById[m.id] = m;
+    }
+
+    return leagues.map((league) {
+      final updatedMatches = league.matches.map((match) {
+        MatchEntity? live = liveById[match.id];
+        if (live == null) {
+          try {
+            live = liveMatches.firstWhere(
+              (lm) =>
+                  (lm.team1.toLowerCase().contains(match.team1.toLowerCase()) ||
+                      match.team1.toLowerCase().contains(lm.team1.toLowerCase())) &&
+                  (lm.team2.toLowerCase().contains(match.team2.toLowerCase()) ||
+                      match.team2.toLowerCase().contains(lm.team2.toLowerCase())),
+            );
+          } catch (_) {
+            live = null;
+          }
+        }
+
+        if (live != null) {
+          return match.copyWith(
+            minute: (live.minute != null && live.minute!.isNotEmpty)
+                ? live.minute
+                : match.minute,
+            status: (live.status != null && live.status!.isNotEmpty)
+                ? live.status
+                : match.status,
+            statusCode: (live.statusCode != null && live.statusCode!.isNotEmpty)
+                ? live.statusCode
+                : match.statusCode,
+            score1: (live.score1 != null && live.score1!.isNotEmpty)
+                ? live.score1
+                : match.score1,
+            score2: (live.score2 != null && live.score2!.isNotEmpty)
+                ? live.score2
+                : match.score2,
+            period: (live.period != null && live.period!.isNotEmpty)
+                ? live.period
+                : match.period,
+            extraTime: (live.extraTime != null && live.extraTime!.isNotEmpty)
+                ? live.extraTime
+                : match.extraTime,
+          );
+        }
+        return match;
+      }).toList();
+
+      return league.copyWith(matches: updatedMatches);
+    }).toList();
   }
 
   int _calculateLiveCount(List<LeagueGroupEntity> leagues) {
