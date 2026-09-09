@@ -203,7 +203,7 @@ void main() {
       expect(find.text('المقاولون العرب'), findsOneWidget);
       expect(find.text('الأهلي'), findsOneWidget);
       expect(find.text('مباشر'), findsNothing);
-      expect(find.textContaining("'"), findsOneWidget);
+      expect(find.textContaining(':'), findsWidgets);
     });
 
     testWidgets('MatchCard displays 90 on line 1 and 02:00 / 5 on line 2', (
@@ -318,9 +318,9 @@ void main() {
 
         await tester.pump();
 
-        // Must display live calculated minute e.g. 22' instead of static 22:00
-        expect(find.text('22:00'), findsNothing);
-        expect(find.textContaining("'"), findsOneWidget);
+        // Must display live calculated time e.g. 22:00 instead of static kick-off time
+        expect(find.text(timeStr), findsNothing);
+        expect(find.text('22:00'), findsOneWidget);
       },
     );
   });

@@ -204,7 +204,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text("67'"), findsOneWidget);
+      expect(find.text('67:00'), findsOneWidget);
     });
 
     testWidgets('5. AnimatedScoreText transitions score without layout jump', (
@@ -307,7 +307,7 @@ void main() {
         expect(find.text('برشلونة'), findsOneWidget);
         expect(find.text('2'), findsOneWidget);
         expect(find.text('1'), findsOneWidget);
-        expect(find.text("78'"), findsOneWidget);
+        expect(find.text('78:00'), findsOneWidget);
       },
     );
 

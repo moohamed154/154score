@@ -43,6 +43,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     with SingleTickerProviderStateMixin {
   Timer? _timer;
   int _currentMinute = 0;
+  int _currentSecond = 0;
   int _elapsedExtraSeconds = 0;
   int _totalExtraMinutes = 0;
   String _displayMinute = '';
@@ -63,14 +64,13 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     );
 
     if (LiveMatchClock.enablePulseAnimation && !_isInTest) {
+      _pulseAnimation = Tween<double>(begin: 0.25, end: 1.0).animate(
+        CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+      );
       _pulseController.repeat(reverse: true);
     } else {
-      _pulseController.value = 1.0;
+      _pulseAnimation = const AlwaysStoppedAnimation(1.0);
     }
-
-    _pulseAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
 
     _syncClock();
     _startTimerIfNeeded();
@@ -105,6 +105,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
 
     int? minuteNum;
     _currentMinute = 0;
+    _currentSecond = 0;
     _elapsedExtraSeconds = 0;
     _totalExtraMinutes = 0;
     _displayMinute = '';
@@ -148,12 +149,23 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       }
     }
 
-    // 2. Parse widget.minute (which may be "90", "45", "90+3", "45+2'")
+    // 2. Parse widget.minute (which may be "90", "45", "90+3", "45+2'", "85:23")
     if (widget.minute != null &&
         widget.minute!.isNotEmpty &&
         widget.minute != 'null') {
       final clean = widget.minute!.replaceAll("'", '').trim();
-      if (clean.contains('+')) {
+      if (clean.contains(':')) {
+        final parts = clean.split(':');
+        final base = int.tryParse(parts[0].trim());
+        final sec = int.tryParse(parts[1].trim());
+        if (base != null) {
+          _currentMinute = base;
+          minuteNum = base;
+        }
+        if (sec != null) {
+          _currentSecond = sec;
+        }
+      } else if (clean.contains('+')) {
         final parts = clean.split('+');
         final base = int.tryParse(parts[0].trim());
         final extra = int.tryParse(parts[1].trim());
@@ -196,7 +208,12 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       }
     }
 
-    // 4. Default total extra time if stoppage is active
+    // 4. Initialize regular seconds if live and in-play
+    if (!_isInTest && _currentSecond == 0 && _currentMinute > 0) {
+      _currentSecond = DateTime.now().second;
+    }
+
+    // 5. Default total extra time if stoppage is active
     final p = (widget.period ?? '').toLowerCase();
     final s = (widget.status ?? '').toLowerCase();
     final is1stHalf = p.contains('1st') ||
@@ -278,9 +295,11 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         _displayExtra = '$mm:$ss  / $total';
         _displayString = '$_displayMinute\n$_displayExtra';
       } else if (m > 0) {
-        _displayMinute = "$m'";
+        final mm = m.toString().padLeft(2, '0');
+        final ss = (_currentSecond % 60).toString().padLeft(2, '0');
+        _displayMinute = '$mm:$ss';
         _displayExtra = null;
-        _displayString = "$m'";
+        _displayString = '$mm:$ss';
       } else {
         _displayMinute = '';
         _displayExtra = null;
@@ -307,7 +326,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
 
     if (!_isInTest &&
         MatchStatusHelper.isInPlay(phase) &&
-        _currentMinute > 0 &&
+        _currentMinute >= 0 &&
         _currentMinute < 130) {
       final p = (widget.period ?? '').toLowerCase();
       final s = (widget.status ?? '').toLowerCase();
@@ -316,54 +335,49 @@ class _LiveMatchClockState extends State<LiveMatchClock>
           s.contains('الاول') ||
           s.contains('first');
 
-      int baseMinute = _currentMinute;
-      if (is1stHalf && _currentMinute >= 45) {
-        baseMinute = 45;
-      } else if (_currentMinute >= 90 && _currentMinute < 105) {
-        baseMinute = 90;
-      } else if (_currentMinute >= 105 && _currentMinute < 120) {
-        baseMinute = 105;
-      } else if (_currentMinute >= 120) {
-        baseMinute = 120;
-      }
-
-      final isExtraPeriod =
-          (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120) &&
-          (_totalExtraMinutes > 0 || _elapsedExtraSeconds > 0 || _currentMinute > baseMinute);
-
-      if (isExtraPeriod) {
-        // Run 1-second ticker during extra time to update MM:SS in real time
-        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          if (mounted) {
-            setState(() {
-              _elapsedExtraSeconds++;
-              if (_elapsedExtraSeconds ~/ 60 >= _totalExtraMinutes) {
-                _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
-              }
-              _updateDisplay(phase);
-            });
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!mounted) return;
+        setState(() {
+          int baseMinute = _currentMinute;
+          if (is1stHalf && _currentMinute >= 45) {
+            baseMinute = 45;
+          } else if (_currentMinute >= 90 && _currentMinute < 105) {
+            baseMinute = 90;
+          } else if (_currentMinute >= 105 && _currentMinute < 120) {
+            baseMinute = 105;
+          } else if (_currentMinute >= 120) {
+            baseMinute = 120;
           }
-        });
-      } else {
-        // Run standard 1-minute ticker during regular time
-        _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-          if (mounted) {
-            setState(() {
+
+          final isExtraPeriod =
+              (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120) &&
+              (_totalExtraMinutes > 0 || _elapsedExtraSeconds > 0 || _currentMinute > baseMinute);
+
+          if (isExtraPeriod) {
+            _elapsedExtraSeconds++;
+            if (_elapsedExtraSeconds ~/ 60 >= _totalExtraMinutes) {
+              _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
+            }
+          } else {
+            _currentSecond++;
+            if (_currentSecond >= 60) {
+              _currentSecond = 0;
               if (is1stHalf && _currentMinute >= 45) {
                 _currentMinute = 45;
-                _startTimerIfNeeded(); // Switch to seconds ticker
+                _startTimerIfNeeded();
+                return;
               } else if (_currentMinute >= 90) {
                 _currentMinute = 90;
-                _startTimerIfNeeded(); // Switch to seconds ticker
+                _startTimerIfNeeded();
+                return;
               } else {
                 _currentMinute++;
               }
-
-              _updateDisplay(phase);
-            });
+            }
           }
+          _updateDisplay(phase);
         });
-      }
+      });
     }
   }
 
