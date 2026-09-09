@@ -182,6 +182,20 @@ class AppLocalizations {
       'diag_status_error': 'Service Error',
       'check_now': 'Check Now',
 
+      // Debug Console
+      'debug_console_title': 'Network Debug Console',
+      'debug_console_subtitle': 'Print and inspect network responses in debug console',
+      'debug_console_print_all': 'Print All to Debug Console',
+      'debug_console_print_latest': 'Print Latest Response',
+      'debug_console_auto_print': 'Auto-print responses to Debug Console',
+      'debug_console_clear': 'Clear History',
+      'debug_console_no_logs': 'No network responses recorded yet.',
+      'debug_console_printed_notice': 'Printed response to Debug Console',
+      'debug_console_printed_all_notice': 'All responses printed to Debug Console',
+      'debug_console_print_this': 'Print to Debug Console',
+      'debug_console_copy': 'Copy Response',
+      'debug_console_copied': 'Copied to clipboard',
+
       'error_title': 'Something went wrong',
       'error_network': 'Unable to connect to the server. Please check your internet connection.',
       'error_service_unavailable':
@@ -389,6 +403,20 @@ class AppLocalizations {
       'diag_status_disconnected': 'غير متصل',
       'diag_status_error': 'خطأ في الخدمة',
       'check_now': 'فحص الآن',
+
+      // Debug Console
+      'debug_console_title': 'شاشة تصحيح الشبكة (Debug Console)',
+      'debug_console_subtitle': 'طباعة وفحص استجابات الشبكة في الديبج كونسول',
+      'debug_console_print_all': 'طباعة الكل في الديبج كونسول',
+      'debug_console_print_latest': 'طباعة أحدث استجابة',
+      'debug_console_auto_print': 'طباعة الاستجابات تلقائياً في الديبج كونسول',
+      'debug_console_clear': 'مسح السجلات',
+      'debug_console_no_logs': 'لا توجد استجابات شبكة مسجلة بعد.',
+      'debug_console_printed_notice': 'تمت طباعة الاستجابة في الديبج كونسول',
+      'debug_console_printed_all_notice': 'تمت طباعة جميع الاستجابات في الديبج كونسول',
+      'debug_console_print_this': 'طباعة في الديبج كونسول',
+      'debug_console_copy': 'نسخ الاستجابة',
+      'debug_console_copied': 'تم النسخ إلى الحافظة',
 
       'error_title': 'حدث خطأ ما',
       'error_network': 'تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة ثانية.',

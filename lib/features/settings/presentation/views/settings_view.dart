@@ -9,6 +9,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../cubit/settings_cubits.dart';
+import '../widgets/debug_console_sheet.dart';
 import '../widgets/diagnostics_sheet.dart';
 
 class SettingsView extends StatefulWidget {
@@ -200,25 +201,46 @@ class _SettingsViewState extends State<SettingsView> {
           ),
           Container(
             decoration: _cardDecoration(isDark),
-            child: ListTile(
-              leading: const Icon(
-                Icons.health_and_safety_rounded,
-                color: AppColors.primary,
-              ),
-              title: Text(l10n.translate('diag_title')),
-              subtitle: Text(l10n.translate('settings_diagnostics')),
-              trailing: Icon(
-                isArabic
-                    ? Icons.chevron_left_rounded
-                    : Icons.chevron_right_rounded,
-              ),
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (ctx) => DiagnosticsSheet(webSocketService: ws),
-                );
-              },
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.health_and_safety_rounded,
+                    color: AppColors.primary,
+                  ),
+                  title: Text(l10n.translate('diag_title')),
+                  subtitle: Text(l10n.translate('settings_diagnostics')),
+                  trailing: Icon(
+                    isArabic
+                        ? Icons.chevron_left_rounded
+                        : Icons.chevron_right_rounded,
+                  ),
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (ctx) => DiagnosticsSheet(webSocketService: ws),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(
+                    Icons.terminal_rounded,
+                    color: AppColors.primary,
+                  ),
+                  title: Text(l10n.translate('debug_console_title')),
+                  subtitle: Text(l10n.translate('debug_console_subtitle')),
+                  trailing: Icon(
+                    isArabic
+                        ? Icons.chevron_left_rounded
+                        : Icons.chevron_right_rounded,
+                  ),
+                  onTap: () {
+                    DebugConsoleSheet.show(context);
+                  },
+                ),
+              ],
             ),
           ),
 

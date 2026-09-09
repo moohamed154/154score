@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 
 import '../constants/api_endpoints.dart';
 import '../errors/exceptions.dart';
+import 'debug_console.dart';
 
 class ApiClient {
   final Dio _dio;
@@ -23,6 +24,9 @@ class ApiClient {
         },
       ),
     );
+
+    // Network Debug Console Interceptor: captures and prints responses
+    dio.interceptors.add(DebugConsoleInterceptor());
 
     dio.interceptors.add(
       InterceptorsWrapper(
