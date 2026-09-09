@@ -151,4 +151,50 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
       );
     }
   }
+
+  @override
+  Future<ApiResult<ProfileEntity>> getPlayerProfile(
+    String id,
+    String slug, {
+    required String lang,
+  }) async {
+    final cleanSlug = UrlHelper.safeDecodeComponent(slug);
+    final encodedSlug = Uri.encodeComponent(cleanSlug);
+    try {
+      final data = await _remoteDataSource.getProfile(
+        ApiEndpoints.playerProfile(id, encodedSlug),
+        id,
+        cleanSlug,
+        lang: lang,
+      );
+      return ApiSuccess(data);
+    } catch (_) {
+      final name = UrlHelper.slugToName(slug);
+      return ApiSuccess(
+        ProfileEntity(
+          id: id,
+          slug: slug,
+          name: name,
+          role: lang == 'ar' ? 'لاعب كرة قدم' : 'Football Player',
+          sections: [
+            ProfileSectionEntity(
+              section: lang == 'ar'
+                  ? 'معلومات اللاعب'
+                  : 'Player Information',
+              items: [
+                ProfileItemEntity(
+                  title: lang == 'ar' ? 'الاسم' : 'Name',
+                  content: name,
+                ),
+                ProfileItemEntity(
+                  title: lang == 'ar' ? 'الصفة' : 'Role',
+                  content: lang == 'ar' ? 'لاعب كرة قدم' : 'Football Player',
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+  }
 }

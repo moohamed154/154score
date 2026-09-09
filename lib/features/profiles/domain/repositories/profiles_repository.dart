@@ -17,4 +17,9 @@ abstract class ProfilesRepository {
     String slug, {
     required String lang,
   });
+  Future<ApiResult<ProfileEntity>> getPlayerProfile(
+    String id,
+    String slug, {
+    required String lang,
+  });
 }

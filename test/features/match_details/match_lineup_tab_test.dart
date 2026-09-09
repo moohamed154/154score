@@ -415,7 +415,7 @@ void main() {
 
     const sampleMatchId = '5868020';
 
-    final sampleLineup = MatchLineupEntity(
+    const sampleLineup = MatchLineupEntity(
       matchId: sampleMatchId,
       lineupsAvailable: true,
       formationType: 'confirmed',
@@ -424,9 +424,9 @@ void main() {
         teamName: 'ريال مدريد',
         teamLogo: 'https://imgs.ysscores.com/teams/real.png',
         formation: '4-3-3',
-        coach: const LineupCoachEntity(coachId: '9', name: 'كارلو أنشيلوتي'),
+        coach: LineupCoachEntity(coachId: '9', name: 'كارلو أنشيلوتي'),
         startingXi: [
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '1',
             name: 'كورتوا',
             number: 1,
@@ -436,7 +436,7 @@ void main() {
             rating: '7.4',
             isCaptain: false,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '2',
             name: 'كارفخال',
             number: 2,
@@ -445,7 +445,7 @@ void main() {
             formationPosition: 1,
             isCaptain: true,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '3',
             name: 'روديغر',
             number: 22,
@@ -453,7 +453,7 @@ void main() {
             positionCode: 'D',
             formationPosition: 2,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '4',
             name: 'ميليتاو',
             number: 3,
@@ -461,7 +461,7 @@ void main() {
             positionCode: 'D',
             formationPosition: 3,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '5',
             name: 'ميندي',
             number: 23,
@@ -469,7 +469,7 @@ void main() {
             positionCode: 'D',
             formationPosition: 4,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '6',
             name: 'فالفيردي',
             number: 8,
@@ -477,7 +477,7 @@ void main() {
             positionCode: 'M',
             formationPosition: 1,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '7',
             name: 'تشواميني',
             number: 14,
@@ -485,7 +485,7 @@ void main() {
             positionCode: 'M',
             formationPosition: 2,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '8',
             name: 'بيلينغهام',
             number: 5,
@@ -494,7 +494,7 @@ void main() {
             formationPosition: 3,
             rating: '8.2',
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '9',
             name: 'رودريغو',
             number: 11,
@@ -502,7 +502,7 @@ void main() {
             positionCode: 'F',
             formationPosition: 1,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '10',
             name: 'مبابي',
             number: 9,
@@ -511,7 +511,7 @@ void main() {
             formationPosition: 2,
             rating: '8.5',
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '11',
             name: 'فينيسيوس',
             number: 7,
@@ -521,7 +521,7 @@ void main() {
             rating: '8.7',
           ),
         ],
-        substitutes: const [
+        substitutes: [
           LineupPlayerEntity(
             playerId: '12',
             name: 'مودريتش',
@@ -532,7 +532,7 @@ void main() {
             isSubstitute: true,
           ),
         ],
-        injuries: const [
+        injuries: [
           LineupInjuryEntity(
             playerId: '99',
             name: 'ألابا',
@@ -547,9 +547,9 @@ void main() {
         teamName: 'برشلونة',
         teamLogo: 'https://imgs.ysscores.com/teams/barca.png',
         formation: '4-3-3',
-        coach: const LineupCoachEntity(coachId: '8', name: 'هانز فليك'),
+        coach: LineupCoachEntity(coachId: '8', name: 'هانز فليك'),
         startingXi: [
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '21',
             name: 'تير شتيغن',
             number: 1,
@@ -557,7 +557,7 @@ void main() {
             positionCode: 'G',
             formationPosition: 1,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '22',
             name: 'كوندي',
             number: 23,
@@ -565,7 +565,7 @@ void main() {
             positionCode: 'D',
             formationPosition: 1,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '23',
             name: 'كوبارسي',
             number: 2,
@@ -573,7 +573,7 @@ void main() {
             positionCode: 'D',
             formationPosition: 2,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '24',
             name: 'إينيغو',
             number: 5,
@@ -581,7 +581,7 @@ void main() {
             positionCode: 'D',
             formationPosition: 3,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '25',
             name: 'بالدي',
             number: 3,
@@ -589,7 +589,7 @@ void main() {
             positionCode: 'D',
             formationPosition: 4,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '26',
             name: 'كاسادو',
             number: 17,
@@ -597,7 +597,7 @@ void main() {
             positionCode: 'M',
             formationPosition: 1,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '27',
             name: 'بيدري',
             number: 8,
@@ -606,7 +606,7 @@ void main() {
             formationPosition: 2,
             rating: '7.9',
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '28',
             name: 'أولمو',
             number: 20,
@@ -614,7 +614,7 @@ void main() {
             positionCode: 'M',
             formationPosition: 3,
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '29',
             name: 'يامال',
             number: 19,
@@ -623,7 +623,7 @@ void main() {
             formationPosition: 1,
             rating: '8.6',
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '30',
             name: 'ليفاندوفسكي',
             number: 9,
@@ -632,7 +632,7 @@ void main() {
             formationPosition: 2,
             rating: '8.1',
           ),
-          const LineupPlayerEntity(
+          LineupPlayerEntity(
             playerId: '31',
             name: 'رافينيا',
             number: 11,
@@ -643,8 +643,8 @@ void main() {
             isCaptain: true,
           ),
         ],
-        substitutes: const [],
-        injuries: const [],
+        substitutes: [],
+        injuries: [],
       ),
     );
 
@@ -675,7 +675,7 @@ void main() {
 
         // Seed state with lineup loaded
         bloc.emit(
-          MatchDetailsState(
+          const MatchDetailsState(
             matchId: sampleMatchId,
             status: MatchDetailsStatus.success,
             lineup: sampleLineup,
@@ -722,7 +722,7 @@ void main() {
       );
 
       bloc.emit(
-        MatchDetailsState(
+        const MatchDetailsState(
           matchId: sampleMatchId,
           status: MatchDetailsStatus.success,
           lineup: sampleLineup,
@@ -804,7 +804,7 @@ void main() {
       );
 
       bloc.emit(
-        MatchDetailsState(
+        const MatchDetailsState(
           matchId: sampleMatchId,
           status: MatchDetailsStatus.success,
           lineup: sampleLineup,
@@ -837,7 +837,7 @@ void main() {
       );
 
       bloc.emit(
-        MatchDetailsState(
+        const MatchDetailsState(
           matchId: sampleMatchId,
           status: MatchDetailsStatus.success,
           lineup: sampleLineup,
@@ -938,11 +938,11 @@ void main() {
         matchId: sampleMatchId,
       );
 
-      final realBetisLineup = MatchLineupEntity(
+      const realBetisLineup = MatchLineupEntity(
         matchId: sampleMatchId,
         lineupsAvailable: true,
         formationType: 'confirmed',
-        home: const TeamLineupEntity(
+        home: TeamLineupEntity(
           teamId: '8603',
           teamName: 'ريال بيتيس',
           formation: '4-2-3-1',
@@ -960,7 +960,7 @@ void main() {
             LineupPlayerEntity(playerId: '9', name: 'هيرنانديز', number: 9, positionCode: 'S', formationPosition: 1),
           ],
         ),
-        away: const TeamLineupEntity(
+        away: TeamLineupEntity(
           teamId: '8633',
           teamName: 'ريال مدريد',
           formation: '4-2-3-1',
@@ -981,7 +981,7 @@ void main() {
       );
 
       bloc.emit(
-        MatchDetailsState(
+        const MatchDetailsState(
           matchId: sampleMatchId,
           status: MatchDetailsStatus.success,
           lineup: realBetisLineup,
@@ -1033,7 +1033,7 @@ void main() {
       );
 
       bloc.emit(
-        MatchDetailsState(
+        const MatchDetailsState(
           matchId: sampleMatchId,
           status: MatchDetailsStatus.success,
           lineup: sampleLineup,

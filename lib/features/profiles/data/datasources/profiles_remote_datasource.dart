@@ -138,6 +138,93 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
           }
         }
       }
+    } else if (response is Map && response['data'] is Map) {
+      final map = response['data'] as Map;
+      if (map['name'] != null && map['name'].toString().isNotEmpty) {
+        name = map['name'].toString();
+      }
+      if (map['name_en'] != null && map['name_en'].toString().isNotEmpty) {
+        englishName = map['name_en'].toString();
+      }
+      if (map['photo'] != null || map['image'] != null) {
+        image = UrlHelper.normalizeImageUrl(
+          (map['photo'] ?? map['image'])?.toString(),
+        );
+      }
+      if (map['country_flag'] != null || map['flag'] != null) {
+        flag = UrlHelper.normalizeImageUrl(
+          (map['country_flag'] ?? map['flag'])?.toString(),
+        );
+      }
+      if (map['role'] != null) {
+        role = map['role'].toString();
+      }
+
+      // Check metadata list
+      final metaList = map['metadata'] as List? ?? [];
+      final metaItems = <ProfileItemEntity>[];
+      for (final it in metaList) {
+        if (it is Map) {
+          final t = (it['title'] ?? it['label'] ?? '').toString().trim();
+          final c = (it['content'] ?? it['value'] ?? '').toString().trim();
+          if (t.isNotEmpty && c.isNotEmpty) {
+            final tLower = t.toLowerCase();
+            if (tLower.contains('birth') ||
+                tLower.contains('عمر') ||
+                tLower.contains('ميلاد')) {
+              birthDate ??= c;
+            } else if (tLower.contains('country') ||
+                tLower.contains('دولة') ||
+                tLower.contains('جنسية')) {
+              country ??= c;
+            } else if (tLower.contains('مركز') ||
+                tLower.contains('position')) {
+              role ??= c;
+            }
+            metaItems.add(ProfileItemEntity(title: t, content: c));
+          }
+        }
+      }
+      if (metaItems.isNotEmpty) {
+        sections.add(
+          ProfileSectionEntity(
+            section: lang == 'ar' ? 'معلومات عامة' : 'Overview',
+            items: metaItems,
+          ),
+        );
+      }
+
+      // Check transfers list
+      final transfersList = map['transfers'] as List? ?? [];
+      final transferItems = <ProfileItemEntity>[];
+      for (final tr in transfersList) {
+        if (tr is Map) {
+          final season =
+              tr['season']?.toString() ?? tr['date']?.toString() ?? '';
+          final from = tr['from_team']?.toString() ?? '';
+          final to = tr['to_team']?.toString() ?? '';
+          final fee = tr['fee']?.toString() ?? tr['price']?.toString() ?? '';
+          final desc = '$from ➔ $to ${fee.isNotEmpty ? "($fee)" : ""}'.trim();
+          if (season.isNotEmpty || desc.isNotEmpty) {
+            transferItems.add(
+              ProfileItemEntity(
+                title: season.isNotEmpty
+                    ? season
+                    : (lang == 'ar' ? 'انتقال' : 'Transfer'),
+                content: desc,
+              ),
+            );
+          }
+        }
+      }
+      if (transferItems.isNotEmpty) {
+        sections.add(
+          ProfileSectionEntity(
+            section: lang == 'ar' ? 'سجل الانتقالات' : 'Transfers',
+            items: transferItems,
+          ),
+        );
+      }
     }
 
     return ProfileEntity(

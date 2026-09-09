@@ -9,7 +9,9 @@ class TopScorerEntity extends Equatable {
   final String? teamId;
   final int goals;
   final int? assists;
+  final String? playerId;
   final int? penaltyGoals;
+  final int? penaltiesMissed;
   final int? matchesPlayed;
 
   const TopScorerEntity({
@@ -21,7 +23,9 @@ class TopScorerEntity extends Equatable {
     this.teamId,
     required this.goals,
     this.assists,
+    this.playerId,
     this.penaltyGoals,
+    this.penaltiesMissed,
     this.matchesPlayed,
   });
 
@@ -35,7 +39,9 @@ class TopScorerEntity extends Equatable {
     teamId,
     goals,
     assists,
+    playerId,
     penaltyGoals,
+    penaltiesMissed,
     matchesPlayed,
   ];
 }

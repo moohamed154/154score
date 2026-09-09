@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -40,7 +41,7 @@ class _TeamViewState extends State<TeamView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     context.read<TeamBloc>().add(
       LoadTeamProfileEvent(
         widget.teamId,
@@ -99,6 +100,8 @@ class _TeamViewState extends State<TeamView>
                   indicatorColor: AppColors.primary,
                   indicatorWeight: 3,
                   labelColor: AppColors.primary,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
                   unselectedLabelColor: isDark
                       ? AppColors.darkTextMuted
                       : AppColors.lightTextMuted,
@@ -110,6 +113,7 @@ class _TeamViewState extends State<TeamView>
                     Tab(text: l10n.translate('tab_overview')),
                     Tab(text: isArabic ? 'المباريات القادمة' : 'Fixtures'),
                     Tab(text: isArabic ? 'النتائج السابقة' : 'Results'),
+                    Tab(text: isArabic ? 'تشكيلة الفريق' : 'Squad'),
                   ],
                 ),
               ),
@@ -153,6 +157,7 @@ class _TeamViewState extends State<TeamView>
                             _buildOverviewTab(context, state, isDark, isArabic),
                             _buildFixturesTab(context, state, isDark, isArabic),
                             _buildResultsTab(context, state, isDark, isArabic),
+                            _buildSquadTab(context, state, isDark, isArabic),
                           ],
                         ),
                 ),
@@ -294,6 +299,158 @@ class _TeamViewState extends State<TeamView>
       itemCount: results.length,
       itemBuilder: (context, index) {
         return MatchCard(match: results[index]);
+      },
+    );
+  }
+
+  Widget _buildSquadTab(
+    BuildContext context,
+    TeamState state,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final squad = state.profile?.squad ?? [];
+
+    if (squad.isEmpty) {
+      return EmptyView(
+        titleKey: 'tab_overview',
+        customMessage: isArabic
+            ? 'لا توجد بيانات تشكيلة مسجلة لهذا الفريق حالياً'
+            : 'No squad roster data available for this team',
+        icon: Icons.groups_rounded,
+      );
+    }
+
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    return ListView.separated(
+      padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 12),
+      itemCount: squad.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final player = squad[index];
+
+        return InkWell(
+          onTap: player.id.isNotEmpty
+              ? () => context.push(
+                    '/player/${player.id}?slug=${Uri.encodeComponent(player.name)}',
+                  )
+              : null,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Row(
+              children: [
+                // Player Number Badge
+                Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    player.number?.isNotEmpty == true ? player.number! : '-',
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Player Photo
+                AppImage(
+                  imageUrl: player.photo,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  fit: BoxFit.cover,
+                  placeholderIcon: Icons.person_rounded,
+                ),
+                const SizedBox(width: 12),
+
+                // Name & Position
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        player.name,
+                        style: AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(fontWeight: FontWeight.w700),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (player.position != null &&
+                          player.position!.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          player.position!,
+                          style: AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                // Position Badge
+                if (player.position != null && player.position!.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.darkCardElevated
+                          : AppColors.lightCardElevated,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusSm,
+                      ),
+                    ),
+                    child: Text(
+                      player.position!,
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
       },
     );
   }

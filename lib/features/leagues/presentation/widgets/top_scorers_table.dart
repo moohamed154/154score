@@ -209,18 +209,32 @@ class TopScorersTable extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        scorer.playerName,
-                        style:
-                            AppTypography.getBodyMedium(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: isSmall ? 12 : 14,
-                            ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      InkWell(
+                        onTap: (scorer.playerId != null &&
+                                scorer.playerId!.isNotEmpty)
+                            ? () {
+                                context.push(
+                                  '/player/${scorer.playerId}?slug=${Uri.encodeComponent(scorer.playerName)}',
+                                );
+                              }
+                            : null,
+                        child: Text(
+                          scorer.playerName,
+                          style:
+                              AppTypography.getBodyMedium(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: isSmall ? 12 : 14,
+                                color: (scorer.playerId != null &&
+                                        scorer.playerId!.isNotEmpty)
+                                    ? AppColors.primary
+                                    : null,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       if (scorer.teamName != null) ...[
                         const SizedBox(height: 2),
@@ -278,27 +292,48 @@ class TopScorersTable extends StatelessWidget {
             ),
           ),
 
-          // Goals Badge
-          Container(
-            width: isSmall ? 40 : 50,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-            ),
-            child: Text(
-              scorer.goals.toString(),
-              style:
-                  AppTypography.getBodyMedium(
+          // Goals Badge & Penalty Indicator
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                width: isSmall ? 40 : 50,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                ),
+                child: Text(
+                  scorer.goals.toString(),
+                  style:
+                      AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                        fontSize: isSmall ? 12 : 13,
+                      ),
+                ),
+              ),
+              if (scorer.penaltyGoals != null && scorer.penaltyGoals! > 0) ...[
+                const SizedBox(height: 2),
+                Text(
+                  '${scorer.penaltyGoals} ${isArabic ? "جزاء" : "pen"}',
+                  style: AppTypography.getBodySmall(
                     isDark: isDark,
                     isArabic: isArabic,
                   ).copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
-                    fontSize: isSmall ? 12 : 13,
+                    fontSize: 9,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
-            ),
+                ),
+              ],
+            ],
           ),
         ],
       ),

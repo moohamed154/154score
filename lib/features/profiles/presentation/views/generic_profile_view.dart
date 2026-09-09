@@ -13,7 +13,7 @@ import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profiles_repository.dart';
 
-enum ProfileType { stadium, referee, commentator }
+enum ProfileType { stadium, referee, commentator, player }
 
 class GenericProfileView extends StatefulWidget {
   final String id;
@@ -78,6 +78,11 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           widget.slug,
           lang: lang,
         ),
+        ProfileType.player => repo.getPlayerProfile(
+          widget.id,
+          widget.slug,
+          lang: lang,
+        ),
       };
 
       if (!mounted) return;
@@ -115,6 +120,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
       ProfileType.stadium => l10n.translate('info_stadium'),
       ProfileType.referee => l10n.translate('info_referee'),
       ProfileType.commentator => l10n.translate('info_commentator'),
+      ProfileType.player => isArabic ? 'لاعب' : 'Player',
     };
 
     return Scaffold(
@@ -725,10 +731,14 @@ class _GenericProfileViewState extends State<GenericProfileView> {
     final roleText = p.role ??
         (widget.type == ProfileType.referee
             ? (isArabic ? 'حكم كرة قدم' : 'Football Referee')
+            : widget.type == ProfileType.player
+            ? (isArabic ? 'لاعب كرة قدم' : 'Football Player')
             : (isArabic ? 'معلق رياضي' : 'Sports Commentator'));
 
     final placeholderIcon = widget.type == ProfileType.referee
         ? Icons.sports_rounded
+        : widget.type == ProfileType.player
+        ? Icons.person_rounded
         : Icons.mic_rounded;
 
     return Container(

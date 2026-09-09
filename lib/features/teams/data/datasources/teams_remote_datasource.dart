@@ -139,6 +139,41 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             } catch (_) {}
           }
 
+          // Fetch squad roster if available
+          final squad = <TeamSquadPlayerEntity>[];
+          try {
+            final playersRes = await _client.get(
+              ApiEndpoints.teamPlayers(teamId),
+              queryParameters: {'lang': lang},
+            );
+            final rawPlayers = (playersRes is Map && playersRes['data'] is Map)
+                ? (playersRes['data']['players'] as List? ?? [])
+                : (playersRes is Map && playersRes['data'] is List)
+                    ? (playersRes['data'] as List)
+                    : [];
+            for (final p in rawPlayers) {
+              if (p is Map) {
+                final pId =
+                    p['player_id']?.toString() ?? p['id']?.toString() ?? '';
+                final pName = p['name']?.toString() ?? '';
+                if (pId.isNotEmpty || pName.isNotEmpty) {
+                  squad.add(
+                    TeamSquadPlayerEntity(
+                      id: pId,
+                      name: pName,
+                      number: p['number']?.toString(),
+                      position: p['position']?.toString(),
+                      photo: UrlHelper.normalizeImageUrl(
+                        p['photo']?.toString() ?? p['image']?.toString(),
+                      ),
+                      url: p['url']?.toString(),
+                    ),
+                  );
+                }
+              }
+            }
+          } catch (_) {}
+
           return TeamProfileEntity(
             teamId: teamId,
             teamName: effectiveName,
@@ -150,6 +185,7 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             recentMatches: recent,
             standingsRow: standingRow,
             form: form.take(5).toList(),
+            squad: squad,
           );
         }
       } catch (_) {

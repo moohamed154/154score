@@ -8,9 +8,11 @@ class TopScorerDto {
   final String? teamName;
   final String? teamLogo;
   final String? teamId;
+  final String? playerId;
   final int goals;
   final int? assists;
   final int? penaltyGoals;
+  final int? penaltiesMissed;
   final int? matchesPlayed;
 
   const TopScorerDto({
@@ -20,9 +22,11 @@ class TopScorerDto {
     this.teamName,
     this.teamLogo,
     this.teamId,
+    this.playerId,
     required this.goals,
     this.assists,
     this.penaltyGoals,
+    this.penaltiesMissed,
     this.matchesPlayed,
   });
 
@@ -71,7 +75,19 @@ class TopScorerDto {
     tId ??= json['team_id']?.toString();
 
     final rawPlayerImg =
-        json['player_image']?.toString() ?? json['image']?.toString();
+        json['player_photo']?.toString() ??
+        json['player_image']?.toString() ??
+        json['photo']?.toString() ??
+        json['image']?.toString() ??
+        (json['player'] is Map
+            ? (json['player']['photo']?.toString() ??
+                json['player']['image']?.toString())
+            : null);
+
+    final playerId =
+        json['player_id']?.toString() ??
+        json['id']?.toString() ??
+        (json['player'] is Map ? json['player']['id']?.toString() : null);
 
     final goals =
         int.tryParse(
@@ -86,9 +102,15 @@ class TopScorerDto {
       json['assists']?.toString() ?? json['assist']?.toString() ?? '',
     );
     final penalties = int.tryParse(
-      json['penalties']?.toString() ??
+      json['penalties_scored']?.toString() ??
+          json['penalties']?.toString() ??
           json['penalty_goals']?.toString() ??
           json['penalty']?.toString() ??
+          '',
+    );
+    final penaltiesMissed = int.tryParse(
+      json['penalties_missed']?.toString() ??
+          json['missed_penalties']?.toString() ??
           '',
     );
     final played = int.tryParse(
@@ -105,9 +127,11 @@ class TopScorerDto {
       teamName: tName,
       teamLogo: UrlHelper.normalizeImageUrl(rawTeamLogo),
       teamId: tId,
+      playerId: playerId,
       goals: goals,
       assists: assists,
       penaltyGoals: penalties,
+      penaltiesMissed: penaltiesMissed,
       matchesPlayed: played,
     );
   }
@@ -120,9 +144,11 @@ class TopScorerDto {
       teamName: teamName,
       teamLogo: teamLogo,
       teamId: teamId,
+      playerId: playerId,
       goals: goals,
       assists: assists,
       penaltyGoals: penaltyGoals,
+      penaltiesMissed: penaltiesMissed,
       matchesPlayed: matchesPlayed,
     );
   }

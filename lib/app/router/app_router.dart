@@ -228,6 +228,33 @@ class AppRouter {
         },
       ),
 
+      // Player Profile
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/player/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final slug = state.uri.queryParameters['slug'] ?? '';
+          return GenericProfileView(
+            id: id,
+            slug: slug,
+            type: ProfileType.player,
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/player/:id/:slug',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final slug = state.pathParameters['slug'] ?? '';
+          return GenericProfileView(
+            id: id,
+            slug: slug,
+            type: ProfileType.player,
+          );
+        },
+      ),
 
       // Settings
       GoRoute(
