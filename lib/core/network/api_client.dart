@@ -9,7 +9,11 @@ import 'debug_console.dart';
 class ApiClient {
   final Dio _dio;
 
-  ApiClient({Dio? dio}) : _dio = dio ?? _createDefaultDio();
+  ApiClient({Dio? dio}) : _dio = dio ?? _createDefaultDio() {
+    if (!_dio.interceptors.any((i) => i is DebugConsoleInterceptor)) {
+      _dio.interceptors.insert(0, DebugConsoleInterceptor());
+    }
+  }
 
   static Dio _createDefaultDio() {
     final dio = Dio(

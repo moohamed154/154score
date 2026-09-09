@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 /// Represents a recorded network request and response pair.
 class DebugNetworkRecord {
@@ -103,6 +104,22 @@ class DebugConsole {
   /// Returns an unmodifiable list of recent records (newest first).
   static List<DebugNetworkRecord> get history => List.unmodifiable(_history.reversed);
 
+  /// Active route or page name.
+  static String? currentPage;
+
+  /// Logs page navigation events prominently in the debug console.
+  static void logPageNavigation(String action, String pageName) {
+    currentPage = pageName;
+    if (enabled) {
+      _safePrint(
+        '╔═════════════════════════════════════════════════════════════════════════════\n'
+        '║ 📱 [PAGE $action] $pageName\n'
+        '╚═════════════════════════════════════════════════════════════════════════════',
+        name: 'DebugConsole:Page',
+      );
+    }
+  }
+
   /// Records and optionally prints an incoming response.
   static DebugNetworkRecord logResponse(Response response, {Duration? duration}) {
     final record = DebugNetworkRecord(
@@ -162,19 +179,21 @@ class DebugConsole {
 
   /// Prints a single [DebugNetworkRecord] to the debug console.
   ///
-  /// Uses chunking and developer.log to avoid Flutter's ~1024 char truncation.
+  /// Uses chunking, developer.log, and debugPrintSynchronously to ensure
+  /// zero line drops on Android logcat and no truncation in IDE consoles.
   static void printRecord(DebugNetworkRecord record, {String tag = 'DebugConsole'}) {
     final buf = StringBuffer();
     final statusText = record.statusCode != null
         ? '${record.statusCode} ${record.statusMessage ?? ''}'.trim()
         : (record.isError ? 'ERROR' : 'UNKNOWN');
     final durationText = record.duration != null ? ' (${record.duration!.inMilliseconds} ms)' : '';
+    final pageText = currentPage != null ? ' [Page: $currentPage]' : '';
 
     buf.writeln('┌─────────────────────────────────────────────────────────────────────────────');
     if (record.isError) {
-      buf.writeln('│ 🔴 [API ERROR] [$statusText]$durationText');
+      buf.writeln('│ 🔴 [PAGE ERROR]$pageText [$statusText]$durationText');
     } else {
-      buf.writeln('│ 🟢 [API RESPONSE] [$statusText]$durationText');
+      buf.writeln('│ 🟢 [PAGE RESPONSE]$pageText [$statusText]$durationText');
     }
     buf.writeln('│ URL: ${record.url}');
     buf.writeln('│ Method: ${record.method}');
@@ -246,23 +265,54 @@ class DebugConsole {
   }
 
   /// Prints text reliably across Dart DevTools, IDE Debug Console, and terminal
-  /// without line truncation.
+  /// without line truncation or Android rate-limiting line drops.
   static void _safePrint(String message, {String name = 'DebugConsole'}) {
     // 1. DevTools logging
     developer.log(message, name: name);
 
-    // 2. Chunked debugPrint to guarantee visibility in VS Code / Android Studio Debug Console
+    // 2. Synchronous chunked printing ensures immediate Android logcat output without throttling
     const int maxChunkSize = 800;
     for (final line in message.split('\n')) {
       if (line.length <= maxChunkSize) {
-        debugPrint(line);
+        debugPrintSynchronously(line);
       } else {
         for (int i = 0; i < line.length; i += maxChunkSize) {
           final end = (i + maxChunkSize < line.length) ? i + maxChunkSize : line.length;
-          debugPrint(line.substring(i, end));
+          debugPrintSynchronously(line.substring(i, end));
         }
       }
     }
+  }
+}
+
+/// NavigatorObserver that tracks active pages and logs navigation events.
+class DebugConsoleRouteObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    _onRouteChanged('OPENED', route);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    if (previousRoute != null) {
+      _onRouteChanged('RETURNED TO', previousRoute);
+    }
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    if (newRoute != null) {
+      _onRouteChanged('REPLACED WITH', newRoute);
+    }
+  }
+
+  void _onRouteChanged(String action, Route<dynamic> route) {
+    final name = route.settings.name ?? route.settings.arguments?.toString();
+    final description = name != null && name.isNotEmpty ? name : route.toString();
+    DebugConsole.logPageNavigation(action, description);
   }
 }
 

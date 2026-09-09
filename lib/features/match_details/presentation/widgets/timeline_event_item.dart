@@ -164,6 +164,20 @@ class TimelineEventItem extends StatelessWidget {
       l10n,
     );
 
+    final isSub = event.type.toLowerCase().contains('sub') ||
+        event.type.toLowerCase().contains('تبديل');
+    final hasSecondary = event.secondaryPlayerName != null &&
+        event.secondaryPlayerName!.trim().isNotEmpty;
+
+    // For substitution events, the player coming IN is displayed on top,
+    // and the player going OUT (with red arrow down) is displayed on bottom.
+    final mainPlayerName = (isSub && hasSecondary)
+        ? event.secondaryPlayerName!
+        : event.playerName;
+    final subPlayerOutName = (isSub && hasSecondary)
+        ? event.playerName
+        : event.secondaryPlayerName;
+
     final textWidget = Column(
       crossAxisAlignment: isHome
           ? CrossAxisAlignment.end
@@ -181,7 +195,7 @@ class TimelineEventItem extends StatelessWidget {
                   ],
                   Flexible(
                     child: Text(
-                      event.playerName,
+                      mainPlayerName,
                       style:
                           AppTypography.getBodyMedium(
                             isDark: isDark,
@@ -202,7 +216,7 @@ class TimelineEventItem extends StatelessWidget {
               : [
                   Flexible(
                     child: Text(
-                      event.playerName,
+                      mainPlayerName,
                       style:
                           AppTypography.getBodyMedium(
                             isDark: isDark,
@@ -227,9 +241,7 @@ class TimelineEventItem extends StatelessWidget {
         ),
 
         // Event Type / Secondary Player / Substitution In-Out
-        if (event.type.toLowerCase().contains('sub') &&
-            event.secondaryPlayerName != null &&
-            event.secondaryPlayerName!.isNotEmpty) ...[
+        if (isSub && subPlayerOutName != null && subPlayerOutName.isNotEmpty) ...[
           const SizedBox(height: 2),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -240,7 +252,7 @@ class TimelineEventItem extends StatelessWidget {
                 ? [
                     Flexible(
                       child: Text(
-                        event.secondaryPlayerName!,
+                        subPlayerOutName,
                         style: TextStyle(
                           fontSize: isSmall ? 10 : 11,
                           color: AppColors.redCard,
@@ -267,7 +279,7 @@ class TimelineEventItem extends StatelessWidget {
                     const SizedBox(width: 2),
                     Flexible(
                       child: Text(
-                        event.secondaryPlayerName!,
+                        subPlayerOutName,
                         style: TextStyle(
                           fontSize: isSmall ? 10 : 11,
                           color: AppColors.redCard,

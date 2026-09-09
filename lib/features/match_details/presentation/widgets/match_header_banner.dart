@@ -205,6 +205,7 @@ class MatchHeaderBanner extends StatelessWidget {
                       minute: match.minute,
                       extraTime: match.extraTime,
                       time: match.time,
+                      period: match.period,
                       compact: isSmall,
                     ),
                   ],

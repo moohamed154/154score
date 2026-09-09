@@ -12,6 +12,7 @@ class LiveMatchClock extends StatefulWidget {
   final String? minute;
   final String? extraTime;
   final String? time;
+  final String? period;
   final bool showLiveDot;
   final TextStyle? textStyle;
 
@@ -23,6 +24,7 @@ class LiveMatchClock extends StatefulWidget {
     this.minute,
     this.extraTime,
     this.time,
+    this.period,
     this.showLiveDot = true,
     this.textStyle,
   });
@@ -70,7 +72,8 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     if (oldWidget.status != widget.status ||
         oldWidget.minute != widget.minute ||
         oldWidget.extraTime != widget.extraTime ||
-        oldWidget.time != widget.time) {
+        oldWidget.time != widget.time ||
+        oldWidget.period != widget.period) {
       _syncClock();
       _startTimerIfNeeded();
     }
@@ -100,6 +103,19 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         _currentMinute = base;
         minuteNum = base;
       }
+    } else if (MatchStatusHelper.isLive(phase) &&
+        widget.time != null &&
+        widget.time!.isNotEmpty &&
+        widget.time != '-') {
+      final estimatedNum = MatchStatusHelper.estimateMinuteNumber(
+        time: widget.time,
+        status: widget.status,
+        period: widget.period,
+      );
+      if (estimatedNum != null) {
+        _currentMinute = estimatedNum;
+        minuteNum = estimatedNum;
+      }
     }
 
     final formattedExtra = MatchStatusHelper.formatExtraTime(
@@ -107,7 +123,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       minute: minuteNum ?? _currentMinute,
     );
 
-    if (phase == MatchPhase.live) {
+    if (MatchStatusHelper.isLive(phase)) {
       if (_currentMinute > 0) {
         if (formattedExtra != null) {
           _displayString = "$_currentMinute' $formattedExtra";
@@ -186,6 +202,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
             minute: widget.minute,
             extraTime: widget.extraTime,
             time: widget.time,
+            period: widget.period,
             isArabic: isArabic,
           );
 

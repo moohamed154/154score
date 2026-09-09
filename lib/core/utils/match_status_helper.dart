@@ -206,12 +206,163 @@ class MatchStatusHelper {
     return '+$clean';
   }
 
+  /// Parses a time string into minutes since midnight (0 - 1439).
+  static int? parseTimeToMinutes(String? timeStr) {
+    if (timeStr == null || timeStr.isEmpty || timeStr == '-') return null;
+    final clean = timeStr.trim();
+    final match =
+        RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?').firstMatch(clean);
+    if (match == null) return null;
+    var h = int.tryParse(match.group(1) ?? '0') ?? 0;
+    final m = int.tryParse(match.group(2) ?? '0') ?? 0;
+    final period = match.group(3);
+    if ((period == 'م' || period?.toUpperCase() == 'PM') && h < 12) {
+      h += 12;
+    } else if ((period == 'ص' || period?.toUpperCase() == 'AM') && h == 12) {
+      h = 0;
+    }
+    return h * 60 + m;
+  }
+
+  /// Estimates the current match minute as an integer based on kick-off time and current time.
+  static int? estimateMinuteNumber({
+    required String? time,
+    String? status,
+    String? period,
+    DateTime? now,
+  }) {
+    final startMins = parseTimeToMinutes(time);
+    if (startMins == null) return null;
+
+    final current = now ?? DateTime.now();
+    final currentMins = current.hour * 60 + current.minute;
+    var elapsed = currentMins - startMins;
+
+    // Handle midnight wrap-around (e.g. kick-off 23:30, current 00:15 -> 45 mins elapsed)
+    if (elapsed < -720) {
+      elapsed += 1440;
+    } else if (elapsed < 0) {
+      return 1;
+    }
+
+    final s = (status ?? '').toLowerCase();
+    final p = (period ?? '').toLowerCase();
+
+    final is1stHalf =
+        p.contains('1st') ||
+        s.contains('الأول') ||
+        s.contains('الاول') ||
+        s.contains('first');
+    final is2ndHalf =
+        p.contains('2nd') || s.contains('الثاني') || s.contains('second');
+    final isHt =
+        p.contains('ht') ||
+        s.contains('استراحة') ||
+        s.contains('بين الشوطين') ||
+        s.contains('half time');
+
+    if (isHt) return 45;
+
+    if (is1stHalf) {
+      if (elapsed <= 0) return 1;
+      if (elapsed <= 45) return elapsed;
+      return 45;
+    }
+
+    if (is2ndHalf) {
+      final secondHalfElapsed =
+          elapsed > 60 ? elapsed - 60 : (elapsed > 45 ? elapsed - 45 : 0);
+      final min = 45 + secondHalfElapsed;
+      if (min < 46) return 46;
+      if (min <= 90) return min;
+      return 90;
+    }
+
+    // Generic live match
+    if (elapsed <= 0) return 1;
+    if (elapsed <= 45) return elapsed;
+    if (elapsed <= 60) return 45;
+    final secHalfMin = 45 + (elapsed - 60);
+    if (secHalfMin <= 90) return secHalfMin;
+    return 90;
+  }
+
+  /// Estimates the real-time match display label (e.g. "75'", "45' +2'", "استراحة")
+  /// when the API does not explicitly return the minute field.
+  static String? estimateMinuteFromKickoff({
+    required String? time,
+    String? status,
+    String? period,
+    bool isArabic = true,
+    DateTime? now,
+  }) {
+    final startMins = parseTimeToMinutes(time);
+    if (startMins == null) return null;
+
+    final current = now ?? DateTime.now();
+    final currentMins = current.hour * 60 + current.minute;
+    var elapsed = currentMins - startMins;
+
+    if (elapsed < -720) {
+      elapsed += 1440;
+    } else if (elapsed < 0) {
+      return "1'";
+    }
+
+    final s = (status ?? '').toLowerCase();
+    final p = (period ?? '').toLowerCase();
+
+    final is1stHalf =
+        p.contains('1st') ||
+        s.contains('الأول') ||
+        s.contains('الاول') ||
+        s.contains('first');
+    final is2ndHalf =
+        p.contains('2nd') || s.contains('الثاني') || s.contains('second');
+    final isHt =
+        p.contains('ht') ||
+        s.contains('استراحة') ||
+        s.contains('بين الشوطين') ||
+        s.contains('half time');
+
+    if (isHt) {
+      return isArabic ? 'استراحة' : 'HT';
+    }
+
+    if (is1stHalf) {
+      if (elapsed <= 0) return "1'";
+      if (elapsed <= 45) return "$elapsed'";
+      final extra = elapsed - 45;
+      return "45' +$extra'";
+    }
+
+    if (is2ndHalf) {
+      final secondHalfElapsed =
+          elapsed > 60 ? elapsed - 60 : (elapsed > 45 ? elapsed - 45 : 0);
+      final min = 45 + secondHalfElapsed;
+      if (min < 46) return "46'";
+      if (min <= 90) return "$min'";
+      final extra = min - 90;
+      return "90' +$extra'";
+    }
+
+    // Generic live match
+    if (elapsed <= 0) return "1'";
+    if (elapsed <= 45) return "$elapsed'";
+    if (elapsed <= 60) return isArabic ? 'استراحة' : 'HT';
+    final secHalfMin = 45 + (elapsed - 60);
+    if (secHalfMin <= 90) return "$secHalfMin'";
+    final extra = secHalfMin - 90;
+    return "90' +$extra'";
+  }
+
   static String getDisplayLabel(
     MatchPhase phase,
     String? rawStatus, {
     String? minute,
     String? extraTime,
     String? time,
+    String? period,
     required bool isArabic,
   }) {
     int? minNum;
@@ -231,6 +382,16 @@ class MatchStatusHelper {
         }
         if (formattedExtra != null) {
           return formattedExtra;
+        }
+        // Fallback: estimate real time from kick-off time if available
+        final estimated = estimateMinuteFromKickoff(
+          time: time,
+          status: rawStatus,
+          period: period,
+          isArabic: isArabic,
+        );
+        if (estimated != null && estimated.isNotEmpty) {
+          return estimated;
         }
         return isArabic ? 'مباشر' : 'LIVE';
 

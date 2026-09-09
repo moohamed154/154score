@@ -2,15 +2,88 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../domain/repositories/matches_repository.dart';
 import '../datasources/matches_remote_datasource.dart';
+import '../models/match_dto.dart';
 
 class MatchesRepositoryImpl implements MatchesRepository {
   final MatchesRemoteDataSource _remoteDataSource;
   final LocalStorageService _localStorageService;
 
   MatchesRepositoryImpl(this._remoteDataSource, this._localStorageService);
+
+  List<LeagueGroupDto> _reconcileWithLiveMatches(
+    List<LeagueGroupDto> groups,
+    List<LeagueGroupDto> liveGroups,
+  ) {
+    if (liveGroups.isEmpty) return groups;
+
+    final liveById = <String, MatchDto>{};
+    final liveByTeams = <String, MatchDto>{};
+
+    for (final lg in liveGroups) {
+      for (final m in lg.matches) {
+        if (m.id != null && m.id!.isNotEmpty) {
+          liveById[m.id!] = m;
+        }
+        final key =
+            '${m.team1.trim().toLowerCase()}_${m.team2.trim().toLowerCase()}';
+        liveByTeams[key] = m;
+      }
+    }
+
+    return groups.map((g) {
+      final updatedMatches = g.matches.map((m) {
+        final key =
+            '${m.team1.trim().toLowerCase()}_${m.team2.trim().toLowerCase()}';
+        final liveMatch =
+            (m.id != null ? liveById[m.id] : null) ?? liveByTeams[key];
+
+        if (liveMatch == null) return m;
+
+        return m.copyWith(
+          minute: (liveMatch.minute != null &&
+                  liveMatch.minute!.isNotEmpty &&
+                  liveMatch.minute != 'null')
+              ? liveMatch.minute
+              : m.minute,
+          period: (liveMatch.period != null && liveMatch.period!.isNotEmpty)
+              ? liveMatch.period
+              : m.period,
+          extraTime:
+              (liveMatch.extraTime != null && liveMatch.extraTime!.isNotEmpty)
+                  ? liveMatch.extraTime
+                  : m.extraTime,
+          status: (liveMatch.status != null && liveMatch.status!.isNotEmpty)
+              ? liveMatch.status
+              : m.status,
+          statusCode:
+              (liveMatch.statusCode != null &&
+                      liveMatch.statusCode!.isNotEmpty)
+                  ? liveMatch.statusCode
+                  : m.statusCode,
+          score1: (liveMatch.score1 != null && liveMatch.score1!.isNotEmpty)
+              ? liveMatch.score1
+              : m.score1,
+          score2: (liveMatch.score2 != null && liveMatch.score2!.isNotEmpty)
+              ? liveMatch.score2
+              : m.score2,
+          penaltyScore1: (liveMatch.penaltyScore1 != null &&
+                  liveMatch.penaltyScore1!.isNotEmpty)
+              ? liveMatch.penaltyScore1
+              : m.penaltyScore1,
+          penaltyScore2: (liveMatch.penaltyScore2 != null &&
+                  liveMatch.penaltyScore2!.isNotEmpty)
+              ? liveMatch.penaltyScore2
+              : m.penaltyScore2,
+        );
+      }).toList();
+
+      return g.copyWith(matches: updatedMatches);
+    }).toList();
+  }
 
   @override
   Future<ApiResult<List<LeagueGroupEntity>>> getMatches({
@@ -22,7 +95,11 @@ class MatchesRepositoryImpl implements MatchesRepository {
     String? sort,
   }) async {
     try {
-      final dtos = await _remoteDataSource.getMatches(
+      final isLiveOrToday = date == null ||
+          date.isEmpty ||
+          date == DateFormatter.toApiDateString(DateTime.now());
+
+      final matchesFuture = _remoteDataSource.getMatches(
         date: date,
         lang: lang,
         utcOffset: utcOffset,
@@ -30,6 +107,26 @@ class MatchesRepositoryImpl implements MatchesRepository {
         leagueId: leagueId,
         sort: sort,
       );
+
+      final liveFuture = isLiveOrToday
+          ? _remoteDataSource
+              .getLiveMatches(
+                lang: lang,
+                utcOffset: utcOffset,
+                date: date,
+                leagueId: leagueId,
+                sort: sort,
+              )
+              .catchError((_) => <LeagueGroupDto>[])
+          : Future.value(<LeagueGroupDto>[]);
+
+      final results = await Future.wait([matchesFuture, liveFuture]);
+      var dtos = results[0];
+      final liveDtos = results[1];
+
+      if (liveDtos.isNotEmpty) {
+        dtos = _reconcileWithLiveMatches(dtos, liveDtos);
+      }
 
       final favoriteMatches = _localStorageService.getFavoriteMatches();
       final entities = dtos
@@ -125,7 +222,9 @@ class MatchesRepositoryImpl implements MatchesRepository {
     String? sort,
   }) async {
     try {
-      final dtos = await _remoteDataSource.getMatchesByDate(
+      final isToday = date == DateFormatter.toApiDateString(DateTime.now());
+
+      final matchesFuture = _remoteDataSource.getMatchesByDate(
         date: date,
         lang: lang,
         utcOffset: utcOffset,
@@ -133,6 +232,26 @@ class MatchesRepositoryImpl implements MatchesRepository {
         leagueId: leagueId,
         sort: sort,
       );
+
+      final liveFuture = isToday
+          ? _remoteDataSource
+              .getLiveMatches(
+                lang: lang,
+                utcOffset: utcOffset,
+                date: date,
+                leagueId: leagueId,
+                sort: sort,
+              )
+              .catchError((_) => <LeagueGroupDto>[])
+          : Future.value(<LeagueGroupDto>[]);
+
+      final results = await Future.wait([matchesFuture, liveFuture]);
+      var dtos = results[0];
+      final liveDtos = results[1];
+
+      if (liveDtos.isNotEmpty) {
+        dtos = _reconcileWithLiveMatches(dtos, liveDtos);
+      }
 
       final favoriteMatches = _localStorageService.getFavoriteMatches();
       final entities = dtos
@@ -147,5 +266,6 @@ class MatchesRepositoryImpl implements MatchesRepository {
     } catch (e) {
       return ApiFailure(ServerFailure('Failed to load matches for date $date: $e'));
     }
+
   }
 }

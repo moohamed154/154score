@@ -327,6 +327,66 @@ class MatchDto {
       isFavorite: isFavorite,
     );
   }
+
+  MatchDto copyWith({
+    String? id,
+    String? team1,
+    String? team2,
+    String? team1Logo,
+    String? team2Logo,
+    String? team1Id,
+    String? team2Id,
+    String? score1,
+    String? score2,
+    String? penaltyScore1,
+    String? penaltyScore2,
+    String? halfTimeScore1,
+    String? halfTimeScore2,
+    String? extraTimeScore1,
+    String? extraTimeScore2,
+    String? aggregateScore1,
+    String? aggregateScore2,
+    String? time,
+    String? status,
+    String? statusCode,
+    String? minute,
+    String? period,
+    String? extraTime,
+    String? leagueTitle,
+    String? leagueLogo,
+    String? leagueId,
+    String? date,
+  }) {
+    return MatchDto(
+      id: id ?? this.id,
+      team1: team1 ?? this.team1,
+      team2: team2 ?? this.team2,
+      team1Logo: team1Logo ?? this.team1Logo,
+      team2Logo: team2Logo ?? this.team2Logo,
+      team1Id: team1Id ?? this.team1Id,
+      team2Id: team2Id ?? this.team2Id,
+      score1: score1 ?? this.score1,
+      score2: score2 ?? this.score2,
+      penaltyScore1: penaltyScore1 ?? this.penaltyScore1,
+      penaltyScore2: penaltyScore2 ?? this.penaltyScore2,
+      halfTimeScore1: halfTimeScore1 ?? this.halfTimeScore1,
+      halfTimeScore2: halfTimeScore2 ?? this.halfTimeScore2,
+      extraTimeScore1: extraTimeScore1 ?? this.extraTimeScore1,
+      extraTimeScore2: extraTimeScore2 ?? this.extraTimeScore2,
+      aggregateScore1: aggregateScore1 ?? this.aggregateScore1,
+      aggregateScore2: aggregateScore2 ?? this.aggregateScore2,
+      time: time ?? this.time,
+      status: status ?? this.status,
+      statusCode: statusCode ?? this.statusCode,
+      minute: minute ?? this.minute,
+      period: period ?? this.period,
+      extraTime: extraTime ?? this.extraTime,
+      leagueTitle: leagueTitle ?? this.leagueTitle,
+      leagueLogo: leagueLogo ?? this.leagueLogo,
+      leagueId: leagueId ?? this.leagueId,
+      date: date ?? this.date,
+    );
+  }
 }
 
 class LeagueGroupDto {
@@ -341,6 +401,21 @@ class LeagueGroupDto {
     this.leagueId,
     required this.matches,
   });
+
+  LeagueGroupDto copyWith({
+    String? leagueTitle,
+    String? leagueLogo,
+    String? leagueId,
+    List<MatchDto>? matches,
+  }) {
+    return LeagueGroupDto(
+      leagueTitle: leagueTitle ?? this.leagueTitle,
+      leagueLogo: leagueLogo ?? this.leagueLogo,
+      leagueId: leagueId ?? this.leagueId,
+      matches: matches ?? this.matches,
+    );
+  }
+
 
   factory LeagueGroupDto.fromJson(Map<String, dynamic> json, {String? date}) {
     final title =

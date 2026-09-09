@@ -13,6 +13,7 @@ class StatusPill extends StatelessWidget {
   final String? minute;
   final String? extraTime;
   final String? time;
+  final String? period;
   final bool compact;
 
   const StatusPill({
@@ -21,6 +22,7 @@ class StatusPill extends StatelessWidget {
     this.minute,
     this.extraTime,
     this.time,
+    this.period,
     this.compact = false,
   });
 
@@ -47,6 +49,7 @@ class StatusPill extends StatelessWidget {
         minute: minute,
         extraTime: extraTime,
         time: time,
+        period: period,
         isArabic: isArabic,
       );
 

@@ -169,6 +169,7 @@ class MatchCard extends StatelessWidget {
                         minute: match.minute,
                         extraTime: match.extraTime,
                         time: match.time,
+                        period: match.period,
                         showLiveDot: true,
                         textStyle:
                             AppTypography.getBodySmall(

@@ -22,6 +22,7 @@ import '../../features/transfers/presentation/views/transfers_view.dart';
 import '../../features/videos/domain/entities/video_entity.dart';
 import '../../features/videos/presentation/views/video_details_view.dart';
 import '../../features/videos/presentation/views/videos_view.dart';
+import '../../core/network/debug_console.dart';
 import '../navigation/app_scaffold.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -31,6 +32,7 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
+    observers: [DebugConsoleRouteObserver()],
     initialLocation: '/',
     routes: [
       StatefulShellRoute.indexedStack(
