@@ -227,6 +227,7 @@ class RealtimeMergeEngine {
           ? '${update.score1} - ${update.score2}'
           : null,
       isHomeTeam: update.isHomeTeam ?? true,
+      videoUrl: update.videoUrl,
     );
 
     // Deduplication check

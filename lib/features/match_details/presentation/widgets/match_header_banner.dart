@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/match_score_widget.dart';
@@ -43,7 +44,17 @@ class MatchHeaderBanner extends StatelessWidget {
     final p1 = penaltyScore1 ?? match.penaltyScore1;
     final p2 = penaltyScore2 ?? match.penaltyScore2;
     final effectiveStatus = liveStatus ?? match.status;
-    final isLive = ScoreHelper.isLiveStatus(effectiveStatus);
+    final phase = MatchStatusHelper.parseStatus(
+      effectiveStatus,
+      minute: match.minute,
+      extraTime: match.extraTime,
+      time: match.time,
+      date: match.date,
+      score1: s1,
+      score2: s2,
+    );
+    final isLive =
+        MatchStatusHelper.isLive(phase) || ScoreHelper.isLiveStatus(effectiveStatus);
 
     final logoSize = isSmall ? 40.0 : 48.0;
 
@@ -206,6 +217,9 @@ class MatchHeaderBanner extends StatelessWidget {
                       extraTime: match.extraTime,
                       time: match.time,
                       period: match.period,
+                      date: match.date,
+                      score1: s1,
+                      score2: s2,
                       compact: isSmall,
                     ),
                   ],

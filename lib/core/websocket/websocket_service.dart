@@ -367,18 +367,37 @@ class WebSocketServiceImpl implements WebSocketService {
       _processTransfersUpdate(data);
     });
 
-    // 3. Match Detail Update Event
-    socket.on('match_update', (data) {
-      _lastEventName = 'match_update';
-      _lastEventTimestamp = DateTime.now();
-      _processMatchUpdate(data);
-    });
+    // 3. Match Detail Update Events
+    const matchEventNames = [
+      'match_update',
+      'match_events',
+      'match_event',
+      'match',
+      'match_details',
+      'events',
+      'stats_update',
+      'lineup_update',
+    ];
+
+    for (final ev in matchEventNames) {
+      socket.on(ev, (data) {
+        _lastEventName = ev;
+        _lastEventTimestamp = DateTime.now();
+        _processMatchUpdate(data, eventName: ev);
+      });
+    }
 
     // Generic fallback handler for dynamic event formats
     socket.onAny((event, data) {
       if (event == 'live_matches_update' ||
           event == 'transfers_update' ||
-          event == 'match_update') {
+          matchEventNames.contains(event)) {
+        return;
+      }
+      if (event.startsWith('match:') || event.contains('match')) {
+        _lastEventName = event;
+        _lastEventTimestamp = DateTime.now();
+        _processMatchUpdate(data, eventName: event);
         return;
       }
       _handleGenericIncomingEvent(event, data);
@@ -540,7 +559,7 @@ class WebSocketServiceImpl implements WebSocketService {
     }
   }
 
-  void _processMatchUpdate(dynamic data) {
+  void _processMatchUpdate(dynamic data, {String? eventName}) {
     if (data == null) {
       _eventsIgnored++;
       _emitHealth();
@@ -549,44 +568,69 @@ class WebSocketServiceImpl implements WebSocketService {
     _totalEventsReceived++;
 
     try {
-      if (data is Map) {
-        String? fallbackId;
-        final activeMatchRooms = _roomReferenceCounts.entries
-            .where((e) => e.key.startsWith('match:') && e.value > 0)
-            .map((e) => e.key.substring('match:'.length))
-            .toList();
-        if (activeMatchRooms.length == 1) {
-          fallbackId = activeMatchRooms.first;
+      if (data is List) {
+        for (final item in data) {
+          if (item is Map) {
+            _dispatchMatchUpdateMap(
+              Map<String, dynamic>.from(item),
+              eventName: eventName,
+            );
+          } else {
+            _eventsIgnored++;
+          }
         }
-
-        final update = MatchDetailRealtimeUpdate.fromJson(
+      } else if (data is Map) {
+        _dispatchMatchUpdateMap(
           Map<String, dynamic>.from(data),
-          fallbackMatchId: fallbackId,
+          eventName: eventName,
         );
-        if (update.matchId.isEmpty) {
-          _eventsIgnored++;
-          return;
-        }
-
-        final fp = update.eventFingerprint;
-        if (_isDuplicateEvent(fp)) {
-          _duplicateEventsSuppressed++;
-          return;
-        }
-
-        if (!_matchDetailsController.isClosed) {
-          _matchDetailsController.add(update);
-        }
       } else {
         _eventsIgnored++;
       }
     } catch (e) {
       _eventsIgnored++;
       if (kDebugMode) {
-        debugPrint('[WS] Error processing match_update: $e');
+        debugPrint('[WS] Error processing match update ($eventName): $e');
       }
     }
     _emitHealth();
+  }
+
+  void _dispatchMatchUpdateMap(
+    Map<String, dynamic> map, {
+    String? eventName,
+  }) {
+    String? fallbackId;
+    if (eventName != null && eventName.startsWith('match:')) {
+      fallbackId = eventName.substring('match:'.length);
+    } else {
+      final activeMatchRooms = _roomReferenceCounts.entries
+          .where((e) => e.key.startsWith('match:') && e.value > 0)
+          .map((e) => e.key.substring('match:'.length))
+          .toList();
+      if (activeMatchRooms.length == 1) {
+        fallbackId = activeMatchRooms.first;
+      }
+    }
+
+    final update = MatchDetailRealtimeUpdate.fromJson(
+      map,
+      fallbackMatchId: fallbackId,
+    );
+    if (update.matchId.isEmpty) {
+      _eventsIgnored++;
+      return;
+    }
+
+    final fp = update.eventFingerprint;
+    if (_isDuplicateEvent(fp)) {
+      _duplicateEventsSuppressed++;
+      return;
+    }
+
+    if (!_matchDetailsController.isClosed) {
+      _matchDetailsController.add(update);
+    }
   }
 
   void _handleGenericIncomingEvent(String event, dynamic data) {
@@ -730,6 +774,8 @@ class WebSocketServiceImpl implements WebSocketService {
       }
       _socket?.emit('subscribe', room);
       _socket?.emit('subscribe', [room]);
+      _socket?.emit('join', room);
+      _socket?.emit('join_room', room);
     }
     _emitHealth();
   }
@@ -747,6 +793,8 @@ class WebSocketServiceImpl implements WebSocketService {
         }
         _socket?.emit('unsubscribe', room);
         _socket?.emit('unsubscribe', [room]);
+        _socket?.emit('leave', room);
+        _socket?.emit('leave_room', room);
       }
     } else {
       _roomReferenceCounts[room] = count - 1;

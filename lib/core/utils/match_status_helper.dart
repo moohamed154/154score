@@ -1,3 +1,5 @@
+import 'date_formatter.dart';
+
 enum MatchPhase {
   upcoming,
   live,
@@ -18,17 +20,12 @@ class MatchStatusHelper {
     String? minute,
     String? extraTime,
     String? time,
+    String? date,
+    String? score1,
+    String? score2,
+    DateTime? now,
   }) {
-    if (status == null || status.trim().isEmpty) {
-      if (extraTime != null && extraTime.isNotEmpty && extraTime != 'null') {
-        return MatchPhase.live;
-      }
-      return (time != null && time.isNotEmpty)
-          ? MatchPhase.upcoming
-          : MatchPhase.unknown;
-    }
-
-    final s = status.trim().toLowerCase();
+    final s = (status ?? '').trim().toLowerCase();
 
     // 1. Penalties
     if (s.contains('ترجيح') ||
@@ -93,7 +90,7 @@ class MatchStatusHelper {
       return MatchPhase.cancelled;
     }
 
-    // 6. Live / In-play
+    // 6. Explicit Live / In-play keywords or minute/extraTime from API
     if (s.contains('مباشر') ||
         s.contains('live') ||
         s.contains('جارية') ||
@@ -107,11 +104,49 @@ class MatchStatusHelper {
         s.contains('2nd half') ||
         s.contains("'") ||
         (minute != null && minute.isNotEmpty && minute != 'null') ||
-        (extraTime != null && extraTime.isNotEmpty && extraTime != 'null')) {
+        (extraTime != null &&
+            extraTime.isNotEmpty &&
+            extraTime != 'null' &&
+            extraTime != '+00:00' &&
+            extraTime != '00:00')) {
       return MatchPhase.live;
     }
 
-    // 7. Upcoming
+    // 7. Time-based in-play detection: If the match is scheduled for today and kickoff has arrived
+    final currentTime = now ?? DateTime.now();
+    final todayStr = DateFormatter.toApiDateString(currentTime);
+    final isToday = date == null || date.isEmpty || date == todayStr;
+
+    if (isToday && time != null && time.isNotEmpty && time != '-') {
+      final startMins = parseTimeToMinutes(time);
+      if (startMins != null) {
+        final currentMins = currentTime.hour * 60 + currentTime.minute;
+        var elapsed = currentMins - startMins;
+        if (elapsed < -720) elapsed += 1440;
+
+        // Kick-off time has passed and within match duration window (0 to 135 minutes)
+        if (elapsed >= 0 && elapsed <= 135) {
+          if (elapsed > 45 && elapsed <= 60) {
+            return MatchPhase.halfTime;
+          }
+          return MatchPhase.live;
+        }
+      }
+    }
+
+    // 8. Score-based in-play detection: If scores are active and non-zero on today's date
+    final hasActiveScores = (score1 != null &&
+        score2 != null &&
+        score1.isNotEmpty &&
+        score2.isNotEmpty &&
+        score1 != '-' &&
+        score2 != '-' &&
+        (score1 != '0' || score2 != '0'));
+    if (isToday && hasActiveScores) {
+      return MatchPhase.live;
+    }
+
+    // 9. Upcoming
     if (s.contains('لم تبدأ') ||
         s.contains('قادمة') ||
         s.contains('upcoming') ||
@@ -119,6 +154,12 @@ class MatchStatusHelper {
         s == 'ns' ||
         (time != null && time.isNotEmpty && !s.contains('انتهت'))) {
       return MatchPhase.upcoming;
+    }
+
+    if (status == null || status.trim().isEmpty) {
+      return (time != null && time.isNotEmpty)
+          ? MatchPhase.upcoming
+          : MatchPhase.unknown;
     }
 
     return MatchPhase.unknown;
@@ -462,7 +503,24 @@ class MatchStatusHelper {
     if (minute != null && minute.isNotEmpty && minute != 'null') {
       minNum = int.tryParse(minute.replaceAll("'", '').trim().split('+').first);
     }
-    final formattedExtra = formatExtraTime(extraTime, minute: minNum);
+    if (minNum == null || minNum == 0) {
+      minNum = estimateMinuteNumber(
+        time: time,
+        status: rawStatus,
+        period: period,
+      );
+    }
+    final p = (period ?? '').toLowerCase();
+    final s = (rawStatus ?? '').toLowerCase();
+    final is1stHalf = p.contains('1st') ||
+        s.contains('الأول') ||
+        s.contains('الاول') ||
+        s.contains('first');
+    final baseMin = (minNum != null && minNum > 0)
+        ? minNum
+        : (is1stHalf ? 45 : 90);
+
+    final formattedExtra = formatExtraTime(extraTime, minute: baseMin);
 
     switch (phase) {
       case MatchPhase.live:
@@ -474,7 +532,7 @@ class MatchStatusHelper {
           return "$cleanMin'";
         }
         if (formattedExtra != null) {
-          return formattedExtra;
+          return "$baseMin'  $formattedExtra";
         }
         // Fallback: estimate real time from kick-off time if available
         final estimated = estimateMinuteFromKickoff(

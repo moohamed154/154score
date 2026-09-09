@@ -14,6 +14,7 @@ import 'package:ysscores/features/match_details/domain/repositories/match_detail
 import 'package:ysscores/features/match_details/presentation/bloc/match_details_bloc.dart';
 import 'package:ysscores/features/match_details/presentation/views/match_details_view.dart';
 import 'package:ysscores/features/match_details/presentation/widgets/timeline_event_item.dart';
+import 'package:ysscores/core/widgets/status_pill.dart';
 import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
 
 class MockMatchDetailsRepository extends Mock
@@ -415,6 +416,55 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(tester.takeException(), isNull);
+    });
+
+    // ── 16. Event with video_url renders video badge and hasVideo flag ────────
+    testWidgets('16. Event with video_url renders video badge and hasVideo flag', (
+      tester,
+    ) async {
+      const eventWithVideo = MatchEventEntity(
+        minute: '67',
+        playerName: 'كيليان مبابي',
+        type: 'goal',
+        isHomeTeam: true,
+        score: '1 - 0',
+        videoUrl: 'https://x.com/beINSPORTS/status/2097768372154876218',
+      );
+
+      expect(eventWithVideo.hasVideo, isTrue);
+
+      await tester.pumpWidget(
+        buildTestApp(const TimelineEventItem(event: eventWithVideo)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('فيديو'), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+    });
+
+    // ── 17. StatusPill with live extra time shows base minute and stoppage ────
+    testWidgets('17. StatusPill with live extra time shows base minute and stoppage', (
+      tester,
+    ) async {
+      // Simulation of Paris vs Bratislava (1st half extra time with extraTime = "1")
+      await tester.pumpWidget(
+        buildTestApp(
+          const StatusPill(
+            status: 'الشوط الأول',
+            minute: '45',
+            extraTime: '1',
+            score1: '0',
+            score2: '3',
+            time: '22:00',
+            period: '1st_half',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Must display base minute '45' and stoppage format '00:00  / 1' (not bare '00:00 / 1')
+      expect(find.text('45'), findsOneWidget);
+      expect(find.text('00:00  / 1'), findsOneWidget);
     });
   });
 }

@@ -36,7 +36,15 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
     final isArabic = l10n.isArabic;
 
     final liveMatches = widget.league.matches.where((m) {
-      final phase = MatchStatusHelper.parseStatus(m.status, time: m.time);
+      final phase = MatchStatusHelper.parseStatus(
+        m.status,
+        minute: m.minute,
+        extraTime: m.extraTime,
+        time: m.time,
+        date: m.date,
+        score1: m.score1,
+        score2: m.score2,
+      );
       return MatchStatusHelper.isLive(phase);
     }).length;
 

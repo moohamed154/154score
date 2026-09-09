@@ -65,7 +65,15 @@ class _LineupTabViewState extends State<LineupTabView> {
 
         // 3. Empty State (Lineups not released yet or empty data)
         if (lineup == null || !lineup.hasLineups) {
-          return LineupEmptyStateWidget(matchId: widget.matchId);
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              context.read<MatchDetailsBloc>().add(
+                    LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
+                  );
+            },
+            child: LineupEmptyStateWidget(matchId: widget.matchId),
+          );
         }
 
         final home = lineup.home!;

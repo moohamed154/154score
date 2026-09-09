@@ -13,6 +13,9 @@ class LiveMatchClock extends StatefulWidget {
   final String? extraTime;
   final String? time;
   final String? period;
+  final String? date;
+  final String? score1;
+  final String? score2;
   final bool showLiveDot;
   final TextStyle? textStyle;
 
@@ -25,6 +28,9 @@ class LiveMatchClock extends StatefulWidget {
     this.extraTime,
     this.time,
     this.period,
+    this.date,
+    this.score1,
+    this.score2,
     this.showLiveDot = true,
     this.textStyle,
   });
@@ -77,7 +83,10 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         oldWidget.minute != widget.minute ||
         oldWidget.extraTime != widget.extraTime ||
         oldWidget.time != widget.time ||
-        oldWidget.period != widget.period) {
+        oldWidget.period != widget.period ||
+        oldWidget.date != widget.date ||
+        oldWidget.score1 != widget.score1 ||
+        oldWidget.score2 != widget.score2) {
       _syncClock();
       _startTimerIfNeeded();
     }
@@ -89,6 +98,9 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       minute: widget.minute,
       extraTime: widget.extraTime,
       time: widget.time,
+      date: widget.date,
+      score1: widget.score1,
+      score2: widget.score2,
     );
 
     int? minuteNum;
@@ -213,7 +225,13 @@ class _LiveMatchClockState extends State<LiveMatchClock>
             widget.extraTime != '00:00' &&
             widget.extraTime != '0');
 
-    if (isStoppageMinute && hasExtra) {
+    if (_currentMinute == 0 && hasExtra) {
+      _currentMinute = is1stHalf ? 45 : 90;
+      minuteNum = _currentMinute;
+      baseMinute = _currentMinute;
+    }
+
+    if ((isStoppageMinute || hasExtra) && hasExtra) {
       if (_totalExtraMinutes == 0) {
         final elapsedM = _elapsedExtraSeconds ~/ 60;
         final defaultTotal = baseMinute == 45 ? 3 : 5;
@@ -282,6 +300,9 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       minute: widget.minute,
       extraTime: widget.extraTime,
       time: widget.time,
+      date: widget.date,
+      score1: widget.score1,
+      score2: widget.score2,
     );
 
     if (!_isInTest &&
@@ -364,6 +385,9 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       minute: widget.minute,
       extraTime: widget.extraTime,
       time: widget.time,
+      date: widget.date,
+      score1: widget.score1,
+      score2: widget.score2,
     );
 
     final isLive = MatchStatusHelper.isLive(phase);
@@ -379,6 +403,13 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         );
 
     final textStyle = widget.textStyle ?? defaultStyle;
+
+    final p = (widget.period ?? '').toLowerCase();
+    final s = (widget.status ?? '').toLowerCase();
+    final is1stHalf = p.contains('1st') ||
+        s.contains('الأول') ||
+        s.contains('الاول') ||
+        s.contains('first');
 
     // Two-line layout for extra time: Line 1 = "90", Line 2 = "02:00  / 5"
     if (_displayExtra != null && _displayExtra!.isNotEmpty) {
@@ -406,7 +437,9 @@ class _LiveMatchClockState extends State<LiveMatchClock>
                 const SizedBox(width: 3),
               ],
               Text(
-                _displayMinute.isNotEmpty ? _displayMinute : '90',
+                _displayMinute.isNotEmpty
+                    ? _displayMinute
+                    : (is1stHalf ? '45' : '90'),
                 style: textStyle.copyWith(
                   fontWeight: FontWeight.w800,
                   fontSize: textStyle.fontSize ?? 11,

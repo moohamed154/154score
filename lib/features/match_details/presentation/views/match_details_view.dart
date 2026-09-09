@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -137,6 +138,29 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       }
     }
     return '';
+  }
+
+  Future<void> _handleRefresh() async {
+    final bloc = context.read<MatchDetailsBloc>();
+    final completer = Completer<void>();
+    late final StreamSubscription sub;
+    Timer? timeoutTimer;
+    void cleanup() {
+      timeoutTimer?.cancel();
+      sub.cancel();
+      if (!completer.isCompleted) {
+        completer.complete();
+      }
+    }
+
+    timeoutTimer = Timer(const Duration(seconds: 8), cleanup);
+    sub = bloc.stream.listen((state) {
+      if (state.status != MatchDetailsStatus.loading) {
+        cleanup();
+      }
+    });
+    bloc.add(LoadMatchDetailsEvent(widget.matchId, isRefresh: true));
+    return completer.future;
   }
 
   Widget _buildAppBarLeagueBadge(
@@ -326,68 +350,57 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
                   // ── Tab Content ────────────────────────────────────────────
                   Expanded(
-                    child: RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: () async {
-                        context.read<MatchDetailsBloc>().add(
-                          LoadMatchDetailsEvent(
-                            widget.matchId,
-                            isRefresh: true,
-                          ),
-                        );
-                      },
-                      child: state.status == MatchDetailsStatus.loading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                              ),
-                            )
-                          : state.status == MatchDetailsStatus.error
-                          ? ErrorView(
-                              message: state.errorMessage,
-                              onRetry: () => context
-                                  .read<MatchDetailsBloc>()
-                                  .add(LoadMatchDetailsEvent(widget.matchId)),
-                            )
-                          : TabBarView(
-                              controller: _tabController,
-                              children: [
-                                // 1. الأحداث (Events with Video chips, Highlights/All filter, Timeline & Stats Preview)
-                                _buildEventsTab(
-                                  context,
-                                  state,
-                                  fallbackMatch,
-                                  isDark,
-                                  isArabic,
-                                ),
-
-                                // 2. التفاصيل (Details / Match Info)
-                                _buildDetailsTab(
-                                  context,
-                                  state,
-                                  isDark,
-                                  isArabic,
-                                ),
-
-                                // 3. التشكيلة (Lineup)
-                                LineupTabView(matchId: widget.matchId),
-
-                                // 4. الإحصائيات (Full Statistics)
-                                _buildStatsTab(
-                                  context,
-                                  state,
-                                  isDark,
-                                  isArabic,
-                                ),
-
-                                // 5. الترتيب (Standings)
-                                _buildStandingsTab(context, isDark, isArabic),
-
-                                // 6. الأخبار (News)
-                                _buildNewsTab(context, state, isDark, isArabic),
-                              ],
+                    child: state.status == MatchDetailsStatus.loading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
                             ),
-                    ),
+                          )
+                        : state.status == MatchDetailsStatus.error
+                        ? ErrorView(
+                            message: state.errorMessage,
+                            onRetry: () => context
+                                .read<MatchDetailsBloc>()
+                                .add(LoadMatchDetailsEvent(widget.matchId)),
+                          )
+                        : TabBarView(
+                            controller: _tabController,
+                            children: [
+                              // 1. الأحداث (Events with Video chips, Highlights/All filter, Timeline & Stats Preview)
+                              _buildEventsTab(
+                                context,
+                                state,
+                                fallbackMatch,
+                                isDark,
+                                isArabic,
+                              ),
+
+                              // 2. التفاصيل (Details / Match Info)
+                              _buildDetailsTab(
+                                context,
+                                state,
+                                isDark,
+                                isArabic,
+                              ),
+
+                              // 3. التشكيلة (Lineup)
+                              LineupTabView(matchId: widget.matchId),
+
+                              // 4. الإحصائيات (Full Statistics)
+                              _buildStatsTab(
+                                context,
+                                state,
+                                isDark,
+                                isArabic,
+                              ),
+
+                              // 5. الترتيب (Standings)
+                              _buildStandingsTab(context, isDark, isArabic),
+
+                              // 6. الأخبار (News)
+                              _buildNewsTab(context, state, isDark, isArabic),
+                            ],
+                          ),
                   ),
                 ],
               );
@@ -411,7 +424,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     // Filter events based on selected filter
     final displayedEvents = state.events.where((e) {
       if (_eventFilter == _EventFilter.all) return true;
-      // Highlights: Goals, disallowed goals, penalties, red cards, yellow cards, subs, and period markers
+      // Highlights: Goals, disallowed goals, penalties, red cards, yellow cards, subs, period markers, and video events
+      if (e.hasVideo) return true;
       final t = e.type.toLowerCase();
       return t.contains('goal') ||
           t.contains('penalty') ||
@@ -426,10 +440,14 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           t == 'goal-x';
     }).toList();
 
-    return ListView(
-      key: const PageStorageKey('events_tab_list'),
-      padding: EdgeInsets.all(hMargin),
-      children: [
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _handleRefresh,
+      child: ListView(
+        key: const PageStorageKey('events_tab_list'),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(hMargin),
+        children: [
         // ── Video Highlights Summary Chips ───────────────────────────────
         _buildVideoSummaryChips(state.news, isDark, isArabic),
         const SizedBox(height: AppDimensions.md),
@@ -494,8 +512,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           const SizedBox(height: AppDimensions.lg),
         ],
       ],
-    );
-  }
+    ),
+  );
+}
 
   // ── Event Filter Selector: [ الأبرز | كل الأحداث ] ─────────────────────────
   Widget _buildEventFilterSelector(bool isDark, bool isArabic) {
@@ -883,16 +902,30 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     }
 
     if (detailsList.isEmpty) {
-      return const EmptyView(
-        titleKey: 'tab_overview',
-        icon: Icons.info_outline_rounded,
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: _handleRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [
+            EmptyView(
+              titleKey: 'tab_overview',
+              icon: Icons.info_outline_rounded,
+            ),
+          ],
+        ),
       );
     }
 
-    return ListView(
-      key: const PageStorageKey('details_tab_list'),
-      padding: EdgeInsets.all(hMargin),
-      children: [...detailsList.map((sec) => MatchInfoCard(section: sec))],
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _handleRefresh,
+      child: ListView(
+        key: const PageStorageKey('details_tab_list'),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(hMargin),
+        children: [...detailsList.map((sec) => MatchInfoCard(section: sec))],
+      ),
     );
   }
 
@@ -906,19 +939,33 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     if (state.stats.isEmpty) {
-      return const EmptyView(
-        titleKey: 'tab_stats',
-        icon: Icons.bar_chart_rounded,
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: _handleRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [
+            EmptyView(
+              titleKey: 'tab_stats',
+              icon: Icons.bar_chart_rounded,
+            ),
+          ],
+        ),
       );
     }
 
-    return ListView.builder(
-      key: const PageStorageKey('stats_tab_list'),
-      padding: EdgeInsets.all(hMargin),
-      itemCount: state.stats.length,
-      itemBuilder: (context, index) {
-        return StatComparisonBar(stat: state.stats[index]);
-      },
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _handleRefresh,
+      child: ListView.builder(
+        key: const PageStorageKey('stats_tab_list'),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(hMargin),
+        itemCount: state.stats.length,
+        itemBuilder: (context, index) {
+          return StatComparisonBar(stat: state.stats[index]);
+        },
+      ),
     );
   }
 
@@ -975,30 +1022,39 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final leagueId = _resolveLeagueId();
 
     if (leagueId == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.format_list_numbered_rounded,
-                size: 48,
-                color: AppColors.primary,
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: _handleRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.format_list_numbered_rounded,
+                      size: 48,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      isArabic
+                          ? 'جدول الترتيب غير متوفر لهذه البطولة حالياً'
+                          : 'Standings not available for this competition',
+                      style: AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                isArabic
-                    ? 'جدول الترتيب غير متوفر لهذه البطولة حالياً'
-                    : 'Standings not available for this competition',
-                style: AppTypography.getBodyLarge(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
@@ -1023,22 +1079,41 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           }
 
           if (state.standings == null || state.standings!.rows.isEmpty) {
-            return EmptyView(
-              titleKey: 'standings_title',
-              customMessage: isArabic
-                  ? 'لا يوجد جدول ترتيب متوفر لهذه البطولة حالياً'
-                  : 'No standings data available for this competition',
-              icon: Icons.table_chart_outlined,
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async {
+                context.read<StandingsBloc>().add(LoadStandingsEvent(leagueId));
+                await _handleRefresh();
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  EmptyView(
+                    titleKey: 'standings_title',
+                    customMessage: isArabic
+                        ? 'لا يوجد جدول ترتيب متوفر لهذه البطولة حالياً'
+                        : 'No standings data available for this competition',
+                    icon: Icons.table_chart_outlined,
+                  ),
+                ],
+              ),
             );
           }
 
           final standings = state.standings!;
           final hasGroups = standings.hasMultipleGroups;
 
-          return ListView(
-            key: const PageStorageKey('match_standings_tab_list'),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            children: [
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              context.read<StandingsBloc>().add(LoadStandingsEvent(leagueId));
+              await _handleRefresh();
+            },
+            child: ListView(
+              key: const PageStorageKey('match_standings_tab_list'),
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              children: [
               if (hasGroups) ...[
                 ...standings.groups!.entries.map((groupEntry) {
                   return Column(
@@ -1128,6 +1203,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                   ),
                 ),
             ],
+            ),
           );
         },
       ),

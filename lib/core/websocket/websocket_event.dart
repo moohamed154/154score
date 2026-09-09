@@ -395,6 +395,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
   final String? eventMinute;
   final bool? isHomeTeam;
   final int? timestamp;
+  final String? videoUrl;
   final Map<String, dynamic> rawPayload;
 
   const MatchDetailRealtimeUpdate({
@@ -409,6 +410,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
     this.eventMinute,
     this.isHomeTeam,
     this.timestamp,
+    this.videoUrl,
     this.rawPayload = const {},
   });
 
@@ -507,6 +509,9 @@ class MatchDetailRealtimeUpdate extends Equatable {
           payload['event_minute']?.toString() ?? payload['minute']?.toString(),
       isHomeTeam: isHome,
       timestamp: parsedTimestamp,
+      videoUrl: payload['video_url']?.toString() ??
+          payload['videoUrl']?.toString() ??
+          payload['video']?.toString(),
       rawPayload: json,
     );
   }
@@ -524,5 +529,6 @@ class MatchDetailRealtimeUpdate extends Equatable {
     eventMinute,
     isHomeTeam,
     timestamp,
+    videoUrl,
   ];
 }

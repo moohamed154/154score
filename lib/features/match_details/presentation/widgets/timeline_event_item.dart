@@ -5,6 +5,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/match_event_helper.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
 
 class TimelineEventItem extends StatelessWidget {
@@ -24,7 +25,7 @@ class TimelineEventItem extends StatelessWidget {
     final isPeriodEvent = _isPeriodEvent(event.type, event.playerName);
 
     if (isPeriodEvent) {
-      return Container(
+      final periodWidget = Container(
         margin: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
@@ -79,14 +80,31 @@ class TimelineEventItem extends StatelessWidget {
                 ),
               ),
             ],
+            if (event.hasVideo) ...[
+              const SizedBox(width: 8),
+              _buildVideoBadge(context, isDark, isArabic, isSmall),
+            ],
           ],
         ),
       );
+
+      if (event.hasVideo) {
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+            onTap: () => _handleVideoNavigation(context),
+            child: periodWidget,
+          ),
+        );
+      }
+
+      return periodWidget;
     }
 
     final sanitizedMinute = MatchEventHelper.sanitizeMinute(event.minute);
 
-    return Padding(
+    final eventRow = Padding(
       padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -148,6 +166,19 @@ class TimelineEventItem extends StatelessWidget {
         ],
       ),
     );
+
+    if (event.hasVideo) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+          onTap: () => _handleVideoNavigation(context),
+          child: eventRow,
+        ),
+      );
+    }
+
+    return eventRow;
   }
 
   Widget _buildEventContent(
@@ -341,6 +372,10 @@ class TimelineEventItem extends StatelessWidget {
           : MainAxisAlignment.start,
       children: isHome
           ? [
+              if (event.hasVideo) ...[
+                _buildVideoBadge(context, isDark, isArabic, isSmall),
+                SizedBox(width: isSmall ? 6 : 8),
+              ],
               Flexible(child: textWidget),
               SizedBox(width: isSmall ? 6 : 8),
               iconWidget,
@@ -349,7 +384,70 @@ class TimelineEventItem extends StatelessWidget {
               iconWidget,
               SizedBox(width: isSmall ? 6 : 8),
               Flexible(child: textWidget),
+              if (event.hasVideo) ...[
+                SizedBox(width: isSmall ? 6 : 8),
+                _buildVideoBadge(context, isDark, isArabic, isSmall),
+              ],
             ],
+    );
+  }
+
+  void _handleVideoNavigation(BuildContext context) {
+    if (!event.hasVideo) return;
+    UrlHelper.navigateToVideo(
+      context,
+      url: event.videoUrl,
+      fallbackErrorMessage: AppLocalizations.of(context).isArabic
+          ? 'تعذر تشغيل مقطع الفيديو'
+          : 'Unable to open video',
+    );
+  }
+
+  Widget _buildVideoBadge(
+    BuildContext context,
+    bool isDark,
+    bool isArabic,
+    bool isSmall,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _handleVideoNavigation(context),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmall ? 5 : 7,
+            vertical: isSmall ? 2 : 3,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.5),
+              width: 0.8,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.play_arrow_rounded,
+                size: isSmall ? 13 : 15,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 2),
+              Text(
+                isArabic ? 'فيديو' : 'Video',
+                style: TextStyle(
+                  fontSize: isSmall ? 9 : 10,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

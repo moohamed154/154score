@@ -20,6 +20,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
   StreamSubscription? _liveMatchSubscription;
   StreamSubscription? _matchRoomSubscription;
+  Timer? _debounceRefreshTimer;
 
   MatchDetailsBloc({
     required this.repository,
@@ -140,6 +141,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
               update.rawPayload['is_home'] == true ||
               update.rawPayload['team'] == '1' ||
               update.rawPayload['team'] == 'home',
+          videoUrl: update.rawPayload['video_url']?.toString() ??
+              update.rawPayload['videoUrl']?.toString() ??
+              update.rawPayload['video']?.toString(),
         );
         updatedEvents = MatchEventHelper.mergeEvents(
           existingEvents: state.events,
@@ -155,6 +159,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           events: updatedEvents,
         ),
       );
+
+      _triggerBackgroundRefresh();
     }
   }
 
@@ -177,11 +183,23 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           events: mergeResult.isUpdated ? mergeResult.data : state.events,
         ),
       );
+
+      _triggerBackgroundRefresh();
     }
+  }
+
+  void _triggerBackgroundRefresh() {
+    _debounceRefreshTimer?.cancel();
+    _debounceRefreshTimer = Timer(const Duration(milliseconds: 600), () {
+      if (!isClosed) {
+        add(LoadMatchDetailsEvent(state.matchId, isRefresh: true));
+      }
+    });
   }
 
   @override
   Future<void> close() {
+    _debounceRefreshTimer?.cancel();
     try {
       webSocketService.leaveMatchRoom(state.matchId);
     } catch (_) {}

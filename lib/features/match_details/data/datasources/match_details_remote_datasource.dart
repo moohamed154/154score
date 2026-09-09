@@ -95,6 +95,17 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
 
         final scoreStr = e['score']?.toString();
 
+        final rawVideoUrl = e['video_url']?.toString() ??
+            e['videoUrl']?.toString() ??
+            e['video']?.toString() ??
+            (e['video'] is Map ? e['video']['url']?.toString() : null);
+        final videoUrl = (rawVideoUrl != null &&
+                rawVideoUrl.trim().isNotEmpty &&
+                rawVideoUrl.trim() != 'null' &&
+                rawVideoUrl.trim() != 'undefined')
+            ? rawVideoUrl.trim()
+            : null;
+
         events.add(
           MatchEventEntity(
             minute: parsedMinute.formatted,
@@ -106,6 +117,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             type: typeStr,
             isHomeTeam: isHome,
             score: scoreStr,
+            videoUrl: videoUrl,
           ),
         );
       }

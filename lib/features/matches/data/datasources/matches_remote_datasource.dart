@@ -1,5 +1,6 @@
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../models/match_dto.dart';
 
 abstract class MatchesRemoteDataSource {
@@ -77,7 +78,10 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       queryParameters: queryParams,
     );
 
-    return _parseLeagueGroups(response, defaultDate: date);
+    return _parseLeagueGroups(
+      response,
+      defaultDate: date ?? DateFormatter.toApiDateString(DateTime.now()),
+    );
   }
 
   @override

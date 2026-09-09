@@ -6,7 +6,7 @@ import '../constants/app_dimensions.dart';
 import '../constants/app_typography.dart';
 import '../localization/app_localizations.dart';
 import '../utils/score_helper.dart';
-import 'live_pulse_badge.dart';
+import 'live_match_clock.dart';
 
 class StatusPill extends StatelessWidget {
   final String? status;
@@ -14,6 +14,9 @@ class StatusPill extends StatelessWidget {
   final String? extraTime;
   final String? time;
   final String? period;
+  final String? date;
+  final String? score1;
+  final String? score2;
   final bool compact;
 
   const StatusPill({
@@ -23,6 +26,9 @@ class StatusPill extends StatelessWidget {
     this.extraTime,
     this.time,
     this.period,
+    this.date,
+    this.score1,
+    this.score2,
     this.compact = false,
   });
 
@@ -37,26 +43,19 @@ class StatusPill extends StatelessWidget {
       minute: minute,
       extraTime: extraTime,
       time: time,
+      date: date,
+      score1: score1,
+      score2: score2,
     );
     final isLive = MatchStatusHelper.isLive(phase);
     final isFinished =
         ScoreHelper.isFinishedStatus(status) || phase == MatchPhase.finished;
 
     if (isLive) {
-      final liveLabel = MatchStatusHelper.getDisplayLabel(
-        phase,
-        status,
-        minute: minute,
-        extraTime: extraTime,
-        time: time,
-        period: period,
-        isArabic: isArabic,
-      );
-
       return Container(
         padding: EdgeInsets.symmetric(
-          horizontal: compact ? 6 : 8,
-          vertical: compact ? 2 : 4,
+          horizontal: compact ? 8 : 10,
+          vertical: compact ? 3 : 5,
         ),
         decoration: BoxDecoration(
           color: AppColors.liveRed.withValues(alpha: 0.15),
@@ -66,7 +65,22 @@ class StatusPill extends StatelessWidget {
             width: 0.8,
           ),
         ),
-        child: LivePulseBadge(minute: liveLabel, showText: true),
+        child: LiveMatchClock(
+          status: status,
+          minute: minute,
+          extraTime: extraTime,
+          time: time,
+          period: period,
+          date: date,
+          score1: score1,
+          score2: score2,
+          showLiveDot: true,
+          textStyle: TextStyle(
+            fontSize: compact ? 10 : 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.liveRed,
+          ),
+        ),
       );
     }
 

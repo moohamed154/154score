@@ -8,6 +8,7 @@ class MatchEventEntity extends Equatable {
   type; // goal, yellow_card, red_card, substitution, var, start-end-match
   final bool isHomeTeam;
   final String? score;
+  final String? videoUrl;
 
   const MatchEventEntity({
     required this.minute,
@@ -16,7 +17,30 @@ class MatchEventEntity extends Equatable {
     required this.type,
     this.isHomeTeam = true,
     this.score,
+    this.videoUrl,
   });
+
+  bool get hasVideo => videoUrl != null && videoUrl!.trim().isNotEmpty;
+
+  MatchEventEntity copyWith({
+    String? minute,
+    String? playerName,
+    String? secondaryPlayerName,
+    String? type,
+    bool? isHomeTeam,
+    String? score,
+    String? videoUrl,
+  }) {
+    return MatchEventEntity(
+      minute: minute ?? this.minute,
+      playerName: playerName ?? this.playerName,
+      secondaryPlayerName: secondaryPlayerName ?? this.secondaryPlayerName,
+      type: type ?? this.type,
+      isHomeTeam: isHomeTeam ?? this.isHomeTeam,
+      score: score ?? this.score,
+      videoUrl: videoUrl ?? this.videoUrl,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -26,6 +50,7 @@ class MatchEventEntity extends Equatable {
     type,
     isHomeTeam,
     score,
+    videoUrl,
   ];
 }
 

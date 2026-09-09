@@ -18,7 +18,13 @@ class MatchEventHelper {
 
     for (final e in incomingEvents) {
       final key = _generateEventKey(e);
-      eventMap[key] = e;
+      if (eventMap.containsKey(key)) {
+        final existing = eventMap[key]!;
+        final videoUrl = e.videoUrl ?? existing.videoUrl;
+        eventMap[key] = e.copyWith(videoUrl: videoUrl);
+      } else {
+        eventMap[key] = e;
+      }
     }
 
     final list = eventMap.values.toList();

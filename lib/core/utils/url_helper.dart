@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -133,6 +136,8 @@ class UrlHelper {
           candidate.startsWith('http://youtu.be') ||
           candidate.contains('vimeo.com') ||
           candidate.contains('dailymotion.com') ||
+          candidate.contains('x.com') ||
+          candidate.contains('twitter.com') ||
           candidate.endsWith('.mp4') ||
           candidate.endsWith('.m3u8')) {
         return candidate;
@@ -203,10 +208,16 @@ class UrlHelper {
     }
 
     try {
-      final launched = await launchUrl(
+      bool launched = await launchUrl(
         uri,
         mode: LaunchMode.externalApplication,
       );
+      if (!launched) {
+        launched = await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+        );
+      }
       if (!launched && context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -217,6 +228,13 @@ class UrlHelper {
       }
       return launched;
     } catch (_) {
+      try {
+        final launched = await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+        );
+        if (launched) return true;
+      } catch (_) {}
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -227,6 +245,53 @@ class UrlHelper {
       }
       return false;
     }
+  }
+
+  /// Universal video navigator: navigates to internal app route or launches external video URL.
+  static Future<bool> navigateToVideo(
+    BuildContext context, {
+    required String? url,
+    String? thumbnail,
+    String? fallbackErrorMessage,
+  }) async {
+    if (url == null || url.trim().isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(fallbackErrorMessage ?? 'رابط الفيديو غير متوفر'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return false;
+    }
+
+    final trimmed = url.trim();
+
+    // Check internal route or video ID
+    final videoMatch = RegExp(r'/video/(\d+)').firstMatch(trimmed);
+    if (videoMatch != null) {
+      unawaited(context.push('/video/${videoMatch.group(1)}'));
+      return true;
+    }
+
+    if (RegExp(r'^\d+$').hasMatch(trimmed)) {
+      unawaited(context.push('/video/$trimmed'));
+      return true;
+    }
+
+    if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+      unawaited(context.push(trimmed));
+      return true;
+    }
+
+    // External URL or stream (e.g. x.com, youtube, web)
+    return launchVideoUrl(
+      trimmed,
+      thumbnail: thumbnail,
+      context: context,
+      fallbackErrorMessage: fallbackErrorMessage,
+    );
   }
 
   /// Safely launches any external URL in the browser or external application.

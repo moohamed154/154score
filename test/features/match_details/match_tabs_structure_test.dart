@@ -288,5 +288,38 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+
+    // ── 9. Independent RefreshIndicator on Events tab ──────────────────────
+    testWidgets('Events tab has independent RefreshIndicator and triggers refresh', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          BlocProvider(
+            create: (_) => MatchDetailsBloc(
+              repository: repo,
+              webSocketService: ws,
+              localStorageService: storage,
+              matchId: 'test123',
+            ),
+            child: const MatchDetailsView(matchId: 'test123'),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Verify RefreshIndicator is present
+      expect(find.byType(RefreshIndicator), findsWidgets);
+
+      // Perform a pull-to-refresh drag gesture on the first tab
+      await tester.drag(find.byKey(const PageStorageKey('events_tab_list')), const Offset(0, 300));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      // Verify repository was queried on refresh
+      verify(() => repo.getEvents('test123', lang: any(named: 'lang'))).called(greaterThanOrEqualTo(1));
+    });
   });
 }

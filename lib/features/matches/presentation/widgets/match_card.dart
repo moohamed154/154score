@@ -27,7 +27,15 @@ class MatchCard extends StatelessWidget {
     final isSmall = AppDimensions.isSmallScreen(context);
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
-    final phase = MatchStatusHelper.parseStatus(match.status, time: match.time);
+    final phase = MatchStatusHelper.parseStatus(
+      match.status,
+      minute: match.minute,
+      extraTime: match.extraTime,
+      time: match.time,
+      date: match.date,
+      score1: match.score1,
+      score2: match.score2,
+    );
     final isLive = MatchStatusHelper.isLive(phase);
     final isUpcoming = MatchStatusHelper.isUpcoming(phase);
 
@@ -170,6 +178,9 @@ class MatchCard extends StatelessWidget {
                         extraTime: match.extraTime,
                         time: match.time,
                         period: match.period,
+                        date: match.date,
+                        score1: match.score1,
+                        score2: match.score2,
                         showLiveDot: true,
                         textStyle:
                             AppTypography.getBodySmall(

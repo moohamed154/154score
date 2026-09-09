@@ -242,7 +242,15 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     int count = 0;
     for (final l in leagues) {
       for (final m in l.matches) {
-        final phase = MatchStatusHelper.parseStatus(m.status, time: m.time);
+        final phase = MatchStatusHelper.parseStatus(
+          m.status,
+          minute: m.minute,
+          extraTime: m.extraTime,
+          time: m.time,
+          date: m.date,
+          score1: m.score1,
+          score2: m.score2,
+        );
         if (MatchStatusHelper.isLive(phase)) {
           count++;
         }
@@ -263,7 +271,12 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           final matches = league.matches.where((match) {
             final phase = MatchStatusHelper.parseStatus(
               match.status,
+              minute: match.minute,
+              extraTime: match.extraTime,
               time: match.time,
+              date: match.date,
+              score1: match.score1,
+              score2: match.score2,
             );
 
             // Apply filter
@@ -294,10 +307,26 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           // Sort matches within each league: Live -> Upcoming -> Finished
           matches.sort((a, b) {
             final pA = MatchStatusHelper.getPriority(
-              MatchStatusHelper.parseStatus(a.status, time: a.time),
+              MatchStatusHelper.parseStatus(
+                a.status,
+                minute: a.minute,
+                extraTime: a.extraTime,
+                time: a.time,
+                date: a.date,
+                score1: a.score1,
+                score2: a.score2,
+              ),
             );
             final pB = MatchStatusHelper.getPriority(
-              MatchStatusHelper.parseStatus(b.status, time: b.time),
+              MatchStatusHelper.parseStatus(
+                b.status,
+                minute: b.minute,
+                extraTime: b.extraTime,
+                time: b.time,
+                date: b.date,
+                score1: b.score1,
+                score2: b.score2,
+              ),
             );
             return pA.compareTo(pB);
           });
@@ -311,12 +340,28 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     result.sort((a, b) {
       final aHasLive = a.matches.any(
         (m) => MatchStatusHelper.isLive(
-          MatchStatusHelper.parseStatus(m.status, time: m.time),
+          MatchStatusHelper.parseStatus(
+            m.status,
+            minute: m.minute,
+            extraTime: m.extraTime,
+            time: m.time,
+            date: m.date,
+            score1: m.score1,
+            score2: m.score2,
+          ),
         ),
       );
       final bHasLive = b.matches.any(
         (m) => MatchStatusHelper.isLive(
-          MatchStatusHelper.parseStatus(m.status, time: m.time),
+          MatchStatusHelper.parseStatus(
+            m.status,
+            minute: m.minute,
+            extraTime: m.extraTime,
+            time: m.time,
+            date: m.date,
+            score1: m.score1,
+            score2: m.score2,
+          ),
         ),
       );
       if (aHasLive && !bHasLive) return -1;

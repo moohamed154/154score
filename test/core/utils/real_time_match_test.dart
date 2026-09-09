@@ -283,6 +283,46 @@ void main() {
       // Line 2: e.g. 03:00 / 3
       expect(find.textContaining('/'), findsOneWidget);
     });
+
+    testWidgets(
+      'MatchCard displays live minute when status is لم تبدأ but kickoff has arrived',
+      (tester) async {
+        final now = DateTime.now();
+        final twentyTwoMinsAgo = now.subtract(const Duration(minutes: 22));
+        final timeStr =
+            '${twentyTwoMinsAgo.hour.toString().padLeft(2, '0')}:${twentyTwoMinsAgo.minute.toString().padLeft(2, '0')}';
+
+        final match = MatchEntity(
+          id: '126',
+          team1: 'باريس',
+          team2: 'براتيسلافا',
+          score1: '1',
+          score2: '0',
+          time: timeStr,
+          status: 'لم تبدأ',
+          statusCode: 'UPCOMING',
+          minute: null,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            supportedLocales: const [Locale('ar')],
+            locale: const Locale('ar'),
+            home: Scaffold(body: MatchCard(match: match)),
+          ),
+        );
+
+        await tester.pump();
+
+        // Must display live calculated minute e.g. 22' instead of static 22:00
+        expect(find.text('22:00'), findsNothing);
+        expect(find.textContaining("'"), findsOneWidget);
+      },
+    );
   });
 
 
