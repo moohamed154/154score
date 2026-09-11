@@ -356,34 +356,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                   Expanded(
                     child: (state.status == MatchDetailsStatus.loading ||
                             state.status == MatchDetailsStatus.initial)
-                        ? Skeletonizer(
-                            enabled: true,
-                            child: ListView(
-                              padding: const EdgeInsets.all(16),
-                              children: [
-                                Container(
-                                  height: 24,
-                                  width: 140,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                ...List.generate(
-                                  5,
-                                  (_) => Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    height: 52,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
+                        ? _buildEventsSkeleton(context, isDark, isArabic)
                         : state.status == MatchDetailsStatus.error
                         ? ErrorView(
                             message: state.errorMessage,
@@ -621,6 +594,154 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                           : AppColors.lightTextSecondary),
               ),
         ),
+      ),
+    );
+  }
+
+  // ── Skeleton Loader for Events Tab (Matches Real UI Perfectly) ───────────
+  Widget _buildEventsSkeleton(BuildContext context, bool isDark, bool isArabic) {
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    const dummyEvents = [
+      MatchEventEntity(
+        minute: "89'",
+        playerName: "بابلو مافيو",
+        secondaryPlayerName: "بطاقة صفراء",
+        type: "yellow_card",
+        isHomeTeam: true,
+      ),
+      MatchEventEntity(
+        minute: "84'",
+        playerName: "خوليو دياز",
+        secondaryPlayerName: "كوريا",
+        type: "substitution",
+        isHomeTeam: false,
+      ),
+      MatchEventEntity(
+        minute: "83'",
+        playerName: "هوغو دورو",
+        secondaryPlayerName: "غيرا",
+        type: "substitution",
+        isHomeTeam: true,
+      ),
+      MatchEventEntity(
+        minute: "83'",
+        playerName: "خيسوس فاسكيز",
+        secondaryPlayerName: "غايا",
+        type: "substitution",
+        isHomeTeam: true,
+      ),
+      MatchEventEntity(
+        minute: "83'",
+        playerName: "جون غوريدي",
+        secondaryPlayerName: "ستاسين",
+        type: "substitution",
+        isHomeTeam: false,
+      ),
+      MatchEventEntity(
+        minute: "81'",
+        playerName: "خوان إغليسياس",
+        type: "goal",
+        score: "0 - 1",
+        isHomeTeam: false,
+      ),
+      MatchEventEntity(
+        minute: "71'",
+        playerName: "جيورجي كوشوراشفيلي",
+        secondaryPlayerName: "فوفانا",
+        type: "substitution",
+        isHomeTeam: false,
+      ),
+      MatchEventEntity(
+        minute: "67'",
+        playerName: "تشيديرا إيجوكي",
+        secondaryPlayerName: "بطاقة صفراء",
+        type: "yellow_card",
+        isHomeTeam: true,
+      ),
+    ];
+
+    return Skeletonizer(
+      enabled: true,
+      effect: ShimmerEffect(
+        baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
+        highlightColor: isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
+        duration: const Duration(milliseconds: 1500),
+      ),
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.all(hMargin),
+        children: [
+          // 1. Video Highlights Summary Button Preview
+          Align(
+            alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.play_circle_filled_rounded,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isArabic ? 'ملخص المباراة' : 'Match Highlights',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.md),
+
+          // 2. Section Header: "الأحداث" + [ الأبرز | كل الأحداث ]
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isArabic ? 'الأحداث' : 'Events',
+                style: AppTypography.getHeadingMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
+              ),
+              _buildEventFilterSelector(isDark, isArabic),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.sm),
+
+          // 3. Events Timeline Container matching real UI
+          Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkCardElevated
+                  : AppColors.lightCardElevated,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              children: dummyEvents
+                  .map((e) => TimelineEventItem(event: e))
+                  .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1095,6 +1216,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           if (state.status == StandingsStatus.loading) {
             return Skeletonizer(
               enabled: true,
+              effect: ShimmerEffect(
+                baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
+                highlightColor: isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
+                duration: const Duration(milliseconds: 1500),
+              ),
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: List.generate(
@@ -1103,8 +1229,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                     margin: const EdgeInsets.only(bottom: 8),
                     height: 44,
                     decoration: BoxDecoration(
-                      color: Colors.grey,
+                      color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      ),
                     ),
                   ),
                 ),
