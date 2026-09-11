@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,13 +20,7 @@ import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../leagues/presentation/bloc/league_bloc.dart';
 import '../../../leagues/presentation/views/league_view.dart';
 
-enum ChampionshipFilter {
-  all,
-  favorites,
-  featured,
-  leagues,
-  cups,
-}
+enum ChampionshipFilter { all, favorites, featured, leagues, cups }
 
 class ChampionshipInfo {
   final String id;
@@ -222,8 +217,7 @@ class _StandingsViewState extends State<StandingsView> {
 
           if (cachedAll.isNotEmpty || cachedFeatured.isNotEmpty) {
             _featuredLeagues = cachedFeatured;
-            _allLeagues =
-                cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
+            _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
             _isLoading = false;
           }
         }
@@ -316,8 +310,7 @@ class _StandingsViewState extends State<StandingsView> {
             _isLoading = false;
             _errorMessage = null;
             _featuredLeagues = fetchedFeatured;
-            _allLeagues =
-                fetchedAll.isNotEmpty ? fetchedAll : fetchedFeatured;
+            _allLeagues = fetchedAll.isNotEmpty ? fetchedAll : fetchedFeatured;
           });
         }
       } else {
@@ -359,11 +352,13 @@ class _StandingsViewState extends State<StandingsView> {
     final isArabic = l10n.isArabic;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
-        backgroundColor:
-            isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        backgroundColor: isDark
+            ? AppColors.darkBackground
+            : AppColors.lightBackground,
         elevation: 0,
         centerTitle: false,
         title: Row(
@@ -424,7 +419,8 @@ class _StandingsViewState extends State<StandingsView> {
                 }
               }
             }
-            if (matched != null && !favoriteCards.any((c) => c.id == matched!.id)) {
+            if (matched != null &&
+                !favoriteCards.any((c) => c.id == matched!.id)) {
               favoriteCards.add(matched);
             }
           }
@@ -540,7 +536,8 @@ class _StandingsViewState extends State<StandingsView> {
                         (item) => _buildChampionshipCard(
                           context,
                           item,
-                          isFavorite: favoriteNames.contains(item.name) ||
+                          isFavorite:
+                              favoriteNames.contains(item.name) ||
                               favoriteNames.contains(item.id) ||
                               favoriteNames.contains(item.slug),
                           isDark: isDark,
@@ -565,7 +562,8 @@ class _StandingsViewState extends State<StandingsView> {
                         (item) => _buildChampionshipCard(
                           context,
                           item,
-                          isFavorite: favoriteNames.contains(item.name) ||
+                          isFavorite:
+                              favoriteNames.contains(item.name) ||
                               favoriteNames.contains(item.id) ||
                               favoriteNames.contains(item.slug),
                           isDark: isDark,
@@ -598,7 +596,9 @@ class _StandingsViewState extends State<StandingsView> {
         return list.where((item) => item.type == 1).toList();
       case ChampionshipFilter.cups:
         return list
-            .where((item) => item.type == 2 || item.type == 4 || !item.hasStandings)
+            .where(
+              (item) => item.type == 2 || item.type == 4 || !item.hasStandings,
+            )
             .toList();
       case ChampionshipFilter.favorites:
         return list;
@@ -629,16 +629,12 @@ class _StandingsViewState extends State<StandingsView> {
         decoration: InputDecoration(
           hintText: l10n.translate('search_championship'),
           hintStyle: TextStyle(
-            color: isDark
-                ? AppColors.darkTextMuted
-                : AppColors.lightTextMuted,
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
             fontSize: 14,
           ),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: isDark
-                ? AppColors.darkTextMuted
-                : AppColors.lightTextMuted,
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
             size: 20,
           ),
           suffixIcon: _searchController.text.isNotEmpty
@@ -671,7 +667,7 @@ class _StandingsViewState extends State<StandingsView> {
       (
         ChampionshipFilter.favorites,
         l10n.translate('filter_favorites'),
-        favoriteCount > 0 ? favoriteCount.toString() : null
+        favoriteCount > 0 ? favoriteCount.toString() : null,
       ),
       (ChampionshipFilter.featured, l10n.translate('filter_featured'), null),
       (ChampionshipFilter.leagues, l10n.translate('filter_leagues'), null),
@@ -701,16 +697,15 @@ class _StandingsViewState extends State<StandingsView> {
                   color: isSelected
                       ? AppColors.primary
                       : (isDark
-                          ? const Color(0xFF161A26)
-                          : const Color(0xFFEFF2F8)),
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusFull),
+                            ? const Color(0xFF161A26)
+                            : const Color(0xFFEFF2F8)),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
                   border: Border.all(
                     color: isSelected
                         ? AppColors.primary
                         : (isDark
-                            ? const Color(0xFF242C40)
-                            : const Color(0xFFE2E7F0)),
+                              ? const Color(0xFF242C40)
+                              : const Color.fromARGB(255, 23, 78, 181)),
                   ),
                 ),
                 child: Row(
@@ -720,13 +715,14 @@ class _StandingsViewState extends State<StandingsView> {
                       f.$2,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         color: isSelected
                             ? Colors.white
                             : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary),
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
                       ),
                     ),
                     if (countBadge != null) ...[
@@ -873,9 +869,9 @@ class _StandingsViewState extends State<StandingsView> {
       buildDefaultDragHandles: false,
       onReorder: (oldIndex, newIndex) {
         context.read<FavoritesCubit>().reorderFavoriteCompetitions(
-              oldIndex,
-              newIndex,
-            );
+          oldIndex,
+          newIndex,
+        );
       },
       itemBuilder: (context, index) {
         final item = favorites[index];
@@ -1010,7 +1006,8 @@ class _StandingsViewState extends State<StandingsView> {
           (item) => _buildChampionshipCard(
             context,
             item,
-            isFavorite: favoriteNames.contains(item.name) ||
+            isFavorite:
+                favoriteNames.contains(item.name) ||
                 favoriteNames.contains(item.id) ||
                 favoriteNames.contains(item.slug),
             isDark: isDark,
@@ -1106,7 +1103,7 @@ class _StandingsViewState extends State<StandingsView> {
                   height: 38,
                   padding: const EdgeInsets.all(3.5),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white : const Color(0xFFF1F3F7),
+                    color: isDark ? Colors.transparent : const Color(0xFFF1F3F7),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isDark
@@ -1116,7 +1113,9 @@ class _StandingsViewState extends State<StandingsView> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.25 : 0.04,
+                        ),
                         blurRadius: 4,
                         offset: const Offset(0, 1),
                       ),
@@ -1124,7 +1123,8 @@ class _StandingsViewState extends State<StandingsView> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(5),
-                    child: (normalizedLogo != null &&
+                    child:
+                        (normalizedLogo != null &&
                             UrlHelper.isValidImageUrl(normalizedLogo))
                         ? CachedNetworkImage(
                             imageUrl: normalizedLogo,
@@ -1161,16 +1161,17 @@ class _StandingsViewState extends State<StandingsView> {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
+                        style:
+                            AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
                       ),
                       if (typeBadge != null) ...[
                         const SizedBox(height: 3),
@@ -1200,21 +1201,17 @@ class _StandingsViewState extends State<StandingsView> {
                 // Star Button (toggles user favorites)
                 IconButton(
                   icon: Icon(
-                    isFavorite
-                        ? Icons.star_rounded
-                        : Icons.star_border_rounded,
+                    isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
                     color: isFavorite
                         ? Colors.amber
                         : (isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted),
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted),
                     size: 24,
                   ),
                   tooltip: isFavorite ? 'Remove Favorite' : 'Add Favorite',
                   onPressed: () {
-                    context
-                        .read<FavoritesCubit>()
-                        .toggleCompetition(item.name);
+                    context.read<FavoritesCubit>().toggleCompetition(item.name);
                   },
                 ),
 
@@ -1247,9 +1244,7 @@ class _StandingsViewState extends State<StandingsView> {
             color: isDark ? const Color(0xFF161A26) : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isDark
-                  ? const Color(0xFF22283A)
-                  : const Color(0xFFE5E9F2),
+              color: isDark ? const Color(0xFF22283A) : const Color(0xFFE5E9F2),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12),
