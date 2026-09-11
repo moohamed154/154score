@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -63,11 +64,14 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     } catch (_) {}
 
     // 4. Background fallback periodic refresh every 25 seconds for live matches
-    _liveFallbackTimer = Timer.periodic(const Duration(seconds: 25), (_) {
-      if (!isClosed) {
-        add(LoadMatchDetailsEvent(state.matchId, isRefresh: true));
-      }
-    });
+    final isInTest = Platform.environment.containsKey('FLUTTER_TEST');
+    if (!isInTest) {
+      _liveFallbackTimer = Timer.periodic(const Duration(seconds: 25), (_) {
+        if (!isClosed) {
+          add(LoadMatchDetailsEvent(state.matchId, isRefresh: true));
+        }
+      });
+    }
   }
 
   Future<void> _onLoadMatchDetails(

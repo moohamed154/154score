@@ -203,10 +203,10 @@ void main() {
       expect(find.text('المقاولون العرب'), findsOneWidget);
       expect(find.text('الأهلي'), findsOneWidget);
       expect(find.text('مباشر'), findsNothing);
-      expect(find.textContaining(':'), findsWidgets);
+      expect(find.text("30'"), findsOneWidget);
     });
 
-    testWidgets('MatchCard displays 90 on line 1 and 02:00 / 5 on line 2', (
+    testWidgets('MatchCard displays 90 in circular live clock for stoppage time', (
       tester,
     ) async {
       const match = MatchEntity(
@@ -236,13 +236,12 @@ void main() {
 
       await tester.pump();
 
-      // Line 1: 90
-      expect(find.text('90'), findsOneWidget);
-      // Line 2: 02:00  / 5
-      expect(find.text('02:00  / 5'), findsOneWidget);
+      expect(find.text('كرالوفه'), findsOneWidget);
+      expect(find.text('فيكتوريا بيلزن'), findsOneWidget);
+      expect(find.text("90'"), findsOneWidget);
     });
 
-    testWidgets('MatchCard displays calculated 1st half extra time with slash format', (
+    testWidgets('MatchCard displays calculated 1st half extra time in circular live clock', (
       tester,
     ) async {
       // Started 48 minutes ago in 1st half
@@ -278,10 +277,9 @@ void main() {
 
       await tester.pump();
 
-      // Line 1: 45
-      expect(find.text('45'), findsOneWidget);
-      // Line 2: e.g. 03:00 / 3
-      expect(find.textContaining('/'), findsOneWidget);
+      expect(find.text('المقاولون العرب'), findsOneWidget);
+      expect(find.text('الأهلي'), findsOneWidget);
+      expect(find.textContaining('45'), findsOneWidget);
     });
 
     testWidgets(
@@ -318,9 +316,9 @@ void main() {
 
         await tester.pump();
 
-        // Must display live calculated time e.g. 22:00 instead of static kick-off time
+        // Must display live calculated minute e.g. 22' instead of static kick-off time
         expect(find.text(timeStr), findsNothing);
-        expect(find.text('22:00'), findsOneWidget);
+        expect(find.text("22'"), findsOneWidget);
       },
     );
   });

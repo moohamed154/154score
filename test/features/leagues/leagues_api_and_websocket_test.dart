@@ -50,6 +50,16 @@ class MockLocalStorageService implements LocalStorageService {
   Future<bool> toggleFavoriteMatch(String matchId) async => true;
   @override
   bool isFavoriteMatch(String matchId) => false;
+  @override
+  Future<bool> setFavoriteCompetitions(List<String> list) async => true;
+  @override
+  String? getCachedRankings() => null;
+  @override
+  Future<bool> setCachedRankings(String json) async => true;
+  @override
+  bool isReorderTipDismissed() => true;
+  @override
+  Future<bool> setReorderTipDismissed(bool dismissed) async => true;
 }
 
 class FakeWebSocketService extends Mock implements WebSocketService {
