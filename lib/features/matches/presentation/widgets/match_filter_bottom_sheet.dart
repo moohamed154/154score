@@ -5,7 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/widgets/app_image.dart';
 import '../bloc/matches_bloc.dart';
 import '../bloc/matches_event.dart';
 import '../bloc/matches_state.dart';
@@ -34,10 +33,6 @@ class MatchFilterBottomSheet extends StatefulWidget {
 class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
   late MatchFilterType _tempFilter;
   late MatchesSortOrder _tempSortOrder;
-  String? _tempLeagueId;
-  String? _tempLeagueTitle;
-  String _leagueSearchQuery = '';
-  final TextEditingController _leagueSearchController = TextEditingController();
 
   @override
   void initState() {
@@ -45,24 +40,12 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
     final state = context.read<MatchesBloc>().state;
     _tempFilter = state.activeFilter;
     _tempSortOrder = state.sortOrder;
-    _tempLeagueId = state.selectedLeagueId;
-    _tempLeagueTitle = state.selectedLeagueTitle;
-  }
-
-  @override
-  void dispose() {
-    _leagueSearchController.dispose();
-    super.dispose();
   }
 
   void _resetFilters() {
     setState(() {
       _tempFilter = MatchFilterType.all;
       _tempSortOrder = MatchesSortOrder.importance;
-      _tempLeagueId = null;
-      _tempLeagueTitle = null;
-      _leagueSearchQuery = '';
-      _leagueSearchController.clear();
     });
   }
 
@@ -70,8 +53,6 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
     context.read<MatchesBloc>().add(
           ApplyMatchesFilterEvent(
             filter: _tempFilter,
-            leagueId: _tempLeagueId,
-            leagueTitle: _tempLeagueTitle,
             sortOrder: _tempSortOrder,
           ),
         );
@@ -87,15 +68,7 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
 
     return BlocBuilder<MatchesBloc, MatchesState>(
       builder: (context, state) {
-        final availableLeagues = state.availableLeagues;
-        final filteredLeaguesList = _leagueSearchQuery.isEmpty
-            ? availableLeagues
-            : availableLeagues.where((l) {
-                return l.title.toLowerCase().contains(_leagueSearchQuery.toLowerCase());
-              }).toList();
-
         final hasAnyFilters = _tempFilter != MatchFilterType.all ||
-            _tempLeagueId != null ||
             _tempSortOrder != MatchesSortOrder.importance;
 
         return Container(
@@ -186,177 +159,46 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
 
               // Scrollable Options Content
               Flexible(
-                child: ListView(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppDimensions.lg,
                     vertical: 16,
                   ),
-                  children: [
-                    // Section 1: Match Status
-                    _buildSectionHeader(
-                      context,
-                      title: l10n.translate('filter_status_header'),
-                      icon: Icons.sports_soccer_outlined,
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildStatusChips(context, isDark, isArabic, state.liveMatchesCount),
-
-                    const SizedBox(height: 24),
-
-                    // Section 2: Sort Order
-                    _buildSectionHeader(
-                      context,
-                      title: l10n.translate('filter_sort_header'),
-                      icon: Icons.sort_rounded,
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildSortOrderOptions(context, isDark, isArabic),
-
-                    const SizedBox(height: 24),
-
-                    // Section 3: League / Championship Filter
-                    _buildSectionHeader(
-                      context,
-                      title: l10n.translate('filter_league_header'),
-                      icon: Icons.emoji_events_outlined,
-                      isDark: isDark,
-                      isArabic: isArabic,
-                      trailing: availableLeagues.isNotEmpty
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? AppColors.darkCard
-                                    : AppColors.lightCard,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '${availableLeagues.length}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            )
-                          : null,
-                    ),
-                    const SizedBox(height: 10),
-
-                    // League Search Box (if more than 3 leagues)
-                    if (availableLeagues.length > 3) ...[
-                      TextField(
-                        controller: _leagueSearchController,
-                        onChanged: (val) {
-                          setState(() {
-                            _leagueSearchQuery = val.trim();
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: l10n.translate('search_championship'),
-                          prefixIcon: const Icon(Icons.search, size: 20),
-                          suffixIcon: _leagueSearchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear, size: 18),
-                                  onPressed: () {
-                                    setState(() {
-                                      _leagueSearchQuery = '';
-                                      _leagueSearchController.clear();
-                                    });
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: isDark
-                              ? AppColors.darkCard
-                              : AppColors.lightCard,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppDimensions.radiusMd),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.darkBorder
-                                  : AppColors.lightBorder,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppDimensions.radiusMd),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.darkBorder
-                                  : AppColors.lightBorder,
-                            ),
-                          ),
-                        ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Section 1: Match Status
+                      _buildSectionHeader(
+                        context,
+                        title: l10n.translate('filter_status_header'),
+                        icon: Icons.sports_soccer_outlined,
+                        isDark: isDark,
+                        isArabic: isArabic,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
+                      _buildStatusChips(
+                        context,
+                        isDark,
+                        isArabic,
+                        state.liveMatchesCount,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Section 2: Sort Order
+                      _buildSectionHeader(
+                        context,
+                        title: l10n.translate('filter_sort_header'),
+                        icon: Icons.sort_rounded,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildSortOrderOptions(context, isDark, isArabic),
                     ],
-
-                    // All Championships Tile
-                    _buildLeagueOptionTile(
-                      context,
-                      isDark: isDark,
-                      isArabic: isArabic,
-                      isSelected: _tempLeagueId == null && _tempLeagueTitle == null,
-                      title: l10n.translate('filter_all_leagues'),
-                      matchCount: state.allLeagues.fold<int>(
-                        0,
-                        (sum, l) => sum + l.matches.length,
-                      ),
-                      logo: null,
-                      onTap: () {
-                        setState(() {
-                          _tempLeagueId = null;
-                          _tempLeagueTitle = null;
-                        });
-                      },
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    // League Options List
-                    ...filteredLeaguesList.map((league) {
-                      final isSelected = (_tempLeagueId != null &&
-                              _tempLeagueId == league.id) ||
-                          (_tempLeagueTitle != null &&
-                              _tempLeagueTitle == league.title);
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: _buildLeagueOptionTile(
-                          context,
-                          isDark: isDark,
-                          isArabic: isArabic,
-                          isSelected: isSelected,
-                          title: league.title,
-                          matchCount: league.matchCount,
-                          logo: league.logo,
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                _tempLeagueId = null;
-                                _tempLeagueTitle = null;
-                              } else {
-                                _tempLeagueId = league.id;
-                                _tempLeagueTitle = league.title;
-                              }
-                            });
-                          },
-                        ),
-                      );
-                    }),
-                  ],
+                  ),
                 ),
               ),
 
@@ -626,115 +468,6 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildLeagueOptionTile(
-    BuildContext context, {
-    required bool isDark,
-    required bool isArabic,
-    required bool isSelected,
-    required String title,
-    required int matchCount,
-    required String? logo,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark
-                    ? AppColors.primary.withValues(alpha: 0.15)
-                    : AppColors.primary.withValues(alpha: 0.1))
-                : (isDark ? AppColors.darkCard : AppColors.lightCard),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.primary
-                  : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-              width: isSelected ? 1.4 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              if (logo != null && logo.isNotEmpty)
-                AppImage(
-                  imageUrl: logo,
-                  width: 26,
-                  height: 26,
-                  placeholderIcon: Icons.emoji_events_outlined,
-                )
-              else
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white10 : Colors.black12,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.public_rounded,
-                    size: 16,
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
-                  ),
-                ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.25)
-                      : (isDark ? Colors.white10 : Colors.black12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '$matchCount',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                isSelected
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                size: 20,
-                color: isSelected
-                    ? AppColors.primary
-                    : (isDark ? Colors.white30 : Colors.black26),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
