@@ -332,6 +332,7 @@ class _HomeViewState extends State<HomeView> {
           return LeagueSectionWidget(
             key: ValueKey(league.leagueTitle),
             league: league,
+            isTimeSorted: state.sortOrder == MatchesSortOrder.time,
             onFavoriteMatchTap: (matchId) {
               context.read<MatchesBloc>().add(
                 ToggleMatchFavoriteEvent(matchId),

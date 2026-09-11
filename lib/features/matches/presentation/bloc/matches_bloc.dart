@@ -638,20 +638,72 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         .where((league) => league.matches.isNotEmpty)
         .toList();
 
-    // League Ordering
+    // League Ordering / Grouping
     if (sortOrder == MatchesSortOrder.time) {
-      // Sort leagues by their earliest match time chronologically
-      result.sort((a, b) {
-        final earliestA = a.matches
-            .map((m) => _parseTimeToMinutes(m.time))
-            .fold<int>(99999, (prev, min) => min < prev ? min : prev);
-        final earliestB = b.matches
-            .map((m) => _parseTimeToMinutes(m.time))
-            .fold<int>(99999, (prev, min) => min < prev ? min : prev);
-        final cmp = earliestA.compareTo(earliestB);
-        if (cmp != 0) return cmp;
-        return a.leagueTitle.compareTo(b.leagueTitle);
+      // Flatten all filtered matches preserving their parent league metadata
+      final allMatches = <MatchEntity>[];
+      for (final league in result) {
+        for (final m in league.matches) {
+          allMatches.add(
+            m.copyWith(
+              leagueTitle: m.leagueTitle ?? league.leagueTitle,
+              leagueLogo: m.leagueLogo ?? league.leagueLogo,
+              leagueId: m.leagueId ?? league.leagueId,
+            ),
+          );
+        }
+      }
+
+      // Sort every match strictly chronologically by kick-off time
+      allMatches.sort((a, b) {
+        final tA = _parseTimeToMinutes(a.time);
+        final tB = _parseTimeToMinutes(b.time);
+        if (tA != tB) return tA.compareTo(tB);
+
+        final pA = MatchStatusHelper.getPriority(
+          MatchStatusHelper.parseStatus(
+            a.status,
+            minute: a.minute,
+            extraTime: a.extraTime,
+            time: a.time,
+            date: a.date,
+            score1: a.score1,
+            score2: a.score2,
+          ),
+        );
+        final pB = MatchStatusHelper.getPriority(
+          MatchStatusHelper.parseStatus(
+            b.status,
+            minute: b.minute,
+            extraTime: b.extraTime,
+            time: b.time,
+            date: b.date,
+            score1: b.score1,
+            score2: b.score2,
+          ),
+        );
+        if (pA != pB) return pA.compareTo(pB);
+
+        return (a.leagueTitle ?? '').compareTo(b.leagueTitle ?? '');
       });
+
+      // Group matches chronologically by kick-off time slot
+      final timeGroups = <String, List<MatchEntity>>{};
+      for (final match in allMatches) {
+        final timeKey = (match.time != null &&
+                match.time!.trim().isNotEmpty &&
+                match.time != '-')
+            ? match.time!.trim()
+            : 'غير محدد';
+        timeGroups.putIfAbsent(timeKey, () => []).add(match);
+      }
+
+      return timeGroups.entries.map((entry) {
+        return LeagueGroupEntity(
+          leagueTitle: entry.key,
+          matches: entry.value,
+        );
+      }).toList();
     } else if (sortOrder == MatchesSortOrder.league) {
       // Sort leagues alphabetically by league title
       result.sort((a, b) => a.leagueTitle.compareTo(b.leagueTitle));

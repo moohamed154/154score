@@ -15,8 +15,14 @@ import '../../domain/entities/match_entity.dart';
 class MatchCard extends StatelessWidget {
   final MatchEntity match;
   final VoidCallback? onFavoriteTap;
+  final bool showLeague;
 
-  const MatchCard({super.key, required this.match, this.onFavoriteTap});
+  const MatchCard({
+    super.key,
+    required this.match,
+    this.onFavoriteTap,
+    this.showLeague = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -75,28 +81,70 @@ class MatchCard extends StatelessWidget {
                   horizontal: isSmall ? 10 : 14,
                   vertical: isLive ? (isSmall ? 10 : 12) : (isSmall ? 8 : 10),
                 ),
-                child: isLive
-                    ? _buildLiveContent(
-                        context,
-                        isDark: isDark,
-                        isArabic: isArabic,
-                        isSmall: isSmall,
-                        score1Str: score1Str,
-                        score2Str: score2Str,
-                        hasPenalties: hasPenalties,
-                      )
-                    : _buildDefaultContent(
-                        context,
-                        isDark: isDark,
-                        isArabic: isArabic,
-                        isSmall: isSmall,
-                        isUpcoming: isUpcoming,
-                        isFinished: isFinished,
-                        hasScores: hasScores,
-                        score1Str: score1Str,
-                        score2Str: score2Str,
-                        hasPenalties: hasPenalties,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showLeague &&
+                        match.leagueTitle != null &&
+                        match.leagueTitle!.trim().isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (match.leagueLogo != null &&
+                                match.leagueLogo!.trim().isNotEmpty) ...[
+                              AppImage(
+                                imageUrl: match.leagueLogo,
+                                width: 14,
+                                height: 14,
+                                fit: BoxFit.contain,
+                                placeholderIcon: Icons.emoji_events_outlined,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            Flexible(
+                              child: Text(
+                                match.leagueTitle!,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    ],
+                    isLive
+                        ? _buildLiveContent(
+                            context,
+                            isDark: isDark,
+                            isArabic: isArabic,
+                            isSmall: isSmall,
+                            score1Str: score1Str,
+                            score2Str: score2Str,
+                            hasPenalties: hasPenalties,
+                          )
+                        : _buildDefaultContent(
+                            context,
+                            isDark: isDark,
+                            isArabic: isArabic,
+                            isSmall: isSmall,
+                            isUpcoming: isUpcoming,
+                            isFinished: isFinished,
+                            hasScores: hasScores,
+                            score1Str: score1Str,
+                            score2Str: score2Str,
+                            hasPenalties: hasPenalties,
+                          ),
+                  ],
+                ),
               ),
               if (onFavoriteTap != null)
                 PositionedDirectional(
