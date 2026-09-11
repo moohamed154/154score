@@ -79,6 +79,7 @@ void main() {
       team2: 'Al Hazem',
       time: '09:00 PM',
       status: 'Upcoming',
+      date: '2030-01-01',
     );
 
     await tester.pumpWidget(

@@ -111,17 +111,21 @@ class AppLocalizations {
       // Standings & Championships
       'standings_title': 'Championships',
       'search_championship': 'Search Championship',
-      'long_press_reorder_hint': 'Long press any championship to modify its order',
+      'long_press_reorder_hint':
+          'Long press any championship to modify its order',
       'favorite_championships': 'Favorite Championships',
       'featured_championships': 'Featured Championships',
       'all_championships': 'All Championships',
+      // ignore: equal_keys_in_map
       'filter_all': 'All',
+      // ignore: equal_keys_in_map
       'filter_favorites': 'Favorites',
       'filter_featured': 'Featured',
       'filter_leagues': 'Leagues',
       'filter_cups': 'Cups & Continental',
       'no_favorite_championships': 'No favorite championships yet',
-      'no_favorite_championships_hint': 'Tap the star on any competition to add it to your favorites',
+      'no_favorite_championships_hint':
+          'Tap the star on any competition to add it to your favorites',
       'no_championships_found': 'No championships found',
       'championship_type_league': 'League',
       'championship_type_cup': 'Cup',
@@ -196,14 +200,16 @@ class AppLocalizations {
 
       // Debug Console
       'debug_console_title': 'Network Debug Console',
-      'debug_console_subtitle': 'Print and inspect network responses in debug console',
+      'debug_console_subtitle':
+          'Print and inspect network responses in debug console',
       'debug_console_print_all': 'Print All to Debug Console',
       'debug_console_print_latest': 'Print Latest Response',
       'debug_console_auto_print': 'Auto-print responses to Debug Console',
       'debug_console_clear': 'Clear History',
       'debug_console_no_logs': 'No network responses recorded yet.',
       'debug_console_printed_notice': 'Printed response to Debug Console',
-      'debug_console_printed_all_notice': 'All responses printed to Debug Console',
+      'debug_console_printed_all_notice':
+          'All responses printed to Debug Console',
       'debug_console_print_this': 'Print to Debug Console',
       'debug_console_copy': 'Copy Response',
       'debug_console_copied': 'Copied to clipboard',
@@ -243,8 +249,7 @@ class AppLocalizations {
       'midfielders': 'Midfielders',
       'forwards': 'Forwards',
       'lineup_unavailable_title': 'Lineups Not Available Yet',
-      'lineup_unavailable_desc':
-          'Official starting lineups are usually announced 1 hour before kickoff.',
+      'lineup_unavailable_desc': 'Official starting lineups are usually announced 1 hour before kickoff.',
       'refresh_lineup': 'Check for Updates',
       'player_details': 'Player Details',
       'starter': 'Starter',
@@ -354,7 +359,8 @@ class AppLocalizations {
       'filter_leagues': 'دوريات',
       'filter_cups': 'كؤوس وقارية',
       'no_favorite_championships': 'لا توجد بطولات في المفضلة',
-      'no_favorite_championships_hint': 'اضغط على النجمة بجانب أي بطولة لإضافتها لمفضلتك',
+      'no_favorite_championships_hint':
+          'اضغط على النجمة بجانب أي بطولة لإضافتها لمفضلتك',
       'no_championships_found': 'لم يتم العثور على أي بطولة',
       'championship_type_league': 'دوري',
       'championship_type_cup': 'كأس',
@@ -437,7 +443,8 @@ class AppLocalizations {
       'debug_console_clear': 'مسح السجلات',
       'debug_console_no_logs': 'لا توجد استجابات شبكة مسجلة بعد.',
       'debug_console_printed_notice': 'تمت طباعة الاستجابة في الديبج كونسول',
-      'debug_console_printed_all_notice': 'تمت طباعة جميع الاستجابات في الديبج كونسول',
+      'debug_console_printed_all_notice':
+          'تمت طباعة جميع الاستجابات في الديبج كونسول',
       'debug_console_print_this': 'طباعة في الديبج كونسول',
       'debug_console_copy': 'نسخ الاستجابة',
       'debug_console_copied': 'تم النسخ إلى الحافظة',
@@ -476,8 +483,7 @@ class AppLocalizations {
       'midfielders': 'الوسط',
       'forwards': 'الهجوم',
       'lineup_unavailable_title': 'لم يتم الإعلان عن التشكيلة بعد',
-      'lineup_unavailable_desc':
-          'عادة ما يتم الكشف عن التشكيل الرسمي قبل ساعة واحدة من صافرة البداية.',
+      'lineup_unavailable_desc': 'عادة ما يتم الكشف عن التشكيل الرسمي قبل ساعة واحدة من صافرة البداية.',
       'refresh_lineup': 'تحديث التشكيلة',
       'player_details': 'معلومات اللاعب',
       'starter': 'أساسي',

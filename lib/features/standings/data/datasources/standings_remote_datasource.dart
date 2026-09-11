@@ -70,32 +70,35 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         }
       }
 
-      // 2. Secondary Source: raw['list_match'] as a flat list
-      //    Each item is a direct team record (not a group wrapper).
-      //    Only use if data['table'] didn't yield results.
-      if (rows.isEmpty &&
-          raw['list_match'] is List &&
-          (raw['list_match'] as List).isNotEmpty) {
-        final listMatch = raw['list_match'] as List;
+      // 2. Secondary Source: raw['list_match']
+      //    Check if raw['list_match'] provides data or more complete rows than data['table']
+      final rawMatch =
+          (raw['list_match'] is List) ? (raw['list_match'] as List) : null;
+      if (rawMatch != null && rawMatch.isNotEmpty) {
+        final rawRows = <StandingRowEntity>[];
+        final rawGroups = <String, List<StandingRowEntity>>{};
 
         // Determine if items are group-wrapper objects (Map of maps)
         // or flat team objects (Map with team_name / team_id fields)
-        final isGrouped = listMatch.isNotEmpty &&
-            listMatch.first is Map &&
-            !(listMatch.first as Map).containsKey('team_name') &&
-            !(listMatch.first as Map).containsKey('team_id') &&
-            !(listMatch.first as Map).containsKey('play') &&
-            !(listMatch.first as Map).containsKey('wins');
+        final isGrouped =
+            rawMatch.first is Map &&
+            !(rawMatch.first as Map).containsKey('team_name') &&
+            !(rawMatch.first as Map).containsKey('team_id') &&
+            !(rawMatch.first as Map).containsKey('play') &&
+            !(rawMatch.first as Map).containsKey('wins');
 
         if (isGrouped) {
           // Each item is a group (Map or List of team rows)
-          final hasMultiGroups = listMatch.length > 1;
-          for (int gIdx = 0; gIdx < listMatch.length; gIdx++) {
-            final groupItem = listMatch[gIdx];
+          final hasMultiGroups = rawMatch.length > 1;
+          for (int gIdx = 0; gIdx < rawMatch.length; gIdx++) {
+            final groupItem = rawMatch[gIdx];
             final groupLetter = String.fromCharCode(65 + gIdx);
-            final defaultGroupName = hasMultiGroups
-                ? (lang == 'ar' ? 'المجموعة $groupLetter' : 'Group $groupLetter')
-                : null;
+            final defaultGroupName =
+                hasMultiGroups
+                    ? (lang == 'ar'
+                        ? 'المجموعة $groupLetter'
+                        : 'Group $groupLetter')
+                    : null;
 
             final groupRows = <StandingRowEntity>[];
 
@@ -104,12 +107,13 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
                 final pos =
                     int.tryParse(key.toString()) ?? (groupRows.length + 1);
                 if (val is Map) {
-                  final row = StandingRowDto.fromJson(
-                    pos,
-                    Map<String, dynamic>.from(val),
-                    groupName: defaultGroupName,
-                  ).toEntity();
-                  rows.add(row);
+                  final row =
+                      StandingRowDto.fromJson(
+                        pos,
+                        Map<String, dynamic>.from(val),
+                        groupName: defaultGroupName,
+                      ).toEntity();
+                  rawRows.add(row);
                   groupRows.add(row);
                 }
               });
@@ -117,12 +121,13 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
               for (int i = 0; i < groupItem.length; i++) {
                 final val = groupItem[i];
                 if (val is Map) {
-                  final row = StandingRowDto.fromJson(
-                    i + 1,
-                    Map<String, dynamic>.from(val),
-                    groupName: defaultGroupName,
-                  ).toEntity();
-                  rows.add(row);
+                  final row =
+                      StandingRowDto.fromJson(
+                        i + 1,
+                        Map<String, dynamic>.from(val),
+                        groupName: defaultGroupName,
+                      ).toEntity();
+                  rawRows.add(row);
                   groupRows.add(row);
                 }
               }
@@ -132,24 +137,32 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
                 defaultGroupName != null &&
                 groupRows.isNotEmpty) {
               groupRows.sort((a, b) => a.position.compareTo(b.position));
-              groups[defaultGroupName] = groupRows;
+              rawGroups[defaultGroupName] = groupRows;
             }
           }
         } else {
           // Flat list of team objects
-          for (int i = 0; i < listMatch.length; i++) {
-            final val = listMatch[i];
+          for (int i = 0; i < rawMatch.length; i++) {
+            final val = rawMatch[i];
             if (val is Map) {
-              final row = StandingRowDto.fromJson(
-                i + 1,
-                Map<String, dynamic>.from(val),
-              ).toEntity();
-              rows.add(row);
+              final row =
+                  StandingRowDto.fromJson(
+                    i + 1,
+                    Map<String, dynamic>.from(val),
+                  ).toEntity();
+              rawRows.add(row);
               if (row.groupName != null && row.groupName!.isNotEmpty) {
-                groups.putIfAbsent(row.groupName!, () => []).add(row);
+                rawGroups.putIfAbsent(row.groupName!, () => []).add(row);
               }
             }
           }
+        }
+
+        if (rawRows.length > rows.length) {
+          rows.clear();
+          rows.addAll(rawRows);
+          groups.clear();
+          groups.addAll(rawGroups);
         }
       }
 
