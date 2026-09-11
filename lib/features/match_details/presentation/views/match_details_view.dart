@@ -353,7 +353,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
                   // ── Tab Content ────────────────────────────────────────────
                   Expanded(
-                    child: state.status == MatchDetailsStatus.loading
+                    child: (state.status == MatchDetailsStatus.loading ||
+                            state.status == MatchDetailsStatus.initial)
                         ? const Center(
                             child: CircularProgressIndicator(
                               color: AppColors.primary,
@@ -427,7 +428,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     // Filter events based on selected filter
     final displayedEvents = state.events.where((e) {
       if (_eventFilter == _EventFilter.all) return true;
-      // Highlights: Goals, disallowed goals, penalties, red cards, yellow cards, subs, period markers, and video events
+      // Highlights: Goals, disallowed goals, penalties, red cards, yellow cards, subs, period markers, video events, VAR
       if (e.hasVideo) return true;
       final t = e.type.toLowerCase();
       return t.contains('goal') ||
@@ -436,12 +437,19 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           t.contains('red') ||
           t.contains('yellow') ||
           t.contains('sub') ||
+          t.contains('var') ||
+          t.contains('disallow') ||
           t.contains('event') ||
           t.contains('start-end') ||
           t.contains('period') ||
           t.contains('whistle') ||
           t == 'goal-x';
     }).toList();
+
+    // Fallback: If highlights filter yields empty but events exist, show all events
+    final eventsToRender = (displayedEvents.isEmpty && state.events.isNotEmpty)
+        ? state.events
+        : displayedEvents;
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -472,7 +480,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         const SizedBox(height: AppDimensions.sm),
 
         // ── Events Timeline Container ────────────────────────────────────
-        if (displayedEvents.isEmpty)
+        if (eventsToRender.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
             child: EmptyView(
@@ -493,7 +501,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
             ),
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Column(
-              children: displayedEvents
+              children: eventsToRender
                   .map((e) => TimelineEventItem(event: e))
                   .toList(),
             ),

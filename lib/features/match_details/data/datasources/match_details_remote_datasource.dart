@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
@@ -36,18 +38,42 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
 
   MatchDetailsRemoteDataSourceImpl(this._client);
 
+  static String _cleanMatchId(String id) =>
+      Uri.decodeComponent(id).replaceAll('match:', '').trim();
+
   @override
   Future<List<MatchEventEntity>> getEvents(
     String matchId, {
     required String lang,
   }) async {
+    final cleanId = _cleanMatchId(matchId);
+    var events = await _fetchEvents(cleanId, lang: lang);
+    if (events.isEmpty) {
+      // Backend SWR may be revalidating on cold cache; wait briefly and retry once
+      await Future.delayed(const Duration(milliseconds: 750));
+      events = await _fetchEvents(cleanId, lang: lang);
+    }
+    return events;
+  }
+
+  Future<List<MatchEventEntity>> _fetchEvents(
+    String cleanId, {
+    required String lang,
+  }) async {
     try {
       final response = await _client.get(
-        ApiEndpoints.matchEvents(matchId),
+        ApiEndpoints.matchEvents(cleanId),
         queryParameters: {'lang': lang},
       );
 
-      final rawEvents = _extractRawEvents(response);
+      dynamic parsed = response;
+      if (parsed is String && parsed.trim().isNotEmpty) {
+        try {
+          parsed = jsonDecode(parsed);
+        } catch (_) {}
+      }
+
+      final rawEvents = _extractRawEvents(parsed);
       final events = <MatchEventEntity>[];
 
       for (final e in rawEvents) {
@@ -206,16 +232,60 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     String matchId, {
     required String lang,
   }) async {
+    final cleanId = _cleanMatchId(matchId);
+    var stats = await _fetchStats(cleanId, lang: lang);
+    if (stats.isEmpty) {
+      // Backend SWR may be revalidating on cold cache; wait briefly and retry once
+      await Future.delayed(const Duration(milliseconds: 750));
+      stats = await _fetchStats(cleanId, lang: lang);
+    }
+    return stats;
+  }
+
+  Future<List<MatchStatItemEntity>> _fetchStats(
+    String cleanId, {
+    required String lang,
+  }) async {
     try {
       final response = await _client.get(
-        ApiEndpoints.matchStats(matchId),
+        ApiEndpoints.matchStats(cleanId),
         queryParameters: {'lang': lang},
       );
 
+      dynamic parsed = response;
+      if (parsed is String && parsed.trim().isNotEmpty) {
+        try {
+          parsed = jsonDecode(parsed);
+        } catch (_) {}
+      }
+
       final stats = <MatchStatItemEntity>[];
-      if (response is Map && response['data'] is List) {
-        final list = response['data'] as List;
-        for (final entry in list) {
+      List? entries;
+      if (parsed is List) {
+        entries = parsed;
+      } else if (parsed is Map) {
+        if (parsed['data'] is List) {
+          entries = parsed['data'] as List;
+        } else if (parsed['data'] is Map) {
+          final dataMap = parsed['data'] as Map;
+          if (dataMap['items'] is List) {
+            entries = dataMap['items'] as List;
+          } else if (dataMap['stats'] is List) {
+            entries = dataMap['stats'] as List;
+          } else if (dataMap['sections'] is List) {
+            entries = dataMap['sections'] as List;
+          } else {
+            entries = dataMap.values.whereType<List>().expand((x) => x).toList();
+          }
+        } else if (parsed['items'] is List) {
+          entries = parsed['items'] as List;
+        } else if (parsed['stats'] is List) {
+          entries = parsed['stats'] as List;
+        }
+      }
+
+      if (entries != null) {
+        for (final entry in entries) {
           if (entry is Map) {
             final sectionName =
                 entry['section']?.toString() ??
@@ -232,7 +302,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             } else if (entry.containsKey('title') ||
                 entry.containsKey('name') ||
                 entry.containsKey('team_a') ||
-                entry.containsKey('home')) {
+                entry.containsKey('home') ||
+                entry.containsKey('home_value')) {
               _parseAndAddStatItem(entry, stats, category: sectionName);
             }
           }
@@ -267,10 +338,20 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         !item.containsKey('home') &&
         !item.containsKey('team_a_val') &&
         !item.containsKey('home_value') &&
+        !item.containsKey('team1') &&
+        !item.containsKey('team_1') &&
+        !item.containsKey('home_val') &&
+        !item.containsKey('val1') &&
+        !item.containsKey('value1') &&
         !item.containsKey('team_b') &&
         !item.containsKey('away') &&
         !item.containsKey('team_b_val') &&
-        !item.containsKey('away_value')) {
+        !item.containsKey('away_value') &&
+        !item.containsKey('team2') &&
+        !item.containsKey('team_2') &&
+        !item.containsKey('away_val') &&
+        !item.containsKey('val2') &&
+        !item.containsKey('value2')) {
       return;
     }
 
@@ -278,25 +359,44 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         item['team_a']?.toString() ??
         item['home']?.toString() ??
         item['home_value']?.toString() ??
+        item['team1']?.toString() ??
+        item['team_1']?.toString() ??
+        item['home_val']?.toString() ??
+        item['val1']?.toString() ??
+        item['value1']?.toString() ??
         '0';
 
     final away =
         item['team_b']?.toString() ??
         item['away']?.toString() ??
         item['away_value']?.toString() ??
+        item['team2']?.toString() ??
+        item['team_2']?.toString() ??
+        item['away_val']?.toString() ??
+        item['val2']?.toString() ??
+        item['value2']?.toString() ??
         '0';
 
     double homePct = 0.5;
 
-    final hNum =
-        double.tryParse(item['team_a_val']?.toString() ?? '') ??
-        double.tryParse(home.replaceAll('%', '').trim());
-    final aNum =
-        double.tryParse(item['team_b_val']?.toString() ?? '') ??
-        double.tryParse(away.replaceAll('%', '').trim());
+    if (item.containsKey('home_percentage') && item['home_percentage'] != null) {
+      final p = double.tryParse(item['home_percentage'].toString().replaceAll('%', '').trim());
+      if (p != null) {
+        homePct = p > 1.0 ? p / 100.0 : p;
+      }
+    } else {
+      final hNum =
+          double.tryParse(item['team_a_val']?.toString() ?? '') ??
+          double.tryParse(item['team1_val']?.toString() ?? '') ??
+          double.tryParse(home.replaceAll('%', '').trim());
+      final aNum =
+          double.tryParse(item['team_b_val']?.toString() ?? '') ??
+          double.tryParse(item['team2_val']?.toString() ?? '') ??
+          double.tryParse(away.replaceAll('%', '').trim());
 
-    if (hNum != null && aNum != null && (hNum + aNum) > 0) {
-      homePct = hNum / (hNum + aNum);
+      if (hNum != null && aNum != null && (hNum + aNum) > 0) {
+        homePct = hNum / (hNum + aNum);
+      }
     }
     if (homePct.isNaN || homePct.isInfinite) {
       homePct = 0.5;
@@ -319,6 +419,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     required String lang,
     int? utcOffset,
   }) async {
+    final cleanId = _cleanMatchId(matchId);
     try {
       final queryParams = <String, dynamic>{'lang': lang};
       if (utcOffset != null) {
@@ -326,7 +427,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       }
 
       final response = await _client.get(
-        ApiEndpoints.matchDetails(matchId),
+        ApiEndpoints.matchDetails(cleanId),
         queryParameters: queryParams,
       );
 
@@ -447,9 +548,10 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     String matchId, {
     required String lang,
   }) async {
+    final cleanId = _cleanMatchId(matchId);
     try {
       final response = await _client.get(
-        ApiEndpoints.matchNews(matchId),
+        ApiEndpoints.matchNews(cleanId),
         queryParameters: {'lang': lang},
       );
 
@@ -486,9 +588,10 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     String matchId, {
     required String lang,
   }) async {
+    final cleanId = _cleanMatchId(matchId);
     try {
       final response = await _client.get(
-        ApiEndpoints.matchLineups(matchId),
+        ApiEndpoints.matchLineups(cleanId),
         queryParameters: {'lang': lang},
       );
 

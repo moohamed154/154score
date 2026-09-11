@@ -78,25 +78,30 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     LoadMatchDetailsEvent event,
     Emitter<MatchDetailsState> emit,
   ) async {
+    final cleanTarget = _cleanId(event.matchId.isNotEmpty ? event.matchId : state.matchId);
+
     if (!event.isRefresh) {
-      emit(state.copyWith(status: MatchDetailsStatus.loading));
+      emit(state.copyWith(
+        status: MatchDetailsStatus.loading,
+        matchId: cleanTarget,
+      ));
     }
 
     final lang = localStorageService.getLanguage();
     final offset = localStorageService.getTimezoneOffset();
 
     try {
-      final eventsFuture = repository.getEvents(event.matchId, lang: lang);
-      final statsFuture = repository.getStats(event.matchId, lang: lang);
+      final eventsFuture = repository.getEvents(cleanTarget, lang: lang);
+      final statsFuture = repository.getStats(cleanTarget, lang: lang);
       final detailsFuture = repository.getDetails(
-        event.matchId,
+        cleanTarget,
         lang: lang,
         utcOffset: offset,
       );
-      final newsFuture = repository.getNews(event.matchId, lang: lang);
+      final newsFuture = repository.getNews(cleanTarget, lang: lang);
       Future<ApiResult<MatchLineupEntity?>>? lineupsFuture;
       try {
-        lineupsFuture = repository.getLineups(event.matchId, lang: lang);
+        lineupsFuture = repository.getLineups(cleanTarget, lang: lang);
       } catch (_) {
         lineupsFuture = null;
       }
@@ -114,17 +119,35 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         }
       }
 
+      final resolvedEvents = eventsRes.isNotEmpty ? eventsRes : state.events;
+      final resolvedStats = statsRes.isNotEmpty ? statsRes : state.stats;
+      final resolvedDetails = detailsRes.isNotEmpty ? detailsRes : state.details;
+      final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
+      final resolvedLineup = lineupsRes ?? state.lineup;
+
       emit(
         state.copyWith(
           status: MatchDetailsStatus.success,
-          events: eventsRes,
-          stats: statsRes,
-          details: detailsRes,
-          news: newsRes,
-          lineup: lineupsRes,
+          matchId: cleanTarget,
+          events: resolvedEvents,
+          stats: resolvedStats,
+          details: resolvedDetails,
+          news: resolvedNews,
+          lineup: resolvedLineup,
           errorMessage: null,
         ),
       );
+
+      // If initial load yielded empty events and stats, schedule a fast background re-check
+      // to capture freshly warmed SWR cache from upstream without manual pull-to-refresh
+      if (!event.isRefresh && resolvedEvents.isEmpty && resolvedStats.isEmpty) {
+        _debounceRefreshTimer?.cancel();
+        _debounceRefreshTimer = Timer(const Duration(milliseconds: 1600), () {
+          if (!isClosed) {
+            add(LoadMatchDetailsEvent(cleanTarget, isRefresh: true));
+          }
+        });
+      }
     } catch (e) {
       emit(
         state.copyWith(

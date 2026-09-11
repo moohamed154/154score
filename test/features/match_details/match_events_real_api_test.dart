@@ -12,6 +12,7 @@ import 'package:ysscores/core/websocket/websocket_service.dart';
 import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
 import 'package:ysscores/features/match_details/domain/repositories/match_details_repository.dart';
 import 'package:ysscores/features/match_details/presentation/bloc/match_details_bloc.dart';
+import 'package:ysscores/features/match_details/presentation/bloc/match_details_event.dart';
 import 'package:ysscores/features/match_details/presentation/views/match_details_view.dart';
 import 'package:ysscores/features/match_details/presentation/widgets/timeline_event_item.dart';
 import 'package:ysscores/core/widgets/status_pill.dart';
@@ -465,6 +466,37 @@ void main() {
       // Must display base minute '45' and stoppage format '00:00  / 1' (not bare '00:00 / 1')
       expect(find.text('45'), findsOneWidget);
       expect(find.text('00:00  / 1'), findsOneWidget);
+    });
+
+    // ── 18. MatchDetailsBloc cleans match: prefix when loading events & stats ─
+    test('18. MatchDetailsBloc cleans match: prefix when loading events & stats', () async {
+      when(() => repo.getEvents('5802935', lang: any(named: 'lang')))
+          .thenAnswer((_) async => const ApiSuccess(sampleEvents));
+      when(() => repo.getStats('5802935', lang: any(named: 'lang')))
+          .thenAnswer((_) async => const ApiSuccess([]));
+      when(() => repo.getDetails('5802935', lang: any(named: 'lang'), utcOffset: any(named: 'utcOffset')))
+          .thenAnswer((_) async => const ApiSuccess([]));
+      when(() => repo.getNews('5802935', lang: any(named: 'lang')))
+          .thenAnswer((_) async => const ApiSuccess([]));
+      when(() => repo.getLineups('5802935', lang: any(named: 'lang')))
+          .thenAnswer((_) async => const ApiSuccess(null));
+
+      final bloc = MatchDetailsBloc(
+        repository: repo,
+        webSocketService: ws,
+        localStorageService: storage,
+        matchId: 'match:5802935',
+      );
+
+      bloc.add(const LoadMatchDetailsEvent('match:5802935'));
+      await pumpEventQueue();
+
+      verify(() => repo.getEvents('5802935', lang: any(named: 'lang'))).called(1);
+      verify(() => repo.getStats('5802935', lang: any(named: 'lang'))).called(1);
+      expect(bloc.state.events, sampleEvents);
+      expect(bloc.state.matchId, '5802935');
+
+      await bloc.close();
     });
   });
 }

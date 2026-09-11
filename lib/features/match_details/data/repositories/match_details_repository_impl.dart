@@ -8,13 +8,16 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
 
   MatchDetailsRepositoryImpl(this._remoteDataSource);
 
+  static String _cleanMatchId(String id) =>
+      Uri.decodeComponent(id).replaceAll('match:', '').trim();
+
   @override
   Future<ApiResult<List<MatchEventEntity>>> getEvents(
     String matchId, {
     required String lang,
   }) async {
     try {
-      final data = await _remoteDataSource.getEvents(matchId, lang: lang);
+      final data = await _remoteDataSource.getEvents(_cleanMatchId(matchId), lang: lang);
       return ApiSuccess(data);
     } catch (e) {
       return const ApiSuccess([]);
@@ -27,7 +30,7 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
     required String lang,
   }) async {
     try {
-      final data = await _remoteDataSource.getStats(matchId, lang: lang);
+      final data = await _remoteDataSource.getStats(_cleanMatchId(matchId), lang: lang);
       return ApiSuccess(data);
     } catch (e) {
       return const ApiSuccess([]);
@@ -42,7 +45,7 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
   }) async {
     try {
       final data = await _remoteDataSource.getDetails(
-        matchId,
+        _cleanMatchId(matchId),
         lang: lang,
         utcOffset: utcOffset,
       );
@@ -58,7 +61,7 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
     required String lang,
   }) async {
     try {
-      final data = await _remoteDataSource.getNews(matchId, lang: lang);
+      final data = await _remoteDataSource.getNews(_cleanMatchId(matchId), lang: lang);
       return ApiSuccess(data);
     } catch (e) {
       return const ApiSuccess([]);
@@ -71,7 +74,7 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
     required String lang,
   }) async {
     try {
-      final data = await _remoteDataSource.getLineups(matchId, lang: lang);
+      final data = await _remoteDataSource.getLineups(_cleanMatchId(matchId), lang: lang);
       return ApiSuccess(data);
     } catch (e) {
       return const ApiSuccess(null);
