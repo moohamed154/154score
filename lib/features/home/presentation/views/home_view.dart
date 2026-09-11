@@ -19,7 +19,9 @@ import '../../../matches/presentation/widgets/horizontal_date_selector.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
 import '../../../matches/presentation/widgets/match_card.dart';
+import '../../../transfers/domain/entities/transfer_entity.dart';
 import '../../../transfers/presentation/widgets/transfer_card.dart';
+import '../../../videos/domain/entities/video_entity.dart';
 import '../../../videos/presentation/widgets/video_card.dart';
 import '../cubit/home_cubit.dart';
 
@@ -280,22 +282,50 @@ class _HomeViewState extends State<HomeView> {
         if (state.status == MatchesStatus.loading)
           Skeletonizer(
             enabled: true,
+            effect: ShimmerEffect(
+              baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
+              highlightColor: isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
+              duration: const Duration(milliseconds: 1500),
+            ),
             child: Column(
-              children: List.generate(
-                3,
-                (_) => const MatchCard(
-                  match: MatchEntity(
-                    id: 'skeleton',
-                    team1: 'Arsenal FC',
-                    team2: 'Chelsea FC',
-                    score1: '2',
-                    score2: '1',
-                    status: 'Finished',
-                    time: '20:00',
-                    leagueTitle: 'Premier League',
+              children: [
+                LeagueSectionWidget(
+                  league: LeagueGroupEntity(
+                    leagueTitle: isArabic
+                        ? 'الدوري الإسباني - الجولة 28'
+                        : 'La Liga - Round 28',
+                    matches: const [
+                      MatchEntity(
+                        id: 's1',
+                        team1: 'ريال مدريد',
+                        team2: 'برشلونة',
+                        score1: '2',
+                        score2: '1',
+                        status: 'Finished',
+                        time: '21:00',
+                      ),
+                      MatchEntity(
+                        id: 's2',
+                        team1: 'أتلتيكو مدريد',
+                        team2: 'إشبيلية',
+                        score1: '1',
+                        score2: '0',
+                        status: 'Finished',
+                        time: '18:30',
+                      ),
+                      MatchEntity(
+                        id: 's3',
+                        team1: 'فالنسيا',
+                        team2: 'فياريال',
+                        score1: '0',
+                        score2: '0',
+                        status: 'Upcoming',
+                        time: '22:00',
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              ],
             ),
           )
         else if (state.status == MatchesStatus.error)
@@ -332,7 +362,9 @@ class _HomeViewState extends State<HomeView> {
     bool isArabic,
   ) {
     final l10n = AppLocalizations.of(context);
-    if (state.recentVideos.isEmpty) return const SizedBox.shrink();
+    final isLoading = state.status == HomeStatus.loading;
+
+    if (state.recentVideos.isEmpty && !isLoading) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,17 +376,43 @@ class _HomeViewState extends State<HomeView> {
         ),
         SizedBox(
           height: 180,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
-            itemCount: state.recentVideos.take(8).length,
-            itemBuilder: (context, index) {
-              return VideoCard(
-                video: state.recentVideos[index],
-                isHorizontal: true,
-              );
-            },
-          ),
+          child: isLoading
+              ? Skeletonizer(
+                  enabled: true,
+                  effect: ShimmerEffect(
+                    baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
+                    highlightColor: isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
+                    duration: const Duration(milliseconds: 1500),
+                  ),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+                    itemCount: 3,
+                    itemBuilder: (context, index) {
+                      return const VideoCard(
+                        video: VideoItemEntity(
+                          id: 's_vid',
+                          title: 'ملخص وأهداف قمة الجولة واللقطات المثيرة',
+                          championship: 'دوري أبطال أوروبا',
+                          date: '2026-09-12',
+                        ),
+                        isHorizontal: true,
+                      );
+                    },
+                  ),
+                )
+              : ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+                  itemCount: state.recentVideos.take(8).length,
+                  itemBuilder: (context, index) {
+                    return VideoCard(
+                      video: state.recentVideos[index],
+                      isHorizontal: true,
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -367,7 +425,9 @@ class _HomeViewState extends State<HomeView> {
     bool isArabic,
   ) {
     final l10n = AppLocalizations.of(context);
-    if (state.recentTransfers.isEmpty) return const SizedBox.shrink();
+    final isLoading = state.status == HomeStatus.loading;
+
+    if (state.recentTransfers.isEmpty && !isLoading) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,7 +437,33 @@ class _HomeViewState extends State<HomeView> {
           actionText: l10n.translate('view_all'),
           onActionTap: () => context.go('/transfers'),
         ),
-        ...state.recentTransfers.take(3).map((t) => TransferCard(transfer: t)),
+        if (isLoading)
+          Skeletonizer(
+            enabled: true,
+            effect: ShimmerEffect(
+              baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
+              highlightColor: isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
+              duration: const Duration(milliseconds: 1500),
+            ),
+            child: Column(
+              children: List.generate(
+                3,
+                (_) => const TransferCard(
+                  transfer: TransferEntity(
+                    id: 's_tr',
+                    playerName: 'كيليان مبابي',
+                    fromTeamName: 'باريس سان جيرمان',
+                    toTeamName: 'ريال مدريد',
+                    transferType: 'انتقال حر',
+                    transferPrice: 'مجاناً',
+                    date: '2026-09-12',
+                  ),
+                ),
+              ),
+            ),
+          )
+        else
+          ...state.recentTransfers.take(3).map((t) => TransferCard(transfer: t)),
       ],
     );
   }

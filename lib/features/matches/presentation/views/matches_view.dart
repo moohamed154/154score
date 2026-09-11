@@ -150,13 +150,57 @@ class _MatchesViewState extends State<MatchesView> {
   }
 
   Widget _buildBody(BuildContext context, MatchesState state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isArabic = AppLocalizations.of(context).isArabic;
+
     if (state.status == MatchesStatus.loading) {
       return Skeletonizer(
         enabled: true,
-        child: ListView.builder(
-          itemCount: 6,
+        effect: ShimmerEffect(
+          baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
+          highlightColor: isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
+          duration: const Duration(milliseconds: 1500),
+        ),
+        child: ListView(
           padding: const EdgeInsets.only(top: AppDimensions.sm),
-          itemBuilder: (_, __) => const MatchCard(match: _dummyMatch),
+          children: [
+            LeagueSectionWidget(
+              league: LeagueGroupEntity(
+                leagueTitle: isArabic
+                    ? 'الدوري الإسباني - الجولة 28'
+                    : 'La Liga - Round 28',
+                matches: const [
+                  MatchEntity(
+                    id: 's1',
+                    team1: 'ريال مدريد',
+                    team2: 'برشلونة',
+                    score1: '2',
+                    score2: '1',
+                    status: 'Finished',
+                    time: '21:00',
+                  ),
+                  MatchEntity(
+                    id: 's2',
+                    team1: 'أتلتيكو مدريد',
+                    team2: 'إشبيلية',
+                    score1: '1',
+                    score2: '0',
+                    status: 'Finished',
+                    time: '18:30',
+                  ),
+                  MatchEntity(
+                    id: 's3',
+                    team1: 'فالنسيا',
+                    team2: 'فياريال',
+                    score1: '0',
+                    score2: '0',
+                    status: 'Upcoming',
+                    time: '22:00',
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       );
     }
