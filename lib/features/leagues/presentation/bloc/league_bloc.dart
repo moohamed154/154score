@@ -123,6 +123,10 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
       emit(
         state.copyWith(status: LeagueStatus.error, errorMessage: e.toString()),
       );
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
     }
   }
 

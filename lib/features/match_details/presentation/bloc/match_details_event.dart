@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/websocket/websocket_event.dart';
@@ -12,8 +14,13 @@ abstract class MatchDetailsEvent extends Equatable {
 class LoadMatchDetailsEvent extends MatchDetailsEvent {
   final String matchId;
   final bool isRefresh;
+  final Completer<void>? completer;
 
-  const LoadMatchDetailsEvent(this.matchId, {this.isRefresh = false});
+  const LoadMatchDetailsEvent(
+    this.matchId, {
+    this.isRefresh = false,
+    this.completer,
+  });
 
   @override
   List<Object?> get props => [matchId, isRefresh];

@@ -19,8 +19,9 @@ abstract class TransfersEvent extends Equatable {
 
 class LoadTransfersEvent extends TransfersEvent {
   final bool isRefresh;
+  final Completer<void>? completer;
 
-  const LoadTransfersEvent({this.isRefresh = false});
+  const LoadTransfersEvent({this.isRefresh = false, this.completer});
 
   @override
   List<Object?> get props => [isRefresh];
@@ -115,36 +116,42 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
     LoadTransfersEvent event,
     Emitter<TransfersState> emit,
   ) async {
-    if (!event.isRefresh) {
-      emit(state.copyWith(status: TransfersStatus.loading));
+    try {
+      if (!event.isRefresh) {
+        emit(state.copyWith(status: TransfersStatus.loading));
+      }
+
+      final lang = localStorageService.getLanguage();
+      final result = await repository.getTransfers(lang: lang);
+
+      result.fold(
+        onSuccess: (transfers) {
+          final filtered = _applySearch(transfers, state.searchQuery);
+          emit(
+            state.copyWith(
+              status: transfers.isEmpty
+                  ? TransfersStatus.empty
+                  : TransfersStatus.success,
+              allTransfers: transfers,
+              filteredTransfers: filtered,
+              errorMessage: null,
+            ),
+          );
+        },
+        onFailure: (failure) {
+          emit(
+            state.copyWith(
+              status: TransfersStatus.error,
+              errorMessage: failure.message,
+            ),
+          );
+        },
+      );
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
     }
-
-    final lang = localStorageService.getLanguage();
-    final result = await repository.getTransfers(lang: lang);
-
-    result.fold(
-      onSuccess: (transfers) {
-        final filtered = _applySearch(transfers, state.searchQuery);
-        emit(
-          state.copyWith(
-            status: transfers.isEmpty
-                ? TransfersStatus.empty
-                : TransfersStatus.success,
-            allTransfers: transfers,
-            filteredTransfers: filtered,
-            errorMessage: null,
-          ),
-        );
-      },
-      onFailure: (failure) {
-        emit(
-          state.copyWith(
-            status: TransfersStatus.error,
-            errorMessage: failure.message,
-          ),
-        );
-      },
-    );
   }
 
   void _onSearchTransfers(

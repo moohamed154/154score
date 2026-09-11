@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +20,6 @@ import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../matches/presentation/widgets/horizontal_date_selector.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
-import '../../../matches/presentation/widgets/match_card.dart';
 import '../../../transfers/domain/entities/transfer_entity.dart';
 import '../../../transfers/presentation/widgets/transfer_card.dart';
 import '../../../videos/domain/entities/video_entity.dart';
@@ -90,13 +91,14 @@ class _HomeViewState extends State<HomeView> {
                         const SizedBox(width: 10),
                         Text(
                           '154Score',
-                          style: AppTypography.getHeadingLarge(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
+                          style:
+                              AppTypography.getHeadingLarge(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
                         ),
                         const Spacer(),
                         // Search Icon
@@ -129,7 +131,9 @@ class _HomeViewState extends State<HomeView> {
                   Divider(
                     height: 1,
                     thickness: 0.8,
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
                   ),
                 ],
               ),
@@ -138,7 +142,6 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
 
-
       body: BlocBuilder<MatchesBloc, MatchesState>(
         builder: (context, matchesState) {
           return BlocBuilder<HomeCubit, HomeState>(
@@ -146,21 +149,24 @@ class _HomeViewState extends State<HomeView> {
               return RefreshIndicator(
                 color: AppColors.primary,
                 onRefresh: () async {
-                  await Future.wait([
-                    homeState.status != HomeStatus.loading
-                        ? context.read<HomeCubit>().loadHomeData(
-                            isRefresh: true,
-                          )
-                        : Future.value(),
-                    Future.sync(
-                      () => context.read<MatchesBloc>().add(
-                        LoadMatchesEvent(
-                          date: matchesState.selectedDate,
-                          isRefresh: true,
-                        ),
-                      ),
+                  final matchesCompleter = Completer<void>();
+                  context.read<MatchesBloc>().add(
+                    LoadMatchesEvent(
+                      date: matchesState.selectedDate,
+                      isRefresh: true,
+                      completer: matchesCompleter,
                     ),
-                  ]);
+                  );
+                  final homeFuture = context
+                      .read<HomeCubit>()
+                      .loadHomeData(isRefresh: true);
+
+                  try {
+                    await Future.wait([
+                      homeFuture,
+                      matchesCompleter.future,
+                    ]).timeout(const Duration(seconds: 3));
+                  } catch (_) {}
                 },
                 child: ListView(
                   padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
@@ -206,7 +212,6 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
-
 
   Widget _buildLiveNowSection(
     BuildContext context,
@@ -283,8 +288,12 @@ class _HomeViewState extends State<HomeView> {
           Skeletonizer(
             enabled: true,
             effect: ShimmerEffect(
-              baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
-              highlightColor: isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
+              baseColor: isDark
+                  ? const Color(0xFF222F3E)
+                  : const Color(0xFFE2E8F0),
+              highlightColor: isDark
+                  ? const Color(0xFF384B66)
+                  : const Color(0xFFF1F5F9),
               duration: const Duration(milliseconds: 1500),
             ),
             child: Column(
@@ -364,7 +373,8 @@ class _HomeViewState extends State<HomeView> {
     final l10n = AppLocalizations.of(context);
     final isLoading = state.status == HomeStatus.loading;
 
-    if (state.recentVideos.isEmpty && !isLoading) return const SizedBox.shrink();
+    if (state.recentVideos.isEmpty && !isLoading)
+      return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,14 +390,20 @@ class _HomeViewState extends State<HomeView> {
               ? Skeletonizer(
                   enabled: true,
                   effect: ShimmerEffect(
-                    baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
-                    highlightColor: isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
+                    baseColor: isDark
+                        ? const Color(0xFF222F3E)
+                        : const Color(0xFFE2E8F0),
+                    highlightColor: isDark
+                        ? const Color(0xFF384B66)
+                        : const Color(0xFFF1F5F9),
                     duration: const Duration(milliseconds: 1500),
                   ),
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.lg,
+                    ),
                     itemCount: 3,
                     itemBuilder: (context, index) {
                       return const VideoCard(
@@ -404,7 +420,9 @@ class _HomeViewState extends State<HomeView> {
                 )
               : ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.lg,
+                  ),
                   itemCount: state.recentVideos.take(8).length,
                   itemBuilder: (context, index) {
                     return VideoCard(
@@ -427,7 +445,8 @@ class _HomeViewState extends State<HomeView> {
     final l10n = AppLocalizations.of(context);
     final isLoading = state.status == HomeStatus.loading;
 
-    if (state.recentTransfers.isEmpty && !isLoading) return const SizedBox.shrink();
+    if (state.recentTransfers.isEmpty && !isLoading)
+      return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,8 +460,12 @@ class _HomeViewState extends State<HomeView> {
           Skeletonizer(
             enabled: true,
             effect: ShimmerEffect(
-              baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
-              highlightColor: isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
+              baseColor: isDark
+                  ? const Color(0xFF222F3E)
+                  : const Color(0xFFE2E8F0),
+              highlightColor: isDark
+                  ? const Color(0xFF384B66)
+                  : const Color(0xFFF1F5F9),
               duration: const Duration(milliseconds: 1500),
             ),
             child: Column(
@@ -463,7 +486,9 @@ class _HomeViewState extends State<HomeView> {
             ),
           )
         else
-          ...state.recentTransfers.take(3).map((t) => TransferCard(transfer: t)),
+          ...state.recentTransfers
+              .take(3)
+              .map((t) => TransferCard(transfer: t)),
       ],
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -68,9 +70,17 @@ class _LineupTabViewState extends State<LineupTabView> {
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
+              final completer = Completer<void>();
               context.read<MatchDetailsBloc>().add(
-                    LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
+                    LoadMatchDetailsEvent(
+                      widget.matchId,
+                      isRefresh: true,
+                      completer: completer,
+                    ),
                   );
+              try {
+                await completer.future.timeout(const Duration(seconds: 3));
+              } catch (_) {}
             },
             child: LineupEmptyStateWidget(matchId: widget.matchId),
           );
@@ -83,9 +93,17 @@ class _LineupTabViewState extends State<LineupTabView> {
         return RefreshIndicator(
           color: AppColors.primary,
           onRefresh: () async {
+            final completer = Completer<void>();
             context.read<MatchDetailsBloc>().add(
-                  LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
+                  LoadMatchDetailsEvent(
+                    widget.matchId,
+                    isRefresh: true,
+                    completer: completer,
+                  ),
                 );
+            try {
+              await completer.future.timeout(const Duration(seconds: 3));
+            } catch (_) {}
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),

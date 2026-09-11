@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,8 +17,13 @@ abstract class VideosEvent extends Equatable {
 class LoadVideosEvent extends VideosEvent {
   final String champId;
   final bool isRefresh;
+  final Completer<void>? completer;
 
-  const LoadVideosEvent({this.champId = 'all', this.isRefresh = false});
+  const LoadVideosEvent({
+    this.champId = 'all',
+    this.isRefresh = false,
+    this.completer,
+  });
 
   @override
   List<Object?> get props => [champId, isRefresh];
@@ -124,6 +131,10 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
       emit(
         state.copyWith(status: VideosStatus.error, errorMessage: e.toString()),
       );
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
     }
   }
 

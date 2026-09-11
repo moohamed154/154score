@@ -196,7 +196,12 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           ? ErrorView(message: _errorMessage, onRetry: _loadProfile)
           : RefreshIndicator(
               color: AppColors.primary,
-              onRefresh: _loadProfile,
+              onRefresh: () async {
+                try {
+                  await _loadProfile()
+                      .timeout(const Duration(milliseconds: 3500));
+                } catch (_) {}
+              },
               child: _buildContent(context, isDark, isArabic),
             ),
     );

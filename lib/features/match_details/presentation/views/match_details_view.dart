@@ -142,26 +142,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   }
 
   Future<void> _handleRefresh() async {
-    final bloc = context.read<MatchDetailsBloc>();
     final completer = Completer<void>();
-    late final StreamSubscription sub;
-    Timer? timeoutTimer;
-    void cleanup() {
-      timeoutTimer?.cancel();
-      sub.cancel();
-      if (!completer.isCompleted) {
-        completer.complete();
-      }
-    }
-
-    timeoutTimer = Timer(const Duration(seconds: 8), cleanup);
-    sub = bloc.stream.listen((state) {
-      if (state.status != MatchDetailsStatus.loading) {
-        cleanup();
-      }
-    });
-    bloc.add(LoadMatchDetailsEvent(widget.matchId, isRefresh: true));
-    return completer.future;
+    context.read<MatchDetailsBloc>().add(
+      LoadMatchDetailsEvent(
+        widget.matchId,
+        isRefresh: true,
+        completer: completer,
+      ),
+    );
+    try {
+      await completer.future.timeout(const Duration(seconds: 3));
+    } catch (_) {}
   }
 
   Widget _buildAppBarLeagueBadge(
@@ -308,16 +299,30 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               return Column(
                 children: [
                   // ── Top Score Hero Banner ──────────────────────────────────
-                  MatchHeaderBanner(
-                    match: fallbackMatch,
-                    liveScore1: state.liveScore1,
-                    liveScore2: state.liveScore2,
-                    liveStatus: state.liveStatus,
-                    liveMinute: state.liveMinute,
-                    liveExtraTime: state.liveExtraTime,
-                    livePeriod: state.livePeriod,
-                    penaltyScore1: fallbackMatch.penaltyScore1,
-                    penaltyScore2: fallbackMatch.penaltyScore2,
+                  Skeletonizer(
+                    enabled: widget.initialMatch == null &&
+                        (state.status == MatchDetailsStatus.loading ||
+                            state.status == MatchDetailsStatus.initial),
+                    effect: ShimmerEffect(
+                      baseColor: isDark
+                          ? const Color(0xFF1E2836)
+                          : const Color(0xFFE2E8F0),
+                      highlightColor: isDark
+                          ? const Color(0xFF2E3D52)
+                          : const Color(0xFFF1F5F9),
+                      duration: const Duration(milliseconds: 1500),
+                    ),
+                    child: MatchHeaderBanner(
+                      match: fallbackMatch,
+                      liveScore1: state.liveScore1,
+                      liveScore2: state.liveScore2,
+                      liveStatus: state.liveStatus,
+                      liveMinute: state.liveMinute,
+                      liveExtraTime: state.liveExtraTime,
+                      livePeriod: state.livePeriod,
+                      penaltyScore1: fallbackMatch.penaltyScore1,
+                      penaltyScore2: fallbackMatch.penaltyScore2,
+                    ),
                   ),
 
                   // ── Main Horizontal Scrollable Tab Bar ─────────────────────
@@ -354,10 +359,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
                   // ── Tab Content ────────────────────────────────────────────
                   Expanded(
-                    child: (state.status == MatchDetailsStatus.loading ||
-                            state.status == MatchDetailsStatus.initial)
-                        ? _buildEventsSkeleton(context, isDark, isArabic)
-                        : state.status == MatchDetailsStatus.error
+                    child: (state.status == MatchDetailsStatus.error &&
+                            state.details.isEmpty &&
+                            state.events.isEmpty)
                         ? ErrorView(
                             message: state.errorMessage,
                             onRetry: () => context
@@ -421,6 +425,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     bool isArabic,
   ) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    if (state.status == MatchDetailsStatus.loading ||
+        state.status == MatchDetailsStatus.initial) {
+      return _buildEventsSkeleton(context, isDark, isArabic);
+    }
 
     // Filter events based on selected filter
     final displayedEvents = state.events.where((e) {
@@ -746,6 +755,237 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     );
   }
 
+  // ── Skeleton Loader for Details Tab ───────────────────────────────────────
+  Widget _buildDetailsSkeleton(BuildContext context, bool isDark, bool isArabic) {
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    return Skeletonizer(
+      enabled: true,
+      effect: ShimmerEffect(
+        baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
+        highlightColor: isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
+        duration: const Duration(milliseconds: 1500),
+      ),
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.all(hMargin),
+        children: [
+          // Section 1: Match Information Card
+          Container(
+            margin: const EdgeInsets.only(bottom: AppDimensions.md),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            padding: const EdgeInsets.all(AppDimensions.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isArabic ? 'معلومات اللقاء' : 'Match Information',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24),
+                ...List.generate(
+                  6,
+                  (i) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(isArabic ? 'وقت المباراة' : 'Match Time'),
+                        Container(
+                          width: 100,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkCardElevated
+                                : AppColors.lightCardElevated,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Section 2: Channels & Commentators Card
+          Container(
+            margin: const EdgeInsets.only(bottom: AppDimensions.md),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            padding: const EdgeInsets.all(AppDimensions.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.tv_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isArabic ? 'القنوات الناقلة والمعلقين' : 'Broadcast & Commentators',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('beIN Sports HD 1'),
+                      Container(
+                        width: 80,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCardElevated
+                              : AppColors.lightCardElevated,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Skeleton Loader for Statistics Tab ────────────────────────────────────
+  Widget _buildStatsSkeleton(BuildContext context, bool isDark, bool isArabic) {
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    return Skeletonizer(
+      enabled: true,
+      effect: ShimmerEffect(
+        baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
+        highlightColor: isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
+        duration: const Duration(milliseconds: 1500),
+      ),
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.all(hMargin),
+        children: List.generate(
+          7,
+          (i) => Container(
+            margin: const EdgeInsets.only(bottom: AppDimensions.md),
+            padding: const EdgeInsets.all(AppDimensions.md),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('55%'),
+                    Text(
+                      isArabic ? 'الاستحواذ على الكرة' : 'Ball Possession',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const Text('45%'),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Container(
+                    height: 8,
+                    color: isDark
+                        ? AppColors.darkCardElevated
+                        : AppColors.lightCardElevated,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Skeleton Loader for News Tab ──────────────────────────────────────────
+  Widget _buildNewsSkeleton(BuildContext context, bool isDark, bool isArabic) {
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    return Skeletonizer(
+      enabled: true,
+      effect: ShimmerEffect(
+        baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
+        highlightColor: isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
+        duration: const Duration(milliseconds: 1500),
+      ),
+      child: ListView.separated(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.all(hMargin),
+        itemCount: 4,
+        separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.sm),
+        itemBuilder: (context, index) {
+          return Card(
+            elevation: 0,
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              side: BorderSide(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                width: 0.8,
+              ),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.md,
+                vertical: AppDimensions.xs,
+              ),
+              leading: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+                ),
+              ),
+              title: const Text('عنوان الخبر الرياضي التمهيدي للمباراة المهمة'),
+              subtitle: const Text('منذ ساعتين • 154Score'),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   // ── Video Highlights Summary Chips ─────────────────────────────────────────
   Widget _buildVideoSummaryChips(
     MatchVideosEntity videos,
@@ -944,6 +1184,12 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     bool isArabic,
   ) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    if (state.status == MatchDetailsStatus.loading ||
+        state.status == MatchDetailsStatus.initial) {
+      return _buildDetailsSkeleton(context, isDark, isArabic);
+    }
+
     final detailsList = List<MatchInfoSectionEntity>.from(state.details);
 
     if (widget.initialMatch != null) {
@@ -1087,6 +1333,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     bool isArabic,
   ) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    if (state.status == MatchDetailsStatus.loading ||
+        state.status == MatchDetailsStatus.initial) {
+      return _buildStatsSkeleton(context, isDark, isArabic);
+    }
 
     if (state.stats.isEmpty) {
       return RefreshIndicator(
@@ -1390,6 +1641,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     bool isArabic,
   ) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    if (state.status == MatchDetailsStatus.loading ||
+        state.status == MatchDetailsStatus.initial) {
+      return _buildNewsSkeleton(context, isDark, isArabic);
+    }
 
     if (state.news.isEmpty) {
       return RefreshIndicator(

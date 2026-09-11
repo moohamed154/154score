@@ -442,8 +442,12 @@ class _StandingsViewState extends State<StandingsView> {
 
           return RefreshIndicator(
             color: AppColors.primary,
-            onRefresh: () =>
-                _fetchRankings(search: _searchController.text.trim()),
+            onRefresh: () async {
+              try {
+                await _fetchRankings(search: _searchController.text.trim())
+                    .timeout(const Duration(milliseconds: 3500));
+              } catch (_) {}
+            },
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: [

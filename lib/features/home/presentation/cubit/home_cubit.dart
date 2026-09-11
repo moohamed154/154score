@@ -91,7 +91,7 @@ class HomeCubit extends Cubit<HomeState> {
         _matchesRepository.getLiveMatchesFlat(lang: lang, utcOffset: offset),
         _videosRepository.getVideos(champId: 'all', lang: lang),
         _transfersRepository.getTransfers(lang: lang),
-      ]);
+      ]).timeout(const Duration(milliseconds: 3500));
 
       final leaguesRes =
           results[0].dataOrNull as List<LeagueGroupEntity>? ?? [];

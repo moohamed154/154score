@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -128,14 +130,19 @@ class _TeamViewState extends State<TeamView>
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: () async {
+                    final completer = Completer<void>();
                     context.read<TeamBloc>().add(
                       LoadTeamProfileEvent(
                         widget.teamId,
                         teamName: widget.initialName,
                         leagueId: widget.leagueId,
                         isRefresh: true,
+                        completer: completer,
                       ),
                     );
+                    try {
+                      await completer.future.timeout(const Duration(seconds: 3));
+                    } catch (_) {}
                   },
                   child: state.status == TeamStatus.loading
                       ? Skeletonizer(

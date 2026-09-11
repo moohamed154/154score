@@ -58,84 +58,90 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     LoadMatchesEvent event,
     Emitter<MatchesState> emit,
   ) async {
-    if (!event.isRefresh) {
-      emit(
-        state.copyWith(status: MatchesStatus.loading, selectedDate: event.date),
-      );
-    }
-
-    final dateStr = DateFormatter.toApiDateString(event.date);
-    final lang = localStorageService.getLanguage();
-    final offset = localStorageService.getTimezoneOffset();
-    final isToday = DateFormatter.isToday(event.date);
-
-    final matchesFuture = repository.getMatchesByDate(
-      date: dateStr,
-      lang: lang,
-      utcOffset: offset,
-    );
-    final liveFuture = isToday
-        ? repository.getLiveMatchesFlat(lang: lang, utcOffset: offset)
-        : null;
-
-    final result = await matchesFuture;
-    final liveResult = liveFuture != null ? await liveFuture : null;
-
     try {
-      webSocketService.recordRestFallback(
-        isActive:
-            _fallbackPollingTimer != null && _fallbackPollingTimer!.isActive,
-        refreshedAt: DateTime.now(),
+      if (!event.isRefresh) {
+        emit(
+          state.copyWith(status: MatchesStatus.loading, selectedDate: event.date),
+        );
+      }
+
+      final dateStr = DateFormatter.toApiDateString(event.date);
+      final lang = localStorageService.getLanguage();
+      final offset = localStorageService.getTimezoneOffset();
+      final isToday = DateFormatter.isToday(event.date);
+
+      final matchesFuture = repository.getMatchesByDate(
+        date: dateStr,
+        lang: lang,
+        utcOffset: offset,
       );
-    } catch (_) {}
+      final liveFuture = isToday
+          ? repository.getLiveMatchesFlat(lang: lang, utcOffset: offset)
+          : null;
 
-    result.fold(
-      onSuccess: (leagues) {
-        var populatedLeagues = leagues;
-        if (liveResult != null) {
-          liveResult.fold(
-            onSuccess: (liveList) {
-              populatedLeagues = _overlayLiveMatches(leagues, liveList);
-            },
-            onFailure: (_) {},
-          );
-        }
+      final result = await matchesFuture;
+      final liveResult = liveFuture != null ? await liveFuture : null;
 
-        final reconciledLeagues =
-            RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(
-              restLeagues: populatedLeagues,
-              currentLeagues: state.allLeagues,
+      try {
+        webSocketService.recordRestFallback(
+          isActive:
+              _fallbackPollingTimer != null && _fallbackPollingTimer!.isActive,
+          refreshedAt: DateTime.now(),
+        );
+      } catch (_) {}
+
+      result.fold(
+        onSuccess: (leagues) {
+          var populatedLeagues = leagues;
+          if (liveResult != null) {
+            liveResult.fold(
+              onSuccess: (liveList) {
+                populatedLeagues = _overlayLiveMatches(leagues, liveList);
+              },
+              onFailure: (_) {},
             );
+          }
 
-        final liveCount = _calculateLiveCount(reconciledLeagues);
-        final filtered = _applyFilters(
-          leagues: reconciledLeagues,
-          filter: state.activeFilter,
-          query: state.searchQuery,
-        );
+          final reconciledLeagues =
+              RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(
+                restLeagues: populatedLeagues,
+                currentLeagues: state.allLeagues,
+              );
 
-        emit(
-          state.copyWith(
-            status: reconciledLeagues.isEmpty
-                ? MatchesStatus.empty
-                : MatchesStatus.success,
-            allLeagues: reconciledLeagues,
-            filteredLeagues: filtered,
-            selectedDate: event.date,
-            liveMatchesCount: liveCount,
-            errorMessage: null,
-          ),
-        );
-      },
-      onFailure: (failure) {
-        emit(
-          state.copyWith(
-            status: MatchesStatus.error,
-            errorMessage: failure.message,
-          ),
-        );
-      },
-    );
+          final liveCount = _calculateLiveCount(reconciledLeagues);
+          final filtered = _applyFilters(
+            leagues: reconciledLeagues,
+            filter: state.activeFilter,
+            query: state.searchQuery,
+          );
+
+          emit(
+            state.copyWith(
+              status: reconciledLeagues.isEmpty
+                  ? MatchesStatus.empty
+                  : MatchesStatus.success,
+              allLeagues: reconciledLeagues,
+              filteredLeagues: filtered,
+              selectedDate: event.date,
+              liveMatchesCount: liveCount,
+              errorMessage: null,
+            ),
+          );
+        },
+        onFailure: (failure) {
+          emit(
+            state.copyWith(
+              status: MatchesStatus.error,
+              errorMessage: failure.message,
+            ),
+          );
+        },
+      );
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
+    }
   }
 
   void _onChangeFilter(ChangeFilterEvent event, Emitter<MatchesState> emit) {

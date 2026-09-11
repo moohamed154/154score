@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 
 abstract class LeagueEvent extends Equatable {
@@ -10,8 +12,13 @@ abstract class LeagueEvent extends Equatable {
 class LoadLeagueDetailsEvent extends LeagueEvent {
   final String leagueId;
   final bool isRefresh;
+  final Completer<void>? completer;
 
-  const LoadLeagueDetailsEvent(this.leagueId, {this.isRefresh = false});
+  const LoadLeagueDetailsEvent(
+    this.leagueId, {
+    this.isRefresh = false,
+    this.completer,
+  });
 
   @override
   List<Object?> get props => [leagueId, isRefresh];

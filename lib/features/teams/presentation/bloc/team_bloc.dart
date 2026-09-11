@@ -66,6 +66,10 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
       emit(
         state.copyWith(status: TeamStatus.error, errorMessage: e.toString()),
       );
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
     }
   }
 

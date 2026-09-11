@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 
 abstract class TeamEvent extends Equatable {
@@ -12,12 +14,14 @@ class LoadTeamProfileEvent extends TeamEvent {
   final String? teamName;
   final String? leagueId;
   final bool isRefresh;
+  final Completer<void>? completer;
 
   const LoadTeamProfileEvent(
     this.teamId, {
     this.teamName,
     this.leagueId,
     this.isRefresh = false,
+    this.completer,
   });
 
   @override

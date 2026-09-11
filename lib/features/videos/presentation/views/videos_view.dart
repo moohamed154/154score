@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -109,12 +111,17 @@ class _VideosViewState extends State<VideosView> {
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: () async {
+                    final completer = Completer<void>();
                     context.read<VideosBloc>().add(
                       LoadVideosEvent(
                         champId: state.selectedCategory,
                         isRefresh: true,
+                        completer: completer,
                       ),
                     );
+                    try {
+                      await completer.future.timeout(const Duration(seconds: 3));
+                    } catch (_) {}
                   },
                   child: _buildBody(context, state),
                 ),

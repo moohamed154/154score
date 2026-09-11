@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -138,9 +140,17 @@ class _LeagueViewState extends State<LeagueView>
                 child: RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: () async {
+                    final completer = Completer<void>();
                     context.read<LeagueBloc>().add(
-                      LoadLeagueDetailsEvent(widget.leagueId, isRefresh: true),
+                      LoadLeagueDetailsEvent(
+                        widget.leagueId,
+                        isRefresh: true,
+                        completer: completer,
+                      ),
                     );
+                    try {
+                      await completer.future.timeout(const Duration(seconds: 3));
+                    } catch (_) {}
                   },
                   child: state.status == LeagueStatus.loading
                       ? Skeletonizer(
