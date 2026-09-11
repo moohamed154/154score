@@ -1262,11 +1262,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           final item = state.news[index];
           return Card(
             elevation: 0,
-            color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               side: BorderSide(
-                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                 width: 0.8,
               ),
             ),
@@ -1287,11 +1287,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                           width: 56,
                           height: 56,
                           color: isDark
-                              ? AppColors.cardSurfaceDark
-                              : AppColors.cardSurfaceLight,
-                          child: const Icon(
+                              ? AppColors.darkSurface
+                              : AppColors.lightSurface,
+                          child: Icon(
                             Icons.article_rounded,
-                            color: AppColors.textSecondary,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
                           ),
                         ),
                       )
@@ -1299,11 +1301,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                         width: 56,
                         height: 56,
                         color: isDark
-                            ? AppColors.cardSurfaceDark
-                            : AppColors.cardSurfaceLight,
-                        child: const Icon(
+                            ? AppColors.darkSurface
+                            : AppColors.lightSurface,
+                        child: Icon(
                           Icons.article_rounded,
-                          color: AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
                         ),
                       ),
               ),
@@ -1326,8 +1330,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                           isArabic: isArabic,
                         ).copyWith(
                           color: isDark
-                              ? AppColors.textSecondaryDark
-                              : AppColors.textSecondaryLight,
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
                           fontSize: 11,
                         ),
                       ),
@@ -1336,7 +1340,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               onTap: () {
                 final link = item.link;
                 if (link != null && link.isNotEmpty) {
-                  UrlHelper.openExternalUrl(link);
+                  UrlHelper.launchExternalUrl(link, context: context);
                 }
               },
             ),
