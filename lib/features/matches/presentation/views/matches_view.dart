@@ -11,6 +11,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/match_entity.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../bloc/matches_bloc.dart';
 import '../bloc/matches_event.dart';
 import '../bloc/matches_state.dart';
@@ -91,8 +92,18 @@ class _MatchesViewState extends State<MatchesView> {
           const SizedBox(width: 4),
         ],
       ),
-      body: BlocBuilder<MatchesBloc, MatchesState>(
-        builder: (context, state) {
+      body: BlocListener<FavoritesCubit, FavoritesState>(
+        listener: (context, favState) {
+          final bloc = context.read<MatchesBloc>();
+          bloc.add(
+            ApplyMatchesFilterEvent(
+              filter: bloc.state.activeFilter,
+              sortOrder: bloc.state.sortOrder,
+            ),
+          );
+        },
+        child: BlocBuilder<MatchesBloc, MatchesState>(
+          builder: (context, state) {
           return Column(
             children: [
               // 1. Date Selector Strip
@@ -168,8 +179,9 @@ class _MatchesViewState extends State<MatchesView> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildBody(BuildContext context, MatchesState state) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

@@ -451,6 +451,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     required String query,
   }) {
     final cleanQuery = query.trim().toLowerCase();
+    final favCompetitions = localStorageService.getFavoriteCompetitions();
+    final favTeams = localStorageService.getFavoriteTeams();
 
     final result = leagues
         .where((league) {
@@ -467,6 +469,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           return true;
         })
         .map((league) {
+          final isLeagueFavorite = favCompetitions.any((comp) {
+            final cleanComp = comp.trim().toLowerCase();
+            return cleanComp == league.leagueTitle.trim().toLowerCase() ||
+                (league.leagueId != null &&
+                    cleanComp == league.leagueId!.trim().toLowerCase());
+          });
+
           final matches = league.matches.where((match) {
             final phase = MatchStatusHelper.parseStatus(
               match.status,
@@ -478,13 +487,32 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
               score2: match.score2,
             );
 
+            // Check if match belongs to a favorite league
+            final isMatchLeagueFavorite = isLeagueFavorite ||
+                (match.leagueTitle != null &&
+                    favCompetitions.any((c) =>
+                        c.trim().toLowerCase() ==
+                        match.leagueTitle!.trim().toLowerCase())) ||
+                (match.leagueId != null &&
+                    favCompetitions.any((c) =>
+                        c.trim().toLowerCase() ==
+                        match.leagueId!.trim().toLowerCase()));
+
+            // Check if either team is marked as favorite
+            final isTeamFavorite = favTeams.any((team) {
+              final cleanTeam = team.trim().toLowerCase();
+              return cleanTeam == match.team1.trim().toLowerCase() ||
+                  cleanTeam == match.team2.trim().toLowerCase();
+            });
+
             // Apply status filter
             final matchesFilter = switch (filter) {
               MatchFilterType.all => true,
               MatchFilterType.live => MatchStatusHelper.isLive(phase),
               MatchFilterType.upcoming => MatchStatusHelper.isUpcoming(phase),
               MatchFilterType.finished => MatchStatusHelper.isFinished(phase),
-              MatchFilterType.favorites => match.isFavorite,
+              MatchFilterType.favorites =>
+                isMatchLeagueFavorite || match.isFavorite || isTeamFavorite,
             };
 
             if (!matchesFilter) return false;
@@ -586,6 +614,20 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         );
         if (aHasLive && !bHasLive) return -1;
         if (!aHasLive && bHasLive) return 1;
+
+        final aIsFav = favCompetitions.any((c) {
+          final clean = c.trim().toLowerCase();
+          return clean == a.leagueTitle.trim().toLowerCase() ||
+              (a.leagueId != null && clean == a.leagueId!.trim().toLowerCase());
+        });
+        final bIsFav = favCompetitions.any((c) {
+          final clean = c.trim().toLowerCase();
+          return clean == b.leagueTitle.trim().toLowerCase() ||
+              (b.leagueId != null && clean == b.leagueId!.trim().toLowerCase());
+        });
+        if (aIsFav && !bIsFav) return -1;
+        if (!aIsFav && bIsFav) return 1;
+
         return 0;
       });
     }
