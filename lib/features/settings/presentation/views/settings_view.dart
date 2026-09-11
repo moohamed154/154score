@@ -29,7 +29,10 @@ class _SettingsViewState extends State<SettingsView> {
     final ws = sl<WebSocketService>();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.translate('settings_title'))),
+      appBar: AppBar(
+        title: Text(l10n.translate('settings_title')),
+        automaticallyImplyLeading: false,
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppDimensions.lg),
         children: [
@@ -334,7 +337,6 @@ class _SettingsViewState extends State<SettingsView> {
   }) {
     return Material(
       color: isDark ? AppColors.darkCard : AppColors.lightCard,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),

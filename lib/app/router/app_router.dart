@@ -105,6 +105,16 @@ class AppRouter {
               ),
             ],
           ),
+
+          // Branch 7: Settings
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (context, state) => const SettingsView(),
+              ),
+            ],
+          ),
         ],
       ),
 
@@ -258,12 +268,7 @@ class AppRouter {
         },
       ),
 
-      // Settings
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/settings',
-        builder: (context, state) => const SettingsView(),
-      ),
+      // Settings is now a shell branch (Branch 7) — see StatefulShellRoute above.
 
 
     ],

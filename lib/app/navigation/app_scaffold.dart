@@ -56,11 +56,18 @@ class AppScaffold extends StatelessWidget {
           );
         }
 
-        // Mobile Layout (< 768px)
+        // Map shell branch index → bottom nav display index
+        // Branch 7 (Settings) → nav item 5; branches 5/6 not shown → fallback 0
+        final navIndex = switch (navigationShell.currentIndex) {
+          >= 0 && <= 4 => navigationShell.currentIndex,
+          7 => 5,
+          _ => 0,
+        };
+
         return Scaffold(
           body: navigationShell,
           bottomNavigationBar: BottomNavigationBar(
-            currentIndex: navigationShell.currentIndex,
+            currentIndex: navIndex,
             onTap: (index) => _onTap(context, index),
             items: [
               BottomNavigationBarItem(
@@ -113,14 +120,11 @@ class AppScaffold extends StatelessWidget {
   }
 
   void _onTap(BuildContext context, int index) {
-    // Index 5 = More / Settings — push as overlay, not a shell branch
-    if (index == 5) {
-      context.push('/settings');
-      return;
-    }
+    // Map bottom nav index 5 (Settings) to shell branch 7
+    final branchIndex = index == 5 ? 7 : index;
     navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
+      branchIndex,
+      initialLocation: branchIndex == navigationShell.currentIndex,
     );
   }
 
