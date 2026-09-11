@@ -555,32 +555,117 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         queryParameters: {'lang': lang},
       );
 
-      final newsList = <MatchNewsItemEntity>[];
-      if (response is Map && response['data'] is List) {
-        final list = response['data'] as List;
-        for (final item in list) {
-          if (item is Map) {
-            final title = item['title']?.toString() ?? '';
-            if (title.isNotEmpty) {
-              final rawImg = item['image']?.toString();
-              final normImg = UrlHelper.normalizeImageUrl(rawImg);
+      var newsList = _parseNewsResponse(response);
 
-              newsList.add(
-                MatchNewsItemEntity(
-                  title: title,
-                  image: normImg,
-                  link: item['link']?.toString(),
-                  date: item['date']?.toString(),
-                ),
-              );
-            }
-          }
-        }
+      // Fallback: If match-specific news is empty, fetch general news
+      if (newsList.isEmpty) {
+        try {
+          final generalResponse = await _client.get(
+            ApiEndpoints.news,
+            queryParameters: {'lang': lang},
+          );
+          newsList = _parseNewsResponse(generalResponse);
+        } catch (_) {}
       }
+
       return newsList;
     } catch (_) {
-      return [];
+      try {
+        final generalResponse = await _client.get(
+          ApiEndpoints.news,
+          queryParameters: {'lang': lang},
+        );
+        return _parseNewsResponse(generalResponse);
+      } catch (_) {
+        return [];
+      }
     }
+  }
+
+  static List<MatchNewsItemEntity> _parseNewsResponse(dynamic response) {
+    dynamic parsed = response;
+    if (parsed is String && parsed.trim().isNotEmpty) {
+      try {
+        parsed = jsonDecode(parsed);
+      } catch (_) {}
+    }
+
+    final rawItems = <Map<String, dynamic>>[];
+
+    void extractArticles(dynamic node) {
+      if (node == null) return;
+      if (node is List) {
+        for (final item in node) {
+          extractArticles(item);
+        }
+      } else if (node is Map) {
+        final map = Map<String, dynamic>.from(node);
+
+        // If this is a section wrapper: { "section": "...", "items": [...] }
+        if (map.containsKey('items')) {
+          extractArticles(map['items']);
+          return;
+        }
+
+        // If this is an envelope: { "data": [...] }
+        if (map.containsKey('data')) {
+          extractArticles(map['data']);
+          return;
+        }
+
+        final title = (map['title']?.toString() ??
+                map['news_title']?.toString() ??
+                map['name']?.toString() ??
+                '')
+            .trim();
+
+        if (title.isNotEmpty &&
+            !title.toLowerCase().contains('download-yalla-shoot')) {
+          rawItems.add(map);
+        }
+      }
+    }
+
+    extractArticles(parsed);
+
+    final newsList = <MatchNewsItemEntity>[];
+    final seenTitles = <String>{};
+
+    for (final item in rawItems) {
+      final title = (item['title']?.toString() ??
+              item['news_title']?.toString() ??
+              item['name']?.toString() ??
+              '')
+          .trim();
+
+      if (title.isEmpty || seenTitles.contains(title)) continue;
+      seenTitles.add(title);
+
+      final rawImg = item['image']?.toString() ??
+          item['thumbnail']?.toString() ??
+          item['img']?.toString();
+      final normImg = UrlHelper.normalizeImageUrl(rawImg);
+
+      final link = item['url']?.toString() ??
+          item['link']?.toString() ??
+          (item['article_id'] != null ? '/news/${item['article_id']}' : null);
+
+      final date = item['published_at']?.toString() ??
+          item['date']?.toString() ??
+          item['time']?.toString() ??
+          item['created_at']?.toString();
+
+      newsList.add(
+        MatchNewsItemEntity(
+          title: title,
+          image: normImg,
+          link: link,
+          date: date,
+        ),
+      );
+    }
+
+    return newsList;
   }
 
   @override

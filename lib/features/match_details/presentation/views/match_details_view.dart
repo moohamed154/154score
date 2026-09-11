@@ -1231,47 +1231,118 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     if (state.news.isEmpty) {
-      return const EmptyView(titleKey: 'tab_news', icon: Icons.article_rounded);
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: _handleRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            EmptyView(
+              titleKey: 'tab_news',
+              icon: Icons.article_rounded,
+              customMessage: isArabic
+                  ? 'لا توجد أخبار متعلقة بهذه المباراة حالياً'
+                  : 'No news articles available for this match at the moment',
+            ),
+          ],
+        ),
+      );
     }
 
-    return ListView.separated(
-      key: const PageStorageKey('news_tab_list'),
-      padding: EdgeInsets.all(hMargin),
-      itemCount: state.news.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.sm),
-      itemBuilder: (context, index) {
-        final item = state.news[index];
-        return Card(
-          child: ListTile(
-            leading: item.image != null && item.image!.isNotEmpty
-                ? Image.network(
-                    item.image!,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.article_rounded),
-                  )
-                : const Icon(Icons.article_rounded),
-            title: Text(
-              item.title,
-              style: AppTypography.getBodyMedium(
-                isDark: isDark,
-                isArabic: isArabic,
-              ).copyWith(fontWeight: FontWeight.w600),
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _handleRefresh,
+      child: ListView.separated(
+        key: const PageStorageKey('news_tab_list'),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(hMargin),
+        itemCount: state.news.length,
+        separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.sm),
+        itemBuilder: (context, index) {
+          final item = state.news[index];
+          return Card(
+            elevation: 0,
+            color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              side: BorderSide(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                width: 0.8,
+              ),
             ),
-            subtitle: item.date != null
-                ? Text(
-                    item.date!,
-                    style: AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ),
-                  )
-                : null,
-          ),
-        );
-      },
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.md,
+                vertical: AppDimensions.xs,
+              ),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+                child: item.image != null && item.image!.isNotEmpty
+                    ? Image.network(
+                        item.image!,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 56,
+                          height: 56,
+                          color: isDark
+                              ? AppColors.cardSurfaceDark
+                              : AppColors.cardSurfaceLight,
+                          child: const Icon(
+                            Icons.article_rounded,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        width: 56,
+                        height: 56,
+                        color: isDark
+                            ? AppColors.cardSurfaceDark
+                            : AppColors.cardSurfaceLight,
+                        child: const Icon(
+                          Icons.article_rounded,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+              ),
+              title: Text(
+                item.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.getBodyMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(fontWeight: FontWeight.w600),
+              ),
+              subtitle: item.date != null && item.date!.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        item.date!,
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          color: isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight,
+                          fontSize: 11,
+                        ),
+                      ),
+                    )
+                  : null,
+              onTap: () {
+                final link = item.link;
+                if (link != null && link.isNotEmpty) {
+                  UrlHelper.openExternalUrl(link);
+                }
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
