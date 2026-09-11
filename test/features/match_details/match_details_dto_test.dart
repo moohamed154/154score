@@ -257,5 +257,107 @@ void main() {
       expect(chips[1].title, contains('سيرجينيو ديست'));
       expect(chips[2].title, contains('جليكير ميندوزا'));
     });
+
+    test('when has_video is false, MatchVideosEntity hasVideo is false and allChips is empty', () async {
+      when(() => mockApiClient.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          )).thenAnswer(
+        (_) async => {
+          'success': true,
+          'data': [
+            {
+              'section': 'الأحداث',
+              'items': {
+                'has_video': false,
+                'match_summary': null,
+                'match_goals': null,
+                'video_links': [],
+                'videos': {
+                  'has_video': false,
+                  'summary': null,
+                  'goals': null,
+                  'full_match': null,
+                  'all': [],
+                  'goal_clips': []
+                },
+                'all_events': [],
+              },
+            },
+          ],
+        },
+      );
+
+      final payload = await dataSource.getEventsPayload('123456', lang: 'ar');
+
+      expect(payload.videos.hasVideo, isFalse);
+      expect(payload.videos.allChips, isEmpty);
+      expect(payload.videos.isEmpty, isTrue);
+      expect(payload.videos.isNotEmpty, isFalse);
+    });
+
+    test('news parsing drops items with تحميل تطبيق يلا شووت and download links', () async {
+      when(() => mockApiClient.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          )).thenAnswer(
+        (_) async => {
+          'success': true,
+          'data': [
+            {
+              'section': 'الأخبار',
+              'items': [
+                {
+                  'title': 'تحميل تطبيق يلا شووت للهواتف الذكية',
+                  'url': 'https://www.ysscores.com/ar/Download-Yalla-Shoot-App',
+                },
+                {
+                  'title': 'ريال مدريد يحقق فوزا مثيرا في الدوري',
+                  'url': 'https://www.ysscores.com/ar/news/12345',
+                },
+              ],
+            },
+          ],
+        },
+      );
+
+      final news = await dataSource.getNews('123456', lang: 'ar');
+
+      expect(news.length, 1);
+      expect(news.first.title, 'ريال مدريد يحقق فوزا مثيرا في الدوري');
+      expect(news.any((n) => n.title.contains('تحميل تطبيق')), isFalse);
+    });
+
+    test('news parsing drops items with Download Yalla Shoot App and download links in English too', () async {
+      when(() => mockApiClient.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          )).thenAnswer(
+        (_) async => {
+          'success': true,
+          'data': [
+            {
+              'section': 'News',
+              'items': [
+                {
+                  'title': 'Download Yalla Shoot App for Android and iOS',
+                  'url': 'https://www.ysscores.com/en/Download-Yalla-Shoot-App',
+                },
+                {
+                  'title': 'Real Madrid achieves an exciting league victory',
+                  'url': 'https://www.ysscores.com/en/news/12345',
+                },
+              ],
+            },
+          ],
+        },
+      );
+
+      final news = await dataSource.getNews('123456', lang: 'en');
+
+      expect(news.length, 1);
+      expect(news.first.title, 'Real Madrid achieves an exciting league victory');
+      expect(news.any((n) => n.title.toLowerCase().contains('download yalla shoot')), isFalse);
+    });
   });
 }

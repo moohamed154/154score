@@ -38,6 +38,9 @@ class ApiClient {
           return handler.next(options);
         },
         onResponse: (response, handler) {
+          if (response.data != null) {
+            response.data = _sanitizeResponseData(response.data);
+          }
           return handler.next(response);
         },
         onError: (DioException error, handler) {
@@ -64,6 +67,9 @@ class ApiClient {
         options: options,
         cancelToken: cancelToken,
       );
+      if (response.data != null) {
+        return _sanitizeResponseData(response.data);
+      }
       return response.data;
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -137,5 +143,65 @@ class ApiClient {
       default:
         return ServerException(error.message ?? 'Unexpected server error.');
     }
+  }
+
+  static dynamic _sanitizeResponseData(dynamic data) {
+    if (data == null) return null;
+    if (data is String) {
+      return _sanitizeString(data);
+    }
+    if (data is List) {
+      final sanitizedList = [];
+      for (final item in data) {
+        if (_shouldDropItem(item)) continue;
+        sanitizedList.add(_sanitizeResponseData(item));
+      }
+      return sanitizedList;
+    }
+    if (data is Map) {
+      final sanitizedMap = <String, dynamic>{};
+      for (final entry in data.entries) {
+        sanitizedMap[entry.key.toString()] = _sanitizeResponseData(entry.value);
+      }
+      return sanitizedMap;
+    }
+    return data;
+  }
+
+  static final RegExp _forbiddenRegExp = RegExp(
+    r'(تحميل تطبيق يلا شووت|تحميل تطبيق يلا شوت|تحميل تطبيق يلاشووت|تحميل تطبيق يلاشود|download\s*yalla[- ]*shoot(\s*app)?|download\s*ys\s*scores?(\s*app)?)',
+    caseSensitive: false,
+  );
+
+  static String _sanitizeString(String str) {
+    if (!_forbiddenRegExp.hasMatch(str)) return str;
+    return str.replaceAll(_forbiddenRegExp, '').trim();
+  }
+
+  static bool _shouldDropItem(dynamic item) {
+    if (item is! Map) return false;
+    final title = (item['title'] ?? item['name'] ?? item['news_title'] ?? '')
+        .toString()
+        .trim();
+    final url = (item['url'] ?? item['link'] ?? item['href'] ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
+
+    if (_forbiddenRegExp.hasMatch(title) ||
+        (title.contains('تحميل تطبيق') &&
+            (title.contains('يلا') ||
+                title.contains('شووت') ||
+                title.contains('شوت')))) {
+      return true;
+    }
+
+    if (url.contains('download-yalla-shoot') ||
+        url.contains('download-ysscores') ||
+        url.contains('download-app')) {
+      return true;
+    }
+
+    return false;
   }
 }

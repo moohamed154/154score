@@ -9,6 +9,7 @@ import 'package:ysscores/core/theme/app_theme.dart';
 import 'package:ysscores/core/websocket/websocket_service.dart';
 import 'package:ysscores/features/match_details/domain/repositories/match_details_repository.dart';
 import 'package:ysscores/features/match_details/presentation/bloc/match_details_bloc.dart';
+import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
 import 'package:ysscores/features/match_details/presentation/views/match_details_view.dart';
 import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
 
@@ -59,6 +60,8 @@ void main() {
     when(() => ws.updatesStream).thenAnswer((_) => const Stream.empty());
     when(() => repo.getEvents(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess([]));
+    when(() => repo.getEventsPayload(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(MatchEventsPayload()));
     when(() => repo.getStats(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess([]));
     when(
@@ -319,7 +322,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify repository was queried on refresh
-      verify(() => repo.getEvents('test123', lang: any(named: 'lang'))).called(greaterThanOrEqualTo(1));
+      verify(() => repo.getEventsPayload('test123', lang: any(named: 'lang'))).called(greaterThanOrEqualTo(1));
     });
   });
 }

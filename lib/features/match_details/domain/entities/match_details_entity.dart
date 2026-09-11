@@ -357,6 +357,7 @@ class MatchVideosEntity extends Equatable {
 
   /// All unique video items ready to display as chips or in a gallery
   List<MatchVideoItemEntity> get allChips {
+    if (!hasVideo) return const [];
     final list = <MatchVideoItemEntity>[];
     final seenUrls = <String>{};
 
@@ -381,8 +382,8 @@ class MatchVideosEntity extends Equatable {
     return list;
   }
 
-  bool get isEmpty => !hasVideo && allChips.isEmpty;
-  bool get isNotEmpty => !isEmpty;
+  bool get isEmpty => !hasVideo || allChips.isEmpty;
+  bool get isNotEmpty => hasVideo && allChips.isNotEmpty;
 
   static MatchVideosEntity fromJson(dynamic json, {bool isArabic = true}) {
     if (json == null) return const MatchVideosEntity();
@@ -420,10 +421,31 @@ class MatchVideosEntity extends Equatable {
 
     if (itemsMap == null) return const MatchVideosEntity();
 
-    final hasVideo = itemsMap['has_video'] == true ||
-        itemsMap['hasVideo'] == true ||
+    final videosContainer =
+        itemsMap['videos'] is Map ? itemsMap['videos'] as Map : null;
+
+    final explicitHasVideo = itemsMap['has_video'] ??
+        itemsMap['hasVideo'] ??
+        videosContainer?['has_video'] ??
+        videosContainer?['hasVideo'];
+
+    final bool isExplicitlyDisabled =
+        (explicitHasVideo is bool && !explicitHasVideo) ||
+            explicitHasVideo == 'false' ||
+            explicitHasVideo == 0 ||
+            explicitHasVideo == '0';
+
+    if (isExplicitlyDisabled) {
+      return const MatchVideosEntity(hasVideo: false);
+    }
+
+    final bool isExplicitlyEnabled = (explicitHasVideo is bool && explicitHasVideo) ||
+        explicitHasVideo == 'true' ||
+        explicitHasVideo == 1 ||
+        explicitHasVideo == '1' ||
         itemsMap['video'] == 1 ||
-        itemsMap['video'] == '1';
+        itemsMap['video'] == '1' ||
+        itemsMap['video'] == true;
 
     MatchVideoItemEntity? parseItem(dynamic obj, {String? defaultTitle}) {
       if (obj == null) return null;
@@ -463,9 +485,6 @@ class MatchVideosEntity extends Equatable {
       }
       return null;
     }
-
-    final videosContainer =
-        itemsMap['videos'] is Map ? itemsMap['videos'] as Map : null;
 
     final summary = parseItem(
       videosContainer?['summary'] ?? itemsMap['match_summary'],
@@ -516,12 +535,18 @@ class MatchVideosEntity extends Equatable {
       }
     }
 
+    final resolvedHasVideo = isExplicitlyEnabled ||
+        summary != null ||
+        goals != null ||
+        videoLinks.isNotEmpty ||
+        goalClips.isNotEmpty;
+
+    if (!resolvedHasVideo) {
+      return const MatchVideosEntity(hasVideo: false);
+    }
+
     return MatchVideosEntity(
-      hasVideo: hasVideo ||
-          summary != null ||
-          goals != null ||
-          videoLinks.isNotEmpty ||
-          goalClips.isNotEmpty,
+      hasVideo: true,
       summary: summary,
       goals: goals,
       fullMatch: fullMatch,

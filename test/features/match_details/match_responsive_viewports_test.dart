@@ -142,6 +142,8 @@ void main() {
 
     when(() => repo.getEvents(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess(sampleEvents));
+    when(() => repo.getEventsPayload(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(MatchEventsPayload(events: sampleEvents)));
     when(() => repo.getStats(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess(sampleStats));
     when(

@@ -138,6 +138,8 @@ void main() {
 
     when(() => repo.getEvents(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess(sampleEvents));
+    when(() => repo.getEventsPayload(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(MatchEventsPayload(events: sampleEvents)));
     when(() => repo.getStats(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess([]));
     when(
@@ -491,7 +493,7 @@ void main() {
       bloc.add(const LoadMatchDetailsEvent('match:5802935'));
       await pumpEventQueue();
 
-      verify(() => repo.getEvents('5802935', lang: any(named: 'lang'))).called(1);
+      verify(() => repo.getEventsPayload('5802935', lang: any(named: 'lang'))).called(1);
       verify(() => repo.getStats('5802935', lang: any(named: 'lang'))).called(1);
       expect(bloc.state.events, sampleEvents);
       expect(bloc.state.matchId, '5802935');

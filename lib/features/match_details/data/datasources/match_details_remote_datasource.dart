@@ -634,9 +634,21 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                 map['name']?.toString() ??
                 '')
             .trim();
+        final link = (map['url'] ?? map['link'])?.toString() ?? '';
 
-        if (title.isNotEmpty &&
-            !title.toLowerCase().contains('download-yalla-shoot')) {
+        final isDownloadPromo = title.contains('تحميل تطبيق يلا شووت') ||
+            title.contains('تحميل تطبيق يلا شوت') ||
+            title.contains('تحميل تطبيق يلاشووت') ||
+            title.contains('تحميل تطبيق') ||
+            title.toLowerCase().contains('download yalla shoot') ||
+            title.toLowerCase().contains('download-yalla-shoot') ||
+            title.toLowerCase().contains('download ysscores') ||
+            title.toLowerCase().contains('download-ysscores') ||
+            link.toLowerCase().contains('download-yalla-shoot') ||
+            link.toLowerCase().contains('download-ysscores') ||
+            link.toLowerCase().contains('download-app');
+
+        if (title.isNotEmpty && !isDownloadPromo) {
           rawItems.add(map);
         }
       }
