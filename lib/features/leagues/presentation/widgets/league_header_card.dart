@@ -50,7 +50,7 @@ class LeagueHeaderCard extends StatelessWidget {
             height: isSmall ? 52 : 64,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? Colors.transparent : Colors.white,
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               border: Border.all(
                 color: isDark
