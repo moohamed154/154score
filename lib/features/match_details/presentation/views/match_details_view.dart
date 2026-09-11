@@ -460,9 +460,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         padding: EdgeInsets.all(hMargin),
         children: [
         // ── Video Highlights Summary Chips ───────────────────────────────
-        _buildVideoSummaryChips(state.videos, state.news, isDark, isArabic),
-        if (state.videos.isNotEmpty || state.news.isNotEmpty)
+        if (state.videos.hasVideo && state.videos.allChips.isNotEmpty) ...[
+          _buildVideoSummaryChips(state.videos, isDark, isArabic),
           const SizedBox(height: AppDimensions.md),
+        ],
 
         // ── Section Title & Filter (الأحداث + [الأبرز | كل الأحداث]) ─────
         Row(
@@ -603,105 +604,39 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   // ── Video Highlights Summary Chips ─────────────────────────────────────────
   Widget _buildVideoSummaryChips(
     MatchVideosEntity videos,
-    List<MatchNewsItemEntity> news,
     bool isDark,
     bool isArabic,
   ) {
-    final videoItems = videos.allChips;
-
-    if (videoItems.isEmpty && news.isEmpty) {
+    if (!videos.hasVideo || videos.allChips.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final hasMatchVideos = videoItems.isNotEmpty;
-    final count = hasMatchVideos ? videoItems.length : news.take(4).length;
+    final videoItems = videos.allChips;
 
     return SizedBox(
       height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: count,
+        itemCount: videoItems.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          if (hasMatchVideos) {
-            final video = videoItems[index];
-            final isGoal = video.type == 'goals' ||
-                video.title.contains('هدف') ||
-                video.title.toLowerCase().contains('goal');
+          final video = videoItems[index];
+          final isGoal = video.type == 'goals' ||
+              video.title.contains('هدف') ||
+              video.title.toLowerCase().contains('goal');
 
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                onTap: () {
-                  UrlHelper.navigateToVideo(
-                    context,
-                    url: video.url,
-                    fallbackErrorMessage: isArabic
-                        ? 'تعذر تشغيل الفيديو'
-                        : 'Could not play video',
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkCardElevated
-                        : AppColors.lightCardElevated,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                    border: Border.all(
-                      color: isDark
-                          ? AppColors.darkBorder
-                          : AppColors.lightBorder,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isGoal
-                            ? Icons.sports_soccer_rounded
-                            : Icons.play_circle_fill_rounded,
-                        size: 18,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        video.title.isNotEmpty
-                            ? video.title
-                            : (isArabic ? 'ملخص المباراة' : 'Highlights'),
-                        style: AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(fontWeight: FontWeight.w600),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-
-          // Fallback: news items
-          final item = news[index];
           return Material(
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
               onTap: () {
-                final link = item.link;
-                if (link != null && link.isNotEmpty) {
-                  UrlHelper.navigateToVideo(
-                    context,
-                    url: link,
-                    thumbnail: item.image,
-                  );
-                }
+                UrlHelper.navigateToVideo(
+                  context,
+                  url: video.url,
+                  fallbackErrorMessage: isArabic
+                      ? 'تعذر تشغيل الفيديو'
+                      : 'Could not play video',
+                );
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -722,15 +657,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.video_library_rounded,
+                    Icon(
+                      isGoal
+                          ? Icons.sports_soccer_rounded
+                          : Icons.play_circle_fill_rounded,
                       size: 18,
                       color: AppColors.primary,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      item.title.isNotEmpty
-                          ? item.title
+                      video.title.isNotEmpty
+                          ? video.title
                           : (isArabic ? 'ملخص المباراة' : 'Highlights'),
                       style: AppTypography.getBodySmall(
                         isDark: isDark,
