@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:skeletonizer/skeletonizer.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -10,6 +12,7 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/widgets/match_card.dart';
 import '../bloc/team_bloc.dart';
 import '../bloc/team_event.dart';
@@ -135,9 +138,49 @@ class _TeamViewState extends State<TeamView>
                     );
                   },
                   child: state.status == TeamStatus.loading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
+                      ? Skeletonizer(
+                          enabled: true,
+                          child: ListView(
+                            padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+                            children: [
+                              SectionHeader(
+                                title: isArabic ? 'المباريات القادمة' : 'Upcoming Matches',
+                              ),
+                              ...List.generate(
+                                2,
+                                (_) => const MatchCard(
+                                  match: MatchEntity(
+                                    id: 'skeleton',
+                                    team1: 'Arsenal FC',
+                                    team2: 'Chelsea FC',
+                                    score1: '0',
+                                    score2: '0',
+                                    status: 'Upcoming',
+                                    time: '20:00',
+                                    leagueTitle: 'Premier League',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SectionHeader(
+                                title: isArabic ? 'آخر النتائج' : 'Recent Results',
+                              ),
+                              ...List.generate(
+                                2,
+                                (_) => const MatchCard(
+                                  match: MatchEntity(
+                                    id: 'skeleton',
+                                    team1: 'Arsenal FC',
+                                    team2: 'Liverpool FC',
+                                    score1: '2',
+                                    score2: '1',
+                                    status: 'Finished',
+                                    time: '18:30',
+                                    leagueTitle: 'Premier League',
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       : state.status == TeamStatus.error

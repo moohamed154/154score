@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -142,9 +143,48 @@ class _LeagueViewState extends State<LeagueView>
                     );
                   },
                   child: state.status == LeagueStatus.loading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
+                      ? Skeletonizer(
+                          enabled: true,
+                          child: ListView(
+                            padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+                            children: [
+                              SectionHeader(
+                                title: isArabic ? 'المباريات' : 'Matches',
+                              ),
+                              ...List.generate(
+                                3,
+                                (_) => const MatchCard(
+                                  match: MatchEntity(
+                                    id: 'skeleton',
+                                    team1: 'Arsenal FC',
+                                    team2: 'Chelsea FC',
+                                    score1: '2',
+                                    score2: '1',
+                                    status: 'Finished',
+                                    time: '20:00',
+                                    leagueTitle: 'Premier League',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SectionHeader(
+                                title: isArabic ? 'جدول الترتيب' : 'Standings',
+                              ),
+                              ...List.generate(
+                                4,
+                                (_) => Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       : state.status == LeagueStatus.error

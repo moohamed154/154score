@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -355,9 +356,32 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                   Expanded(
                     child: (state.status == MatchDetailsStatus.loading ||
                             state.status == MatchDetailsStatus.initial)
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.primary,
+                        ? Skeletonizer(
+                            enabled: true,
+                            child: ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                                Container(
+                                  height: 24,
+                                  width: 140,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ...List.generate(
+                                  5,
+                                  (_) => Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         : state.status == MatchDetailsStatus.error
@@ -1069,8 +1093,22 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       child: BlocBuilder<StandingsBloc, StandingsState>(
         builder: (context, state) {
           if (state.status == StandingsStatus.loading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+            return Skeletonizer(
+              enabled: true,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: List.generate(
+                  8,
+                  (_) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
             );
           }
 

@@ -1,17 +1,20 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:skeletonizer/skeletonizer.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
-import '../../../../core/widgets/skeleton_loader.dart';
+import '../../domain/entities/match_entity.dart';
 import '../bloc/matches_bloc.dart';
 import '../bloc/matches_event.dart';
 import '../bloc/matches_state.dart';
 import '../widgets/horizontal_date_selector.dart';
 import '../widgets/league_section_widget.dart';
+import '../widgets/match_card.dart';
 import '../widgets/match_filters_bar.dart';
 
 class MatchesView extends StatefulWidget {
@@ -24,6 +27,17 @@ class MatchesView extends StatefulWidget {
 class _MatchesViewState extends State<MatchesView> {
   bool _isSearchVisible = false;
   final TextEditingController _searchController = TextEditingController();
+
+  static const _dummyMatch = MatchEntity(
+    id: 'skeleton',
+    team1: 'Arsenal FC',
+    team2: 'Chelsea FC',
+    score1: '2',
+    score2: '1',
+    status: 'Finished',
+    time: '20:00',
+    leagueTitle: 'Premier League',
+  );
 
   @override
   void initState() {
@@ -42,46 +56,23 @@ class _MatchesViewState extends State<MatchesView> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
-        title: _isSearchVisible
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: l10n.translate('search_placeholder'),
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                    fontSize: 14,
-                  ),
-                ),
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                ),
-                onChanged: (val) {
-                  context.read<MatchesBloc>().add(SearchMatchesEvent(val));
-                },
-              )
-            : Text(l10n.translate('nav_matches')),
+        title: Text(
+          AppLocalizations.of(context).translate('nav_matches'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
-            icon: Icon(
-              _isSearchVisible ? Icons.close_rounded : Icons.search_rounded,
-            ),
+            icon: Icon(_isSearchVisible ? Icons.close : Icons.search),
             onPressed: () {
               setState(() {
                 _isSearchVisible = !_isSearchVisible;
                 if (!_isSearchVisible) {
                   _searchController.clear();
-                  context.read<MatchesBloc>().add(const SearchMatchesEvent(''));
+                  context.read<MatchesBloc>().add(
+                    const SearchMatchesEvent(''),
+                  );
                 }
               });
             },
@@ -92,26 +83,49 @@ class _MatchesViewState extends State<MatchesView> {
         builder: (context, state) {
           return Column(
             children: [
-              // 1. Horizontal Date Strip
+              // 1. Date Selector Strip
               HorizontalDateSelector(
                 selectedDate: state.selectedDate,
                 onDateSelected: (date) {
-                  context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+                  context.read<MatchesBloc>().add(
+                    LoadMatchesEvent(date: date),
+                  );
                 },
               ),
 
-              const SizedBox(height: 8),
+              // Search Box if visible
+              if (_isSearchVisible)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.md,
+                    vertical: AppDimensions.xs,
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context).translate('search_hint'),
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    onChanged: (query) {
+                      context.read<MatchesBloc>().add(SearchMatchesEvent(query));
+                    },
+                  ),
+                ),
 
-              // 2. Filters Bar
+              // 2. Filter Tabs (Live, Finished, Upcoming, All)
               MatchFiltersBar(
                 activeFilter: state.activeFilter,
                 liveCount: state.liveMatchesCount,
                 onFilterSelected: (filter) {
-                  context.read<MatchesBloc>().add(ChangeFilterEvent(filter));
+                  context.read<MatchesBloc>().add(
+                    ChangeFilterEvent(filter),
+                  );
                 },
               ),
-
-              const SizedBox(height: 8),
 
               // 3. Main Matches Content
               Expanded(
@@ -137,10 +151,13 @@ class _MatchesViewState extends State<MatchesView> {
 
   Widget _buildBody(BuildContext context, MatchesState state) {
     if (state.status == MatchesStatus.loading) {
-      return ListView.builder(
-        itemCount: 6,
-        padding: const EdgeInsets.only(top: AppDimensions.sm),
-        itemBuilder: (_, __) => const MatchCardSkeleton(),
+      return Skeletonizer(
+        enabled: true,
+        child: ListView.builder(
+          itemCount: 6,
+          padding: const EdgeInsets.only(top: AppDimensions.sm),
+          itemBuilder: (_, __) => const MatchCard(match: _dummyMatch),
+        ),
       );
     }
 

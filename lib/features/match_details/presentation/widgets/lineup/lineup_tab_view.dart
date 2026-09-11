@@ -5,7 +5,7 @@ import 'package:ysscores/core/constants/app_colors.dart';
 import 'package:ysscores/core/constants/app_dimensions.dart';
 import 'package:ysscores/core/localization/app_localizations.dart';
 import 'package:ysscores/core/widgets/error_view.dart';
-import 'package:ysscores/core/widgets/skeleton_loader.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:ysscores/features/match_details/presentation/bloc/match_details_bloc.dart';
 import 'package:ysscores/features/match_details/presentation/bloc/match_details_event.dart';
 import 'package:ysscores/features/match_details/presentation/bloc/match_details_state.dart';
@@ -271,47 +271,68 @@ class _LineupTabViewState extends State<LineupTabView> {
   Widget _buildSkeletonLoader(BuildContext context, bool isDark) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 16),
-      child: Column(
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SkeletonLoader(width: 110, height: 26, borderRadius: 14),
-              SkeletonLoader(width: 120, height: 26, borderRadius: 14),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Pitch Skeleton
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: const AspectRatio(
-                aspectRatio: 1 / 1.40,
-                child: SkeletonLoader(
-                  width: 560,
-                  height: 500,
-                  borderRadius: AppDimensions.radiusLg,
+    return Skeletonizer(
+      enabled: true,
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 110,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                Container(
+                  width: 120,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Pitch Skeleton
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: AspectRatio(
+                  aspectRatio: 1 / 1.40,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          // List Skeletons
-          ...List.generate(
-            4,
-            (i) => const Padding(
-              padding: EdgeInsets.only(bottom: 8.0),
-              child: SkeletonLoader(
-                width: 400,
-                height: 48,
-                borderRadius: AppDimensions.radiusMd,
+            const SizedBox(height: 16),
+            // List Skeletons
+            ...List.generate(
+              4,
+              (i) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Container(
+                  width: 400,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,12 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:skeletonizer/skeletonizer.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../domain/entities/video_entity.dart';
 import '../bloc/videos_bloc.dart';
 import '../widgets/video_card.dart';
 
@@ -125,8 +128,20 @@ class _VideosViewState extends State<VideosView> {
 
   Widget _buildBody(BuildContext context, VideosState state) {
     if (state.status == VideosStatus.loading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+      return Skeletonizer(
+        enabled: true,
+        child: ListView.builder(
+          padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+          itemCount: 6,
+          itemBuilder: (_, __) => const VideoCard(
+            video: VideoItemEntity(
+              id: 'dummy',
+              title: 'Match Highlights and Goals Video Title',
+              championship: 'UEFA Champions League',
+              date: '2025-01-01',
+            ),
+          ),
+        ),
       );
     }
 

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -136,8 +137,60 @@ class _GenericProfileViewState extends State<GenericProfileView> {
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+          ? Skeletonizer(
+              enabled: true,
+              child: ListView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppDimensions.getHorizontalMargin(context),
+                  vertical: 16,
+                ),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: const BoxDecoration(
+                        color: Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Container(
+                      width: 160,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Container(
+                      width: 100,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ...List.generate(
+                    4,
+                    (_) => Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             )
           : _errorMessage != null
           ? ErrorView(message: _errorMessage, onRetry: _loadProfile)

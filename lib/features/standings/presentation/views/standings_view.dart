@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -1234,46 +1235,49 @@ class _StandingsViewState extends State<StandingsView> {
   }
 
   Widget _buildLoadingSkeletons(bool isDark) {
-    return Column(
-      children: List.generate(
-        6,
-        (index) => Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          height: 60,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF161A26) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isDark ? const Color(0xFF22283A) : const Color(0xFFE5E9F2),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1B2338)
-                      : const Color(0xFFE5E9F2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+    return Skeletonizer(
+      enabled: true,
+      child: Column(
+        children: List.generate(
+          6,
+          (index) => Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            height: 60,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF161A26) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? const Color(0xFF22283A) : const Color(0xFFE5E9F2),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  height: 14,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: isDark
                         ? const Color(0xFF1B2338)
                         : const Color(0xFFE5E9F2),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-              ),
-              const SizedBox(width: 40),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF1B2338)
+                          : const Color(0xFFE5E9F2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 40),
+              ],
+            ),
           ),
         ),
       ),

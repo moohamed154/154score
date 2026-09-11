@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:skeletonizer/skeletonizer.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -9,13 +11,14 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/section_header.dart';
-import '../../../../core/widgets/skeleton_loader.dart';
+import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../matches/presentation/widgets/horizontal_date_selector.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
+import '../../../matches/presentation/widgets/match_card.dart';
 import '../../../transfers/presentation/widgets/transfer_card.dart';
 import '../../../videos/presentation/widgets/video_card.dart';
 import '../cubit/home_cubit.dart';
@@ -275,7 +278,26 @@ class _HomeViewState extends State<HomeView> {
           onActionTap: () => context.go('/matches'),
         ),
         if (state.status == MatchesStatus.loading)
-          ...List.generate(3, (_) => const MatchCardSkeleton())
+          Skeletonizer(
+            enabled: true,
+            child: Column(
+              children: List.generate(
+                3,
+                (_) => const MatchCard(
+                  match: MatchEntity(
+                    id: 'skeleton',
+                    team1: 'Arsenal FC',
+                    team2: 'Chelsea FC',
+                    score1: '2',
+                    score2: '1',
+                    status: 'Finished',
+                    time: '20:00',
+                    leagueTitle: 'Premier League',
+                  ),
+                ),
+              ),
+            ),
+          )
         else if (state.status == MatchesStatus.error)
           ErrorView(
             message: state.errorMessage,

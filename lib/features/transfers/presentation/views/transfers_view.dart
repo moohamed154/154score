@@ -1,11 +1,14 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:skeletonizer/skeletonizer.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../domain/entities/transfer_entity.dart';
 import '../bloc/transfers_bloc.dart';
 import '../widgets/transfer_card.dart';
 
@@ -120,8 +123,24 @@ class _TransfersViewState extends State<TransfersView> {
 
   Widget _buildBody(BuildContext context, TransfersState state) {
     if (state.status == TransfersStatus.loading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+      return Skeletonizer(
+        enabled: true,
+        child: ListView.builder(
+          padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+          itemCount: 8,
+          itemBuilder: (_, __) => const TransferCard(
+            transfer: TransferEntity(
+              id: 'dummy',
+              playerName: 'Player Full Name Placeholder',
+              playerPosition: 'Midfielder',
+              fromTeamName: 'Previous Football Club',
+              toTeamName: 'Target Football Club',
+              transferType: 'Permanent Transfer',
+              transferPrice: '€50,000,000',
+              date: '2025-07-01',
+            ),
+          ),
+        ),
       );
     }
 

@@ -53,9 +53,4 @@ class AppColors {
   static const Color ueclOrange = Color(0xFFF59E0B);
   static const Color relegationRed = Color(0xFFEF4444);
 
-  // Shimmer / Skeleton
-  static const Color darkShimmerBase = Color(0xFF1E2836);
-  static const Color darkShimmerHighlight = Color(0xFF2A3644);
-  static const Color lightShimmerBase = Color(0xFFE2E8F0);
-  static const Color lightShimmerHighlight = Color(0xFFF1F5F9);
 }
