@@ -61,6 +61,17 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     loadFavorites();
   }
 
+  Future<void> reorderFavoriteCompetitions(int oldIndex, int newIndex) async {
+    final list = List<String>.from(state.favoriteCompetitions);
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final item = list.removeAt(oldIndex);
+    list.insert(newIndex, item);
+    await _storage.setFavoriteCompetitions(list);
+    emit(state.copyWith(favoriteCompetitions: list));
+  }
+
   Future<void> toggleMatch(String matchId) async {
     await _storage.toggleFavoriteMatch(matchId);
     loadFavorites();

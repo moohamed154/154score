@@ -25,12 +25,21 @@ abstract class LocalStorageService {
   bool isFavoriteTeam(String teamName);
 
   List<String> getFavoriteCompetitions();
+  Future<bool> setFavoriteCompetitions(List<String> list);
   Future<bool> toggleFavoriteCompetition(String compName);
   bool isFavoriteCompetition(String compName);
 
   List<String> getFavoriteMatches();
   Future<bool> toggleFavoriteMatch(String matchId);
   bool isFavoriteMatch(String matchId);
+
+  // Cached Rankings / Standings Directory
+  String? getCachedRankings();
+  Future<bool> setCachedRankings(String json);
+
+  // Tips Persistence
+  bool isReorderTipDismissed();
+  Future<bool> setReorderTipDismissed(bool dismissed);
 }
 
 class LocalStorageServiceImpl implements LocalStorageService {
@@ -45,6 +54,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyFavoriteTeams = 'app_favorite_teams';
   static const String _keyFavoriteCompetitions = 'app_favorite_competitions';
   static const String _keyFavoriteMatches = 'app_favorite_matches';
+  static const String _keyCachedRankings = 'app_cached_rankings';
+  static const String _keyReorderTipDismissed = 'app_reorder_tip_dismissed';
 
   @override
   Future<void> init() async {}
@@ -116,6 +127,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
+  Future<bool> setFavoriteCompetitions(List<String> list) {
+    return _prefs.setStringList(_keyFavoriteCompetitions, list);
+  }
+
+  @override
   Future<bool> toggleFavoriteCompetition(String compName) async {
     final list = getFavoriteCompetitions().toList();
     if (list.contains(compName)) {
@@ -151,4 +167,25 @@ class LocalStorageServiceImpl implements LocalStorageService {
   bool isFavoriteMatch(String matchId) {
     return getFavoriteMatches().contains(matchId);
   }
+
+  @override
+  String? getCachedRankings() {
+    return _prefs.getString(_keyCachedRankings);
+  }
+
+  @override
+  Future<bool> setCachedRankings(String json) {
+    return _prefs.setString(_keyCachedRankings, json);
+  }
+
+  @override
+  bool isReorderTipDismissed() {
+    return _prefs.getBool(_keyReorderTipDismissed) ?? false;
+  }
+
+  @override
+  Future<bool> setReorderTipDismissed(bool dismissed) {
+    return _prefs.setBool(_keyReorderTipDismissed, dismissed);
+  }
 }
+

@@ -41,8 +41,8 @@ class _SettingsViewState extends State<SettingsView> {
           ),
           BlocBuilder<ThemeCubit, ThemeMode>(
             builder: (context, themeMode) {
-              return Container(
-                decoration: _cardDecoration(isDark),
+              return _buildCard(
+                isDark: isDark,
                 child: RadioGroup<ThemeMode>(
                   groupValue: themeMode,
                   onChanged: (mode) {
@@ -88,8 +88,8 @@ class _SettingsViewState extends State<SettingsView> {
           ),
           BlocBuilder<LocaleCubit, Locale>(
             builder: (context, currentLocale) {
-              return Container(
-                decoration: _cardDecoration(isDark),
+              return _buildCard(
+                isDark: isDark,
                 child: RadioGroup<String>(
                   groupValue: currentLocale.languageCode,
                   onChanged: (lang) {
@@ -131,8 +131,8 @@ class _SettingsViewState extends State<SettingsView> {
             isDark,
             isArabic,
           ),
-          Container(
-            decoration: _cardDecoration(isDark),
+          _buildCard(
+            isDark: isDark,
             child: Column(
               children: [
                 ListTile(
@@ -199,8 +199,8 @@ class _SettingsViewState extends State<SettingsView> {
             isDark,
             isArabic,
           ),
-          Container(
-            decoration: _cardDecoration(isDark),
+          _buildCard(
+            isDark: isDark,
             child: Column(
               children: [
                 ListTile(
@@ -252,8 +252,8 @@ class _SettingsViewState extends State<SettingsView> {
             isDark,
             isArabic,
           ),
-          Container(
-            decoration: _cardDecoration(isDark),
+          _buildCard(
+            isDark: isDark,
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,13 +327,22 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  BoxDecoration _cardDecoration(bool isDark) {
-    return BoxDecoration(
+  Widget _buildCard({
+    required bool isDark,
+    required Widget child,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return Material(
       color: isDark ? AppColors.darkCard : AppColors.lightCard,
       borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      border: Border.all(
-        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
+      child: padding != null ? Padding(padding: padding, child: child) : child,
     );
   }
 }

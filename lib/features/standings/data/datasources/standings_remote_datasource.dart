@@ -43,65 +43,117 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
       final promotionData = raw['promotion'] ?? data['promotion'];
       legends.addAll(_parsePromotionLegends(promotionData));
 
-      // 1. Primary Source: raw['list_match'] or data['list_match'] (Contains all 20+ teams / groups)
-      List? listMatch;
-      if (raw['list_match'] is List && (raw['list_match'] as List).isNotEmpty) {
-        listMatch = raw['list_match'] as List;
-      } else if (data['list_match'] is List &&
-          (data['list_match'] as List).isNotEmpty) {
-        listMatch = data['list_match'] as List;
-      }
+      // 1. Primary Source: data['table'] — flat list with full team data
+      //    This is the most reliable source; always try it first.
+      if (data['table'] is List && (data['table'] as List).isNotEmpty) {
+        final tableList = data['table'] as List;
 
-      if (listMatch != null && listMatch.isNotEmpty) {
-        final hasMultiGroups = listMatch.length > 1;
-        for (int gIdx = 0; gIdx < listMatch.length; gIdx++) {
-          final groupItem = listMatch[gIdx];
-          final groupLetter = String.fromCharCode(65 + gIdx);
-          final defaultGroupName = hasMultiGroups
-              ? (lang == 'ar' ? 'المجموعة $groupLetter' : 'Group $groupLetter')
-              : null;
+        // Check if items have meaningful team data (not just color stubs)
+        final hasTeamData = tableList.any((item) =>
+            item is Map &&
+            (item['team_name'] != null || item['team_id'] != null));
 
-          final groupRows = <StandingRowEntity>[];
-
-          if (groupItem is Map) {
-            groupItem.forEach((key, val) {
-              final pos =
-                  int.tryParse(key.toString()) ?? (groupRows.length + 1);
-              if (val is Map) {
-                final row = StandingRowDto.fromJson(
-                  pos,
-                  Map<String, dynamic>.from(val),
-                  groupName: defaultGroupName,
-                ).toEntity();
-                rows.add(row);
-                groupRows.add(row);
-              }
-            });
-          } else if (groupItem is List) {
-            for (int i = 0; i < groupItem.length; i++) {
-              final val = groupItem[i];
-              if (val is Map) {
-                final row = StandingRowDto.fromJson(
-                  i + 1,
-                  Map<String, dynamic>.from(val),
-                  groupName: defaultGroupName,
-                ).toEntity();
-                rows.add(row);
-                groupRows.add(row);
+        if (hasTeamData) {
+          for (int i = 0; i < tableList.length; i++) {
+            final it = tableList[i];
+            if (it is Map) {
+              final row = StandingRowDto.fromJson(
+                i + 1,
+                Map<String, dynamic>.from(it),
+              ).toEntity();
+              rows.add(row);
+              if (row.groupName != null && row.groupName!.isNotEmpty) {
+                groups.putIfAbsent(row.groupName!, () => []).add(row);
               }
             }
-          }
-
-          if (hasMultiGroups &&
-              defaultGroupName != null &&
-              groupRows.isNotEmpty) {
-            groupRows.sort((a, b) => a.position.compareTo(b.position));
-            groups[defaultGroupName] = groupRows;
           }
         }
       }
 
-      // 2. Secondary Source: data['groups'] if groups exist
+      // 2. Secondary Source: raw['list_match'] as a flat list
+      //    Each item is a direct team record (not a group wrapper).
+      //    Only use if data['table'] didn't yield results.
+      if (rows.isEmpty &&
+          raw['list_match'] is List &&
+          (raw['list_match'] as List).isNotEmpty) {
+        final listMatch = raw['list_match'] as List;
+
+        // Determine if items are group-wrapper objects (Map of maps)
+        // or flat team objects (Map with team_name / team_id fields)
+        final isGrouped = listMatch.isNotEmpty &&
+            listMatch.first is Map &&
+            !(listMatch.first as Map).containsKey('team_name') &&
+            !(listMatch.first as Map).containsKey('team_id') &&
+            !(listMatch.first as Map).containsKey('play') &&
+            !(listMatch.first as Map).containsKey('wins');
+
+        if (isGrouped) {
+          // Each item is a group (Map or List of team rows)
+          final hasMultiGroups = listMatch.length > 1;
+          for (int gIdx = 0; gIdx < listMatch.length; gIdx++) {
+            final groupItem = listMatch[gIdx];
+            final groupLetter = String.fromCharCode(65 + gIdx);
+            final defaultGroupName = hasMultiGroups
+                ? (lang == 'ar' ? 'المجموعة $groupLetter' : 'Group $groupLetter')
+                : null;
+
+            final groupRows = <StandingRowEntity>[];
+
+            if (groupItem is Map) {
+              groupItem.forEach((key, val) {
+                final pos =
+                    int.tryParse(key.toString()) ?? (groupRows.length + 1);
+                if (val is Map) {
+                  final row = StandingRowDto.fromJson(
+                    pos,
+                    Map<String, dynamic>.from(val),
+                    groupName: defaultGroupName,
+                  ).toEntity();
+                  rows.add(row);
+                  groupRows.add(row);
+                }
+              });
+            } else if (groupItem is List) {
+              for (int i = 0; i < groupItem.length; i++) {
+                final val = groupItem[i];
+                if (val is Map) {
+                  final row = StandingRowDto.fromJson(
+                    i + 1,
+                    Map<String, dynamic>.from(val),
+                    groupName: defaultGroupName,
+                  ).toEntity();
+                  rows.add(row);
+                  groupRows.add(row);
+                }
+              }
+            }
+
+            if (hasMultiGroups &&
+                defaultGroupName != null &&
+                groupRows.isNotEmpty) {
+              groupRows.sort((a, b) => a.position.compareTo(b.position));
+              groups[defaultGroupName] = groupRows;
+            }
+          }
+        } else {
+          // Flat list of team objects
+          for (int i = 0; i < listMatch.length; i++) {
+            final val = listMatch[i];
+            if (val is Map) {
+              final row = StandingRowDto.fromJson(
+                i + 1,
+                Map<String, dynamic>.from(val),
+              ).toEntity();
+              rows.add(row);
+              if (row.groupName != null && row.groupName!.isNotEmpty) {
+                groups.putIfAbsent(row.groupName!, () => []).add(row);
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Third Source: data['groups'] list format
       if (rows.isEmpty &&
           data['groups'] is List &&
           (data['groups'] as List).isNotEmpty) {
@@ -127,26 +179,6 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
             if (gRows.isNotEmpty) {
               gRows.sort((a, b) => a.position.compareTo(b.position));
               groups[gTitle] = gRows;
-            }
-          }
-        }
-      }
-
-      // 3. Fallback: data['table'] if rows still empty or table has more items
-      if (rows.isEmpty &&
-          data['table'] is List &&
-          (data['table'] as List).isNotEmpty) {
-        final tableList = data['table'] as List;
-        for (int i = 0; i < tableList.length; i++) {
-          final it = tableList[i];
-          if (it is Map) {
-            final row = StandingRowDto.fromJson(
-              i + 1,
-              Map<String, dynamic>.from(it),
-            ).toEntity();
-            rows.add(row);
-            if (row.groupName != null && row.groupName!.isNotEmpty) {
-              groups.putIfAbsent(row.groupName!, () => []).add(row);
             }
           }
         }
@@ -182,7 +214,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
       r'<div[^>]*class="rank-key"[^>]*>([\s\S]*?)<\/div>',
       caseSensitive: false,
     );
-    final fillRegex = RegExp(r'fill=["\x27](#[0-9a-fA-F]{3,8})["\x27]');
+    final fillRegex = RegExp(r"""fill=["'](#[0-9a-fA-F]{3,8})["']""");
     final textRegex = RegExp(
       r'<span[^>]*>([\s\S]*?)<\/span>',
       caseSensitive: false,

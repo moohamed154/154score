@@ -106,38 +106,42 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
         const SizedBox(height: 12),
         ..._popularCompetitions.map((comp) {
           final title = isArabic ? comp.$3 : comp.$2;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Material(
               color: isDark ? AppColors.darkCard : AppColors.lightCard,
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                side: BorderSide(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
               ),
-            ),
-            child: ListTile(
-              leading: const Icon(
-                Icons.emoji_events_outlined,
-                color: AppColors.primary,
+              child: ListTile(
+                leading: const Icon(
+                  Icons.emoji_events_outlined,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  title,
+                  style: AppTypography.getBodyMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                ),
+                trailing: Icon(
+                  isArabic
+                      ? Icons.chevron_left_rounded
+                      : Icons.chevron_right_rounded,
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
+                onTap: () {
+                  context.push('/standings/${comp.$1}');
+                },
               ),
-              title: Text(
-                title,
-                style: AppTypography.getBodyMedium(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(fontWeight: FontWeight.w600),
-              ),
-              trailing: Icon(
-                isArabic
-                    ? Icons.chevron_left_rounded
-                    : Icons.chevron_right_rounded,
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
-              ),
-              onTap: () {
-                context.push('/standings/${comp.$1}');
-              },
             ),
           );
         }),

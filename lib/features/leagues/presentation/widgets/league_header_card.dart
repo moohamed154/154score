@@ -44,14 +44,33 @@ class LeagueHeaderCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // League Logo
-          AppImage(
-            imageUrl: logo,
-            width: isSmall ? 48 : 60,
-            height: isSmall ? 48 : 60,
-            borderRadius: AppDimensions.radiusSm,
-            fit: BoxFit.contain,
-            placeholderIcon: Icons.emoji_events_outlined,
+          // League Logo with high-contrast badge background
+          Container(
+            width: isSmall ? 52 : 64,
+            height: isSmall ? 52 : 64,
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF2A3447)
+                    : const Color(0xFFE2E8F0),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: AppImage(
+              imageUrl: logo,
+              fit: BoxFit.contain,
+              placeholderIcon: Icons.emoji_events_outlined,
+            ),
           ),
           const SizedBox(width: 14),
 

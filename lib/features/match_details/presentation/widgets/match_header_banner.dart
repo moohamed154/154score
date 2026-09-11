@@ -108,6 +108,8 @@ class MatchHeaderBanner extends StatelessWidget {
                         width: 18,
                         height: 18,
                         borderRadius: 4,
+                        backgroundColor: isDark ? Colors.white : null,
+                        padding: isDark ? const EdgeInsets.all(1.5) : null,
                         fit: BoxFit.contain,
                         placeholderIcon: Icons.emoji_events_outlined,
                       ),

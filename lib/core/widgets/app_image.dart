@@ -11,6 +11,8 @@ class AppImage extends StatelessWidget {
   final double borderRadius;
   final BoxFit fit;
   final IconData placeholderIcon;
+  final Color? backgroundColor;
+  final EdgeInsetsGeometry? padding;
 
   const AppImage({
     super.key,
@@ -20,6 +22,8 @@ class AppImage extends StatelessWidget {
     this.borderRadius = 8.0,
     this.fit = BoxFit.cover,
     this.placeholderIcon = Icons.sports_soccer,
+    this.backgroundColor,
+    this.padding,
   });
 
   @override
@@ -46,55 +50,72 @@ class AppImage extends StatelessWidget {
         ? (safeWidth * 0.4).clamp(12.0, 36.0)
         : 16.0;
 
-    final cacheW = (safeWidth != null && safeWidth > 0) ? (safeWidth * 2).toInt() : null;
-    final cacheH = (safeHeight != null && safeHeight > 0) ? (safeHeight * 2).toInt() : null;
+    final cacheW = (safeWidth != null && safeWidth! > 0) ? (safeWidth! * 2).toInt() : null;
+    final cacheH = (safeHeight != null && safeHeight! > 0) ? (safeHeight! * 2).toInt() : null;
 
     final normalizedUrl = UrlHelper.normalizeImageUrl(imageUrl);
 
+    Widget imageContent;
+
     if (normalizedUrl == null || !UrlHelper.isValidImageUrl(normalizedUrl)) {
-      return Container(
+      imageContent = Container(
         width: safeWidth,
         height: safeHeight,
         decoration: BoxDecoration(
-          color: fallbackBg,
+          color: backgroundColor ?? fallbackBg,
           borderRadius: BorderRadius.circular(borderRadius),
         ),
         child: Center(
           child: Icon(placeholderIcon, size: safeIconSize, color: iconColor),
         ),
       );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: CachedNetworkImage(
-        imageUrl: normalizedUrl,
-        width: width,
-        height: height,
-        fit: fit,
-        memCacheWidth: cacheW,
-        memCacheHeight: cacheH,
-        placeholder: (context, url) => Container(
-          width: width,
-          height: height,
-          color: fallbackBg,
-          child: Center(
-            child: Icon(
-              placeholderIcon,
-              size: safePlaceholderIconSize,
-              color: iconColor.withValues(alpha: 0.5),
+    } else {
+      imageContent = ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: CachedNetworkImage(
+          imageUrl: normalizedUrl,
+          width: padding == null ? width : null,
+          height: padding == null ? height : null,
+          fit: fit,
+          memCacheWidth: cacheW,
+          memCacheHeight: cacheH,
+          placeholder: (context, url) => Container(
+            width: width,
+            height: height,
+            color: backgroundColor ?? fallbackBg,
+            child: Center(
+              child: Icon(
+                placeholderIcon,
+                size: safePlaceholderIconSize,
+                color: iconColor.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+          errorWidget: (context, url, error) => Container(
+            width: width,
+            height: height,
+            color: backgroundColor ?? fallbackBg,
+            child: Center(
+              child: Icon(placeholderIcon, size: safeIconSize, color: iconColor),
             ),
           ),
         ),
-        errorWidget: (context, url, error) => Container(
-          width: width,
-          height: height,
-          color: fallbackBg,
-          child: Center(
-            child: Icon(placeholderIcon, size: safeIconSize, color: iconColor),
-          ),
+      );
+    }
+
+    if (backgroundColor != null || padding != null) {
+      return Container(
+        width: safeWidth,
+        height: safeHeight,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(borderRadius),
         ),
-      ),
-    );
+        child: imageContent,
+      );
+    }
+
+    return imageContent;
   }
 }

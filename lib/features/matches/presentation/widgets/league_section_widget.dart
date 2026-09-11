@@ -83,6 +83,8 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                           width: 24,
                           height: 24,
                           borderRadius: 4,
+                          backgroundColor: isDark ? Colors.white : null,
+                          padding: isDark ? const EdgeInsets.all(2) : null,
                           fit: BoxFit.contain,
                           placeholderIcon: Icons.emoji_events_outlined,
                         ),
