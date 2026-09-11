@@ -36,10 +36,12 @@ class AppImage extends StatelessWidget {
         ? AppColors.darkTextMuted
         : AppColors.lightTextMuted;
 
-    final safeWidth = (width != null && width!.isFinite && !width!.isNaN && width! > 0)
+    final safeWidth =
+        (width != null && width!.isFinite && !width!.isNaN && width! > 0)
         ? width
         : null;
-    final safeHeight = (height != null && height!.isFinite && !height!.isNaN && height! > 0)
+    final safeHeight =
+        (height != null && height!.isFinite && !height!.isNaN && height! > 0)
         ? height
         : null;
 
@@ -50,8 +52,12 @@ class AppImage extends StatelessWidget {
         ? (safeWidth * 0.4).clamp(12.0, 36.0)
         : 16.0;
 
-    final cacheW = (safeWidth != null && safeWidth! > 0) ? (safeWidth! * 2).toInt() : null;
-    final cacheH = (safeHeight != null && safeHeight! > 0) ? (safeHeight! * 2).toInt() : null;
+    final cacheW = (safeWidth != null && safeWidth > 0)
+        ? (safeWidth * 2).toInt()
+        : null;
+    final cacheH = (safeHeight != null && safeHeight > 0)
+        ? (safeHeight * 2).toInt()
+        : null;
 
     final normalizedUrl = UrlHelper.normalizeImageUrl(imageUrl);
 
@@ -96,7 +102,11 @@ class AppImage extends StatelessWidget {
             height: height,
             color: backgroundColor ?? fallbackBg,
             child: Center(
-              child: Icon(placeholderIcon, size: safeIconSize, color: iconColor),
+              child: Icon(
+                placeholderIcon,
+                size: safeIconSize,
+                color: iconColor,
+              ),
             ),
           ),
         ),

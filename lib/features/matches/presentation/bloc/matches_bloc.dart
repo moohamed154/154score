@@ -21,6 +21,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   StreamSubscription? _wsSubscription;
   StreamSubscription? _wsStatusSubscription;
   Timer? _fallbackPollingTimer;
+  final Map<String, List<LeagueGroupEntity>> _cachedDateLeagues = {};
 
   MatchesBloc({
     required this.repository,
@@ -29,6 +30,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   }) : super(MatchesState(selectedDate: DateTime.now())) {
     on<LoadMatchesEvent>(_onLoadMatches);
     on<ChangeFilterEvent>(_onChangeFilter);
+    on<ApplyMatchesFilterEvent>(_onApplyMatchesFilter);
+    on<ResetMatchesFilterEvent>(_onResetMatchesFilter);
     on<SearchMatchesEvent>(_onSearchMatches);
     on<LiveMatchReceivedEvent>(_onLiveMatchReceived);
     on<SocketStatusChangedEvent>(_onSocketStatusChanged);
@@ -58,14 +61,37 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     LoadMatchesEvent event,
     Emitter<MatchesState> emit,
   ) async {
-    try {
-      if (!event.isRefresh) {
-        emit(
-          state.copyWith(status: MatchesStatus.loading, selectedDate: event.date),
-        );
-      }
+    final dateStr = DateFormatter.toApiDateString(event.date);
 
-      final dateStr = DateFormatter.toApiDateString(event.date);
+    // 1. SWR Instant Memory Cache: If already loaded, show cached data immediately (0ms)
+    if (!event.isRefresh && _cachedDateLeagues.containsKey(dateStr)) {
+      final cached = _cachedDateLeagues[dateStr]!;
+      final liveCount = _calculateLiveCount(cached);
+      final filtered = _applyFilters(
+        leagues: cached,
+        filter: state.activeFilter,
+        leagueId: state.selectedLeagueId,
+        leagueTitle: state.selectedLeagueTitle,
+        sortOrder: state.sortOrder,
+        query: state.searchQuery,
+      );
+      emit(
+        state.copyWith(
+          status: cached.isEmpty ? MatchesStatus.empty : MatchesStatus.success,
+          allLeagues: cached,
+          filteredLeagues: filtered,
+          selectedDate: event.date,
+          liveMatchesCount: liveCount,
+          errorMessage: null,
+        ),
+      );
+    } else if (!event.isRefresh) {
+      emit(
+        state.copyWith(status: MatchesStatus.loading, selectedDate: event.date),
+      );
+    }
+
+    try {
       final lang = localStorageService.getLanguage();
       final offset = localStorageService.getTimezoneOffset();
       final isToday = DateFormatter.isToday(event.date);
@@ -102,6 +128,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             );
           }
 
+          // Update in-memory date cache
+          _cachedDateLeagues[dateStr] = populatedLeagues;
+
           final reconciledLeagues =
               RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(
                 restLeagues: populatedLeagues,
@@ -112,6 +141,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           final filtered = _applyFilters(
             leagues: reconciledLeagues,
             filter: state.activeFilter,
+            leagueId: state.selectedLeagueId,
+            leagueTitle: state.selectedLeagueTitle,
+            sortOrder: state.sortOrder,
             query: state.searchQuery,
           );
 
@@ -129,12 +161,15 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           );
         },
         onFailure: (failure) {
-          emit(
-            state.copyWith(
-              status: MatchesStatus.error,
-              errorMessage: failure.message,
-            ),
-          );
+          // If we already have cached data displayed, don't clobber it with an error screen on silent revalidation
+          if (!_cachedDateLeagues.containsKey(dateStr)) {
+            emit(
+              state.copyWith(
+                status: MatchesStatus.error,
+                errorMessage: failure.message,
+              ),
+            );
+          }
         },
       );
     } finally {
@@ -148,16 +183,75 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final filtered = _applyFilters(
       leagues: state.allLeagues,
       filter: event.filter,
+      leagueId: state.selectedLeagueId,
+      leagueTitle: state.selectedLeagueTitle,
+      sortOrder: state.sortOrder,
       query: state.searchQuery,
     );
 
     emit(state.copyWith(activeFilter: event.filter, filteredLeagues: filtered));
   }
 
+  void _onApplyMatchesFilter(
+    ApplyMatchesFilterEvent event,
+    Emitter<MatchesState> emit,
+  ) {
+    final nextFilter = event.filter ?? state.activeFilter;
+    final nextLeagueId = event.leagueId;
+    final nextLeagueTitle = event.leagueTitle;
+    final nextSortOrder = event.sortOrder ?? state.sortOrder;
+
+    final filtered = _applyFilters(
+      leagues: state.allLeagues,
+      filter: nextFilter,
+      leagueId: nextLeagueId,
+      leagueTitle: nextLeagueTitle,
+      sortOrder: nextSortOrder,
+      query: state.searchQuery,
+    );
+
+    emit(
+      state.copyWith(
+        activeFilter: nextFilter,
+        selectedLeagueId: nextLeagueId,
+        clearSelectedLeague: nextLeagueId == null,
+        selectedLeagueTitle: nextLeagueTitle,
+        sortOrder: nextSortOrder,
+        filteredLeagues: filtered,
+      ),
+    );
+  }
+
+  void _onResetMatchesFilter(
+    ResetMatchesFilterEvent event,
+    Emitter<MatchesState> emit,
+  ) {
+    final filtered = _applyFilters(
+      leagues: state.allLeagues,
+      filter: MatchFilterType.all,
+      leagueId: null,
+      leagueTitle: null,
+      sortOrder: MatchesSortOrder.importance,
+      query: state.searchQuery,
+    );
+
+    emit(
+      state.copyWith(
+        activeFilter: MatchFilterType.all,
+        clearSelectedLeague: true,
+        sortOrder: MatchesSortOrder.importance,
+        filteredLeagues: filtered,
+      ),
+    );
+  }
+
   void _onSearchMatches(SearchMatchesEvent event, Emitter<MatchesState> emit) {
     final filtered = _applyFilters(
       leagues: state.allLeagues,
       filter: state.activeFilter,
+      leagueId: state.selectedLeagueId,
+      leagueTitle: state.selectedLeagueTitle,
+      sortOrder: state.sortOrder,
       query: event.query,
     );
 
@@ -184,6 +278,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final filtered = _applyFilters(
       leagues: updatedAll,
       filter: state.activeFilter,
+      leagueId: state.selectedLeagueId,
+      leagueTitle: state.selectedLeagueTitle,
+      sortOrder: state.sortOrder,
       query: state.searchQuery,
     );
 
@@ -204,6 +301,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       final filtered = _applyFilters(
         leagues: mergeResult.data,
         filter: state.activeFilter,
+        leagueId: state.selectedLeagueId,
+        leagueTitle: state.selectedLeagueTitle,
+        sortOrder: state.sortOrder,
         query: state.searchQuery,
       );
 
@@ -345,11 +445,27 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   List<LeagueGroupEntity> _applyFilters({
     required List<LeagueGroupEntity> leagues,
     required MatchFilterType filter,
+    required String? leagueId,
+    required String? leagueTitle,
+    required MatchesSortOrder sortOrder,
     required String query,
   }) {
     final cleanQuery = query.trim().toLowerCase();
 
     final result = leagues
+        .where((league) {
+          // Championship / League Filter
+          if (leagueId != null && leagueId.isNotEmpty) {
+            final matchesId =
+                league.leagueId != null && league.leagueId == leagueId;
+            final matchesTitle = leagueTitle != null &&
+                leagueTitle.isNotEmpty &&
+                league.leagueTitle.trim().toLowerCase() ==
+                    leagueTitle.trim().toLowerCase();
+            return matchesId || matchesTitle;
+          }
+          return true;
+        })
         .map((league) {
           final matches = league.matches.where((match) {
             final phase = MatchStatusHelper.parseStatus(
@@ -362,7 +478,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
               score2: match.score2,
             );
 
-            // Apply filter
+            // Apply status filter
             final matchesFilter = switch (filter) {
               MatchFilterType.all => true,
               MatchFilterType.live => MatchStatusHelper.isLive(phase),
@@ -387,70 +503,92 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             return true;
           }).toList();
 
-          // Sort matches within each league: Live -> Upcoming -> Finished
-          matches.sort((a, b) {
-            final pA = MatchStatusHelper.getPriority(
-              MatchStatusHelper.parseStatus(
-                a.status,
-                minute: a.minute,
-                extraTime: a.extraTime,
-                time: a.time,
-                date: a.date,
-                score1: a.score1,
-                score2: a.score2,
-              ),
-            );
-            final pB = MatchStatusHelper.getPriority(
-              MatchStatusHelper.parseStatus(
-                b.status,
-                minute: b.minute,
-                extraTime: b.extraTime,
-                time: b.time,
-                date: b.date,
-                score1: b.score1,
-                score2: b.score2,
-              ),
-            );
-            return pA.compareTo(pB);
-          });
+          if (sortOrder == MatchesSortOrder.time) {
+            // Sort matches chronologically by match time (e.g. 15:00, 18:30)
+            matches.sort((a, b) {
+              final tA = a.time ?? '99:99';
+              final tB = b.time ?? '99:99';
+              return tA.compareTo(tB);
+            });
+          } else {
+            // Sort matches within each league: Live -> Upcoming -> Finished
+            matches.sort((a, b) {
+              final pA = MatchStatusHelper.getPriority(
+                MatchStatusHelper.parseStatus(
+                  a.status,
+                  minute: a.minute,
+                  extraTime: a.extraTime,
+                  time: a.time,
+                  date: a.date,
+                  score1: a.score1,
+                  score2: a.score2,
+                ),
+              );
+              final pB = MatchStatusHelper.getPriority(
+                MatchStatusHelper.parseStatus(
+                  b.status,
+                  minute: b.minute,
+                  extraTime: b.extraTime,
+                  time: b.time,
+                  date: b.date,
+                  score1: b.score1,
+                  score2: b.score2,
+                ),
+              );
+              return pA.compareTo(pB);
+            });
+          }
 
           return league.copyWith(matches: matches);
         })
         .where((league) => league.matches.isNotEmpty)
         .toList();
 
-    // Sort leagues with live matches first
-    result.sort((a, b) {
-      final aHasLive = a.matches.any(
-        (m) => MatchStatusHelper.isLive(
-          MatchStatusHelper.parseStatus(
-            m.status,
-            minute: m.minute,
-            extraTime: m.extraTime,
-            time: m.time,
-            date: m.date,
-            score1: m.score1,
-            score2: m.score2,
+    // League Ordering
+    if (sortOrder == MatchesSortOrder.time) {
+      // Sort leagues by their earliest match time
+      result.sort((a, b) {
+        final earliestA = a.matches.firstOrNull?.time ?? '99:99';
+        final earliestB = b.matches.firstOrNull?.time ?? '99:99';
+        return earliestA.compareTo(earliestB);
+      });
+    } else if (sortOrder == MatchesSortOrder.league) {
+      // Sort leagues alphabetically by league title
+      result.sort((a, b) => a.leagueTitle.compareTo(b.leagueTitle));
+    } else {
+      // MatchesSortOrder.importance: Sort leagues with live matches first, then maintain natural importance
+      result.sort((a, b) {
+        final aHasLive = a.matches.any(
+          (m) => MatchStatusHelper.isLive(
+            MatchStatusHelper.parseStatus(
+              m.status,
+              minute: m.minute,
+              extraTime: m.extraTime,
+              time: m.time,
+              date: m.date,
+              score1: m.score1,
+              score2: m.score2,
+            ),
           ),
-        ),
-      );
-      final bHasLive = b.matches.any(
-        (m) => MatchStatusHelper.isLive(
-          MatchStatusHelper.parseStatus(
-            m.status,
-            minute: m.minute,
-            extraTime: m.extraTime,
-            time: m.time,
-            date: m.date,
-            score1: m.score1,
-            score2: m.score2,
+        );
+        final bHasLive = b.matches.any(
+          (m) => MatchStatusHelper.isLive(
+            MatchStatusHelper.parseStatus(
+              m.status,
+              minute: m.minute,
+              extraTime: m.extraTime,
+              time: m.time,
+              date: m.date,
+              score1: m.score1,
+              score2: m.score2,
+            ),
           ),
-        ),
-      );
-      if (aHasLive && !bHasLive) return -1;
-      if (!aHasLive && bHasLive) return 1;
-      return 0;
-    });
+        );
+        if (aHasLive && !bHasLive) return -1;
+        if (!aHasLive && bHasLive) return 1;
+        return 0;
+      });
+    }
 
     return result;
   }

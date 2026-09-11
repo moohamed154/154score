@@ -20,9 +20,8 @@ import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../matches/presentation/widgets/horizontal_date_selector.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
-import '../../../transfers/domain/entities/transfer_entity.dart';
+import '../../../matches/presentation/widgets/match_filter_bottom_sheet.dart';
 import '../../../transfers/presentation/widgets/transfer_card.dart';
-import '../../../videos/domain/entities/video_entity.dart';
 import '../../../videos/presentation/widgets/video_card.dart';
 import '../cubit/home_cubit.dart';
 
@@ -107,10 +106,23 @@ class _HomeViewState extends State<HomeView> {
                           tooltip: l10n.translate('nav_search'),
                           onPressed: () => context.push('/search'),
                         ),
-                        // Filter Icon
+                        // Filter Icon with active badge indicator
                         IconButton(
-                          icon: const Icon(Icons.filter_alt_outlined),
-                          onPressed: () {},
+                          icon: Badge(
+                            isLabelVisible: matchesState.hasActiveFilter,
+                            backgroundColor: AppColors.primary,
+                            smallSize: 8,
+                            child: Icon(
+                              matchesState.hasActiveFilter
+                                  ? Icons.filter_alt_rounded
+                                  : Icons.filter_alt_outlined,
+                              color: matchesState.hasActiveFilter
+                                  ? AppColors.primary
+                                  : null,
+                            ),
+                          ),
+                          tooltip: l10n.translate('filter_title'),
+                          onPressed: () => MatchFilterBottomSheet.show(context),
                         ),
                         const SizedBox(width: 4),
                       ],
@@ -146,6 +158,11 @@ class _HomeViewState extends State<HomeView> {
         builder: (context, matchesState) {
           return BlocBuilder<HomeCubit, HomeState>(
             builder: (context, homeState) {
+              final isHomeLoading =
+                  (matchesState.status == MatchesStatus.loading ||
+                      matchesState.status == MatchesStatus.initial) &&
+                  matchesState.allLeagues.isEmpty;
+
               return RefreshIndicator(
                 color: AppColors.primary,
                 onRefresh: () async {
@@ -157,15 +174,13 @@ class _HomeViewState extends State<HomeView> {
                       completer: matchesCompleter,
                     ),
                   );
-                  final homeFuture = context
-                      .read<HomeCubit>()
-                      .loadHomeData(isRefresh: true);
+                  final homeFuture = context.read<HomeCubit>().loadHomeData(
+                    isRefresh: true,
+                  );
 
                   try {
-                    await Future.wait([
-                      homeFuture,
-                      matchesCompleter.future,
-                    ]).timeout(const Duration(seconds: 3));
+                    await Future.wait([homeFuture, matchesCompleter.future])
+                        .timeout(const Duration(seconds: 3));
                   } catch (_) {}
                 },
                 child: ListView(
@@ -173,36 +188,40 @@ class _HomeViewState extends State<HomeView> {
                   children: [
                     const SizedBox(height: 12),
 
-                    // 1. LIVE NOW Section (if any live matches)
-                    _buildLiveNowSection(
-                      context,
-                      matchesState,
-                      isDark,
-                      isArabic,
-                    ),
+                    if (isHomeLoading)
+                      _buildMatchesSkeleton(context, isDark, isArabic)
+                    else ...[
+                      // 1. LIVE NOW Section (if any live matches)
+                      _buildLiveNowSection(
+                        context,
+                        matchesState,
+                        isDark,
+                        isArabic,
+                      ),
 
-                    // 2. Matches for Selected Date
-                    _buildMatchesSection(
-                      context,
-                      matchesState,
-                      isDark,
-                      isArabic,
-                    ),
+                      // 2. Matches for Selected Date
+                      _buildMatchesSection(
+                        context,
+                        matchesState,
+                        isDark,
+                        isArabic,
+                      ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // 3. Featured Highlights & Videos
-                    _buildVideosSection(context, homeState, isDark, isArabic),
+                      // 3. Featured Highlights & Videos
+                      _buildVideosSection(context, homeState, isDark, isArabic),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // 4. Latest Transfer News
-                    _buildTransfersSection(
-                      context,
-                      homeState,
-                      isDark,
-                      isArabic,
-                    ),
+                      // 4. Latest Transfer News
+                      _buildTransfersSection(
+                        context,
+                        homeState,
+                        isDark,
+                        isArabic,
+                      ),
+                    ],
                   ],
                 ),
               );
@@ -275,6 +294,32 @@ class _HomeViewState extends State<HomeView> {
     bool isArabic,
   ) {
     final l10n = AppLocalizations.of(context);
+    final displayLeagues =
+        state.hasActiveFilter ? state.filteredLeagues : state.allLeagues;
+
+    if ((state.status == MatchesStatus.loading ||
+            state.status == MatchesStatus.initial) &&
+        displayLeagues.isEmpty) {
+      return _buildMatchesSkeleton(context, isDark, isArabic);
+    }
+
+    if (state.status == MatchesStatus.error && displayLeagues.isEmpty) {
+      return ErrorView(
+        message: state.errorMessage,
+        onRetry: () => context.read<MatchesBloc>().add(
+          LoadMatchesEvent(date: state.selectedDate),
+        ),
+      );
+    }
+
+    if (displayLeagues.isEmpty) {
+      return const EmptyView(
+        titleKey: 'no_matches_date',
+        icon: Icons.sports_soccer_rounded,
+      );
+    }
+
+    final maxCount = state.hasActiveFilter ? 10 : 4;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -284,82 +329,118 @@ class _HomeViewState extends State<HomeView> {
           actionText: l10n.translate('view_all'),
           onActionTap: () => context.go('/matches'),
         ),
-        if (state.status == MatchesStatus.loading)
-          Skeletonizer(
-            enabled: true,
-            effect: ShimmerEffect(
-              baseColor: isDark
-                  ? const Color(0xFF222F3E)
-                  : const Color(0xFFE2E8F0),
-              highlightColor: isDark
-                  ? const Color(0xFF384B66)
-                  : const Color(0xFFF1F5F9),
-              duration: const Duration(milliseconds: 1500),
-            ),
-            child: Column(
-              children: [
-                LeagueSectionWidget(
-                  league: LeagueGroupEntity(
-                    leagueTitle: isArabic
-                        ? 'الدوري الإسباني - الجولة 28'
-                        : 'La Liga - Round 28',
-                    matches: const [
-                      MatchEntity(
-                        id: 's1',
-                        team1: 'ريال مدريد',
-                        team2: 'برشلونة',
-                        score1: '2',
-                        score2: '1',
-                        status: 'Finished',
-                        time: '21:00',
-                      ),
-                      MatchEntity(
-                        id: 's2',
-                        team1: 'أتلتيكو مدريد',
-                        team2: 'إشبيلية',
-                        score1: '1',
-                        score2: '0',
-                        status: 'Finished',
-                        time: '18:30',
-                      ),
-                      MatchEntity(
-                        id: 's3',
-                        team1: 'فالنسيا',
-                        team2: 'فياريال',
-                        score1: '0',
-                        score2: '0',
-                        status: 'Upcoming',
-                        time: '22:00',
-                      ),
-                    ],
-                  ),
+        ...displayLeagues.take(maxCount).map((league) {
+          return LeagueSectionWidget(
+            league: league,
+            onFavoriteMatchTap: (matchId) {
+              context.read<MatchesBloc>().add(
+                ToggleMatchFavoriteEvent(matchId),
+              );
+            },
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildMatchesSkeleton(
+    BuildContext context,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: l10n.translate('nav_matches'),
+          actionText: l10n.translate('view_all'),
+          onActionTap: () => context.go('/matches'),
+        ),
+        Skeletonizer(
+          enabled: true,
+          ignoreContainers: false,
+          effect: ShimmerEffect(
+            baseColor: isDark
+                ? const Color(0xFF222F3E)
+                : const Color(0xFFE2E8F0),
+            highlightColor: isDark
+                ? const Color(0xFF384B66)
+                : const Color(0xFFF1F5F9),
+            duration: const Duration(milliseconds: 1500),
+          ),
+          child: Column(
+            children: [
+              LeagueSectionWidget(
+                key: const ValueKey('sk_league_1'),
+                league: LeagueGroupEntity(
+                  leagueTitle: isArabic ? 'الدوري الإسباني' : 'La Liga',
+                  matches: const [
+                    MatchEntity(
+                      id: 'sk1',
+                      team1: 'راسينغ',
+                      team2: 'ألافيس',
+                      time: '15:00',
+                      status: 'لم تبدأ',
+                    ),
+                    MatchEntity(
+                      id: 'sk2',
+                      team1: 'أوساسونا',
+                      team2: 'إسبانيول',
+                      time: '17:15',
+                      status: 'لم تبدأ',
+                    ),
+                    MatchEntity(
+                      id: 'sk3',
+                      team1: 'أتلتيك بلباو',
+                      team2: 'إلتشي',
+                      time: '19:30',
+                      status: 'لم تبدأ',
+                    ),
+                    MatchEntity(
+                      id: 'sk4',
+                      team1: 'ريال مدريد',
+                      team2: 'رايو فاليكانو',
+                      time: '22:00',
+                      status: 'لم تبدأ',
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )
-        else if (state.status == MatchesStatus.error)
-          ErrorView(
-            message: state.errorMessage,
-            onRetry: () => context.read<MatchesBloc>().add(
-              LoadMatchesEvent(date: state.selectedDate),
-            ),
-          )
-        else if (state.allLeagues.isEmpty)
-          const EmptyView(
-            titleKey: 'no_matches_date',
-            icon: Icons.sports_soccer_rounded,
-          )
-        else
-          ...state.allLeagues.take(4).map((league) {
-            return LeagueSectionWidget(
-              league: league,
-              onFavoriteMatchTap: (matchId) {
-                context.read<MatchesBloc>().add(
-                  ToggleMatchFavoriteEvent(matchId),
-                );
-              },
-            );
-          }),
+              ),
+              const SizedBox(height: 12),
+              LeagueSectionWidget(
+                key: const ValueKey('sk_league_2'),
+                league: LeagueGroupEntity(
+                  leagueTitle: isArabic ? 'الدوري الفرنسي' : 'Ligue 1',
+                  matches: const [
+                    MatchEntity(
+                      id: 'sk5',
+                      team1: 'ستراسبورغ',
+                      team2: 'موناكو',
+                      time: '18:15',
+                      status: 'لم تبدأ',
+                    ),
+                    MatchEntity(
+                      id: 'sk6',
+                      team1: 'أوكسير',
+                      team2: 'نيس',
+                      time: '21:45',
+                      status: 'لم تبدأ',
+                    ),
+                    MatchEntity(
+                      id: 'sk7',
+                      team1: 'لوهافر',
+                      team2: 'أنجيه',
+                      time: '21:45',
+                      status: 'لم تبدأ',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -371,10 +452,10 @@ class _HomeViewState extends State<HomeView> {
     bool isArabic,
   ) {
     final l10n = AppLocalizations.of(context);
-    final isLoading = state.status == HomeStatus.loading;
 
-    if (state.recentVideos.isEmpty && !isLoading)
+    if (state.recentVideos.isEmpty) {
       return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,51 +467,17 @@ class _HomeViewState extends State<HomeView> {
         ),
         SizedBox(
           height: 180,
-          child: isLoading
-              ? Skeletonizer(
-                  enabled: true,
-                  effect: ShimmerEffect(
-                    baseColor: isDark
-                        ? const Color(0xFF222F3E)
-                        : const Color(0xFFE2E8F0),
-                    highlightColor: isDark
-                        ? const Color(0xFF384B66)
-                        : const Color(0xFFF1F5F9),
-                    duration: const Duration(milliseconds: 1500),
-                  ),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.lg,
-                    ),
-                    itemCount: 3,
-                    itemBuilder: (context, index) {
-                      return const VideoCard(
-                        video: VideoItemEntity(
-                          id: 's_vid',
-                          title: 'ملخص وأهداف قمة الجولة واللقطات المثيرة',
-                          championship: 'دوري أبطال أوروبا',
-                          date: '2026-09-12',
-                        ),
-                        isHorizontal: true,
-                      );
-                    },
-                  ),
-                )
-              : ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.lg,
-                  ),
-                  itemCount: state.recentVideos.take(8).length,
-                  itemBuilder: (context, index) {
-                    return VideoCard(
-                      video: state.recentVideos[index],
-                      isHorizontal: true,
-                    );
-                  },
-                ),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+            itemCount: state.recentVideos.take(8).length,
+            itemBuilder: (context, index) {
+              return VideoCard(
+                video: state.recentVideos[index],
+                isHorizontal: true,
+              );
+            },
+          ),
         ),
       ],
     );
@@ -443,10 +490,10 @@ class _HomeViewState extends State<HomeView> {
     bool isArabic,
   ) {
     final l10n = AppLocalizations.of(context);
-    final isLoading = state.status == HomeStatus.loading;
 
-    if (state.recentTransfers.isEmpty && !isLoading)
+    if (state.recentTransfers.isEmpty) {
       return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,39 +503,7 @@ class _HomeViewState extends State<HomeView> {
           actionText: l10n.translate('view_all'),
           onActionTap: () => context.go('/transfers'),
         ),
-        if (isLoading)
-          Skeletonizer(
-            enabled: true,
-            effect: ShimmerEffect(
-              baseColor: isDark
-                  ? const Color(0xFF222F3E)
-                  : const Color(0xFFE2E8F0),
-              highlightColor: isDark
-                  ? const Color(0xFF384B66)
-                  : const Color(0xFFF1F5F9),
-              duration: const Duration(milliseconds: 1500),
-            ),
-            child: Column(
-              children: List.generate(
-                3,
-                (_) => const TransferCard(
-                  transfer: TransferEntity(
-                    id: 's_tr',
-                    playerName: 'كيليان مبابي',
-                    fromTeamName: 'باريس سان جيرمان',
-                    toTeamName: 'ريال مدريد',
-                    transferType: 'انتقال حر',
-                    transferPrice: 'مجاناً',
-                    date: '2026-09-12',
-                  ),
-                ),
-              ),
-            ),
-          )
-        else
-          ...state.recentTransfers
-              .take(3)
-              .map((t) => TransferCard(transfer: t)),
+        ...state.recentTransfers.take(3).map((t) => TransferCard(transfer: t)),
       ],
     );
   }

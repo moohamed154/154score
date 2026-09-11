@@ -46,6 +46,27 @@ class AppTypography {
     );
   }
 
+  static TextStyle getHeadingSmall({
+    required bool isDark,
+    required bool isArabic,
+  }) {
+    final color = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
+    if (isArabic) {
+      return GoogleFonts.cairo(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: color,
+        height: 1.3,
+      );
+    }
+    return GoogleFonts.inter(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      color: color,
+      letterSpacing: -0.2,
+    );
+  }
+
   static TextStyle getBodyLarge({
     required bool isDark,
     required bool isArabic,
@@ -99,6 +120,25 @@ class AppTypography {
     return GoogleFonts.inter(
       fontSize: 11,
       fontWeight: FontWeight.w400,
+      color: color,
+    );
+  }
+
+  static TextStyle getButton({
+    required bool isDark,
+    required bool isArabic,
+  }) {
+    final color = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
+    if (isArabic) {
+      return GoogleFonts.cairo(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: color,
+      );
+    }
+    return GoogleFonts.inter(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
       color: color,
     );
   }

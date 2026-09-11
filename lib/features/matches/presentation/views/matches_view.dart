@@ -16,7 +16,7 @@ import '../bloc/matches_event.dart';
 import '../bloc/matches_state.dart';
 import '../widgets/horizontal_date_selector.dart';
 import '../widgets/league_section_widget.dart';
-import '../widgets/match_card.dart';
+import '../widgets/match_filter_bottom_sheet.dart';
 import '../widgets/match_filters_bar.dart';
 
 class MatchesView extends StatefulWidget {
@@ -29,17 +29,6 @@ class MatchesView extends StatefulWidget {
 class _MatchesViewState extends State<MatchesView> {
   bool _isSearchVisible = false;
   final TextEditingController _searchController = TextEditingController();
-
-  static const _dummyMatch = MatchEntity(
-    id: 'skeleton',
-    team1: 'Arsenal FC',
-    team2: 'Chelsea FC',
-    score1: '2',
-    score2: '1',
-    status: 'Finished',
-    time: '20:00',
-    leagueTitle: 'Premier League',
-  );
 
   @override
   void initState() {
@@ -72,13 +61,34 @@ class _MatchesViewState extends State<MatchesView> {
                 _isSearchVisible = !_isSearchVisible;
                 if (!_isSearchVisible) {
                   _searchController.clear();
-                  context.read<MatchesBloc>().add(
-                    const SearchMatchesEvent(''),
-                  );
+                  context.read<MatchesBloc>().add(const SearchMatchesEvent(''));
                 }
               });
             },
           ),
+          BlocBuilder<MatchesBloc, MatchesState>(
+            buildWhen: (prev, curr) =>
+                prev.hasActiveFilter != curr.hasActiveFilter,
+            builder: (context, state) {
+              return IconButton(
+                icon: Badge(
+                  isLabelVisible: state.hasActiveFilter,
+                  backgroundColor: AppColors.primary,
+                  smallSize: 8,
+                  child: Icon(
+                    state.hasActiveFilter
+                        ? Icons.filter_alt_rounded
+                        : Icons.filter_alt_outlined,
+                    color: state.hasActiveFilter ? AppColors.primary : null,
+                  ),
+                ),
+                tooltip:
+                    AppLocalizations.of(context).translate('filter_title'),
+                onPressed: () => MatchFilterBottomSheet.show(context),
+              );
+            },
+          ),
+          const SizedBox(width: 4),
         ],
       ),
       body: BlocBuilder<MatchesBloc, MatchesState>(
@@ -89,9 +99,7 @@ class _MatchesViewState extends State<MatchesView> {
               HorizontalDateSelector(
                 selectedDate: state.selectedDate,
                 onDateSelected: (date) {
-                  context.read<MatchesBloc>().add(
-                    LoadMatchesEvent(date: date),
-                  );
+                  context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
                 },
               ),
 
@@ -105,15 +113,22 @@ class _MatchesViewState extends State<MatchesView> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context).translate('search_hint'),
+                      hintText: AppLocalizations.of(context)
+                          .translate('search_hint'),
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
                     ),
                     onChanged: (query) {
-                      context.read<MatchesBloc>().add(SearchMatchesEvent(query));
+                      context.read<MatchesBloc>().add(
+                        SearchMatchesEvent(query),
+                      );
                     },
                   ),
                 ),
@@ -123,9 +138,7 @@ class _MatchesViewState extends State<MatchesView> {
                 activeFilter: state.activeFilter,
                 liveCount: state.liveMatchesCount,
                 onFilterSelected: (filter) {
-                  context.read<MatchesBloc>().add(
-                    ChangeFilterEvent(filter),
-                  );
+                  context.read<MatchesBloc>().add(ChangeFilterEvent(filter));
                 },
               ),
 
@@ -143,7 +156,9 @@ class _MatchesViewState extends State<MatchesView> {
                       ),
                     );
                     try {
-                      await completer.future.timeout(const Duration(seconds: 3));
+                      await completer.future.timeout(
+                        const Duration(seconds: 3),
+                      );
                     } catch (_) {}
                   },
                   child: _buildBody(context, state),
@@ -160,12 +175,14 @@ class _MatchesViewState extends State<MatchesView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = AppLocalizations.of(context).isArabic;
 
-    if (state.status == MatchesStatus.loading) {
+    if (state.status == MatchesStatus.loading && state.filteredLeagues.isEmpty) {
       return Skeletonizer(
         enabled: true,
         effect: ShimmerEffect(
           baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
-          highlightColor: isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
+          highlightColor: isDark
+              ? const Color(0xFF384B66)
+              : const Color(0xFFF1F5F9),
           duration: const Duration(milliseconds: 1500),
         ),
         child: ListView(

@@ -71,48 +71,39 @@ class HomeCubit extends Cubit<HomeState> {
   }) : super(const HomeState());
 
   Future<void> loadHomeData({bool isRefresh = false}) async {
-    if (!isRefresh) {
+    final hasExistingData =
+        state.recentVideos.isNotEmpty || state.recentTransfers.isNotEmpty;
+
+    if (!isRefresh && !hasExistingData) {
       emit(state.copyWith(status: HomeStatus.loading));
     }
 
     final lang = _localStorageService.getLanguage();
-    final now = DateTime.now();
-    final dateStr =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final offset = _localStorageService.getTimezoneOffset();
 
     try {
       final results = await Future.wait([
-        _matchesRepository.getMatchesByDate(
-          date: dateStr,
-          lang: lang,
-          utcOffset: offset,
-        ),
-        _matchesRepository.getLiveMatchesFlat(lang: lang, utcOffset: offset),
         _videosRepository.getVideos(champId: 'all', lang: lang),
         _transfersRepository.getTransfers(lang: lang),
       ]).timeout(const Duration(milliseconds: 3500));
 
-      final leaguesRes =
-          results[0].dataOrNull as List<LeagueGroupEntity>? ?? [];
-      final liveRes = results[1].dataOrNull as List<MatchEntity>? ?? [];
-      final videosRes = results[2].dataOrNull as List<VideoItemEntity>? ?? [];
-      final transfersRes = results[3].dataOrNull as List<TransferEntity>? ?? [];
+      final videosRes = results[0].dataOrNull as List<VideoItemEntity>? ?? [];
+      final transfersRes = results[1].dataOrNull as List<TransferEntity>? ?? [];
 
       emit(
         state.copyWith(
           status: HomeStatus.success,
-          todayLeagues: leaguesRes,
-          liveMatches: liveRes,
-          recentVideos: videosRes,
-          recentTransfers: transfersRes,
+          recentVideos: videosRes.isNotEmpty ? videosRes : state.recentVideos,
+          recentTransfers:
+              transfersRes.isNotEmpty ? transfersRes : state.recentTransfers,
           errorMessage: null,
         ),
       );
     } catch (e) {
-      emit(
-        state.copyWith(status: HomeStatus.error, errorMessage: e.toString()),
-      );
+      if (!hasExistingData) {
+        emit(
+          state.copyWith(status: HomeStatus.error, errorMessage: e.toString()),
+        );
+      }
     }
   }
 }
