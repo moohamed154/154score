@@ -23,11 +23,37 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   Timer? _fallbackPollingTimer;
   final Map<String, List<LeagueGroupEntity>> _cachedDateLeagues = {};
 
+  static MatchFilterType _parseSavedFilter(String? val) {
+    if (val == null) return MatchFilterType.all;
+    return MatchFilterType.values.firstWhere(
+      (e) => e.name == val,
+      orElse: () => MatchFilterType.all,
+    );
+  }
+
+  static MatchesSortOrder _parseSavedSortOrder(String? val) {
+    if (val == null) return MatchesSortOrder.importance;
+    return MatchesSortOrder.values.firstWhere(
+      (e) => e.name == val,
+      orElse: () => MatchesSortOrder.importance,
+    );
+  }
+
   MatchesBloc({
     required this.repository,
     required this.webSocketService,
     required this.localStorageService,
-  }) : super(MatchesState(selectedDate: DateTime.now())) {
+  }) : super(
+          MatchesState(
+            selectedDate: DateTime.now(),
+            activeFilter: _parseSavedFilter(
+              localStorageService.getMatchesFilter(),
+            ),
+            sortOrder: _parseSavedSortOrder(
+              localStorageService.getMatchesSortOrder(),
+            ),
+          ),
+        ) {
     on<LoadMatchesEvent>(_onLoadMatches);
     on<ChangeFilterEvent>(_onChangeFilter);
     on<ApplyMatchesFilterEvent>(_onApplyMatchesFilter);
@@ -180,6 +206,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   }
 
   void _onChangeFilter(ChangeFilterEvent event, Emitter<MatchesState> emit) {
+    unawaited(localStorageService.setMatchesFilter(event.filter.name));
+
     final filtered = _applyFilters(
       leagues: state.allLeagues,
       filter: event.filter,
@@ -200,6 +228,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final nextLeagueId = event.leagueId;
     final nextLeagueTitle = event.leagueTitle;
     final nextSortOrder = event.sortOrder ?? state.sortOrder;
+
+    unawaited(localStorageService.setMatchesFilter(nextFilter.name));
+    unawaited(localStorageService.setMatchesSortOrder(nextSortOrder.name));
 
     final filtered = _applyFilters(
       leagues: state.allLeagues,
@@ -226,6 +257,11 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     ResetMatchesFilterEvent event,
     Emitter<MatchesState> emit,
   ) {
+    unawaited(localStorageService.setMatchesFilter(MatchFilterType.all.name));
+    unawaited(
+      localStorageService.setMatchesSortOrder(MatchesSortOrder.importance.name),
+    );
+
     final filtered = _applyFilters(
       leagues: state.allLeagues,
       filter: MatchFilterType.all,

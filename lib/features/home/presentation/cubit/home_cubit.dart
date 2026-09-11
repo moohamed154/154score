@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../matches/domain/entities/match_entity.dart';
-import '../../../matches/domain/repositories/matches_repository.dart';
 import '../../../transfers/domain/entities/transfer_entity.dart';
 import '../../../transfers/domain/repositories/transfers_repository.dart';
 import '../../../videos/domain/entities/video_entity.dart';
@@ -58,13 +57,11 @@ class HomeState extends Equatable {
 }
 
 class HomeCubit extends Cubit<HomeState> {
-  final MatchesRepository _matchesRepository;
   final VideosRepository _videosRepository;
   final TransfersRepository _transfersRepository;
   final LocalStorageService _localStorageService;
 
   HomeCubit({
-    required this._matchesRepository,
     required this._videosRepository,
     required this._transfersRepository,
     required this._localStorageService,
@@ -93,8 +90,9 @@ class HomeCubit extends Cubit<HomeState> {
         state.copyWith(
           status: HomeStatus.success,
           recentVideos: videosRes.isNotEmpty ? videosRes : state.recentVideos,
-          recentTransfers:
-              transfersRes.isNotEmpty ? transfersRes : state.recentTransfers,
+          recentTransfers: transfersRes.isNotEmpty
+              ? transfersRes
+              : state.recentTransfers,
           errorMessage: null,
         ),
       );

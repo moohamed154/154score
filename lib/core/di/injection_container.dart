@@ -176,7 +176,6 @@ Future<void> initDependencies() async {
 
   sl.registerFactory<HomeCubit>(
     () => HomeCubit(
-      matchesRepository: sl(),
       videosRepository: sl(),
       transfersRepository: sl(),
       localStorageService: sl(),

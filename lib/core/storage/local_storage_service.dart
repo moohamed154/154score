@@ -40,6 +40,12 @@ abstract class LocalStorageService {
   // Tips Persistence
   bool isReorderTipDismissed();
   Future<bool> setReorderTipDismissed(bool dismissed);
+
+  // Matches Filter & Sort Order Persistence
+  String? getMatchesFilter();
+  Future<bool> setMatchesFilter(String filter);
+  String? getMatchesSortOrder();
+  Future<bool> setMatchesSortOrder(String sortOrder);
 }
 
 class LocalStorageServiceImpl implements LocalStorageService {
@@ -56,6 +62,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyFavoriteMatches = 'app_favorite_matches';
   static const String _keyCachedRankings = 'app_cached_rankings';
   static const String _keyReorderTipDismissed = 'app_reorder_tip_dismissed';
+  static const String _keyMatchesFilter = 'app_matches_filter';
+  static const String _keyMatchesSortOrder = 'app_matches_sort_order';
 
   @override
   Future<void> init() async {}
@@ -186,6 +194,26 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setReorderTipDismissed(bool dismissed) {
     return _prefs.setBool(_keyReorderTipDismissed, dismissed);
+  }
+
+  @override
+  String? getMatchesFilter() {
+    return _prefs.getString(_keyMatchesFilter);
+  }
+
+  @override
+  Future<bool> setMatchesFilter(String filter) {
+    return _prefs.setString(_keyMatchesFilter, filter);
+  }
+
+  @override
+  String? getMatchesSortOrder() {
+    return _prefs.getString(_keyMatchesSortOrder);
+  }
+
+  @override
+  Future<bool> setMatchesSortOrder(String sortOrder) {
+    return _prefs.setString(_keyMatchesSortOrder, sortOrder);
   }
 }
 
