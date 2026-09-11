@@ -36,4 +36,66 @@ void main() {
     expect(find.text('1'), findsOneWidget);
     expect(find.text('FT'), findsOneWidget);
   });
+
+  testWidgets('MatchCard renders live state with circular clock and minute correctly', (
+    WidgetTester tester,
+  ) async {
+    const match = MatchEntity(
+      id: '2',
+      team1: 'Al-Faisaly',
+      team2: 'Al Ittihad',
+      score1: '0',
+      score2: '3',
+      minute: '85',
+      status: 'Live',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
+        supportedLocales: [Locale('en')],
+        home: Scaffold(body: MatchCard(match: match)),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Al-Faisaly'), findsOneWidget);
+    expect(find.text('Al Ittihad'), findsOneWidget);
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text("85'"), findsOneWidget);
+  });
+
+  testWidgets('MatchCard renders upcoming state with time capsule correctly', (
+    WidgetTester tester,
+  ) async {
+    const match = MatchEntity(
+      id: '3',
+      team1: 'Al-Ahli',
+      team2: 'Al Hazem',
+      time: '09:00 PM',
+      status: 'Upcoming',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
+        supportedLocales: [Locale('en')],
+        home: Scaffold(body: MatchCard(match: match)),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Al-Ahli'), findsOneWidget);
+    expect(find.text('Al Hazem'), findsOneWidget);
+    expect(find.text('09:00 PM'), findsOneWidget);
+  });
 }
