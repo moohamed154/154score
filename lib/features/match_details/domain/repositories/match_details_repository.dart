@@ -6,6 +6,10 @@ abstract class MatchDetailsRepository {
     String matchId, {
     required String lang,
   });
+  Future<ApiResult<MatchEventsPayload>> getEventsPayload(
+    String matchId, {
+    required String lang,
+  });
   Future<ApiResult<List<MatchStatItemEntity>>> getStats(
     String matchId, {
     required String lang,

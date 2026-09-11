@@ -145,5 +145,117 @@ void main() {
       expect(details[0].items[0].title, 'القناة');
       expect(details[0].items[0].content, 'بي إن سبورت 8');
     });
+
+    test('getEventsPayload parses match summary, goals, and goal clips accurately', () async {
+      when(
+        () => mockApiClient.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => {
+          'success': true,
+          'data': [
+            {
+              'section': 'الأحداث',
+              'items': {
+                'has_video': true,
+                'match_summary': {
+                  'type': 14,
+                  'category': 'alternative_summary',
+                  'title': 'ملخص إضافي',
+                  'url': 'https://www.youtube.com/watch?v=uBkxy7BTsZs',
+                },
+                'match_goals': null,
+                'video_links': [
+                  {
+                    'type': 14,
+                    'category': 'alternative_summary',
+                    'title': 'ملخص إضافي',
+                    'url': 'https://www.youtube.com/watch?v=uBkxy7BTsZs',
+                  }
+                ],
+                'videos': {
+                  'has_video': true,
+                  'summary': {
+                    'type': 14,
+                    'category': 'alternative_summary',
+                    'title': 'ملخص إضافي',
+                    'url': 'https://www.youtube.com/watch?v=uBkxy7BTsZs',
+                  },
+                  'goals': null,
+                  'full_match': null,
+                  'all': [
+                    {
+                      'type': 14,
+                      'category': 'alternative_summary',
+                      'title': 'ملخص إضافي',
+                      'url': 'https://www.youtube.com/watch?v=uBkxy7BTsZs',
+                    }
+                  ],
+                  'goal_clips': [
+                    {
+                      'event_id': '72147417',
+                      'player_name': 'سيرجينيو ديست',
+                      'team': 'team-a',
+                      'time': "48'",
+                      'minute': 48,
+                      'type': 'goal',
+                      'video_url':
+                          'https://x.com/beINSPORTS/status/2098108413574004793',
+                    },
+                    {
+                      'event_id': '72147394',
+                      'player_name': 'جليكير ميندوزا',
+                      'team': 'team-b',
+                      'time': "45+1'",
+                      'minute': 45,
+                      'type': 'goal',
+                      'video_url':
+                          'https://x.com/beINSPORTS/status/2098107791181304245',
+                    }
+                  ],
+                },
+                'all_events': [
+                  {
+                    'is_start_end': false,
+                    'team': 'team-a',
+                    'time': "48'",
+                    'minute': 48,
+                    'text': 'سيرجينيو ديست',
+                    'type': 'goal',
+                    'video_url':
+                        'https://x.com/beINSPORTS/status/2098108413574004793',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      );
+
+      final payload = await dataSource.getEventsPayload('6106304', lang: 'ar');
+
+      expect(payload.events.length, 1);
+      expect(payload.events[0].playerName, 'سيرجينيو ديست');
+      expect(payload.events[0].videoUrl,
+          'https://x.com/beINSPORTS/status/2098108413574004793');
+
+      expect(payload.videos.hasVideo, isTrue);
+      expect(payload.videos.summary?.title, 'ملخص إضافي');
+      expect(payload.videos.summary?.url,
+          'https://www.youtube.com/watch?v=uBkxy7BTsZs');
+
+      expect(payload.videos.goalClips.length, 2);
+      expect(payload.videos.goalClips[0].playerName, 'سيرجينيو ديست');
+      expect(payload.videos.goalClips[0].url,
+          'https://x.com/beINSPORTS/status/2098108413574004793');
+
+      final chips = payload.videos.allChips;
+      expect(chips.length, 3);
+      expect(chips[0].title, 'ملخص إضافي');
+      expect(chips[1].title, contains('سيرجينيو ديست'));
+      expect(chips[2].title, contains('جليكير ميندوزا'));
+    });
   });
 }

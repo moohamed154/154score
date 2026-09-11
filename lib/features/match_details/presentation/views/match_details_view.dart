@@ -460,8 +460,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         padding: EdgeInsets.all(hMargin),
         children: [
         // ── Video Highlights Summary Chips ───────────────────────────────
-        _buildVideoSummaryChips(state.news, isDark, isArabic),
-        const SizedBox(height: AppDimensions.md),
+        _buildVideoSummaryChips(state.videos, state.news, isDark, isArabic),
+        if (state.videos.isNotEmpty || state.news.isNotEmpty)
+          const SizedBox(height: AppDimensions.md),
 
         // ── Section Title & Filter (الأحداث + [الأبرز | كل الأحداث]) ─────
         Row(
@@ -601,27 +602,93 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
   // ── Video Highlights Summary Chips ─────────────────────────────────────────
   Widget _buildVideoSummaryChips(
+    MatchVideosEntity videos,
     List<MatchNewsItemEntity> news,
     bool isDark,
     bool isArabic,
   ) {
-    final items = news.isNotEmpty
-        ? news.take(4).toList()
-        : [
-            MatchNewsItemEntity(
-              title: isArabic ? 'ملخص المباراة' : 'Match Highlights',
-              link: '/video/${widget.matchId}',
-            ),
-          ];
+    final videoItems = videos.allChips;
+
+    if (videoItems.isEmpty && news.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final hasMatchVideos = videoItems.isNotEmpty;
+    final count = hasMatchVideos ? videoItems.length : news.take(4).length;
 
     return SizedBox(
-      height: 48,
+      height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: items.length,
+        itemCount: count,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final item = items[index];
+          if (hasMatchVideos) {
+            final video = videoItems[index];
+            final isGoal = video.type == 'goals' ||
+                video.title.contains('هدف') ||
+                video.title.toLowerCase().contains('goal');
+
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                onTap: () {
+                  UrlHelper.navigateToVideo(
+                    context,
+                    url: video.url,
+                    fallbackErrorMessage: isArabic
+                        ? 'تعذر تشغيل الفيديو'
+                        : 'Could not play video',
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCardElevated
+                        : AppColors.lightCardElevated,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                    border: Border.all(
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isGoal
+                            ? Icons.sports_soccer_rounded
+                            : Icons.play_circle_fill_rounded,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        video.title.isNotEmpty
+                            ? video.title
+                            : (isArabic ? 'ملخص المباراة' : 'Highlights'),
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          // Fallback: news items
+          final item = news[index];
           return Material(
             color: Colors.transparent,
             child: InkWell(
@@ -629,26 +696,16 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               onTap: () {
                 final link = item.link;
                 if (link != null && link.isNotEmpty) {
-                  final videoMatch = RegExp(r'/video/(\d+)').firstMatch(link);
-                  if (videoMatch != null) {
-                    context.push('/video/${videoMatch.group(1)}');
-                  } else if (link.startsWith('http://') ||
-                      link.startsWith('https://')) {
-                    UrlHelper.launchVideoUrl(
-                      link,
-                      thumbnail: item.image,
-                      context: context,
-                    );
-                  } else {
-                    context.push('/video/${Uri.encodeComponent(link)}');
-                  }
-                } else {
-                  context.push('/video/${Uri.encodeComponent(widget.matchId)}');
+                  UrlHelper.navigateToVideo(
+                    context,
+                    url: link,
+                    thumbnail: item.image,
+                  );
                 }
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
+                  horizontal: 14,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
@@ -670,7 +727,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                       size: 18,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Text(
                       item.title.isNotEmpty
                           ? item.title

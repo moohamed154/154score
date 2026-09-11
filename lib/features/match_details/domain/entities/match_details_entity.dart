@@ -319,3 +319,240 @@ class LineupInjuryEntity extends Equatable {
   ];
 }
 
+class MatchVideoItemEntity extends Equatable {
+  final String title;
+  final String url;
+  final String? type; // 'summary', 'goals', 'full_match', 'alternative_summary', 'goal_clip'
+  final String? minute;
+  final String? playerName;
+
+  const MatchVideoItemEntity({
+    required this.title,
+    required this.url,
+    this.type,
+    this.minute,
+    this.playerName,
+  });
+
+  @override
+  List<Object?> get props => [title, url, type, minute, playerName];
+}
+
+class MatchVideosEntity extends Equatable {
+  final bool hasVideo;
+  final MatchVideoItemEntity? summary;
+  final MatchVideoItemEntity? goals;
+  final MatchVideoItemEntity? fullMatch;
+  final List<MatchVideoItemEntity> videoLinks;
+  final List<MatchVideoItemEntity> goalClips;
+
+  const MatchVideosEntity({
+    this.hasVideo = false,
+    this.summary,
+    this.goals,
+    this.fullMatch,
+    this.videoLinks = const [],
+    this.goalClips = const [],
+  });
+
+  /// All unique video items ready to display as chips or in a gallery
+  List<MatchVideoItemEntity> get allChips {
+    final list = <MatchVideoItemEntity>[];
+    final seenUrls = <String>{};
+
+    void add(MatchVideoItemEntity? item) {
+      if (item != null &&
+          item.url.trim().isNotEmpty &&
+          !seenUrls.contains(item.url.trim())) {
+        seenUrls.add(item.url.trim());
+        list.add(item);
+      }
+    }
+
+    add(summary);
+    add(goals);
+    add(fullMatch);
+    for (final vl in videoLinks) {
+      add(vl);
+    }
+    for (final gc in goalClips) {
+      add(gc);
+    }
+    return list;
+  }
+
+  bool get isEmpty => !hasVideo && allChips.isEmpty;
+  bool get isNotEmpty => !isEmpty;
+
+  static MatchVideosEntity fromJson(dynamic json, {bool isArabic = true}) {
+    if (json == null) return const MatchVideosEntity();
+
+    Map<String, dynamic>? itemsMap;
+    if (json is Map) {
+      if (json['videos'] is Map ||
+          json['match_summary'] != null ||
+          json['has_video'] != null ||
+          json['hasVideo'] != null) {
+        itemsMap = Map<String, dynamic>.from(json);
+      } else if (json['items'] is Map) {
+        itemsMap = Map<String, dynamic>.from(json['items']);
+      } else if (json['data'] is List && (json['data'] as List).isNotEmpty) {
+        final first = (json['data'] as List).first;
+        if (first is Map && first['items'] is Map) {
+          itemsMap = Map<String, dynamic>.from(first['items']);
+        } else if (first is Map) {
+          itemsMap = Map<String, dynamic>.from(first);
+        }
+      } else if (json['data'] is Map) {
+        final dataMap = Map<String, dynamic>.from(json['data']);
+        if (dataMap['items'] is Map) {
+          itemsMap = Map<String, dynamic>.from(dataMap['items']);
+        } else {
+          itemsMap = dataMap;
+        }
+      }
+    } else if (json is List && json.isNotEmpty) {
+      final first = json.first;
+      if (first is Map && first['items'] is Map) {
+        itemsMap = Map<String, dynamic>.from(first['items']);
+      }
+    }
+
+    if (itemsMap == null) return const MatchVideosEntity();
+
+    final hasVideo = itemsMap['has_video'] == true ||
+        itemsMap['hasVideo'] == true ||
+        itemsMap['video'] == 1 ||
+        itemsMap['video'] == '1';
+
+    MatchVideoItemEntity? parseItem(dynamic obj, {String? defaultTitle}) {
+      if (obj == null) return null;
+      if (obj is Map) {
+        final url = (obj['url'] ??
+                obj['video_link'] ??
+                obj['video_url'] ??
+                obj['link'])
+            ?.toString();
+        if (url == null ||
+            url.trim().isEmpty ||
+            url == 'null' ||
+            url == 'undefined') {
+          return null;
+        }
+        final title = (obj['title'] ?? obj['name'] ?? defaultTitle)
+                ?.toString() ??
+            defaultTitle ??
+            '';
+        return MatchVideoItemEntity(
+          title: title.isNotEmpty ? title : (defaultTitle ?? ''),
+          url: url.trim(),
+          type: obj['category']?.toString() ?? obj['type']?.toString(),
+          minute: obj['minute']?.toString() ?? obj['time']?.toString(),
+          playerName:
+              obj['player_name']?.toString() ?? obj['player']?.toString(),
+        );
+      }
+      if (obj is String &&
+          obj.trim().isNotEmpty &&
+          obj != 'null' &&
+          obj != 'undefined') {
+        return MatchVideoItemEntity(
+          title: defaultTitle ?? (isArabic ? 'فيديو' : 'Video'),
+          url: obj.trim(),
+        );
+      }
+      return null;
+    }
+
+    final videosContainer =
+        itemsMap['videos'] is Map ? itemsMap['videos'] as Map : null;
+
+    final summary = parseItem(
+      videosContainer?['summary'] ?? itemsMap['match_summary'],
+      defaultTitle: isArabic ? 'ملخص المباراة' : 'Match Highlights',
+    );
+
+    final goals = parseItem(
+      videosContainer?['goals'] ?? itemsMap['match_goals'],
+      defaultTitle: isArabic ? 'أهداف المباراة' : 'Match Goals',
+    );
+
+    final fullMatch = parseItem(
+      videosContainer?['full_match'] ?? itemsMap['full_match'],
+      defaultTitle: isArabic ? 'المباراة كاملة' : 'Full Match',
+    );
+
+    final videoLinks = <MatchVideoItemEntity>[];
+    final rawLinks =
+        (videosContainer?['all'] ?? itemsMap['video_links']) as List?;
+    if (rawLinks != null) {
+      for (final l in rawLinks) {
+        final item = parseItem(l);
+        if (item != null) videoLinks.add(item);
+      }
+    }
+
+    final goalClips = <MatchVideoItemEntity>[];
+    final rawClips =
+        (videosContainer?['goal_clips'] ?? itemsMap['goal_clips']) as List?;
+    if (rawClips != null) {
+      for (final c in rawClips) {
+        if (c is Map) {
+          final pName = c['player_name']?.toString() ??
+              c['player']?.toString() ??
+              '';
+          final timeStr = c['time']?.toString() ??
+              (c['minute'] != null ? "${c['minute']}'" : '');
+          final clipTitle = isArabic
+              ? (pName.isNotEmpty
+                  ? 'هدف: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
+                  : 'هدف $timeStr')
+              : (pName.isNotEmpty
+                  ? 'Goal: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
+                  : 'Goal $timeStr');
+          final item = parseItem(c, defaultTitle: clipTitle);
+          if (item != null) goalClips.add(item);
+        }
+      }
+    }
+
+    return MatchVideosEntity(
+      hasVideo: hasVideo ||
+          summary != null ||
+          goals != null ||
+          videoLinks.isNotEmpty ||
+          goalClips.isNotEmpty,
+      summary: summary,
+      goals: goals,
+      fullMatch: fullMatch,
+      videoLinks: videoLinks,
+      goalClips: goalClips,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        hasVideo,
+        summary,
+        goals,
+        fullMatch,
+        videoLinks,
+        goalClips,
+      ];
+}
+
+class MatchEventsPayload extends Equatable {
+  final List<MatchEventEntity> events;
+  final MatchVideosEntity videos;
+
+  const MatchEventsPayload({
+    this.events = const [],
+    this.videos = const MatchVideosEntity(),
+  });
+
+  @override
+  List<Object?> get props => [events, videos];
+}
+
+
+

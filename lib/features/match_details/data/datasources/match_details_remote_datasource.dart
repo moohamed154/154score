@@ -14,6 +14,10 @@ abstract class MatchDetailsRemoteDataSource {
     String matchId, {
     required String lang,
   });
+  Future<MatchEventsPayload> getEventsPayload(
+    String matchId, {
+    required String lang,
+  });
   Future<List<MatchStatItemEntity>> getStats(
     String matchId, {
     required String lang,
@@ -42,21 +46,30 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       Uri.decodeComponent(id).replaceAll('match:', '').trim();
 
   @override
-  Future<List<MatchEventEntity>> getEvents(
+  Future<MatchEventsPayload> getEventsPayload(
     String matchId, {
     required String lang,
   }) async {
     final cleanId = _cleanMatchId(matchId);
-    var events = await _fetchEvents(cleanId, lang: lang);
-    if (events.isEmpty) {
+    var payload = await _fetchEventsPayload(cleanId, lang: lang);
+    if (payload.events.isEmpty && payload.videos.isEmpty) {
       // Backend SWR may be revalidating on cold cache; wait briefly and retry once
       await Future.delayed(const Duration(milliseconds: 750));
-      events = await _fetchEvents(cleanId, lang: lang);
+      payload = await _fetchEventsPayload(cleanId, lang: lang);
     }
-    return events;
+    return payload;
   }
 
-  Future<List<MatchEventEntity>> _fetchEvents(
+  @override
+  Future<List<MatchEventEntity>> getEvents(
+    String matchId, {
+    required String lang,
+  }) async {
+    final payload = await getEventsPayload(matchId, lang: lang);
+    return payload.events;
+  }
+
+  Future<MatchEventsPayload> _fetchEventsPayload(
     String cleanId, {
     required String lang,
   }) async {
@@ -72,6 +85,9 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           parsed = jsonDecode(parsed);
         } catch (_) {}
       }
+
+      final videos =
+          MatchVideosEntity.fromJson(parsed, isArabic: lang != 'en');
 
       final rawEvents = _extractRawEvents(parsed);
       final events = <MatchEventEntity>[];
@@ -148,9 +164,9 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         );
       }
 
-      return events;
+      return MatchEventsPayload(events: events, videos: videos);
     } catch (_) {
-      return [];
+      return const MatchEventsPayload();
     }
   }
 

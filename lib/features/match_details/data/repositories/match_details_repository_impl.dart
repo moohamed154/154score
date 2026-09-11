@@ -12,6 +12,22 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
       Uri.decodeComponent(id).replaceAll('match:', '').trim();
 
   @override
+  Future<ApiResult<MatchEventsPayload>> getEventsPayload(
+    String matchId, {
+    required String lang,
+  }) async {
+    try {
+      final data = await _remoteDataSource.getEventsPayload(
+        _cleanMatchId(matchId),
+        lang: lang,
+      );
+      return ApiSuccess(data);
+    } catch (e) {
+      return const ApiSuccess(MatchEventsPayload());
+    }
+  }
+
+  @override
   Future<ApiResult<List<MatchEventEntity>>> getEvents(
     String matchId, {
     required String lang,

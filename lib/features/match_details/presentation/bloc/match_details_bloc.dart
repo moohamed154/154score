@@ -91,7 +91,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     final offset = localStorageService.getTimezoneOffset();
 
     try {
-      final eventsFuture = repository.getEvents(cleanTarget, lang: lang);
+      final eventsFuture = repository.getEventsPayload(cleanTarget, lang: lang);
       final statsFuture = repository.getStats(cleanTarget, lang: lang);
       final detailsFuture = repository.getDetails(
         cleanTarget,
@@ -106,7 +106,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         lineupsFuture = null;
       }
 
-      final eventsRes = (await eventsFuture).dataOrNull ?? [];
+      final eventsPayloadRes = (await eventsFuture).dataOrNull;
+      final eventsRes = eventsPayloadRes?.events ?? [];
+      final videosRes = eventsPayloadRes?.videos;
       final statsRes = (await statsFuture).dataOrNull ?? [];
       final detailsRes = (await detailsFuture).dataOrNull ?? [];
       final newsRes = (await newsFuture).dataOrNull ?? [];
@@ -120,6 +122,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       }
 
       final resolvedEvents = eventsRes.isNotEmpty ? eventsRes : state.events;
+      final resolvedVideos =
+          (videosRes != null && videosRes.isNotEmpty) ? videosRes : state.videos;
       final resolvedStats = statsRes.isNotEmpty ? statsRes : state.stats;
       final resolvedDetails = detailsRes.isNotEmpty ? detailsRes : state.details;
       final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
@@ -130,6 +134,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           status: MatchDetailsStatus.success,
           matchId: cleanTarget,
           events: resolvedEvents,
+          videos: resolvedVideos,
           stats: resolvedStats,
           details: resolvedDetails,
           news: resolvedNews,

@@ -12,6 +12,7 @@ class MatchDetailsState extends Equatable {
   final List<MatchStatItemEntity> stats;
   final List<MatchInfoSectionEntity> details;
   final List<MatchNewsItemEntity> news;
+  final MatchVideosEntity videos;
   final MatchLineupEntity? lineup;
   final String? liveScore1;
   final String? liveScore2;
@@ -29,6 +30,7 @@ class MatchDetailsState extends Equatable {
     this.stats = const [],
     this.details = const [],
     this.news = const [],
+    this.videos = const MatchVideosEntity(),
     this.lineup,
     this.liveScore1,
     this.liveScore2,
@@ -47,6 +49,7 @@ class MatchDetailsState extends Equatable {
     List<MatchStatItemEntity>? stats,
     List<MatchInfoSectionEntity>? details,
     List<MatchNewsItemEntity>? news,
+    MatchVideosEntity? videos,
     MatchLineupEntity? lineup,
     String? liveScore1,
     String? liveScore2,
@@ -64,6 +67,7 @@ class MatchDetailsState extends Equatable {
       stats: stats ?? this.stats,
       details: details ?? this.details,
       news: news ?? this.news,
+      videos: videos ?? this.videos,
       lineup: lineup ?? this.lineup,
       liveScore1: liveScore1 ?? this.liveScore1,
       liveScore2: liveScore2 ?? this.liveScore2,
@@ -84,6 +88,7 @@ class MatchDetailsState extends Equatable {
     stats,
     details,
     news,
+    videos,
     lineup,
     liveScore1,
     liveScore2,
