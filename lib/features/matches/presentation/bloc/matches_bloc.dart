@@ -225,8 +225,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     Emitter<MatchesState> emit,
   ) {
     final nextFilter = event.filter ?? state.activeFilter;
-    final nextLeagueId = event.leagueId;
-    final nextLeagueTitle = event.leagueTitle;
+    final nextLeagueId = event.leagueId ?? state.selectedLeagueId;
+    final nextLeagueTitle = event.leagueTitle ?? state.selectedLeagueTitle;
     final nextSortOrder = event.sortOrder ?? state.sortOrder;
 
     unawaited(localStorageService.setMatchesFilter(nextFilter.name));
@@ -478,6 +478,34 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     return count;
   }
 
+  static int _parseTimeToMinutes(String? timeStr) {
+    if (timeStr == null || timeStr.trim().isEmpty || timeStr == '-') {
+      return 99999;
+    }
+
+    var s = timeStr.trim();
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    for (int i = 0; i < 10; i++) {
+      s = s.replaceAll(arabicDigits[i], '$i');
+    }
+
+    final regExp = RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?');
+    final match = regExp.firstMatch(s);
+    if (match == null) return 99999;
+
+    int hours = int.tryParse(match.group(1)!) ?? 0;
+    final int minutes = int.tryParse(match.group(2)!) ?? 0;
+    final String? period = match.group(3)?.toLowerCase();
+
+    if (period == 'م' || period == 'pm') {
+      if (hours < 12) hours += 12;
+    } else if (period == 'ص' || period == 'am') {
+      if (hours == 12) hours = 0;
+    }
+
+    return hours * 60 + minutes;
+  }
+
   List<LeagueGroupEntity> _applyFilters({
     required List<LeagueGroupEntity> leagues,
     required MatchFilterType filter,
@@ -568,14 +596,14 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           }).toList();
 
           if (sortOrder == MatchesSortOrder.time) {
-            // Sort matches chronologically by match time (e.g. 15:00, 18:30)
+            // Sort matches chronologically by kick-off time
             matches.sort((a, b) {
-              final tA = a.time ?? '99:99';
-              final tB = b.time ?? '99:99';
+              final tA = _parseTimeToMinutes(a.time);
+              final tB = _parseTimeToMinutes(b.time);
               return tA.compareTo(tB);
             });
           } else {
-            // Sort matches within each league: Live -> Upcoming -> Finished
+            // Sort matches within each league: Live -> Upcoming -> Finished, tie-broken chronologically
             matches.sort((a, b) {
               final pA = MatchStatusHelper.getPriority(
                 MatchStatusHelper.parseStatus(
@@ -599,7 +627,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
                   score2: b.score2,
                 ),
               );
-              return pA.compareTo(pB);
+              final pCmp = pA.compareTo(pB);
+              if (pCmp != 0) return pCmp;
+              return _parseTimeToMinutes(a.time).compareTo(_parseTimeToMinutes(b.time));
             });
           }
 
@@ -610,17 +640,26 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
     // League Ordering
     if (sortOrder == MatchesSortOrder.time) {
-      // Sort leagues by their earliest match time
+      // Sort leagues by their earliest match time chronologically
       result.sort((a, b) {
-        final earliestA = a.matches.firstOrNull?.time ?? '99:99';
-        final earliestB = b.matches.firstOrNull?.time ?? '99:99';
-        return earliestA.compareTo(earliestB);
+        final earliestA = a.matches
+            .map((m) => _parseTimeToMinutes(m.time))
+            .fold<int>(99999, (prev, min) => min < prev ? min : prev);
+        final earliestB = b.matches
+            .map((m) => _parseTimeToMinutes(m.time))
+            .fold<int>(99999, (prev, min) => min < prev ? min : prev);
+        final cmp = earliestA.compareTo(earliestB);
+        if (cmp != 0) return cmp;
+        return a.leagueTitle.compareTo(b.leagueTitle);
       });
     } else if (sortOrder == MatchesSortOrder.league) {
       // Sort leagues alphabetically by league title
       result.sort((a, b) => a.leagueTitle.compareTo(b.leagueTitle));
     } else {
-      // MatchesSortOrder.importance: Sort leagues with live matches first, then maintain natural importance
+      // MatchesSortOrder.importance: Sort leagues with live matches first, then favorites, then maintain natural API order
+      final originalIndices = {
+        for (int i = 0; i < leagues.length; i++) leagues[i].leagueTitle: i,
+      };
       result.sort((a, b) {
         final aHasLive = a.matches.any(
           (m) => MatchStatusHelper.isLive(
@@ -664,7 +703,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         if (aIsFav && !bIsFav) return -1;
         if (!aIsFav && bIsFav) return 1;
 
-        return 0;
+        final idxA = originalIndices[a.leagueTitle] ?? 9999;
+        final idxB = originalIndices[b.leagueTitle] ?? 9999;
+        return idxA.compareTo(idxB);
       });
     }
 

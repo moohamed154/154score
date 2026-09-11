@@ -294,8 +294,7 @@ class _HomeViewState extends State<HomeView> {
     bool isArabic,
   ) {
     final l10n = AppLocalizations.of(context);
-    final displayLeagues =
-        state.hasActiveFilter ? state.filteredLeagues : state.allLeagues;
+    final displayLeagues = state.filteredLeagues;
 
     if ((state.status == MatchesStatus.loading ||
             state.status == MatchesStatus.initial) &&
@@ -331,6 +330,7 @@ class _HomeViewState extends State<HomeView> {
         ),
         ...displayLeagues.take(maxCount).map((league) {
           return LeagueSectionWidget(
+            key: ValueKey(league.leagueTitle),
             league: league,
             onFavoriteMatchTap: (matchId) {
               context.read<MatchesBloc>().add(

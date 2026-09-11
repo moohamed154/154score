@@ -92,6 +92,18 @@ class MockLocalStorageService implements LocalStorageService {
 
   @override
   Future<bool> setReorderTipDismissed(bool dismissed) async => true;
+
+  @override
+  String? getMatchesFilter() => null;
+
+  @override
+  Future<bool> setMatchesFilter(String filter) async => true;
+
+  @override
+  String? getMatchesSortOrder() => null;
+
+  @override
+  Future<bool> setMatchesSortOrder(String sortOrder) async => true;
 }
 
 class MockLeaguesRepository implements LeaguesRepository {

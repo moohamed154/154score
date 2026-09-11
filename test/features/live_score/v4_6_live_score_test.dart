@@ -64,6 +64,14 @@ class _MockStorageForLiveScore implements LocalStorageService {
   bool isReorderTipDismissed() => true;
   @override
   Future<bool> setReorderTipDismissed(bool dismissed) async => true;
+  @override
+  String? getMatchesFilter() => null;
+  @override
+  Future<bool> setMatchesFilter(String filter) async => true;
+  @override
+  String? getMatchesSortOrder() => null;
+  @override
+  Future<bool> setMatchesSortOrder(String sortOrder) async => true;
 }
 
 Widget createTestApp(Widget child, {Locale locale = const Locale('ar')}) {

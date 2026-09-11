@@ -32,6 +32,12 @@ void main() {
     when(() => mockStorage.getLanguage()).thenReturn('en');
     when(() => mockStorage.getTimezoneOffset()).thenReturn(3);
     when(() => mockStorage.getFavoriteMatches()).thenReturn([]);
+    when(() => mockStorage.getFavoriteCompetitions()).thenReturn([]);
+    when(() => mockStorage.getFavoriteTeams()).thenReturn([]);
+    when(() => mockStorage.getMatchesFilter()).thenReturn(null);
+    when(() => mockStorage.getMatchesSortOrder()).thenReturn(null);
+    when(() => mockStorage.setMatchesFilter(any())).thenAnswer((_) async => true);
+    when(() => mockStorage.setMatchesSortOrder(any())).thenAnswer((_) async => true);
   });
 
   final testDate = DateTime(2026, 8, 27);

@@ -409,59 +409,61 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
         return Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _tempSortOrder = opt.$1;
-                });
-              },
+            child: Material(
+              color: isSelected
+                  ? (isDark
+                      ? AppColors.primary.withValues(alpha: 0.18)
+                      : AppColors.primary.withValues(alpha: 0.12))
+                  : (isDark ? AppColors.darkCard : AppColors.lightCard),
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark
-                          ? AppColors.primary.withValues(alpha: 0.18)
-                          : AppColors.primary.withValues(alpha: 0.12))
-                      : (isDark ? AppColors.darkCard : AppColors.lightCard),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDark
-                            ? AppColors.darkBorder
-                            : AppColors.lightBorder),
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      opt.$3,
-                      size: 20,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _tempSortOrder = opt.$1;
+                  });
+                },
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                    border: Border.all(
                       color: isSelected
                           ? AppColors.primary
                           : (isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary),
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder),
+                      width: isSelected ? 1.5 : 1,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      opt.$2,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        opt.$3,
+                        size: 20,
                         color: isSelected
-                            ? (isDark ? Colors.white : Colors.black)
+                            ? AppColors.primary
                             : (isDark
                                 ? AppColors.darkTextSecondary
                                 : AppColors.lightTextSecondary),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        opt.$2,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? (isDark ? Colors.white : Colors.black)
+                              : (isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
