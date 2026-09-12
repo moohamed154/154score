@@ -17,6 +17,7 @@ class MatchDetailsState extends Equatable {
   final String? liveScore1;
   final String? liveScore2;
   final String? liveStatus;
+  final String? liveStatusCode;
   final String? liveMinute;
   final String? liveExtraTime;
   final String? livePeriod;
@@ -35,6 +36,7 @@ class MatchDetailsState extends Equatable {
     this.liveScore1,
     this.liveScore2,
     this.liveStatus,
+    this.liveStatusCode,
     this.liveMinute,
     this.liveExtraTime,
     this.livePeriod,
@@ -54,6 +56,7 @@ class MatchDetailsState extends Equatable {
     String? liveScore1,
     String? liveScore2,
     String? liveStatus,
+    String? liveStatusCode,
     String? liveMinute,
     String? liveExtraTime,
     String? livePeriod,
@@ -72,6 +75,7 @@ class MatchDetailsState extends Equatable {
       liveScore1: liveScore1 ?? this.liveScore1,
       liveScore2: liveScore2 ?? this.liveScore2,
       liveStatus: liveStatus ?? this.liveStatus,
+      liveStatusCode: liveStatusCode ?? this.liveStatusCode,
       liveMinute: liveMinute ?? this.liveMinute,
       liveExtraTime: liveExtraTime ?? this.liveExtraTime,
       livePeriod: livePeriod ?? this.livePeriod,
@@ -93,6 +97,7 @@ class MatchDetailsState extends Equatable {
     liveScore1,
     liveScore2,
     liveStatus,
+    liveStatusCode,
     liveMinute,
     liveExtraTime,
     livePeriod,

@@ -34,6 +34,8 @@ class MatchCard extends StatelessWidget {
 
     final phase = MatchStatusHelper.parseStatus(
       match.status,
+      statusCode: match.statusCode,
+      period: match.period,
       minute: match.minute,
       extraTime: match.extraTime,
       time: match.time,
@@ -248,6 +250,7 @@ class MatchCard extends StatelessWidget {
           children: [
             CircularLiveClock(
               status: match.status,
+              statusCode: match.statusCode,
               minute: match.minute,
               extraTime: match.extraTime,
               time: match.time,

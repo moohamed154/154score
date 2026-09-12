@@ -202,9 +202,20 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
       emit(
         state.copyWith(
-          liveScore1: update.score1 ?? state.liveScore1,
-          liveScore2: update.score2 ?? state.liveScore2,
+          liveScore1: update.score1 ??
+              update.rawPayload['score_1']?.toString() ??
+              update.rawPayload['score1']?.toString() ??
+              update.rawPayload['home_score']?.toString() ??
+              state.liveScore1,
+          liveScore2: update.score2 ??
+              update.rawPayload['score_2']?.toString() ??
+              update.rawPayload['score2']?.toString() ??
+              update.rawPayload['away_score']?.toString() ??
+              state.liveScore2,
           liveStatus: update.status ?? state.liveStatus,
+          liveStatusCode: update.statusCode ??
+              update.rawPayload['status_code']?.toString() ??
+              state.liveStatusCode,
           liveMinute: update.minute ?? state.liveMinute,
           liveExtraTime: update.extraTime ?? state.liveExtraTime,
           livePeriod: update.period ?? state.livePeriod,
@@ -229,9 +240,20 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
       emit(
         state.copyWith(
-          liveScore1: update.score1 ?? state.liveScore1,
-          liveScore2: update.score2 ?? state.liveScore2,
+          liveScore1: update.score1 ??
+              update.rawPayload['score_1']?.toString() ??
+              update.rawPayload['score1']?.toString() ??
+              update.rawPayload['home_score']?.toString() ??
+              state.liveScore1,
+          liveScore2: update.score2 ??
+              update.rawPayload['score_2']?.toString() ??
+              update.rawPayload['score2']?.toString() ??
+              update.rawPayload['away_score']?.toString() ??
+              state.liveScore2,
           liveStatus: update.status ?? state.liveStatus,
+          liveStatusCode: update.statusCode ??
+              update.rawPayload['status_code']?.toString() ??
+              state.liveStatusCode,
           liveMinute: update.minute ?? state.liveMinute,
           liveExtraTime: update.extraTime ?? state.liveExtraTime,
           livePeriod: update.period ?? state.livePeriod,

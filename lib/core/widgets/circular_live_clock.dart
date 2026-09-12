@@ -9,6 +9,7 @@ import '../utils/match_status_helper.dart';
 /// circular progress ring, top yellow marker, and goal markers.
 class CircularLiveClock extends StatefulWidget {
   final String? status;
+  final String? statusCode;
   final String? minute;
   final String? extraTime;
   final String? time;
@@ -25,6 +26,7 @@ class CircularLiveClock extends StatefulWidget {
   const CircularLiveClock({
     super.key,
     this.status,
+    this.statusCode,
     this.minute,
     this.extraTime,
     this.time,
@@ -47,7 +49,10 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
   Timer? _timer;
   int _currentMinute = 0;
   int _currentSecond = 0;
+  int _elapsedExtraSeconds = 0;
+  int _totalExtraMinutes = 0;
   String _displayMinute = '';
+  String? _displayExtra;
   MatchPhase _phase = MatchPhase.unknown;
 
   bool get _isInTest =>
@@ -64,6 +69,7 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
   void didUpdateWidget(covariant CircularLiveClock oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.status != widget.status ||
+        oldWidget.statusCode != widget.statusCode ||
         oldWidget.minute != widget.minute ||
         oldWidget.extraTime != widget.extraTime ||
         oldWidget.time != widget.time ||
@@ -85,6 +91,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
   void _syncClock() {
     _phase = MatchStatusHelper.parseStatus(
       widget.status,
+      statusCode: widget.statusCode,
+      period: widget.period,
       minute: widget.minute,
       extraTime: widget.extraTime,
       time: widget.time,
@@ -124,15 +132,60 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
           0;
     }
 
-    if (secNum == 0 &&
-        !_isInTest &&
-        minNum > 0 &&
-        MatchStatusHelper.isInPlay(_phase)) {
-      secNum = DateTime.now().second;
-    }
-
     _currentMinute = minNum;
     _currentSecond = secNum;
+
+    // Parse extraTime (e.g. "+04:36 / 12", "02:00 / 5", "+3", "+00:00")
+    _displayExtra = null;
+    _elapsedExtraSeconds = 0;
+    _totalExtraMinutes = 0;
+
+    if (widget.extraTime != null &&
+        widget.extraTime!.isNotEmpty &&
+        widget.extraTime != 'null') {
+      final clean = widget.extraTime!.trim();
+      if (clean != '+00:00' && clean != '00:00' && clean != '0' && clean != '+0') {
+        if (clean.contains('/')) {
+          final parts = clean.split('/');
+          final elapsedPart = parts.first.replaceAll('+', '').trim();
+          final totalPart = parts.last.trim();
+          _totalExtraMinutes = int.tryParse(totalPart) ?? 0;
+          if (elapsedPart.contains(':')) {
+            final timeParts = elapsedPart.split(':');
+            final m = int.tryParse(timeParts[0]) ?? 0;
+            final s = int.tryParse(timeParts[1]) ?? 0;
+            _elapsedExtraSeconds = m * 60 + s;
+          } else {
+            final m = int.tryParse(elapsedPart) ?? 0;
+            _elapsedExtraSeconds = m * 60;
+          }
+        } else if (clean.contains(':')) {
+          final cleanTime = clean.replaceAll('+', '').trim();
+          final timeParts = cleanTime.split(':');
+          final m = int.tryParse(timeParts[0]) ?? 0;
+          final s = int.tryParse(timeParts[1]) ?? 0;
+          _elapsedExtraSeconds = m * 60 + s;
+        } else {
+          final numMatch = RegExp(r'(\d+)').firstMatch(clean);
+          if (numMatch != null) {
+            final val = int.tryParse(numMatch.group(1)!) ?? 0;
+            if (val > 0) {
+              _totalExtraMinutes = val;
+            }
+          }
+        }
+
+        final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
+        final ss = (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
+        if (_totalExtraMinutes > 0) {
+          _displayExtra = '+$mm:$ss / $_totalExtraMinutes';
+        } else if (_elapsedExtraSeconds > 0) {
+          _displayExtra = '+$mm:$ss';
+        } else if (clean.startsWith('+')) {
+          _displayExtra = clean;
+        }
+      }
+    }
 
     _updateDisplayMinute();
   }
@@ -140,11 +193,32 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
   void _updateDisplayMinute() {
     if (_phase == MatchPhase.halfTime) {
       _displayMinute = 'HT';
+      _displayExtra = null;
     } else if (_phase == MatchPhase.penalties) {
       _displayMinute = 'PEN';
+      _displayExtra = null;
     } else {
-      final mm = _currentMinute.toString().padLeft(2, '0');
-      final ss = (_currentSecond % 60).toString().padLeft(2, '0');
+      final p = (widget.period ?? '').toLowerCase();
+      final s = (widget.status ?? '').toLowerCase();
+      final is1stHalf = p.contains('1st') ||
+          p.contains('first') ||
+          s.contains('الأول') ||
+          s.contains('الاول');
+
+      int m = _currentMinute;
+      int sec = _currentSecond;
+      if (_displayExtra != null) {
+        if (is1stHalf && m >= 45) {
+          m = 45;
+          sec = 0; // When extra time starts, main time is strictly 45:00
+        } else if (m >= 90) {
+          m = 90;
+          sec = 0; // When extra time starts, main time is strictly 90:00
+        }
+      }
+
+      final mm = m.toString().padLeft(2, '0');
+      final ss = (sec % 60).toString().padLeft(2, '0');
       _displayMinute = '$mm:$ss';
     }
   }
@@ -158,10 +232,27 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
         setState(() {
-          _currentSecond++;
-          if (_currentSecond >= 60) {
-            _currentSecond = 0;
-            _currentMinute++;
+          if (_displayExtra != null) {
+            _elapsedExtraSeconds++;
+            if (_totalExtraMinutes > 0 &&
+                _elapsedExtraSeconds ~/ 60 >= _totalExtraMinutes) {
+              _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
+            }
+            final mm =
+                (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
+            final ss =
+                (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
+            if (_totalExtraMinutes > 0) {
+              _displayExtra = '+$mm:$ss / $_totalExtraMinutes';
+            } else {
+              _displayExtra = '+$mm:$ss';
+            }
+          } else {
+            _currentSecond++;
+            if (_currentSecond >= 60) {
+              _currentSecond = 0;
+              _currentMinute++;
+            }
           }
           _updateDisplayMinute();
         });
@@ -190,7 +281,7 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     final s2 = int.tryParse(widget.score2 ?? '');
     final totalGoals = (s1 != null && s2 != null) ? (s1 + s2) : 0;
 
-    return SizedBox(
+    final clockWidget = SizedBox(
       width: widget.size,
       height: widget.size,
       child: Stack(
@@ -225,6 +316,29 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         ],
       ),
     );
+
+    if (_displayExtra != null && _displayExtra!.isNotEmpty) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          clockWidget,
+          const SizedBox(height: 2),
+          Text(
+            _displayExtra!,
+            style: TextStyle(
+              color: const Color(0xFFFF4B4B),
+              fontSize: (widget.size * 0.18).clamp(9.5, 11.5),
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+            textDirection: TextDirection.ltr,
+          ),
+        ],
+      );
+    }
+
+    return clockWidget;
   }
 }
 

@@ -17,6 +17,8 @@ class MatchStatusHelper {
 
   static MatchPhase parseStatus(
     String? status, {
+    String? statusCode,
+    String? period,
     String? minute,
     String? extraTime,
     String? time,
@@ -25,7 +27,53 @@ class MatchStatusHelper {
     String? score2,
     DateTime? now,
   }) {
+    final code = (statusCode ?? '').trim().toUpperCase();
+    final p = (period ?? '').trim().toLowerCase();
     final s = (status ?? '').trim().toLowerCase();
+
+    // 0. Explicit status_code / period checks from Mobile App JSON
+    if (code == 'HALF_TIME' ||
+        code == 'HT' ||
+        p == 'break' ||
+        p == 'ht' ||
+        p == 'half_time') {
+      return MatchPhase.halfTime;
+    }
+    if (code == 'PENALTIES' || p == 'penalties' || p == 'pen') {
+      return MatchPhase.penalties;
+    }
+    if (code == 'EXTRA_TIME_1ST' ||
+        code == 'EXTRA_TIME_2ND' ||
+        code == 'EXTRA_TIME' ||
+        code == 'ET' ||
+        p.contains('extra') ||
+        p.contains('et')) {
+      return MatchPhase.extraTime;
+    }
+    if (code == 'FINISHED' || code == 'FT' || p == 'finished' || p == 'ended') {
+      return MatchPhase.finished;
+    }
+    if (code == 'POSTPONED' || p == 'postponed') {
+      return MatchPhase.postponed;
+    }
+    if (code == 'CANCELLED' || code == 'ABANDONED' || p == 'cancelled') {
+      return MatchPhase.cancelled;
+    }
+    if (code == 'INTERRUPTED' ||
+        code == 'SUSPENDED' ||
+        p == 'interrupted' ||
+        p == 'suspended') {
+      return MatchPhase.postponed;
+    }
+    if (code == 'LIVE' ||
+        code == 'IN_PLAY_1ST' ||
+        code == 'IN_PLAY_2ND' ||
+        p == '1st_half' ||
+        p == '2nd_half' ||
+        p == '1st' ||
+        p == '2nd') {
+      return MatchPhase.live;
+    }
 
     // 1. Penalties
     if (s.contains('ترجيح') ||

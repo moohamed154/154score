@@ -317,6 +317,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                       liveScore1: state.liveScore1,
                       liveScore2: state.liveScore2,
                       liveStatus: state.liveStatus,
+                      liveStatusCode: state.liveStatusCode,
                       liveMinute: state.liveMinute,
                       liveExtraTime: state.liveExtraTime,
                       livePeriod: state.livePeriod,

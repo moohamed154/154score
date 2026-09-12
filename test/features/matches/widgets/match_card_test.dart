@@ -67,7 +67,7 @@ void main() {
     expect(find.text('Al Ittihad'), findsOneWidget);
     expect(find.text('0'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
-    expect(find.text("85'"), findsOneWidget);
+    expect(find.text('85:00'), findsOneWidget);
   });
 
   testWidgets('MatchCard renders upcoming state with time capsule correctly', (
@@ -98,5 +98,40 @@ void main() {
     expect(find.text('Al-Ahli'), findsOneWidget);
     expect(find.text('Al Hazem'), findsOneWidget);
     expect(find.text('09:00 PM'), findsOneWidget);
+  });
+
+  testWidgets('MatchCard renders extra time under match time correctly', (
+    WidgetTester tester,
+  ) async {
+    const match = MatchEntity(
+      id: '4',
+      team1: 'Coritiba',
+      team2: 'Paranaense',
+      score1: '0',
+      score2: '2',
+      status: 'الشوط الثاني',
+      statusCode: 'LIVE',
+      minute: '90',
+      period: '2nd_half',
+      extraTime: '+04:36 / 12',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
+        supportedLocales: [Locale('en')],
+        home: Scaffold(body: MatchCard(match: match)),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('90:00'), findsOneWidget);
+    expect(find.text('+04:36 / 12'), findsOneWidget);
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
   });
 }

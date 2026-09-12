@@ -388,6 +388,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
   final String? score1;
   final String? score2;
   final String? status;
+  final String? statusCode;
   final String? minute;
   final String? extraTime;
   final String? period;
@@ -405,6 +406,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
     this.score1,
     this.score2,
     this.status,
+    this.statusCode,
     this.minute,
     this.extraTime,
     this.period,
@@ -509,6 +511,9 @@ class MatchDetailRealtimeUpdate extends Equatable {
       }
     }
 
+    final statusCode =
+        payload['status_code']?.toString() ?? json['status_code']?.toString();
+
     final isHome =
         payload['is_home'] == true ||
         payload['team'] == '1' ||
@@ -520,6 +525,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
       score1: s1,
       score2: s2,
       status: st,
+      statusCode: statusCode,
       minute: min,
       extraTime: extraTime,
       period: period,

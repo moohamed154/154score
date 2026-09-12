@@ -42,13 +42,18 @@ class RealtimeMergeEngine {
           matchFound = true;
           leagueHasMatch = true;
 
-          // Safe value merging - never convert null to "null" or create undefined/NaN
           final newScore1 = (update.score1 != null && update.score1!.isNotEmpty)
               ? update.score1
-              : m.score1;
+              : (update.rawPayload['score_1']?.toString() ??
+                  update.rawPayload['score1']?.toString() ??
+                  update.rawPayload['home_score']?.toString() ??
+                  m.score1);
           final newScore2 = (update.score2 != null && update.score2!.isNotEmpty)
               ? update.score2
-              : m.score2;
+              : (update.rawPayload['score_2']?.toString() ??
+                  update.rawPayload['score2']?.toString() ??
+                  update.rawPayload['away_score']?.toString() ??
+                  m.score2);
           final newStatus = (update.status != null && update.status!.isNotEmpty)
               ? update.status
               : m.status;

@@ -17,6 +17,7 @@ class MatchHeaderBanner extends StatelessWidget {
   final String? liveScore1;
   final String? liveScore2;
   final String? liveStatus;
+  final String? liveStatusCode;
   final String? liveMinute;
   final String? liveExtraTime;
   final String? livePeriod;
@@ -30,6 +31,7 @@ class MatchHeaderBanner extends StatelessWidget {
     this.liveScore1,
     this.liveScore2,
     this.liveStatus,
+    this.liveStatusCode,
     this.liveMinute,
     this.liveExtraTime,
     this.livePeriod,
@@ -50,12 +52,15 @@ class MatchHeaderBanner extends StatelessWidget {
     final p1 = penaltyScore1 ?? match.penaltyScore1;
     final p2 = penaltyScore2 ?? match.penaltyScore2;
     final effectiveStatus = liveStatus ?? match.status;
+    final effectiveStatusCode = liveStatusCode ?? match.statusCode;
     final effectiveMinute = liveMinute ?? match.minute;
     final effectiveExtraTime = liveExtraTime ?? match.extraTime;
     final effectivePeriod = livePeriod ?? match.period;
 
     final phase = MatchStatusHelper.parseStatus(
       effectiveStatus,
+      statusCode: effectiveStatusCode,
+      period: effectivePeriod,
       minute: effectiveMinute,
       extraTime: effectiveExtraTime,
       time: match.time,
@@ -235,6 +240,7 @@ class MatchHeaderBanner extends StatelessWidget {
                   children: [
                     CircularLiveClock(
                       status: effectiveStatus,
+                      statusCode: effectiveStatusCode,
                       minute: effectiveMinute,
                       extraTime: effectiveExtraTime,
                       time: match.time,
