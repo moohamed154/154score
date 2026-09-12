@@ -68,7 +68,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
   }) async {
     final queryParams = <String, dynamic>{'lang': lang};
     if (date != null && date.isNotEmpty) queryParams['date'] = date;
-    if (utcOffset != null) queryParams['utc-offset'] = utcOffset;
+    if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (leagueId != null && leagueId.isNotEmpty) queryParams['league_id'] = leagueId;
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
@@ -93,7 +93,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     String? sort,
   }) async {
     final queryParams = <String, dynamic>{'lang': lang};
-    if (utcOffset != null) queryParams['utc-offset'] = utcOffset;
+    if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (date != null && date.isNotEmpty) queryParams['date'] = date;
     if (leagueId != null && leagueId.isNotEmpty) queryParams['league_id'] = leagueId;
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
@@ -116,7 +116,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     String? sort,
   }) async {
     final queryParams = <String, dynamic>{'lang': lang};
-    if (utcOffset != null) queryParams['utc-offset'] = utcOffset;
+    if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (leagueId != null && leagueId.isNotEmpty) queryParams['league_id'] = leagueId;
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;

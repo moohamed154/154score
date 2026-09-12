@@ -124,3 +124,11 @@ class RefreshFavoritesEvent extends MatchesEvent {
   @override
   List<Object?> get props => [];
 }
+
+class ChangeTimezoneEvent extends MatchesEvent {
+  final int offset;
+  const ChangeTimezoneEvent(this.offset);
+
+  @override
+  List<Object?> get props => [offset];
+}

@@ -8,6 +8,8 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/websocket/websocket_service.dart';
+import '../../../matches/presentation/bloc/matches_bloc.dart';
+import '../../../matches/presentation/bloc/matches_event.dart';
 import '../cubit/settings_cubits.dart';
 import '../widgets/debug_console_sheet.dart';
 import '../widgets/diagnostics_sheet.dart';
@@ -186,6 +188,9 @@ class _SettingsViewState extends State<SettingsView> {
                       if (val != null) {
                         storage.setTimezoneOffset(val);
                         setState(() {});
+                        try {
+                          context.read<MatchesBloc>().add(ChangeTimezoneEvent(val));
+                        } catch (_) {}
                       }
                     },
                   ),

@@ -63,6 +63,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     on<SocketStatusChangedEvent>(_onSocketStatusChanged);
     on<ToggleMatchFavoriteEvent>(_onToggleMatchFavorite);
     on<RefreshFavoritesEvent>(_onRefreshFavorites);
+    on<ChangeTimezoneEvent>(_onChangeTimezone);
 
     // 1. Listen to Real-Time WebSocket updates
     try {
@@ -378,6 +379,15 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     );
 
     emit(state.copyWith(allLeagues: updatedAll, filteredLeagues: filtered));
+  }
+
+  Future<void> _onChangeTimezone(
+    ChangeTimezoneEvent event,
+    Emitter<MatchesState> emit,
+  ) async {
+    await localStorageService.setTimezoneOffset(event.offset);
+    _cachedDateLeagues.clear();
+    add(LoadMatchesEvent(date: state.selectedDate, isRefresh: true));
   }
 
   void _onLiveMatchReceived(

@@ -1,21 +1,26 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
 
 import '../constants/api_endpoints.dart';
 import '../errors/exceptions.dart';
+import '../storage/local_storage_service.dart';
 import 'debug_console.dart';
 
 class ApiClient {
   final Dio _dio;
+  final LocalStorageService? _localStorageService;
 
-  ApiClient({Dio? dio}) : _dio = dio ?? _createDefaultDio() {
+  ApiClient({Dio? dio, LocalStorageService? localStorageService})
+      : _localStorageService = localStorageService,
+        _dio = dio ?? _createDefaultDio(localStorageService) {
     if (!_dio.interceptors.any((i) => i is DebugConsoleInterceptor)) {
       _dio.interceptors.insert(0, DebugConsoleInterceptor());
     }
   }
 
-  static Dio _createDefaultDio() {
+  static Dio _createDefaultDio([LocalStorageService? localStorageService]) {
     final dio = Dio(
       BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
@@ -35,6 +40,32 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
+          // Resolve current timezone offset from LocalStorageService (default to 3)
+          int offset = 3;
+          if (localStorageService != null) {
+            offset = localStorageService.getTimezoneOffset();
+          } else {
+            try {
+              if (GetIt.instance.isRegistered<LocalStorageService>()) {
+                offset = GetIt.instance<LocalStorageService>().getTimezoneOffset();
+              }
+            } catch (_) {}
+          }
+
+          // 1. If options.queryParameters already has 'utc-offset', ensure it's a String
+          if (options.queryParameters.containsKey('utc-offset')) {
+            options.queryParameters['utc-offset'] =
+                options.queryParameters['utc-offset'].toString();
+          } else {
+            // 2. Automatically inject utc-offset as String for any match-related endpoint
+            final path = options.path;
+            final isMatchEndpoint = path.startsWith('/api/matches') ||
+                path.startsWith(ApiEndpoints.matches);
+            if (isMatchEndpoint) {
+              options.queryParameters['utc-offset'] = offset.toString();
+            }
+          }
+
           return handler.next(options);
         },
         onResponse: (response, handler) {
@@ -53,6 +84,7 @@ class ApiClient {
   }
 
   Dio get dio => _dio;
+  LocalStorageService? get localStorageService => _localStorageService;
 
   Future<dynamic> get(
     String path, {

@@ -439,7 +439,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     try {
       final queryParams = <String, dynamic>{'lang': lang};
       if (utcOffset != null) {
-        queryParams['utc-offset'] = utcOffset;
+        queryParams['utc-offset'] = utcOffset.toString();
       }
 
       final response = await _client.get(

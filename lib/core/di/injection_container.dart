@@ -59,10 +59,11 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<Connectivity>(() => Connectivity());
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
-  sl.registerLazySingleton<ApiClient>(() => ApiClient());
-
   sl.registerLazySingleton<LocalStorageService>(
     () => LocalStorageServiceImpl(sl()),
+  );
+  sl.registerLazySingleton<ApiClient>(
+    () => ApiClient(localStorageService: sl<LocalStorageService>()),
   );
 
   sl.registerLazySingleton<WebSocketService>(() {
