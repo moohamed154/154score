@@ -282,6 +282,9 @@ class _MatchesViewState extends State<MatchesView> {
           isTimeSorted: state.sortOrder == MatchesSortOrder.time,
           onFavoriteMatchTap: (matchId) {
             context.read<MatchesBloc>().add(ToggleMatchFavoriteEvent(matchId));
+            try {
+              context.read<FavoritesCubit>().loadFavorites();
+            } catch (_) {}
           },
         );
       },

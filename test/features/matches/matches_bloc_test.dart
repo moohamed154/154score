@@ -112,5 +112,55 @@ void main() {
             .having((s) => s.filteredLeagues.length, 'filtered length', 1),
       ],
     );
+
+    blocTest<MatchesBloc, MatchesState>(
+      'filters matches correctly when MatchFilterType.favorites is chosen',
+      build: () {
+        when(() => mockStorage.getFavoriteMatches()).thenReturn(['1']);
+        return MatchesBloc(
+          repository: mockRepository,
+          webSocketService: mockWebSocketService,
+          localStorageService: mockStorage,
+        );
+      },
+      seed: () => MatchesState(
+        selectedDate: testDate,
+        status: MatchesStatus.success,
+        allLeagues: testLeagues,
+        filteredLeagues: testLeagues,
+      ),
+      act: (bloc) => bloc.add(const ChangeFilterEvent(MatchFilterType.favorites)),
+      expect: () => [
+        isA<MatchesState>()
+            .having((s) => s.activeFilter, 'activeFilter', MatchFilterType.favorites)
+            .having((s) => s.filteredLeagues.length, 'filtered length', 1)
+            .having((s) => s.filteredLeagues.first.matches.first.isFavorite, 'isFavorite', true),
+      ],
+    );
+
+    blocTest<MatchesBloc, MatchesState>(
+      'updates filtered leagues on RefreshFavoritesEvent',
+      build: () {
+        when(() => mockStorage.getFavoriteMatches()).thenReturn(['1']);
+        return MatchesBloc(
+          repository: mockRepository,
+          webSocketService: mockWebSocketService,
+          localStorageService: mockStorage,
+        );
+      },
+      seed: () => MatchesState(
+        selectedDate: testDate,
+        status: MatchesStatus.success,
+        activeFilter: MatchFilterType.favorites,
+        allLeagues: testLeagues,
+        filteredLeagues: const [],
+      ),
+      act: (bloc) => bloc.add(const RefreshFavoritesEvent()),
+      expect: () => [
+        isA<MatchesState>()
+            .having((s) => s.filteredLeagues.length, 'filtered length', 1)
+            .having((s) => s.filteredLeagues.first.matches.first.isFavorite, 'isFavorite', true),
+      ],
+    );
   });
 }

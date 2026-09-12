@@ -62,6 +62,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     on<LiveMatchReceivedEvent>(_onLiveMatchReceived);
     on<SocketStatusChangedEvent>(_onSocketStatusChanged);
     on<ToggleMatchFavoriteEvent>(_onToggleMatchFavorite);
+    on<RefreshFavoritesEvent>(_onRefreshFavorites);
 
     // 1. Listen to Real-Time WebSocket updates
     try {
@@ -91,7 +92,14 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
     // 1. SWR Instant Memory Cache: If already loaded, show cached data immediately (0ms)
     if (!event.isRefresh && _cachedDateLeagues.containsKey(dateStr)) {
-      final cached = _cachedDateLeagues[dateStr]!;
+      final favMatches = localStorageService.getFavoriteMatches();
+      final cached = _cachedDateLeagues[dateStr]!.map((l) {
+        return l.copyWith(
+          matches: l.matches.map((m) {
+            return m.copyWith(isFavorite: favMatches.contains(m.id));
+          }).toList(),
+        );
+      }).toList();
       final liveCount = _calculateLiveCount(cached);
       final filtered = _applyFilters(
         leagues: cached,
@@ -154,14 +162,29 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             );
           }
 
+          final favMatches = localStorageService.getFavoriteMatches();
+          final populatedWithFavs = populatedLeagues.map((l) {
+            return l.copyWith(
+              matches: l.matches.map((m) {
+                return m.copyWith(isFavorite: favMatches.contains(m.id));
+              }).toList(),
+            );
+          }).toList();
+
           // Update in-memory date cache
-          _cachedDateLeagues[dateStr] = populatedLeagues;
+          _cachedDateLeagues[dateStr] = populatedWithFavs;
 
           final reconciledLeagues =
               RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(
-                restLeagues: populatedLeagues,
+                restLeagues: populatedWithFavs,
                 currentLeagues: state.allLeagues,
-              );
+              ).map((l) {
+                return l.copyWith(
+                  matches: l.matches.map((m) {
+                    return m.copyWith(isFavorite: favMatches.contains(m.id));
+                  }).toList(),
+                );
+              }).toList();
 
           final liveCount = _calculateLiveCount(reconciledLeagues);
           final filtered = _applyFilters(
@@ -310,6 +333,40 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       }).toList();
       return league.copyWith(matches: updatedMatches);
     }).toList();
+
+    final dateStr = DateFormatter.toApiDateString(state.selectedDate);
+    if (_cachedDateLeagues.containsKey(dateStr)) {
+      _cachedDateLeagues[dateStr] = updatedAll;
+    }
+
+    final filtered = _applyFilters(
+      leagues: updatedAll,
+      filter: state.activeFilter,
+      leagueId: state.selectedLeagueId,
+      leagueTitle: state.selectedLeagueTitle,
+      sortOrder: state.sortOrder,
+      query: state.searchQuery,
+    );
+
+    emit(state.copyWith(allLeagues: updatedAll, filteredLeagues: filtered));
+  }
+
+  void _onRefreshFavorites(
+    RefreshFavoritesEvent event,
+    Emitter<MatchesState> emit,
+  ) {
+    final favMatches = localStorageService.getFavoriteMatches();
+    final updatedAll = state.allLeagues.map((league) {
+      final updatedMatches = league.matches.map((match) {
+        return match.copyWith(isFavorite: favMatches.contains(match.id));
+      }).toList();
+      return league.copyWith(matches: updatedMatches);
+    }).toList();
+
+    final dateStr = DateFormatter.toApiDateString(state.selectedDate);
+    if (_cachedDateLeagues.containsKey(dateStr)) {
+      _cachedDateLeagues[dateStr] = updatedAll;
+    }
 
     final filtered = _applyFilters(
       leagues: updatedAll,
@@ -517,6 +574,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final cleanQuery = query.trim().toLowerCase();
     final favCompetitions = localStorageService.getFavoriteCompetitions();
     final favTeams = localStorageService.getFavoriteTeams();
+    final favMatches = localStorageService.getFavoriteMatches();
 
     final result = leagues
         .where((league) {
@@ -540,7 +598,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
                     cleanComp == league.leagueId!.trim().toLowerCase());
           });
 
-          final matches = league.matches.where((match) {
+          final matches = league.matches.map((match) {
+            final isMatchFavorite = favMatches.contains(match.id);
+            return match.copyWith(isFavorite: isMatchFavorite);
+          }).where((match) {
             final phase = MatchStatusHelper.parseStatus(
               match.status,
               minute: match.minute,
@@ -566,7 +627,11 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             final isTeamFavorite = favTeams.any((team) {
               final cleanTeam = team.trim().toLowerCase();
               return cleanTeam == match.team1.trim().toLowerCase() ||
-                  cleanTeam == match.team2.trim().toLowerCase();
+                  cleanTeam == match.team2.trim().toLowerCase() ||
+                  (match.team1Id != null &&
+                      cleanTeam == match.team1Id!.trim().toLowerCase()) ||
+                  (match.team2Id != null &&
+                      cleanTeam == match.team2Id!.trim().toLowerCase());
             });
 
             // Apply status filter

@@ -117,3 +117,10 @@ class ToggleMatchFavoriteEvent extends MatchesEvent {
   @override
   List<Object?> get props => [matchId];
 }
+
+class RefreshFavoritesEvent extends MatchesEvent {
+  const RefreshFavoritesEvent();
+
+  @override
+  List<Object?> get props => [];
+}

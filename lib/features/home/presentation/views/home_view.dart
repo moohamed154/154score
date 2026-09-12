@@ -23,6 +23,7 @@ import '../../../matches/presentation/widgets/live_match_card.dart';
 import '../../../matches/presentation/widgets/match_filter_bottom_sheet.dart';
 import '../../../transfers/presentation/widgets/transfer_card.dart';
 import '../../../videos/presentation/widgets/video_card.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../cubit/home_cubit.dart';
 
 class HomeView extends StatefulWidget {
@@ -312,6 +313,18 @@ class _HomeViewState extends State<HomeView> {
     }
 
     if (displayLeagues.isEmpty) {
+      if (state.activeFilter == MatchFilterType.live) {
+        return const EmptyView(
+          titleKey: 'no_live_matches',
+          icon: Icons.live_tv_outlined,
+        );
+      }
+      if (state.activeFilter == MatchFilterType.favorites) {
+        return const EmptyView(
+          titleKey: 'no_favorites_matches',
+          icon: Icons.star_border_rounded,
+        );
+      }
       return const EmptyView(
         titleKey: 'no_matches_date',
         icon: Icons.sports_soccer_rounded,
@@ -337,6 +350,9 @@ class _HomeViewState extends State<HomeView> {
               context.read<MatchesBloc>().add(
                 ToggleMatchFavoriteEvent(matchId),
               );
+              try {
+                context.read<FavoritesCubit>().loadFavorites();
+              } catch (_) {}
             },
           );
         }),

@@ -10,6 +10,8 @@ import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../domain/entities/match_entity.dart';
+import '../bloc/matches_bloc.dart';
+import '../bloc/matches_event.dart';
 import 'match_card.dart';
 
 class LeagueSectionWidget extends StatefulWidget {
@@ -171,6 +173,11 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                           context.read<FavoritesCubit>().toggleCompetition(
                             widget.league.leagueTitle,
                           );
+                          try {
+                            context.read<MatchesBloc>().add(
+                              const RefreshFavoritesEvent(),
+                            );
+                          } catch (_) {}
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(4.0),
