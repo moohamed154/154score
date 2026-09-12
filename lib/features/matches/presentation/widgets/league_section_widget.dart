@@ -56,12 +56,30 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
         (widget.league.leagueId == null &&
             RegExp(r'^\d{1,2}:\d{2}').hasMatch(widget.league.leagueTitle));
 
+    if (isTimeSlot) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final match in widget.league.matches)
+            MatchCard(
+              key: ValueKey(match.id),
+              match: match,
+              showLeague: true,
+              onFavoriteTap: widget.onFavoriteMatchTap != null
+                  ? () => widget.onFavoriteMatchTap!(match.id)
+                  : null,
+            ),
+        ],
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // League / Time Header Accordion Bar
+          // League Header Accordion Bar
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppDimensions.lg,
@@ -70,134 +88,102 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             child: Row(
               children: [
-                if (isTimeSlot)
-                  Expanded(
+                // League Identity (Clickable to open LeagueView)
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                    onTap: () {
+                      final lId = widget.league.leagueId ?? '937599';
+                      context.push(
+                        '/league/$lId',
+                        extra: {
+                          'title': widget.league.leagueTitle,
+                          'logo': widget.league.leagueLogo,
+                        },
+                      );
+                    },
                     child: Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.access_time_filled_rounded,
-                            size: 16,
-                            color: AppColors.primary,
-                          ),
+                        AppImage(
+                          imageUrl: widget.league.leagueLogo,
+                          width: 24,
+                          height: 24,
+                          borderRadius: 4,
+                          fit: BoxFit.contain,
+                          placeholderIcon: Icons.emoji_events_outlined,
                         ),
                         const SizedBox(width: AppDimensions.md),
-                        Text(
-                          widget.league.leagueTitle,
-                          style: AppTypography.getBodyLarge(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
+                        Expanded(
+                          child: Text(
+                            widget.league.leagueTitle,
+                            style: AppTypography.getBodyLarge(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          isArabic
+                              ? Icons.chevron_left_rounded
+                              : Icons.chevron_right_rounded,
+                          size: 16,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
                         ),
                       ],
                     ),
-                  )
-                else ...[
-                  // League Identity (Clickable to open LeagueView)
-                  Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                      onTap: () {
-                        final lId = widget.league.leagueId ?? '937599';
-                        context.push(
-                          '/league/$lId',
-                          extra: {
-                            'title': widget.league.leagueTitle,
-                            'logo': widget.league.leagueLogo,
-                          },
-                        );
-                      },
-                      child: Row(
-                        children: [
-                          AppImage(
-                            imageUrl: widget.league.leagueLogo,
-                            width: 24,
-                            height: 24,
-                            borderRadius: 4,
-                            fit: BoxFit.contain,
-                            placeholderIcon: Icons.emoji_events_outlined,
-                          ),
-                          const SizedBox(width: AppDimensions.md),
-                          Expanded(
-                            child: Text(
-                              widget.league.leagueTitle,
-                              style: AppTypography.getBodyLarge(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(fontWeight: FontWeight.w700),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            isArabic
-                                ? Icons.chevron_left_rounded
-                                : Icons.chevron_right_rounded,
-                            size: 16,
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                          ),
-                        ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+
+                // League Favorite Star Button
+                BlocBuilder<FavoritesCubit, FavoritesState>(
+                  builder: (context, favState) {
+                    final isFav =
+                        favState.favoriteCompetitions.contains(
+                          widget.league.leagueTitle,
+                        ) ||
+                        (widget.league.leagueId != null &&
+                            favState.favoriteCompetitions.contains(
+                              widget.league.leagueId,
+                            ));
+
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusFull,
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-
-                  // League Favorite Star Button
-                  BlocBuilder<FavoritesCubit, FavoritesState>(
-                    builder: (context, favState) {
-                      final isFav =
-                          favState.favoriteCompetitions.contains(
-                            widget.league.leagueTitle,
-                          ) ||
-                          (widget.league.leagueId != null &&
-                              favState.favoriteCompetitions.contains(
-                                widget.league.leagueId,
-                              ));
-
-                      return InkWell(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusFull,
-                        ),
-                        onTap: () {
-                          context.read<FavoritesCubit>().toggleCompetition(
-                            widget.league.leagueTitle,
+                      onTap: () {
+                        context.read<FavoritesCubit>().toggleCompetition(
+                          widget.league.leagueTitle,
+                        );
+                        try {
+                          context.read<MatchesBloc>().add(
+                            const RefreshFavoritesEvent(),
                           );
-                          try {
-                            context.read<MatchesBloc>().add(
-                              const RefreshFavoritesEvent(),
-                            );
-                          } catch (_) {}
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Icon(
-                            isFav
-                                ? Icons.star_rounded
-                                : Icons.star_border_rounded,
-                            size: 18,
-                            color: isFav
-                                ? AppColors.yellowCard
-                                : (isDark
-                                      ? AppColors.darkTextMuted
-                                      : AppColors.lightTextMuted),
-                          ),
+                        } catch (_) {}
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Icon(
+                          isFav
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          size: 18,
+                          color: isFav
+                              ? AppColors.yellowCard
+                              : (isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted),
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 6),
-                ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 6),
 
                 // Match count & Live count & Expand/Collapse Trigger
                 InkWell(
