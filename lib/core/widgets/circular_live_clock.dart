@@ -46,6 +46,7 @@ class CircularLiveClock extends StatefulWidget {
 class _CircularLiveClockState extends State<CircularLiveClock> {
   Timer? _timer;
   int _currentMinute = 0;
+  int _currentSecond = 0;
   String _displayMinute = '';
   MatchPhase _phase = MatchPhase.unknown;
 
@@ -93,19 +94,20 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     );
 
     int minNum = 0;
-    String extraSuffix = '';
+    int secNum = _currentSecond;
 
     if (widget.minute != null &&
         widget.minute!.isNotEmpty &&
         widget.minute != 'null') {
       final clean = widget.minute!.replaceAll("'", '').trim();
-      if (clean.contains('+')) {
-        final parts = clean.split('+');
-        minNum = int.tryParse(parts[0].trim()) ?? 0;
-        final extra = parts[1].trim();
-        extraSuffix = '+$extra';
-      } else if (clean.contains(':')) {
+      if (clean.contains(':')) {
         final parts = clean.split(':');
+        minNum = int.tryParse(parts[0].trim()) ?? 0;
+        if (parts.length > 1) {
+          secNum = int.tryParse(parts[1].trim()) ?? 0;
+        }
+      } else if (clean.contains('+')) {
+        final parts = clean.split('+');
         minNum = int.tryParse(parts[0].trim()) ?? 0;
       } else {
         minNum = int.tryParse(clean) ?? 0;
@@ -122,16 +124,28 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
           0;
     }
 
-    _currentMinute = minNum;
+    if (secNum == 0 &&
+        !_isInTest &&
+        minNum > 0 &&
+        MatchStatusHelper.isInPlay(_phase)) {
+      secNum = DateTime.now().second;
+    }
 
+    _currentMinute = minNum;
+    _currentSecond = secNum;
+
+    _updateDisplayMinute();
+  }
+
+  void _updateDisplayMinute() {
     if (_phase == MatchPhase.halfTime) {
       _displayMinute = 'HT';
     } else if (_phase == MatchPhase.penalties) {
       _displayMinute = 'PEN';
-    } else if (_currentMinute > 0) {
-      _displayMinute = '$_currentMinute$extraSuffix\'';
     } else {
-      _displayMinute = '1\'';
+      final mm = _currentMinute.toString().padLeft(2, '0');
+      final ss = (_currentSecond % 60).toString().padLeft(2, '0');
+      _displayMinute = '$mm:$ss';
     }
   }
 
@@ -141,10 +155,15 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         MatchStatusHelper.isInPlay(_phase) &&
         _currentMinute >= 0 &&
         _currentMinute < 130) {
-      _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
         setState(() {
-          _syncClock();
+          _currentSecond++;
+          if (_currentSecond >= 60) {
+            _currentSecond = 0;
+            _currentMinute++;
+          }
+          _updateDisplayMinute();
         });
       });
     }
@@ -188,15 +207,18 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
               currentMinute: _currentMinute,
             ),
           ),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              _displayMinute,
-              style: TextStyle(
-                color: effectiveTextColor,
-                fontSize: widget.size * 0.25,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.size * 0.08),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                _displayMinute,
+                style: TextStyle(
+                  color: effectiveTextColor,
+                  fontSize: widget.size * 0.24,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
               ),
             ),
           ),

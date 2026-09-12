@@ -8,8 +8,8 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/app_image.dart';
-import '../../../../core/widgets/match_score_widget.dart';
-import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/circular_live_clock.dart';
+import '../../../../core/widgets/penalty_shootout_widget.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 
 class MatchHeaderBanner extends StatelessWidget {
@@ -65,6 +65,14 @@ class MatchHeaderBanner extends StatelessWidget {
     );
     final isLive =
         MatchStatusHelper.isLive(phase) || ScoreHelper.isLiveStatus(effectiveStatus);
+    final isUpcoming = MatchStatusHelper.isUpcoming(phase);
+    final isFinished = MatchStatusHelper.isFinished(phase);
+
+    final score1Str = ScoreHelper.normalizeScore(s1);
+    final score2Str = ScoreHelper.normalizeScore(s2);
+    final hasScores = score1Str != '-' && score2Str != '-';
+    final hasPenalties = (p1 != null && p1.isNotEmpty && p1 != '-') &&
+        (p2 != null && p2.isNotEmpty && p2 != '-');
 
     final logoSize = isSmall ? 40.0 : 48.0;
 
@@ -204,24 +212,28 @@ class MatchHeaderBanner extends StatelessWidget {
                 ),
               ),
 
-              // Center Score & Status & Penalties
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: isSmall ? 6 : 12),
-                child: Column(
+              // If LIVE: Home Score
+              if (isLive)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: isSmall ? 8 : 12),
+                  child: Text(
+                    score1Str,
+                    style: TextStyle(
+                      fontSize: isSmall ? 22 : 26,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                ),
+
+              // Center Widget: CircularLiveClock (if Live) OR Center Pill (if Finished/Upcoming/Other)
+              if (isLive)
+                Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    MatchScoreWidget(
-                      score1: s1,
-                      score2: s2,
-                      penaltyScore1: p1,
-                      penaltyScore2: p2,
-                      halfTimeScore1: match.halfTimeScore1,
-                      halfTimeScore2: match.halfTimeScore2,
-                      isLive: isLive,
-                      isLarge: !isSmall,
-                    ),
-                    const SizedBox(height: 6),
-                    StatusPill(
+                    CircularLiveClock(
                       status: effectiveStatus,
                       minute: effectiveMinute,
                       extraTime: effectiveExtraTime,
@@ -230,11 +242,53 @@ class MatchHeaderBanner extends StatelessWidget {
                       date: match.date,
                       score1: s1,
                       score2: s2,
-                      compact: isSmall,
+                      size: isSmall ? 48 : 56,
                     ),
+                    if (hasPenalties) ...[
+                      const SizedBox(height: 3),
+                      PenaltyShootoutWidget(
+                        penaltyScore1: p1,
+                        penaltyScore2: p2,
+                        isCompact: true,
+                      ),
+                    ],
                   ],
+                )
+              else
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: isSmall ? 8 : 12),
+                  child: _buildCenterPill(
+                    context,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                    isSmall: isSmall,
+                    isUpcoming: isUpcoming,
+                    isFinished: isFinished,
+                    hasScores: hasScores,
+                    score1Str: score1Str,
+                    score2Str: score2Str,
+                    hasPenalties: hasPenalties,
+                    p1: p1,
+                    p2: p2,
+                    effectiveStatus: effectiveStatus,
+                  ),
                 ),
-              ),
+
+              // If LIVE: Away Score
+              if (isLive)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: isSmall ? 8 : 12),
+                  child: Text(
+                    score2Str,
+                    style: TextStyle(
+                      fontSize: isSmall ? 22 : 26,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                ),
 
               // Away Team (Tappable)
               Expanded(
@@ -290,6 +344,137 @@ class MatchHeaderBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCenterPill(
+    BuildContext context, {
+    required bool isDark,
+    required bool isArabic,
+    required bool isSmall,
+    required bool isUpcoming,
+    required bool isFinished,
+    required bool hasScores,
+    required String score1Str,
+    required String score2Str,
+    required bool hasPenalties,
+    String? p1,
+    String? p2,
+    String? effectiveStatus,
+  }) {
+    final pillBg = isDark
+        ? const Color(0xFF1B2232)
+        : const Color(0xFFEDF2F7);
+
+    Widget content;
+
+    if (hasScores && !isUpcoming) {
+      // Finished / Result state: e.g. "3 - 3"
+      content = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            score1Str,
+            style: TextStyle(
+              fontSize: isSmall ? 14 : 16,
+              fontWeight: FontWeight.w700,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Text(
+              '-',
+              style: TextStyle(
+                fontSize: isSmall ? 14 : 16,
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
+              ),
+            ),
+          ),
+          Text(
+            score2Str,
+            style: TextStyle(
+              fontSize: isSmall ? 14 : 16,
+              fontWeight: FontWeight.w700,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
+        ],
+      );
+    } else if (isUpcoming) {
+      // Upcoming state: e.g. "09:00 PM"
+      final timeStr =
+          (match.time != null && match.time!.isNotEmpty && match.time != '-')
+              ? match.time!
+              : 'VS';
+      content = Text(
+        timeStr,
+        style: TextStyle(
+          fontSize: isSmall ? 12 : 14,
+          fontWeight: FontWeight.w600,
+          color: isDark
+              ? AppColors.darkTextPrimary
+              : AppColors.lightTextPrimary,
+        ),
+      );
+    } else {
+      // Other state (e.g. postponed, cancelled)
+      final statusStr = effectiveStatus ?? match.status ?? (match.time ?? 'VS');
+      content = Text(
+        statusStr,
+        style: TextStyle(
+          fontSize: isSmall ? 12 : 13,
+          fontWeight: FontWeight.w600,
+          color: isDark
+              ? AppColors.darkTextMuted
+              : AppColors.lightTextMuted,
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmall ? 14 : 18,
+            vertical: isSmall ? 6 : 8,
+          ),
+          decoration: BoxDecoration(
+            color: pillBg,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+          ),
+          child: content,
+        ),
+        if (isFinished) ...[
+          const SizedBox(height: 3),
+          Text(
+            isArabic ? 'انتهت' : 'FT',
+            style: TextStyle(
+              fontSize: isSmall ? 10 : 11,
+              fontWeight: FontWeight.w600,
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
+            ),
+          ),
+        ],
+        if (hasPenalties && p1 != null && p2 != null) ...[
+          const SizedBox(height: 3),
+          PenaltyShootoutWidget(
+            penaltyScore1: p1,
+            penaltyScore2: p2,
+            isCompact: true,
+          ),
+        ],
+      ],
     );
   }
 }
