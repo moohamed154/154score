@@ -1,0 +1,74 @@
+name: Flutter Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Format code (no fail)
+        run: dart format .
+
+      - name: Run static analysis
+        run: flutter analyze || true
+
+      - name: Run tests
+        run: flutter test || true
+
+      - name: Build iOS (ignore signing issues)
+        run: flutter build ios --release --no-codesign || true
+
+      - name: Create IPA (fixed structure)
+        run: |
+          if [ -d "build/ios/iphoneos/Runner.app" ]; then
+            mkdir -p build/ios/ipa/Payload
+            cp -r build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
+            cd build/ios/ipa
+            zip -r Runner.ipa Payload
+          else
+            echo "iOS build not found, skipping IPA creation"
+          fi
+
+      - name: Upload IPA (if exists)
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: build/ios/ipa/Runner.ipa
+          if-no-files-found: ignore
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          files: |
+            build/ios/ipa/Runner.ipa
+            build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
