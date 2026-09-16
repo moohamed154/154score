@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/websocket/websocket_event.dart';
+import '../../domain/entities/match_entity.dart';
 
 enum MatchFilterType { all, live, upcoming, finished, favorites }
 
@@ -131,4 +132,13 @@ class ChangeTimezoneEvent extends MatchesEvent {
 
   @override
   List<Object?> get props => [offset];
+}
+
+class LiveMatchesSnapshotReceivedEvent extends MatchesEvent {
+  final List<MatchEntity> liveMatches;
+
+  const LiveMatchesSnapshotReceivedEvent(this.liveMatches);
+
+  @override
+  List<Object?> get props => [liveMatches];
 }

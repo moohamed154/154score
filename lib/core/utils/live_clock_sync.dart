@@ -64,15 +64,12 @@ class LiveClockSync {
     final totalElapsedSec = (diffSec > 0) ? diffSec : 0;
 
     int newExtraSec = record.elapsedExtraSeconds;
-    int newTotalExtra = record.totalExtraMinutes;
+    final int newTotalExtra = record.totalExtraMinutes;
     int newMin = record.minute;
     int newSec = record.second;
 
     if (newExtraSec > 0 || newTotalExtra > 0) {
       newExtraSec += totalElapsedSec;
-      if (newTotalExtra > 0 && newExtraSec ~/ 60 >= newTotalExtra) {
-        newTotalExtra = (newExtraSec ~/ 60) + 1;
-      }
     } else {
       final totalSec = newSec + totalElapsedSec;
       newMin += totalSec ~/ 60;

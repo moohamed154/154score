@@ -5,9 +5,11 @@ import 'package:material_ui/material_ui.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_typography.dart';
 import '../localization/app_localizations.dart';
+import '../utils/live_clock_sync.dart';
 import '../utils/match_status_helper.dart';
 
 class LiveMatchClock extends StatefulWidget {
+  final String? matchId;
   final String? status;
   final String? minute;
   final String? extraTime;
@@ -23,6 +25,7 @@ class LiveMatchClock extends StatefulWidget {
 
   const LiveMatchClock({
     super.key,
+    this.matchId,
     this.status,
     this.minute,
     this.extraTime,
@@ -79,7 +82,8 @@ class _LiveMatchClockState extends State<LiveMatchClock>
   @override
   void didUpdateWidget(covariant LiveMatchClock oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.status != widget.status ||
+    if (oldWidget.matchId != widget.matchId ||
+        oldWidget.status != widget.status ||
         oldWidget.minute != widget.minute ||
         oldWidget.extraTime != widget.extraTime ||
         oldWidget.time != widget.time ||
@@ -111,6 +115,21 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     _displayMinute = '';
     _displayExtra = null;
     _displayString = '';
+
+    // Check synchronized clock registry first for seamless parity
+    final synced = LiveClockSync.getLiveClock(widget.matchId);
+    if (synced != null) {
+      if (synced.minute > 0 || synced.second > 0) {
+        _currentMinute = synced.minute;
+        _currentSecond = synced.second;
+      }
+      if (synced.elapsedExtraSeconds > 0) {
+        _elapsedExtraSeconds = synced.elapsedExtraSeconds;
+      }
+      if (synced.totalExtraMinutes > 0) {
+        _totalExtraMinutes = synced.totalExtraMinutes;
+      }
+    }
 
     // 1. Check if extraTime is provided in widget.extraTime (e.g. "02:00 / 5", "02:00  / 5", "5", "+3")
     if (widget.extraTime != null &&
@@ -310,6 +329,16 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       _displayExtra = null;
       _displayString = '';
     }
+
+    if (_elapsedExtraSeconds > 0 || _totalExtraMinutes > 0 || _currentMinute > 0) {
+      LiveClockSync.recordClock(
+        matchId: widget.matchId,
+        minute: _currentMinute,
+        second: _currentSecond,
+        elapsedExtraSeconds: _elapsedExtraSeconds,
+        totalExtraMinutes: _totalExtraMinutes,
+      );
+    }
   }
 
   void _startTimerIfNeeded() {
@@ -354,9 +383,11 @@ class _LiveMatchClockState extends State<LiveMatchClock>
               (_totalExtraMinutes > 0 || _elapsedExtraSeconds > 0 || _currentMinute > baseMinute);
 
           if (isExtraPeriod) {
-            _elapsedExtraSeconds++;
-            if (_elapsedExtraSeconds ~/ 60 >= _totalExtraMinutes) {
-              _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
+            final maxExtraSec = _totalExtraMinutes > 0
+                ? (_totalExtraMinutes + 3) * 60
+                : 600;
+            if (_elapsedExtraSeconds < maxExtraSec) {
+              _elapsedExtraSeconds++;
             }
           } else {
             _currentSecond++;
@@ -375,6 +406,13 @@ class _LiveMatchClockState extends State<LiveMatchClock>
               }
             }
           }
+          LiveClockSync.recordClock(
+            matchId: widget.matchId,
+            minute: _currentMinute,
+            second: _currentSecond,
+            elapsedExtraSeconds: _elapsedExtraSeconds,
+            totalExtraMinutes: _totalExtraMinutes,
+          );
           _updateDisplay(phase);
         });
       });

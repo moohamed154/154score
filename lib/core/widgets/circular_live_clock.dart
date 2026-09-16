@@ -302,11 +302,6 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
           ? parsedTotalExtraMinutes
           : (_totalExtraMinutes > 0 ? _totalExtraMinutes : 0);
 
-      if (_totalExtraMinutes > 0 &&
-          _elapsedExtraSeconds ~/ 60 >= _totalExtraMinutes) {
-        _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
-      }
-
       final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
       final ss = (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
       if (_totalExtraMinutes > 0) {
@@ -375,10 +370,13 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         if (!mounted) return;
         setState(() {
           if (_displayExtra != null) {
-            _elapsedExtraSeconds++;
-            if (_totalExtraMinutes > 0 &&
-                _elapsedExtraSeconds ~/ 60 >= _totalExtraMinutes) {
-              _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
+            // Cap stoppage time ticking to at most (totalExtraMinutes + 3) * 60 seconds
+            // to prevent runaway counter if network drops whistle event
+            final maxExtraSec = _totalExtraMinutes > 0
+                ? (_totalExtraMinutes + 3) * 60
+                : 600;
+            if (_elapsedExtraSeconds < maxExtraSec) {
+              _elapsedExtraSeconds++;
             }
             final mm =
                 (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');

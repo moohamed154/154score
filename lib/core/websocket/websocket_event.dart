@@ -167,7 +167,7 @@ class LiveMatchUpdate extends Equatable {
 
   /// Deterministic fingerprint for duplicate-event suppression
   String get fingerprint {
-    return '${matchId ?? ''}_${score1 ?? ''}_${score2 ?? ''}_${penaltyScore1 ?? ''}_${penaltyScore2 ?? ''}_${status ?? ''}_${statusCode ?? ''}_${minute ?? ''}_${eventType ?? ''}_${playerName ?? ''}';
+    return '${matchId ?? ''}_${score1 ?? ''}_${score2 ?? ''}_${penaltyScore1 ?? ''}_${penaltyScore2 ?? ''}_${status ?? ''}_${statusCode ?? ''}_${minute ?? ''}_${extraTime ?? ''}_${eventType ?? ''}_${playerName ?? ''}';
   }
 
   factory LiveMatchUpdate.fromJson(
@@ -422,6 +422,8 @@ class MatchDetailRealtimeUpdate extends Equatable {
   final String matchId;
   final String? score1;
   final String? score2;
+  final String? penaltyScore1;
+  final String? penaltyScore2;
   final String? status;
   final String? statusCode;
   final String? minute;
@@ -433,6 +435,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
   final String? eventMinute;
   final bool? isHomeTeam;
   final int? timestamp;
+  final int? sequence;
   final String? videoUrl;
   final Map<String, dynamic> rawPayload;
 
@@ -440,6 +443,8 @@ class MatchDetailRealtimeUpdate extends Equatable {
     required this.matchId,
     this.score1,
     this.score2,
+    this.penaltyScore1,
+    this.penaltyScore2,
     this.status,
     this.statusCode,
     this.minute,
@@ -451,13 +456,17 @@ class MatchDetailRealtimeUpdate extends Equatable {
     this.eventMinute,
     this.isHomeTeam,
     this.timestamp,
+    this.sequence,
     this.videoUrl,
     this.rawPayload = const {},
   });
 
+  /// Convenience getter for player name compatibility
+  String? get playerName => eventPlayer;
+
   /// Deterministic fingerprint for event deduplication
   String get eventFingerprint {
-    return '${matchId}_${score1 ?? ''}_${score2 ?? ''}_${status ?? ''}_${minute ?? ''}_${extraTime ?? ''}_${eventMinute ?? ''}_${eventType ?? ''}_${eventPlayer ?? ''}_$isHomeTeam';
+    return '${matchId}_${score1 ?? ''}_${score2 ?? ''}_${penaltyScore1 ?? ''}_${penaltyScore2 ?? ''}_${status ?? ''}_${minute ?? ''}_${extraTime ?? ''}_${eventMinute ?? ''}_${eventType ?? ''}_${eventPlayer ?? ''}_$isHomeTeam';
   }
 
   factory MatchDetailRealtimeUpdate.fromJson(
@@ -471,9 +480,23 @@ class MatchDetailRealtimeUpdate extends Equatable {
       parsedTimestamp = int.tryParse(json['updatedAt'].toString());
     }
 
+    int? parsedSequence;
+    if (json['sequence'] != null || json['version'] != null) {
+      parsedSequence = int.tryParse(
+        (json['sequence'] ?? json['version']).toString(),
+      );
+    }
+
     final Map<String, dynamic> payload = (json['data'] is Map)
         ? Map<String, dynamic>.from(json['data'] as Map)
         : json;
+
+    if (parsedSequence == null &&
+        (payload['sequence'] != null || payload['version'] != null)) {
+      parsedSequence = int.tryParse(
+        (payload['sequence'] ?? payload['version']).toString(),
+      );
+    }
 
     String parsedMatchId = (
             json['match_id'] ??
@@ -508,6 +531,34 @@ class MatchDetailRealtimeUpdate extends Equatable {
       if (sMap['home'] != null) s1 ??= sMap['home'].toString();
       if (sMap['away'] != null) s2 ??= sMap['away'].toString();
     }
+
+    // Penalty shootout extraction
+    String? pen1;
+    String? pen2;
+    final pSource = (payload['score'] is Map && payload['score']['penalties'] is Map)
+        ? (payload['score']['penalties'] as Map)
+        : (json['score'] is Map && json['score']['penalties'] is Map)
+            ? (json['score']['penalties'] as Map)
+            : null;
+    if (pSource != null) {
+      if (pSource['home'] != null) pen1 = pSource['home'].toString();
+      if (pSource['away'] != null) pen2 = pSource['away'].toString();
+    }
+    pen1 ??= payload['penalty_score_1']?.toString() ??
+        payload['penalties_1']?.toString() ??
+        payload['penalties_home']?.toString() ??
+        json['penalty_score_1']?.toString() ??
+        json['penalties_1']?.toString() ??
+        json['penalties_home']?.toString();
+    pen2 ??= payload['penalty_score_2']?.toString() ??
+        payload['penalties_2']?.toString() ??
+        payload['penalties_away']?.toString() ??
+        json['penalty_score_2']?.toString() ??
+        json['penalties_2']?.toString() ??
+        json['penalties_away']?.toString();
+    if (pen1 == 'null') pen1 = null;
+    if (pen2 == 'null') pen2 = null;
+
     String? st = payload['status']?.toString();
     final rawClock = payload['clock']?.toString() ?? json['clock']?.toString();
     final rawMin = payload['minute']?.toString() ?? json['minute']?.toString();
@@ -563,6 +614,8 @@ class MatchDetailRealtimeUpdate extends Equatable {
       matchId: parsedMatchId,
       score1: s1,
       score2: s2,
+      penaltyScore1: pen1,
+      penaltyScore2: pen2,
       status: st,
       statusCode: statusCode,
       minute: min,
@@ -579,6 +632,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
           payload['event_minute']?.toString() ?? payload['minute']?.toString(),
       isHomeTeam: isHome,
       timestamp: parsedTimestamp,
+      sequence: parsedSequence,
       videoUrl: payload['video_url']?.toString() ??
           payload['videoUrl']?.toString() ??
           payload['video']?.toString(),
@@ -591,7 +645,10 @@ class MatchDetailRealtimeUpdate extends Equatable {
     matchId,
     score1,
     score2,
+    penaltyScore1,
+    penaltyScore2,
     status,
+    statusCode,
     minute,
     extraTime,
     period,
@@ -601,6 +658,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
     eventMinute,
     isHomeTeam,
     timestamp,
+    sequence,
     videoUrl,
   ];
 }

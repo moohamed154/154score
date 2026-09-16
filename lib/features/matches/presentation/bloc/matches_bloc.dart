@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ysscores/core/utils/score_helper.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -21,6 +22,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   StreamSubscription? _wsSubscription;
   StreamSubscription? _wsStatusSubscription;
   Timer? _fallbackPollingTimer;
+  Timer? _livePollerTimer;
+  final Set<String> _joinedLiveMatchRooms = <String>{};
+  int _currentPollIntervalSeconds = 30;
   final Map<String, List<LeagueGroupEntity>> _cachedDateLeagues = {};
 
   static MatchFilterType _parseSavedFilter(String? val) {
@@ -44,16 +48,16 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     required this.webSocketService,
     required this.localStorageService,
   }) : super(
-          MatchesState(
-            selectedDate: DateTime.now(),
-            activeFilter: _parseSavedFilter(
-              localStorageService.getMatchesFilter(),
-            ),
-            sortOrder: _parseSavedSortOrder(
-              localStorageService.getMatchesSortOrder(),
-            ),
-          ),
-        ) {
+         MatchesState(
+           selectedDate: DateTime.now(),
+           activeFilter: _parseSavedFilter(
+             localStorageService.getMatchesFilter(),
+           ),
+           sortOrder: _parseSavedSortOrder(
+             localStorageService.getMatchesSortOrder(),
+           ),
+         ),
+       ) {
     on<LoadMatchesEvent>(_onLoadMatches);
     on<ChangeFilterEvent>(_onChangeFilter);
     on<ApplyMatchesFilterEvent>(_onApplyMatchesFilter);
@@ -64,6 +68,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     on<ToggleMatchFavoriteEvent>(_onToggleMatchFavorite);
     on<RefreshFavoritesEvent>(_onRefreshFavorites);
     on<ChangeTimezoneEvent>(_onChangeTimezone);
+    on<LiveMatchesSnapshotReceivedEvent>(_onLiveMatchesSnapshotReceived);
 
     // 1. Listen to Real-Time WebSocket updates
     try {
@@ -209,6 +214,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
               errorMessage: null,
             ),
           );
+          _syncLiveRoomsAndPoller();
         },
         onFailure: (failure) {
           // If we already have cached data displayed, don't clobber it with an error screen on silent revalidation
@@ -417,6 +423,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           liveMatchesCount: liveCount,
         ),
       );
+      _syncLiveRoomsAndPoller();
     }
   }
 
@@ -429,17 +436,26 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       try {
         webSocketService.recordRestFallback(isActive: false);
       } catch (_) {}
+      // Re-join active live match rooms on reconnect
+      for (final id in _joinedLiveMatchRooms) {
+        try {
+          webSocketService.joinMatchRoom(id);
+        } catch (_) {}
+      }
       // Refresh REST snapshot to heal any gap during disconnect
       if (state.status == MatchesStatus.success ||
           state.status == MatchesStatus.empty) {
         add(LoadMatchesEvent(date: state.selectedDate, isRefresh: true));
       }
+      _syncLiveRoomsAndPoller();
     } else if (event.status == SocketConnectionState.disconnected ||
         event.status == SocketConnectionState.error) {
       try {
         webSocketService.recordRestFallback(isActive: true);
       } catch (_) {}
       _startFallbackPolling();
+      // Immediately accelerate live poller to 3 seconds during socket disconnect
+      _startLivePoller(3);
     }
   }
 
@@ -448,8 +464,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       return;
     }
 
-    // Poll every 35 seconds only when disconnected and matches are loaded
-    _fallbackPollingTimer = Timer.periodic(const Duration(seconds: 35), (
+    // Poll every 25 seconds only when disconnected and matches are loaded
+    _fallbackPollingTimer = Timer.periodic(const Duration(seconds: 25), (
       timer,
     ) {
       if (state.status == MatchesStatus.success ||
@@ -462,6 +478,254 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   void _stopFallbackPolling() {
     _fallbackPollingTimer?.cancel();
     _fallbackPollingTimer = null;
+  }
+
+  bool _hasLiveMatchChanged(MatchEntity old, MatchEntity live) {
+    if (live.minute != null &&
+        live.minute!.isNotEmpty &&
+        live.minute != old.minute) {
+      return true;
+    }
+    if (live.status != null &&
+        live.status!.isNotEmpty &&
+        live.status != old.status) {
+      return true;
+    }
+    if (live.statusCode != null &&
+        live.statusCode!.isNotEmpty &&
+        live.statusCode != old.statusCode) {
+      return true;
+    }
+    if (live.score1 != null &&
+        live.score1!.isNotEmpty &&
+        live.score1 != old.score1) {
+      return true;
+    }
+    if (live.score2 != null &&
+        live.score2!.isNotEmpty &&
+        live.score2 != old.score2) {
+      return true;
+    }
+    if (live.period != null &&
+        live.period!.isNotEmpty &&
+        live.period != old.period) {
+      return true;
+    }
+    if (live.extraTime != null &&
+        live.extraTime!.isNotEmpty &&
+        live.extraTime != old.extraTime) {
+      return true;
+    }
+    return false;
+  }
+
+  void _onLiveMatchesSnapshotReceived(
+    LiveMatchesSnapshotReceivedEvent event,
+    Emitter<MatchesState> emit,
+  ) {
+    if (isClosed) return;
+    final liveMatches = event.liveMatches;
+    final liveIds = liveMatches
+        .map((m) => m.id.replaceAll('match:', '').trim())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    // 1. If any match that was previously live is no longer in liveMatches,
+    // it likely finished or went to half-time break. Trigger a full refresh
+    // to get the authoritative status and final score.
+    bool hasEndedMatch = false;
+    for (final id in _joinedLiveMatchRooms) {
+      if (!liveIds.contains(id)) {
+        hasEndedMatch = true;
+        break;
+      }
+    }
+
+    if (hasEndedMatch) {
+      add(LoadMatchesEvent(date: state.selectedDate, isRefresh: true));
+      return;
+    }
+
+    // 2. Check if any active match has changed scores, minute, status, extraTime
+    bool anyChanged = false;
+    final liveById = <String, MatchEntity>{};
+    for (final m in liveMatches) {
+      liveById[m.id.replaceAll('match:', '').trim()] = m;
+    }
+
+    for (final league in state.allLeagues) {
+      for (final match in league.matches) {
+        final cleanId = match.id.replaceAll('match:', '').trim();
+        MatchEntity? live = liveById[cleanId];
+        if (live == null) {
+          try {
+            live = liveMatches.firstWhere(
+              (lm) =>
+                  (lm.team1.toLowerCase().contains(match.team1.toLowerCase()) ||
+                      match.team1.toLowerCase().contains(
+                        lm.team1.toLowerCase(),
+                      )) &&
+                  (lm.team2.toLowerCase().contains(match.team2.toLowerCase()) ||
+                      match.team2.toLowerCase().contains(
+                        lm.team2.toLowerCase(),
+                      )),
+            );
+          } catch (_) {
+            live = null;
+          }
+        }
+        if (live != null && _hasLiveMatchChanged(match, live)) {
+          anyChanged = true;
+          break;
+        }
+      }
+      if (anyChanged) break;
+    }
+
+    if (anyChanged) {
+      final updatedLeagues = _overlayLiveMatches(state.allLeagues, liveMatches);
+      final favMatches = localStorageService.getFavoriteMatches();
+      final updatedWithFavs = updatedLeagues.map((l) {
+        return l.copyWith(
+          matches: l.matches.map((m) {
+            return m.copyWith(isFavorite: favMatches.contains(m.id));
+          }).toList(),
+        );
+      }).toList();
+
+      final dateStr = DateFormatter.toApiDateString(state.selectedDate);
+      _cachedDateLeagues[dateStr] = updatedWithFavs;
+
+      final liveCount = _calculateLiveCount(updatedWithFavs);
+      final filtered = _applyFilters(
+        leagues: updatedWithFavs,
+        filter: state.activeFilter,
+        leagueId: state.selectedLeagueId,
+        leagueTitle: state.selectedLeagueTitle,
+        sortOrder: state.sortOrder,
+        query: state.searchQuery,
+      );
+
+      emit(
+        state.copyWith(
+          allLeagues: updatedWithFavs,
+          filteredLeagues: filtered,
+          liveMatchesCount: liveCount,
+        ),
+      );
+      _syncLiveRoomsAndPoller();
+    }
+  }
+
+  void _onLivePollTick() async {
+    if (isClosed) return;
+    final isToday = DateFormatter.isToday(state.selectedDate);
+    final hasLive =
+        state.liveMatchesCount > 0 || _joinedLiveMatchRooms.isNotEmpty;
+    if (!isToday && !hasLive) {
+      _stopLivePoller();
+      return;
+    }
+
+    final lang = localStorageService.getLanguage();
+    final offset = localStorageService.getTimezoneOffset();
+    final result = await repository.getLiveMatchesFlat(
+      lang: lang,
+      utcOffset: offset,
+    );
+
+    result.fold(
+      onSuccess: (liveMatches) {
+        if (isClosed) return;
+        add(LiveMatchesSnapshotReceivedEvent(liveMatches));
+      },
+      onFailure: (_) {},
+    );
+  }
+
+  void _syncLiveRoomsAndPoller() {
+    if (isClosed) return;
+    final currentLiveIds = <String>{};
+    bool hasExtraTime = false;
+
+    for (final l in state.allLeagues) {
+      for (final m in l.matches) {
+        final phase = MatchStatusHelper.parseStatus(
+          m.status,
+          minute: m.minute,
+          extraTime: m.extraTime,
+          time: m.time,
+          date: m.date,
+          score1: m.score1,
+          score2: m.score2,
+        );
+        if (MatchStatusHelper.isLive(phase) ||
+            ScoreHelper.isLiveStatus(m.status)) {
+          final clean = m.id.replaceAll('match:', '').trim();
+          if (clean.isNotEmpty) {
+            currentLiveIds.add(clean);
+          }
+          if (m.extraTime != null &&
+              m.extraTime!.isNotEmpty &&
+              m.extraTime != 'null') {
+            hasExtraTime = true;
+          }
+          final minNum = int.tryParse(
+            m.minute?.replaceAll("'", '').trim() ?? '',
+          );
+          if (minNum != null &&
+              ((minNum >= 45 && minNum < 55) || minNum >= 90)) {
+            hasExtraTime = true;
+          }
+        }
+      }
+    }
+
+    // Synchronize match rooms with WebSocket backend
+    for (final id in currentLiveIds) {
+      if (!_joinedLiveMatchRooms.contains(id)) {
+        try {
+          webSocketService.joinMatchRoom(id);
+        } catch (_) {}
+        _joinedLiveMatchRooms.add(id);
+      }
+    }
+
+    final toRemove = <String>[];
+    for (final id in _joinedLiveMatchRooms) {
+      if (!currentLiveIds.contains(id)) {
+        try {
+          webSocketService.leaveMatchRoom(id);
+        } catch (_) {}
+        toRemove.add(id);
+      }
+    }
+    _joinedLiveMatchRooms.removeAll(toRemove);
+
+    const desiredInterval = 30;
+    final isToday = DateFormatter.isToday(state.selectedDate);
+    final shouldPoll = isToday || currentLiveIds.isNotEmpty;
+
+    if (!shouldPoll) {
+      _stopLivePoller();
+    } else if (_livePollerTimer == null ||
+        !_livePollerTimer!.isActive ||
+        _currentPollIntervalSeconds != desiredInterval) {
+      _startLivePoller(desiredInterval);
+    }
+  }
+
+  void _startLivePoller(int seconds) {
+    _livePollerTimer?.cancel();
+    _currentPollIntervalSeconds = seconds;
+    _livePollerTimer = Timer.periodic(Duration(seconds: seconds), (_) {
+      _onLivePollTick();
+    });
+  }
+
+  void _stopLivePoller() {
+    _livePollerTimer?.cancel();
+    _livePollerTimer = null;
   }
 
   List<LeagueGroupEntity> _overlayLiveMatches(
@@ -483,9 +747,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             live = liveMatches.firstWhere(
               (lm) =>
                   (lm.team1.toLowerCase().contains(match.team1.toLowerCase()) ||
-                      match.team1.toLowerCase().contains(lm.team1.toLowerCase())) &&
+                      match.team1.toLowerCase().contains(
+                        lm.team1.toLowerCase(),
+                      )) &&
                   (lm.team2.toLowerCase().contains(match.team2.toLowerCase()) ||
-                      match.team2.toLowerCase().contains(lm.team2.toLowerCase())),
+                      match.team2.toLowerCase().contains(
+                        lm.team2.toLowerCase(),
+                      )),
             );
           } catch (_) {
             live = null;
@@ -592,7 +860,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           if (leagueId != null && leagueId.isNotEmpty) {
             final matchesId =
                 league.leagueId != null && league.leagueId == leagueId;
-            final matchesTitle = leagueTitle != null &&
+            final matchesTitle =
+                leagueTitle != null &&
                 leagueTitle.isNotEmpty &&
                 league.leagueTitle.trim().toLowerCase() ==
                     leagueTitle.trim().toLowerCase();
@@ -608,67 +877,79 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
                     cleanComp == league.leagueId!.trim().toLowerCase());
           });
 
-          final matches = league.matches.map((match) {
-            final isMatchFavorite = favMatches.contains(match.id);
-            return match.copyWith(isFavorite: isMatchFavorite);
-          }).where((match) {
-            final phase = MatchStatusHelper.parseStatus(
-              match.status,
-              minute: match.minute,
-              extraTime: match.extraTime,
-              time: match.time,
-              date: match.date,
-              score1: match.score1,
-              score2: match.score2,
-            );
+          final matches = league.matches
+              .map((match) {
+                final isMatchFavorite = favMatches.contains(match.id);
+                return match.copyWith(isFavorite: isMatchFavorite);
+              })
+              .where((match) {
+                final phase = MatchStatusHelper.parseStatus(
+                  match.status,
+                  minute: match.minute,
+                  extraTime: match.extraTime,
+                  time: match.time,
+                  date: match.date,
+                  score1: match.score1,
+                  score2: match.score2,
+                );
 
-            // Check if match belongs to a favorite league
-            final isMatchLeagueFavorite = isLeagueFavorite ||
-                (match.leagueTitle != null &&
-                    favCompetitions.any((c) =>
-                        c.trim().toLowerCase() ==
-                        match.leagueTitle!.trim().toLowerCase())) ||
-                (match.leagueId != null &&
-                    favCompetitions.any((c) =>
-                        c.trim().toLowerCase() ==
-                        match.leagueId!.trim().toLowerCase()));
+                // Check if match belongs to a favorite league
+                final isMatchLeagueFavorite =
+                    isLeagueFavorite ||
+                    (match.leagueTitle != null &&
+                        favCompetitions.any(
+                          (c) =>
+                              c.trim().toLowerCase() ==
+                              match.leagueTitle!.trim().toLowerCase(),
+                        )) ||
+                    (match.leagueId != null &&
+                        favCompetitions.any(
+                          (c) =>
+                              c.trim().toLowerCase() ==
+                              match.leagueId!.trim().toLowerCase(),
+                        ));
 
-            // Check if either team is marked as favorite
-            final isTeamFavorite = favTeams.any((team) {
-              final cleanTeam = team.trim().toLowerCase();
-              return cleanTeam == match.team1.trim().toLowerCase() ||
-                  cleanTeam == match.team2.trim().toLowerCase() ||
-                  (match.team1Id != null &&
-                      cleanTeam == match.team1Id!.trim().toLowerCase()) ||
-                  (match.team2Id != null &&
-                      cleanTeam == match.team2Id!.trim().toLowerCase());
-            });
+                // Check if either team is marked as favorite
+                final isTeamFavorite = favTeams.any((team) {
+                  final cleanTeam = team.trim().toLowerCase();
+                  return cleanTeam == match.team1.trim().toLowerCase() ||
+                      cleanTeam == match.team2.trim().toLowerCase() ||
+                      (match.team1Id != null &&
+                          cleanTeam == match.team1Id!.trim().toLowerCase()) ||
+                      (match.team2Id != null &&
+                          cleanTeam == match.team2Id!.trim().toLowerCase());
+                });
 
-            // Apply status filter
-            final matchesFilter = switch (filter) {
-              MatchFilterType.all => true,
-              MatchFilterType.live => MatchStatusHelper.isLive(phase),
-              MatchFilterType.upcoming => MatchStatusHelper.isUpcoming(phase),
-              MatchFilterType.finished => MatchStatusHelper.isFinished(phase),
-              MatchFilterType.favorites =>
-                isMatchLeagueFavorite || match.isFavorite || isTeamFavorite,
-            };
+                // Apply status filter
+                final matchesFilter = switch (filter) {
+                  MatchFilterType.all => true,
+                  MatchFilterType.live => MatchStatusHelper.isLive(phase),
+                  MatchFilterType.upcoming => MatchStatusHelper.isUpcoming(
+                    phase,
+                  ),
+                  MatchFilterType.finished => MatchStatusHelper.isFinished(
+                    phase,
+                  ),
+                  MatchFilterType.favorites =>
+                    isMatchLeagueFavorite || match.isFavorite || isTeamFavorite,
+                };
 
-            if (!matchesFilter) return false;
+                if (!matchesFilter) return false;
 
-            // Apply search query
-            if (cleanQuery.isNotEmpty) {
-              final inTeams =
-                  match.team1.toLowerCase().contains(cleanQuery) ||
-                  match.team2.toLowerCase().contains(cleanQuery);
-              final inLeague = (match.leagueTitle ?? league.leagueTitle)
-                  .toLowerCase()
-                  .contains(cleanQuery);
-              return inTeams || inLeague;
-            }
+                // Apply search query
+                if (cleanQuery.isNotEmpty) {
+                  final inTeams =
+                      match.team1.toLowerCase().contains(cleanQuery) ||
+                      match.team2.toLowerCase().contains(cleanQuery);
+                  final inLeague = (match.leagueTitle ?? league.leagueTitle)
+                      .toLowerCase()
+                      .contains(cleanQuery);
+                  return inTeams || inLeague;
+                }
 
-            return true;
-          }).toList();
+                return true;
+              })
+              .toList();
 
           if (sortOrder == MatchesSortOrder.time) {
             // Sort matches chronologically by kick-off time
@@ -704,7 +985,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
               );
               final pCmp = pA.compareTo(pB);
               if (pCmp != 0) return pCmp;
-              return _parseTimeToMinutes(a.time).compareTo(_parseTimeToMinutes(b.time));
+              return _parseTimeToMinutes(a.time)
+                  .compareTo(_parseTimeToMinutes(b.time));
             });
           }
 
@@ -765,7 +1047,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       // Group matches chronologically by kick-off time slot
       final timeGroups = <String, List<MatchEntity>>{};
       for (final match in allMatches) {
-        final timeKey = (match.time != null &&
+        final timeKey =
+            (match.time != null &&
                 match.time!.trim().isNotEmpty &&
                 match.time != '-')
             ? match.time!.trim()
@@ -774,10 +1057,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       }
 
       return timeGroups.entries.map((entry) {
-        return LeagueGroupEntity(
-          leagueTitle: entry.key,
-          matches: entry.value,
-        );
+        return LeagueGroupEntity(leagueTitle: entry.key, matches: entry.value);
       }).toList();
     } else if (sortOrder == MatchesSortOrder.league) {
       // Sort leagues alphabetically by league title
@@ -841,7 +1121,14 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
   @override
   Future<void> close() {
+    _stopLivePoller();
     _stopFallbackPolling();
+    for (final id in _joinedLiveMatchRooms) {
+      try {
+        webSocketService.leaveMatchRoom(id);
+      } catch (_) {}
+    }
+    _joinedLiveMatchRooms.clear();
     _wsSubscription?.cancel();
     _wsStatusSubscription?.cancel();
     return super.close();

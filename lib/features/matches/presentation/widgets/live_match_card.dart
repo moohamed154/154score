@@ -101,6 +101,7 @@ class LiveMatchCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     LiveMatchClock(
+                      matchId: match.id,
                       status: match.status,
                       minute: match.minute,
                       extraTime: match.extraTime,

@@ -262,11 +262,13 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
               update.rawPayload['score2']?.toString() ??
               update.rawPayload['away_score']?.toString() ??
               state.liveScore2,
-          livePenaltyScore1: update.rawPayload['penalty_score_1']?.toString() ??
+          livePenaltyScore1: update.penaltyScore1 ??
+              update.rawPayload['penalty_score_1']?.toString() ??
               update.rawPayload['penalties_1']?.toString() ??
               (update.rawPayload['penalties'] is Map ? update.rawPayload['penalties']['home']?.toString() : null) ??
               state.livePenaltyScore1,
-          livePenaltyScore2: update.rawPayload['penalty_score_2']?.toString() ??
+          livePenaltyScore2: update.penaltyScore2 ??
+              update.rawPayload['penalty_score_2']?.toString() ??
               update.rawPayload['penalties_2']?.toString() ??
               (update.rawPayload['penalties'] is Map ? update.rawPayload['penalties']['away']?.toString() : null) ??
               state.livePenaltyScore2,

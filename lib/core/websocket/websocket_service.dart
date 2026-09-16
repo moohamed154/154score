@@ -646,6 +646,29 @@ class WebSocketServiceImpl implements WebSocketService {
     if (!_matchDetailsController.isClosed) {
       _matchDetailsController.add(update);
     }
+
+    // Also forward to live matches controller so home page gets realtime match room updates
+    if (!_liveMatchesController.isClosed) {
+      final liveUpdate = LiveMatchUpdate(
+        matchId: update.matchId,
+        score1: update.score1,
+        score2: update.score2,
+        penaltyScore1: update.rawPayload['penalty_score_1']?.toString() ??
+            update.rawPayload['penalties_1']?.toString(),
+        penaltyScore2: update.rawPayload['penalty_score_2']?.toString() ??
+            update.rawPayload['penalties_2']?.toString(),
+        status: update.status,
+        statusCode: update.statusCode,
+        minute: update.minute,
+        period: update.period,
+        extraTime: update.extraTime,
+        eventType: update.eventType,
+        playerName: update.eventPlayer,
+        timestamp: update.timestamp,
+        rawPayload: update.rawPayload,
+      );
+      _liveMatchesController.add(liveUpdate);
+    }
   }
 
   void _handleGenericIncomingEvent(String event, dynamic data) {
