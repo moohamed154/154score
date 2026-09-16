@@ -249,6 +249,7 @@ class MatchCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularLiveClock(
+              matchId: match.id.replaceAll('match:', '').trim(),
               status: match.status,
               statusCode: match.statusCode,
               minute: match.minute,

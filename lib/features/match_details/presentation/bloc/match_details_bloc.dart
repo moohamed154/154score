@@ -233,7 +233,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         ),
       );
 
-      _triggerBackgroundRefresh();
+      if (update.eventType != null && update.eventType!.isNotEmpty) {
+        _triggerBackgroundRefresh();
+      }
     }
   }
 
@@ -279,7 +281,10 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         ),
       );
 
-      _triggerBackgroundRefresh();
+      if (mergeResult.isUpdated ||
+          (update.eventType != null && update.eventType!.isNotEmpty)) {
+        _triggerBackgroundRefresh();
+      }
     }
   }
 

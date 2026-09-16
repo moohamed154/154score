@@ -22,6 +22,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../standings/presentation/bloc/standings_bloc.dart';
 import '../../../standings/presentation/widgets/standings_table.dart';
 import '../../../matches/domain/entities/match_entity.dart';
+import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../bloc/match_details_bloc.dart';
 import '../bloc/match_details_event.dart';
 import '../bloc/match_details_state.dart';
@@ -239,7 +240,27 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
+    MatchEntity? liveFromMatches;
+    try {
+      final matchesBloc = context.watch<MatchesBloc>();
+      final cleanId = widget.matchId.replaceAll('match:', '').trim();
+      for (final league in matchesBloc.state.allLeagues) {
+        for (final m in league.matches) {
+          final mCleanId = m.id.replaceAll('match:', '').trim();
+          final teamsMatch = (widget.initialMatch != null &&
+              m.team1.toLowerCase().trim() == widget.initialMatch!.team1.toLowerCase().trim() &&
+              m.team2.toLowerCase().trim() == widget.initialMatch!.team2.toLowerCase().trim());
+          if (mCleanId == cleanId || teamsMatch) {
+            liveFromMatches = m;
+            break;
+          }
+        }
+        if (liveFromMatches != null) break;
+      }
+    } catch (_) {}
+
     final fallbackMatch =
+        liveFromMatches ??
         widget.initialMatch ??
         MatchEntity(id: widget.matchId, team1: 'Home Team', team2: 'Away Team');
 
@@ -314,15 +335,15 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                     ),
                     child: MatchHeaderBanner(
                       match: fallbackMatch,
-                      liveScore1: state.liveScore1,
-                      liveScore2: state.liveScore2,
-                      liveStatus: state.liveStatus,
-                      liveStatusCode: state.liveStatusCode,
-                      liveMinute: state.liveMinute,
-                      liveExtraTime: state.liveExtraTime,
-                      livePeriod: state.livePeriod,
-                      penaltyScore1: state.livePenaltyScore1 ?? fallbackMatch.penaltyScore1,
-                      penaltyScore2: state.livePenaltyScore2 ?? fallbackMatch.penaltyScore2,
+                      liveScore1: state.liveScore1 ?? liveFromMatches?.score1,
+                      liveScore2: state.liveScore2 ?? liveFromMatches?.score2,
+                      liveStatus: state.liveStatus ?? liveFromMatches?.status,
+                      liveStatusCode: state.liveStatusCode ?? liveFromMatches?.statusCode,
+                      liveMinute: state.liveMinute ?? liveFromMatches?.minute,
+                      liveExtraTime: state.liveExtraTime ?? liveFromMatches?.extraTime,
+                      livePeriod: state.livePeriod ?? liveFromMatches?.period,
+                      penaltyScore1: state.livePenaltyScore1 ?? liveFromMatches?.penaltyScore1 ?? fallbackMatch.penaltyScore1,
+                      penaltyScore2: state.livePenaltyScore2 ?? liveFromMatches?.penaltyScore2 ?? fallbackMatch.penaltyScore2,
                     ),
                   ),
 

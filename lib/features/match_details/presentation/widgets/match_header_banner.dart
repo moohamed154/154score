@@ -239,6 +239,7 @@ class MatchHeaderBanner extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CircularLiveClock(
+                      matchId: match.id.replaceAll('match:', '').trim(),
                       status: effectiveStatus,
                       statusCode: effectiveStatusCode,
                       minute: effectiveMinute,

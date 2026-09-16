@@ -3,11 +3,13 @@ import 'dart:math';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../utils/live_clock_sync.dart';
 import '../utils/match_status_helper.dart';
 
 /// A circular live clock gauge widget displaying the elapsed match minute,
 /// circular progress ring, top yellow marker, and goal markers.
 class CircularLiveClock extends StatefulWidget {
+  final String? matchId;
   final String? status;
   final String? statusCode;
   final String? minute;
@@ -25,6 +27,7 @@ class CircularLiveClock extends StatefulWidget {
 
   const CircularLiveClock({
     super.key,
+    this.matchId,
     this.status,
     this.statusCode,
     this.minute,
@@ -68,7 +71,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
   @override
   void didUpdateWidget(covariant CircularLiveClock oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.status != widget.status ||
+    if (oldWidget.matchId != widget.matchId ||
+        oldWidget.status != widget.status ||
         oldWidget.statusCode != widget.statusCode ||
         oldWidget.minute != widget.minute ||
         oldWidget.extraTime != widget.extraTime ||
@@ -145,6 +149,17 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       }
     }
 
+    final syncedClock = LiveClockSync.getLiveClock(widget.matchId);
+    if (syncedClock != null) {
+      if (syncedClock.minute >= minNum && minNum > 0) {
+        minNum = syncedClock.minute;
+        secNum = syncedClock.second;
+      } else if (minNum == 0 && syncedClock.minute > 0) {
+        minNum = syncedClock.minute;
+        secNum = syncedClock.second;
+      }
+    }
+
     _currentMinute = minNum;
     _currentSecond = secNum;
 
@@ -196,7 +211,13 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
 
     _displayExtra = null;
 
-    if (isHt || isPen || isFinished || !isStoppageEligible) {
+    if (isHt || isPen || isFinished) {
+      _elapsedExtraSeconds = 0;
+      _totalExtraMinutes = 0;
+      if (isFinished) {
+        LiveClockSync.clearMatch(widget.matchId);
+      }
+    } else if (!isStoppageEligible) {
       _elapsedExtraSeconds = 0;
       _totalExtraMinutes = 0;
     } else {
@@ -208,13 +229,20 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         computedElapsedExtraSec = (minNum - regularBaseMinute) * 60 + secNum;
       }
 
+      // Check if another screen (e.g. Homepage or MatchDetails) already has an active ticking clock for this match
+      if (syncedClock != null && syncedClock.elapsedExtraSeconds > 0) {
+        if (computedElapsedExtraSec == 0 || syncedClock.elapsedExtraSeconds > computedElapsedExtraSec) {
+          computedElapsedExtraSec = syncedClock.elapsedExtraSeconds;
+        }
+      }
+
       // If computed is 0 but we already had an active timer running in this widget, preserve it
       if (computedElapsedExtraSec == 0 && _elapsedExtraSeconds > 0) {
         computedElapsedExtraSec = _elapsedExtraSeconds;
       }
 
-      // If still 0, check estimate from kickoff time
-      if (computedElapsedExtraSec == 0) {
+      // If still 0 and not synced, check estimate from kickoff time
+      if (computedElapsedExtraSec == 0 && (syncedClock == null || syncedClock.elapsedExtraSeconds == 0)) {
         final est = MatchStatusHelper.estimateMatchMinutes(
           time: widget.time,
           status: widget.status,
@@ -262,13 +290,20 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         }
       }
 
+      if (parsedTotalExtraMinutes == 0 && syncedClock != null && syncedClock.totalExtraMinutes > 0) {
+        parsedTotalExtraMinutes = syncedClock.totalExtraMinutes;
+      }
+
       _elapsedExtraSeconds = explicitElapsedSec ?? computedElapsedExtraSec;
+      if (syncedClock != null && syncedClock.elapsedExtraSeconds > _elapsedExtraSeconds) {
+        _elapsedExtraSeconds = syncedClock.elapsedExtraSeconds;
+      }
       _totalExtraMinutes = parsedTotalExtraMinutes > 0
           ? parsedTotalExtraMinutes
           : (_totalExtraMinutes > 0 ? _totalExtraMinutes : 0);
 
       if (_totalExtraMinutes > 0 &&
-          (_elapsedExtraSeconds ~/ 60) >= _totalExtraMinutes) {
+          _elapsedExtraSeconds ~/ 60 >= _totalExtraMinutes) {
         _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
       }
 
@@ -280,6 +315,17 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         _displayExtra = '+$mm:$ss';
       } else if (widget.extraTime != null && widget.extraTime!.startsWith('+')) {
         _displayExtra = widget.extraTime;
+      }
+
+      // Record state in sync registry
+      if (_elapsedExtraSeconds > 0 || _totalExtraMinutes > 0 || _currentMinute > 0) {
+        LiveClockSync.recordClock(
+          matchId: widget.matchId,
+          minute: _currentMinute,
+          second: _currentSecond,
+          elapsedExtraSeconds: _elapsedExtraSeconds,
+          totalExtraMinutes: _totalExtraMinutes,
+        );
       }
     }
 
@@ -350,6 +396,13 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
               _currentMinute++;
             }
           }
+          LiveClockSync.recordClock(
+            matchId: widget.matchId,
+            minute: _currentMinute,
+            second: _currentSecond,
+            elapsedExtraSeconds: _elapsedExtraSeconds,
+            totalExtraMinutes: _totalExtraMinutes,
+          );
           _updateDisplayMinute();
         });
       });

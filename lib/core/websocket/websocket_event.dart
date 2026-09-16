@@ -509,7 +509,11 @@ class MatchDetailRealtimeUpdate extends Equatable {
       if (sMap['away'] != null) s2 ??= sMap['away'].toString();
     }
     String? st = payload['status']?.toString();
-    final min = payload['minute']?.toString() ?? json['minute']?.toString();
+    final rawClock = payload['clock']?.toString() ?? json['clock']?.toString();
+    final rawMin = payload['minute']?.toString() ?? json['minute']?.toString();
+    final min = (rawClock != null && rawClock.contains(':'))
+        ? rawClock
+        : (rawMin ?? rawClock);
     final period = payload['period']?.toString() ?? json['period']?.toString();
     final extraTime = (payload['extra_time'] is! Map &&
             payload['extra_time'] != null &&
