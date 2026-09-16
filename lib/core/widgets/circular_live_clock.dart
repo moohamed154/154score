@@ -103,87 +103,183 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
 
     int minNum = 0;
     int secNum = _currentSecond;
+    int? extraSecFromMinute;
 
     if (widget.minute != null &&
         widget.minute!.isNotEmpty &&
         widget.minute != 'null') {
       final clean = widget.minute!.replaceAll("'", '').trim();
-      if (clean.contains(':')) {
+      if (clean.contains('+')) {
+        final parts = clean.split('+');
+        minNum = int.tryParse(parts[0].trim()) ?? 0;
+        final extraPart = parts.length > 1 ? parts[1].trim() : '';
+        if (extraPart.contains(':')) {
+          final t = extraPart.split(':');
+          final m = int.tryParse(t[0].trim()) ?? 0;
+          final s = int.tryParse(t[1].trim()) ?? 0;
+          extraSecFromMinute = m * 60 + s;
+        } else {
+          final m = int.tryParse(extraPart) ?? 0;
+          extraSecFromMinute = m * 60;
+        }
+      } else if (clean.contains(':')) {
         final parts = clean.split(':');
         minNum = int.tryParse(parts[0].trim()) ?? 0;
         if (parts.length > 1) {
           secNum = int.tryParse(parts[1].trim()) ?? 0;
         }
-      } else if (clean.contains('+')) {
-        final parts = clean.split('+');
-        minNum = int.tryParse(parts[0].trim()) ?? 0;
       } else {
         minNum = int.tryParse(clean) ?? 0;
       }
     }
 
     if (minNum == 0) {
-      minNum =
-          MatchStatusHelper.estimateMinuteNumber(
-            time: widget.time,
-            status: widget.status,
-            period: widget.period,
-          ) ??
-          0;
+      final est = MatchStatusHelper.estimateMatchMinutes(
+        time: widget.time,
+        status: widget.status,
+        period: widget.period,
+      );
+      minNum = est.minute;
+      if (est.extraMinute > 0) {
+        extraSecFromMinute ??= est.extraMinute * 60;
+      }
     }
 
     _currentMinute = minNum;
     _currentSecond = secNum;
 
-    // Parse extraTime (e.g. "+04:36 / 12", "02:00 / 5", "+3", "+00:00")
-    _displayExtra = null;
-    _elapsedExtraSeconds = 0;
-    _totalExtraMinutes = 0;
+    // Detect periods
+    final p = (widget.period ?? '').toLowerCase();
+    final s = (widget.status ?? '').toLowerCase();
+    final is1stHalf = p.contains('1st') ||
+        p.contains('first') ||
+        s.contains('الأول') ||
+        s.contains('الاول');
+    final is2ndHalf = p.contains('2nd') ||
+        p.contains('second') ||
+        s.contains('الثاني');
+    final is1stExtra = p.contains('1st_extra') ||
+        s.contains('الإضافي الأول') ||
+        s.contains('الاضافي الاول');
+    final is2ndExtra = p.contains('2nd_extra') ||
+        s.contains('الإضافي الثاني') ||
+        s.contains('الاضافي الثاني');
 
-    if (widget.extraTime != null &&
-        widget.extraTime!.isNotEmpty &&
-        widget.extraTime != 'null') {
-      final clean = widget.extraTime!.trim();
-      if (clean != '+00:00' && clean != '00:00' && clean != '0' && clean != '+0') {
-        if (clean.contains('/')) {
-          final parts = clean.split('/');
-          final elapsedPart = parts.first.replaceAll('+', '').trim();
-          final totalPart = parts.last.trim();
-          _totalExtraMinutes = int.tryParse(totalPart) ?? 0;
-          if (elapsedPart.contains(':')) {
-            final timeParts = elapsedPart.split(':');
+    final isHt = _phase == MatchPhase.halfTime;
+    final isPen = _phase == MatchPhase.penalties;
+    final isFinished = _phase == MatchPhase.finished;
+
+    // Stoppage time is ONLY active at >=45 in 1st half, >=90 in 2nd half, >=105 in 1st ET, >=120 in 2nd ET
+    bool isStoppageEligible = false;
+    int regularBaseMinute = 90;
+    if (is1stHalf) {
+      regularBaseMinute = 45;
+      isStoppageEligible = minNum >= 45 || extraSecFromMinute != null;
+    } else if (is2ndHalf) {
+      regularBaseMinute = 90;
+      isStoppageEligible = minNum >= 90 || extraSecFromMinute != null;
+    } else if (is1stExtra) {
+      regularBaseMinute = 105;
+      isStoppageEligible = minNum >= 105 || extraSecFromMinute != null;
+    } else if (is2ndExtra) {
+      regularBaseMinute = 120;
+      isStoppageEligible = minNum >= 120 || extraSecFromMinute != null;
+    } else {
+      if (minNum >= 90) {
+        regularBaseMinute = 90;
+        isStoppageEligible = true;
+      } else if (minNum >= 45 && minNum < 60) {
+        regularBaseMinute = 45;
+        isStoppageEligible = true;
+      }
+    }
+
+    _displayExtra = null;
+
+    if (isHt || isPen || isFinished || !isStoppageEligible) {
+      _elapsedExtraSeconds = 0;
+      _totalExtraMinutes = 0;
+    } else {
+      // Calculate elapsed extra time from minute, second, or existing running timer
+      int computedElapsedExtraSec = 0;
+      if (extraSecFromMinute != null) {
+        computedElapsedExtraSec = extraSecFromMinute;
+      } else if (minNum >= regularBaseMinute) {
+        computedElapsedExtraSec = (minNum - regularBaseMinute) * 60 + secNum;
+      }
+
+      // If computed is 0 but we already had an active timer running in this widget, preserve it
+      if (computedElapsedExtraSec == 0 && _elapsedExtraSeconds > 0) {
+        computedElapsedExtraSec = _elapsedExtraSeconds;
+      }
+
+      // If still 0, check estimate from kickoff time
+      if (computedElapsedExtraSec == 0) {
+        final est = MatchStatusHelper.estimateMatchMinutes(
+          time: widget.time,
+          status: widget.status,
+          period: widget.period,
+        );
+        if (est.extraMinute > 0) {
+          computedElapsedExtraSec = est.extraMinute * 60;
+        }
+      }
+
+      int parsedTotalExtraMinutes = 0;
+      int? explicitElapsedSec;
+
+      if (widget.extraTime != null &&
+          widget.extraTime!.isNotEmpty &&
+          widget.extraTime != 'null') {
+        final clean = widget.extraTime!.trim();
+        if (clean != '+00:00' && clean != '00:00' && clean != '0' && clean != '+0') {
+          if (clean.contains('/')) {
+            final parts = clean.split('/');
+            final elapsedPart = parts.first.replaceAll('+', '').trim();
+            final totalPart = parts.last.trim();
+            parsedTotalExtraMinutes = int.tryParse(totalPart) ?? 0;
+            if (elapsedPart.contains(':')) {
+              final timeParts = elapsedPart.split(':');
+              final m = int.tryParse(timeParts[0]) ?? 0;
+              final s = int.tryParse(timeParts[1]) ?? 0;
+              explicitElapsedSec = m * 60 + s;
+            } else {
+              final m = int.tryParse(elapsedPart) ?? 0;
+              explicitElapsedSec = m * 60;
+            }
+          } else if (clean.contains(':')) {
+            final cleanTime = clean.replaceAll('+', '').trim();
+            final timeParts = cleanTime.split(':');
             final m = int.tryParse(timeParts[0]) ?? 0;
             final s = int.tryParse(timeParts[1]) ?? 0;
-            _elapsedExtraSeconds = m * 60 + s;
+            explicitElapsedSec = m * 60 + s;
           } else {
-            final m = int.tryParse(elapsedPart) ?? 0;
-            _elapsedExtraSeconds = m * 60;
-          }
-        } else if (clean.contains(':')) {
-          final cleanTime = clean.replaceAll('+', '').trim();
-          final timeParts = cleanTime.split(':');
-          final m = int.tryParse(timeParts[0]) ?? 0;
-          final s = int.tryParse(timeParts[1]) ?? 0;
-          _elapsedExtraSeconds = m * 60 + s;
-        } else {
-          final numMatch = RegExp(r'(\d+)').firstMatch(clean);
-          if (numMatch != null) {
-            final val = int.tryParse(numMatch.group(1)!) ?? 0;
-            if (val > 0) {
-              _totalExtraMinutes = val;
+            final numMatch = RegExp(r'(\d+)').firstMatch(clean);
+            if (numMatch != null) {
+              parsedTotalExtraMinutes = int.tryParse(numMatch.group(1)!) ?? 0;
             }
           }
         }
+      }
 
-        final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
-        final ss = (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
-        if (_totalExtraMinutes > 0) {
-          _displayExtra = '+$mm:$ss / $_totalExtraMinutes';
-        } else if (_elapsedExtraSeconds > 0) {
-          _displayExtra = '+$mm:$ss';
-        } else if (clean.startsWith('+')) {
-          _displayExtra = clean;
-        }
+      _elapsedExtraSeconds = explicitElapsedSec ?? computedElapsedExtraSec;
+      _totalExtraMinutes = parsedTotalExtraMinutes > 0
+          ? parsedTotalExtraMinutes
+          : (_totalExtraMinutes > 0 ? _totalExtraMinutes : 0);
+
+      if (_totalExtraMinutes > 0 &&
+          (_elapsedExtraSeconds ~/ 60) >= _totalExtraMinutes) {
+        _totalExtraMinutes = (_elapsedExtraSeconds ~/ 60) + 1;
+      }
+
+      final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
+      final ss = (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
+      if (_totalExtraMinutes > 0) {
+        _displayExtra = '+$mm:$ss / $_totalExtraMinutes';
+      } else if (_elapsedExtraSeconds > 0) {
+        _displayExtra = '+$mm:$ss';
+      } else if (widget.extraTime != null && widget.extraTime!.startsWith('+')) {
+        _displayExtra = widget.extraTime;
       }
     }
 

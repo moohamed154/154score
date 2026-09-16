@@ -283,7 +283,9 @@ class MatchDto {
       time: (rawTime != null && rawTime.isNotEmpty && rawTime != 'null') ? rawTime : '-',
       status: rawStatus ?? 'Not Started',
       statusCode: json['status_code']?.toString(),
-      minute: json['minute']?.toString(),
+      minute: (json['clock'] != null && json['clock'].toString().contains(':'))
+          ? json['clock'].toString()
+          : json['minute']?.toString(),
       period: json['period']?.toString(),
       extraTime: (json['extra_time'] is! Map && json['extra_time'] != null && json['extra_time'] != 'null')
           ? json['extra_time']?.toString()

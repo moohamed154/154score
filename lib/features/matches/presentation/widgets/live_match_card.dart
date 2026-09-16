@@ -188,6 +188,28 @@ class LiveMatchCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (match.hasPenalties) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        width: double.infinity,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E2638) : const Color(0xFFEDF2F7),
+                          borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+                        ),
+                        child: Text(
+                          isArabic
+                              ? 'ركلات ترجيح (${match.penaltyScore1 ?? "-"} - ${match.penaltyScore2 ?? "-"})'
+                              : 'Penalties (${match.penaltyScore1 ?? "-"} - ${match.penaltyScore2 ?? "-"})',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],

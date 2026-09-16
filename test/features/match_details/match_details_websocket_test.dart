@@ -203,5 +203,38 @@ void main() {
         await bloc.close();
       },
     );
+
+    test(
+      'MatchDetailsBloc emits livePenaltyScore1 and livePenaltyScore2 from LiveMatchUpdate and room update',
+      () async {
+        final bloc = MatchDetailsBloc(
+          repository: mockRepository,
+          webSocketService: mockWebSocketService,
+          localStorageService: mockLocalStorageService,
+          matchId: '1080351',
+        );
+
+        const liveUpdate = LiveMatchUpdate(
+          matchId: '1080351',
+          score1: '1',
+          score2: '1',
+          penaltyScore1: '4',
+          penaltyScore2: '5',
+          minute: '120',
+          period: 'penalties',
+          status: 'ركلات الترجيح',
+          statusCode: 'PENALTIES',
+        );
+
+        liveMatchController.add(liveUpdate);
+        await pumpEventQueue();
+
+        expect(bloc.state.livePenaltyScore1, '4');
+        expect(bloc.state.livePenaltyScore2, '5');
+        expect(bloc.state.liveStatusCode, 'PENALTIES');
+
+        await bloc.close();
+      },
+    );
   });
 }

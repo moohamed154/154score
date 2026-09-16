@@ -321,8 +321,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                       liveMinute: state.liveMinute,
                       liveExtraTime: state.liveExtraTime,
                       livePeriod: state.livePeriod,
-                      penaltyScore1: fallbackMatch.penaltyScore1,
-                      penaltyScore2: fallbackMatch.penaltyScore2,
+                      penaltyScore1: state.livePenaltyScore1 ?? fallbackMatch.penaltyScore1,
+                      penaltyScore2: state.livePenaltyScore2 ?? fallbackMatch.penaltyScore2,
                     ),
                   ),
 

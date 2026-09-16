@@ -33,9 +33,13 @@ class MatchStatusHelper {
 
     // 0. Explicit status_code / period checks from Mobile App JSON
     if (code == 'HALF_TIME' ||
+        code == 'HALFTIME' ||
         code == 'HT' ||
+        code == 'BREAK' ||
         p == 'break' ||
         p == 'ht' ||
+        p == 'halftime' ||
+        p == 'extra_break' ||
         p == 'half_time') {
       return MatchPhase.halfTime;
     }
@@ -46,6 +50,8 @@ class MatchStatusHelper {
         code == 'EXTRA_TIME_2ND' ||
         code == 'EXTRA_TIME' ||
         code == 'ET' ||
+        p == '1st_extra' ||
+        p == '2nd_extra' ||
         p.contains('extra') ||
         p.contains('et')) {
       return MatchPhase.extraTime;

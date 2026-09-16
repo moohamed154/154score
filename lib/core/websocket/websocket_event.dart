@@ -126,6 +126,8 @@ class LiveMatchUpdate extends Equatable {
   final String? team2Logo;
   final String? score1;
   final String? score2;
+  final String? penaltyScore1;
+  final String? penaltyScore2;
   final String? time;
   final String? status;
   final String? statusCode;
@@ -148,6 +150,8 @@ class LiveMatchUpdate extends Equatable {
     this.team2Logo,
     this.score1,
     this.score2,
+    this.penaltyScore1,
+    this.penaltyScore2,
     this.time,
     this.status,
     this.statusCode,
@@ -163,7 +167,7 @@ class LiveMatchUpdate extends Equatable {
 
   /// Deterministic fingerprint for duplicate-event suppression
   String get fingerprint {
-    return '${matchId ?? ''}_${score1 ?? ''}_${score2 ?? ''}_${status ?? ''}_${statusCode ?? ''}_${minute ?? ''}_${eventType ?? ''}_${playerName ?? ''}';
+    return '${matchId ?? ''}_${score1 ?? ''}_${score2 ?? ''}_${penaltyScore1 ?? ''}_${penaltyScore2 ?? ''}_${status ?? ''}_${statusCode ?? ''}_${minute ?? ''}_${eventType ?? ''}_${playerName ?? ''}';
   }
 
   factory LiveMatchUpdate.fromJson(
@@ -230,6 +234,31 @@ class LiveMatchUpdate extends Equatable {
     if (s1 == 'null') s1 = null;
     if (s2 == 'null') s2 = null;
 
+    // Penalty shootout extraction
+    String? pen1;
+    String? pen2;
+    if (json['score'] is Map && json['score']['penalties'] is Map) {
+      final pMap = json['score']['penalties'] as Map;
+      if (pMap['home'] != null) pen1 = pMap['home'].toString();
+      if (pMap['away'] != null) pen2 = pMap['away'].toString();
+    }
+    pen1 ??=
+        json['penalty_score_1']?.toString() ??
+        json['penalties_1']?.toString() ??
+        json['penalties_home']?.toString() ??
+        (json['penalties'] is Map
+            ? json['penalties']['home']?.toString()
+            : null);
+    pen2 ??=
+        json['penalty_score_2']?.toString() ??
+        json['penalties_2']?.toString() ??
+        json['penalties_away']?.toString() ??
+        (json['penalties'] is Map
+            ? json['penalties']['away']?.toString()
+            : null);
+    if (pen1 == 'null') pen1 = null;
+    if (pen2 == 'null') pen2 = null;
+
     // League extraction
     Map? leagueMap;
     if (json['league'] is Map) leagueMap = json['league'] as Map;
@@ -253,10 +282,14 @@ class LiveMatchUpdate extends Equatable {
       team2Logo: t2Logo,
       score1: s1,
       score2: s2,
+      penaltyScore1: pen1,
+      penaltyScore2: pen2,
       time: json['time']?.toString(),
       status: json['status']?.toString(),
       statusCode: json['status_code']?.toString(),
-      minute: json['minute']?.toString(),
+      minute: (json['clock'] != null && json['clock'].toString().contains(':'))
+          ? json['clock'].toString()
+          : json['minute']?.toString(),
       period: json['period']?.toString(),
       extraTime: (json['extra_time'] is! Map && json['extra_time'] != null && json['extra_time'] != 'null')
           ? json['extra_time']?.toString()
@@ -280,6 +313,8 @@ class LiveMatchUpdate extends Equatable {
     team2Logo,
     score1,
     score2,
+    penaltyScore1,
+    penaltyScore2,
     time,
     status,
     statusCode,

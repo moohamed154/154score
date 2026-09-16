@@ -76,9 +76,24 @@ class RealtimeMergeEngine {
               ? update.team2Logo
               : m.team2Logo;
 
+          final newPenaltyScore1 = (update.penaltyScore1 != null && update.penaltyScore1!.isNotEmpty)
+              ? update.penaltyScore1
+              : (update.rawPayload['penalty_score_1']?.toString() ??
+                  update.rawPayload['penalties_1']?.toString() ??
+                  (update.rawPayload['penalties'] is Map ? update.rawPayload['penalties']['home']?.toString() : null) ??
+                  m.penaltyScore1);
+          final newPenaltyScore2 = (update.penaltyScore2 != null && update.penaltyScore2!.isNotEmpty)
+              ? update.penaltyScore2
+              : (update.rawPayload['penalty_score_2']?.toString() ??
+                  update.rawPayload['penalties_2']?.toString() ??
+                  (update.rawPayload['penalties'] is Map ? update.rawPayload['penalties']['away']?.toString() : null) ??
+                  m.penaltyScore2);
+
           return m.copyWith(
             score1: newScore1,
             score2: newScore2,
+            penaltyScore1: newPenaltyScore1,
+            penaltyScore2: newPenaltyScore2,
             status: newStatus,
             statusCode: newStatusCode,
             minute: newMinute,
@@ -196,10 +211,12 @@ class RealtimeMergeEngine {
             ) ??
             0;
 
-        if (currGoals > restGoals || (currIsLive && currMin > restMin)) {
+        if (currGoals > restGoals || (currIsLive && currMin > restMin) || currentMatch.hasPenalties) {
           return restMatch.copyWith(
             score1: currentMatch.score1 ?? restMatch.score1,
             score2: currentMatch.score2 ?? restMatch.score2,
+            penaltyScore1: currentMatch.penaltyScore1 ?? restMatch.penaltyScore1,
+            penaltyScore2: currentMatch.penaltyScore2 ?? restMatch.penaltyScore2,
             status: currentMatch.status ?? restMatch.status,
             minute: currentMatch.minute ?? restMatch.minute,
           );
