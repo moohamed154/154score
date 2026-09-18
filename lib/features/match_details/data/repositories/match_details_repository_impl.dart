@@ -72,6 +72,24 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
   }
 
   @override
+  Future<ApiResult<MatchDetailsPayload>> getDetailsPayload(
+    String matchId, {
+    required String lang,
+    int? utcOffset,
+  }) async {
+    try {
+      final data = await _remoteDataSource.getDetailsPayload(
+        _cleanMatchId(matchId),
+        lang: lang,
+        utcOffset: utcOffset,
+      );
+      return ApiSuccess(data);
+    } catch (e) {
+      return const ApiSuccess(MatchDetailsPayload());
+    }
+  }
+
+  @override
   Future<ApiResult<List<MatchNewsItemEntity>>> getNews(
     String matchId, {
     required String lang,

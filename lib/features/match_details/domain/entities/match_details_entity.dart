@@ -579,5 +579,207 @@ class MatchEventsPayload extends Equatable {
   List<Object?> get props => [events, videos];
 }
 
+class MatchH2HSummaryEntity extends Equatable {
+  final int homeWins;
+  final int awayWins;
+  final int draws;
+  final String? homeTeamName;
+  final String? awayTeamName;
+
+  const MatchH2HSummaryEntity({
+    required this.homeWins,
+    required this.awayWins,
+    required this.draws,
+    this.homeTeamName,
+    this.awayTeamName,
+  });
+
+  int get totalMatches => homeWins + awayWins + draws;
+
+  double get homeWinRatio => totalMatches > 0 ? homeWins / totalMatches : 0.0;
+  double get drawRatio => totalMatches > 0 ? draws / totalMatches : 0.0;
+  double get awayWinRatio => totalMatches > 0 ? awayWins / totalMatches : 0.0;
+
+  @override
+  List<Object?> get props => [homeWins, awayWins, draws, homeTeamName, awayTeamName];
+}
+
+class MatchFormItemEntity extends Equatable {
+  final String matchId;
+  final String opponentName;
+  final String? opponentLogo;
+  final String score;
+  final String winType; // 'win', 'lose', 'equal'
+  final bool isHome;
+
+  const MatchFormItemEntity({
+    required this.matchId,
+    required this.opponentName,
+    this.opponentLogo,
+    required this.score,
+    required this.winType,
+    this.isHome = true,
+  });
+
+  bool get isWin => winType.toLowerCase() == 'win';
+  bool get isDraw => winType.toLowerCase() == 'equal' || winType.toLowerCase() == 'draw';
+  bool get isLoss => winType.toLowerCase() == 'lose' || winType.toLowerCase() == 'loss';
+
+  @override
+  List<Object?> get props => [matchId, opponentName, opponentLogo, score, winType, isHome];
+}
+
+class MatchRecentFormEntity extends Equatable {
+  final List<MatchFormItemEntity> homeMatches;
+  final List<MatchFormItemEntity> awayMatches;
+  final String? homeTeamName;
+  final String? awayTeamName;
+
+  const MatchRecentFormEntity({
+    this.homeMatches = const [],
+    this.awayMatches = const [],
+    this.homeTeamName,
+    this.awayTeamName,
+  });
+
+  @override
+  List<Object?> get props => [homeMatches, awayMatches, homeTeamName, awayTeamName];
+}
+
+class MatchReturnLegEntity extends Equatable {
+  final String matchId;
+  final String homeTeam;
+  final String awayTeam;
+  final int homeScores;
+  final int awayScores;
+  final String? aggResult;
+  final String? penalties;
+
+  const MatchReturnLegEntity({
+    required this.matchId,
+    required this.homeTeam,
+    required this.awayTeam,
+    required this.homeScores,
+    required this.awayScores,
+    this.aggResult,
+    this.penalties,
+  });
+
+  String get scoreText => '$homeScores - $awayScores';
+
+  @override
+  List<Object?> get props => [matchId, homeTeam, awayTeam, homeScores, awayScores, aggResult, penalties];
+}
+
+class MatchQuickStatsEntity extends Equatable {
+  final String? homePossession;
+  final String? awayPossession;
+  final int? homeShots;
+  final int? awayShots;
+  final int? homeFouls;
+  final int? awayFouls;
+  final int? homeOffsides;
+  final int? awayOffsides;
+
+  const MatchQuickStatsEntity({
+    this.homePossession,
+    this.awayPossession,
+    this.homeShots,
+    this.awayShots,
+    this.homeFouls,
+    this.awayFouls,
+    this.homeOffsides,
+    this.awayOffsides,
+  });
+
+  bool get isEmpty =>
+      homePossession == null &&
+      awayPossession == null &&
+      homeShots == null &&
+      awayShots == null &&
+      homeFouls == null &&
+      awayFouls == null &&
+      homeOffsides == null &&
+      awayOffsides == null;
+
+  @override
+  List<Object?> get props => [
+    homePossession,
+    awayPossession,
+    homeShots,
+    awayShots,
+    homeFouls,
+    awayFouls,
+    homeOffsides,
+    awayOffsides,
+  ];
+}
+
+class MatchRefereeItemEntity extends Equatable {
+  final String? id;
+  final String name;
+  final String role;
+
+  const MatchRefereeItemEntity({
+    this.id,
+    required this.name,
+    required this.role,
+  });
+
+  @override
+  List<Object?> get props => [id, name, role];
+}
+
+class MatchOverviewDataEntity extends Equatable {
+  final String matchId;
+  final String? stadiumName;
+  final String? stadiumId;
+  final MatchReturnLegEntity? returnLeg;
+  final MatchH2HSummaryEntity? h2hSummary;
+  final MatchRecentFormEntity? recentForm;
+  final MatchQuickStatsEntity? quickStats;
+  final List<MatchRefereeItemEntity> referees;
+  final List<MatchInfoItemEntity> channels;
+
+  const MatchOverviewDataEntity({
+    required this.matchId,
+    this.stadiumName,
+    this.stadiumId,
+    this.returnLeg,
+    this.h2hSummary,
+    this.recentForm,
+    this.quickStats,
+    this.referees = const [],
+    this.channels = const [],
+  });
+
+  @override
+  List<Object?> get props => [
+    matchId,
+    stadiumName,
+    stadiumId,
+    returnLeg,
+    h2hSummary,
+    recentForm,
+    quickStats,
+    referees,
+    channels,
+  ];
+}
+
+class MatchDetailsPayload extends Equatable {
+  final List<MatchInfoSectionEntity> sections;
+  final MatchOverviewDataEntity? overview;
+
+  const MatchDetailsPayload({
+    this.sections = const [],
+    this.overview,
+  });
+
+  @override
+  List<Object?> get props => [sections, overview];
+}
+
+
 
 

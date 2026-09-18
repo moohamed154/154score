@@ -92,13 +92,25 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     final offset = localStorageService.getTimezoneOffset();
 
     try {
-      final eventsFuture = repository.getEventsPayload(cleanTarget, lang: lang);
+      Future<ApiResult<MatchEventsPayload>>? eventsFuture;
+      try {
+        eventsFuture = repository.getEventsPayload(cleanTarget, lang: lang);
+      } catch (_) {
+        eventsFuture = null;
+      }
+
       final statsFuture = repository.getStats(cleanTarget, lang: lang);
-      final detailsFuture = repository.getDetails(
-        cleanTarget,
-        lang: lang,
-        utcOffset: offset,
-      );
+      Future<ApiResult<MatchDetailsPayload>>? detailsFuture;
+      try {
+        detailsFuture = repository.getDetailsPayload(
+          cleanTarget,
+          lang: lang,
+          utcOffset: offset,
+        );
+      } catch (_) {
+        detailsFuture = null;
+      }
+
       final newsFuture = repository.getNews(cleanTarget, lang: lang);
       Future<ApiResult<MatchLineupEntity?>>? lineupsFuture;
       try {
@@ -107,11 +119,55 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         lineupsFuture = null;
       }
 
-      final eventsPayloadRes = (await eventsFuture).dataOrNull;
-      final eventsRes = eventsPayloadRes?.events ?? [];
-      final videosRes = eventsPayloadRes?.videos;
+      MatchEventsPayload? eventsPayloadRes;
+      if (eventsFuture != null) {
+        try {
+          eventsPayloadRes = (await eventsFuture).dataOrNull;
+        } catch (_) {
+          eventsPayloadRes = null;
+        }
+      }
+
+      if (eventsPayloadRes == null) {
+        try {
+          final fallbackEvents = (await repository.getEvents(
+            cleanTarget,
+            lang: lang,
+          )).dataOrNull ?? [];
+          eventsPayloadRes = MatchEventsPayload(events: fallbackEvents);
+        } catch (_) {
+          eventsPayloadRes = const MatchEventsPayload();
+        }
+      }
+
+      final eventsRes = eventsPayloadRes.events;
+      final videosRes = eventsPayloadRes.videos;
       final statsRes = (await statsFuture).dataOrNull ?? [];
-      final detailsRes = (await detailsFuture).dataOrNull ?? [];
+
+      MatchDetailsPayload? detailsPayload;
+      if (detailsFuture != null) {
+        try {
+          detailsPayload = (await detailsFuture).dataOrNull;
+        } catch (_) {
+          detailsPayload = null;
+        }
+      }
+
+      if (detailsPayload == null) {
+        try {
+          final fallbackSections = (await repository.getDetails(
+            cleanTarget,
+            lang: lang,
+            utcOffset: offset,
+          )).dataOrNull ?? [];
+          detailsPayload = MatchDetailsPayload(sections: fallbackSections);
+        } catch (_) {
+          detailsPayload = const MatchDetailsPayload();
+        }
+      }
+
+      final detailsRes = detailsPayload.sections;
+      final overviewRes = detailsPayload.overview;
       final newsRes = (await newsFuture).dataOrNull ?? [];
       MatchLineupEntity? lineupsRes;
       if (lineupsFuture != null) {
@@ -126,6 +182,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final resolvedVideos = videosRes ?? state.videos;
       final resolvedStats = statsRes.isNotEmpty ? statsRes : state.stats;
       final resolvedDetails = detailsRes.isNotEmpty ? detailsRes : state.details;
+      final resolvedOverview = overviewRes ?? state.overview;
       final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
       final resolvedLineup = lineupsRes ?? state.lineup;
 
@@ -137,6 +194,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           videos: resolvedVideos,
           stats: resolvedStats,
           details: resolvedDetails,
+          overview: resolvedOverview,
           news: resolvedNews,
           lineup: resolvedLineup,
           errorMessage: null,

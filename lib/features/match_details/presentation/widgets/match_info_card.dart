@@ -220,6 +220,12 @@ class MatchInfoCard extends StatelessWidget {
       finalRoute = '/stadium/$id/$slug';
     } else if (type == 'commentator') {
       finalRoute = '/commentator/$id/$slug';
+    } else if (type == 'championship') {
+      finalRoute = '/league/$id/$slug';
+    } else if (type == 'team') {
+      finalRoute = '/team/$id/$slug';
+    } else if (type == 'match') {
+      finalRoute = '/match/$id';
     } else {
       final titleLower = item.title.toLowerCase();
       if (titleLower.contains('referee') || titleLower.contains('حكم')) {
@@ -231,6 +237,14 @@ class MatchInfoCard extends StatelessWidget {
       } else if (titleLower.contains('commentator') ||
           titleLower.contains('معلق')) {
         finalRoute = '/commentator/$id/$slug';
+      } else if (titleLower.contains('بطولة') ||
+          titleLower.contains('دوري') ||
+          titleLower.contains('league')) {
+        finalRoute = '/league/$id/$slug';
+      } else if (titleLower.contains('ذهاب') ||
+          titleLower.contains('إياب') ||
+          titleLower.contains('match')) {
+        finalRoute = '/match/$id';
       }
     }
 
@@ -248,6 +262,15 @@ class MatchInfoCard extends StatelessWidget {
         lower.contains('معلق') ||
         lower.contains('broadcast')) {
       return Icons.live_tv_rounded;
+    }
+    if (lower.contains('مواجهات') || lower.contains('h2h') || lower.contains('head-to-head')) {
+      return Icons.history_rounded;
+    }
+    if (lower.contains('آخر المباريات') || lower.contains('form')) {
+      return Icons.trending_up_rounded;
+    }
+    if (lower.contains('إحصائيات') || lower.contains('statistics') || lower.contains('stats')) {
+      return Icons.bar_chart_rounded;
     }
     return Icons.info_outline_rounded;
   }
@@ -291,6 +314,36 @@ class MatchInfoCard extends StatelessWidget {
         lower.contains('round') ||
         lower.contains('stage')) {
       return Icons.format_list_numbered_rounded;
+    }
+    if (lower.contains('ذهاب') || lower.contains('leg')) {
+      return Icons.swap_horiz_rounded;
+    }
+    if (lower.contains('إجمالي') || lower.contains('aggregate')) {
+      return Icons.layers_outlined;
+    }
+    if (lower.contains('ترجيح') || lower.contains('penalty') || lower.contains('penalties')) {
+      return Icons.sports_soccer_rounded;
+    }
+    if (lower.contains('استحواذ') || lower.contains('possession')) {
+      return Icons.pie_chart_outline_rounded;
+    }
+    if (lower.contains('تسديد') || lower.contains('shot')) {
+      return Icons.gps_fixed_rounded;
+    }
+    if (lower.contains('خطأ') || lower.contains('أخطاء') || lower.contains('foul')) {
+      return Icons.pan_tool_outlined;
+    }
+    if (lower.contains('تسلل') || lower.contains('offside')) {
+      return Icons.flag_outlined;
+    }
+    if (lower.contains('فوز') || lower.contains('win')) {
+      return Icons.check_circle_outline_rounded;
+    }
+    if (lower.contains('تعادل') || lower.contains('draw')) {
+      return Icons.remove_circle_outline_rounded;
+    }
+    if (lower.contains('خسارة') || lower.contains('lose') || lower.contains('loss')) {
+      return Icons.highlight_off_rounded;
     }
     return Icons.info_outline_rounded;
   }

@@ -29,7 +29,11 @@ import '../bloc/match_details_state.dart';
 import '../../domain/entities/match_details_entity.dart';
 import '../widgets/lineup/lineup_tab_view.dart';
 import '../widgets/match_header_banner.dart';
+import '../widgets/match_form_card.dart';
+import '../widgets/match_h2h_card.dart';
 import '../widgets/match_info_card.dart';
+import '../widgets/match_quick_stats_card.dart';
+import '../widgets/match_return_leg_card.dart';
 import '../widgets/stat_comparison_bar.dart';
 import '../widgets/timeline_event_item.dart';
 
@@ -1205,8 +1209,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     bool isDark,
     bool isArabic,
   ) {
-    final hMargin = AppDimensions.getHorizontalMargin(context);
-
     if (state.status == MatchDetailsStatus.loading ||
         state.status == MatchDetailsStatus.initial) {
       return _buildDetailsSkeleton(context, isDark, isArabic);
@@ -1335,14 +1337,57 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       );
     }
 
+    final overview = state.overview;
+
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: _handleRefresh,
       child: ListView(
         key: const PageStorageKey('details_tab_list'),
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.all(hMargin),
-        children: [...detailsList.map((sec) => MatchInfoCard(section: sec))],
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        children: [
+          // 1. First Leg / Return Leg
+          if (overview?.returnLeg case final returnLeg?)
+            MatchReturnLegCard(returnLeg: returnLeg),
+
+          // 2. Head-to-Head Record
+          if (overview?.h2hSummary case final h2hSummary?)
+            MatchH2HCard(summary: h2hSummary),
+
+          // 3. Recent Form (Last 5 matches)
+          if (overview?.recentForm case final recentForm?)
+            MatchFormCard(recentForm: recentForm),
+
+          // 4. Quick Match Statistics
+          if (overview?.quickStats case final quickStats?
+              when !quickStats.isEmpty)
+            MatchQuickStatsCard(stats: quickStats),
+
+          // 5. Enriched Info Sections
+          ...detailsList
+              .where((sec) {
+                if (overview != null) {
+                  if (overview.h2hSummary != null &&
+                      (sec.section.contains('المواجهات المباشرة') ||
+                          sec.section.toLowerCase().contains('head-to-head'))) {
+                    return false;
+                  }
+                  if (overview.recentForm != null &&
+                      (sec.section.contains('آخر المباريات') ||
+                          sec.section.toLowerCase().contains('recent form'))) {
+                    return false;
+                  }
+                  if (overview.quickStats != null &&
+                      (sec.section.contains('إحصائيات سريعة') ||
+                          sec.section.toLowerCase().contains('quick statistics'))) {
+                    return false;
+                  }
+                }
+                return true;
+              })
+              .map((sec) => MatchInfoCard(section: sec)),
+        ],
       ),
     );
   }

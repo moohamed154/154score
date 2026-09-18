@@ -646,7 +646,6 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   void _syncLiveRoomsAndPoller() {
     if (isClosed) return;
     final currentLiveIds = <String>{};
-    bool hasExtraTime = false;
 
     for (final l in state.allLeagues) {
       for (final m in l.matches) {
@@ -667,16 +666,12 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           }
           if (m.extraTime != null &&
               m.extraTime!.isNotEmpty &&
-              m.extraTime != 'null') {
-            hasExtraTime = true;
-          }
+              m.extraTime != 'null') {}
           final minNum = int.tryParse(
             m.minute?.replaceAll("'", '').trim() ?? '',
           );
           if (minNum != null &&
-              ((minNum >= 45 && minNum < 55) || minNum >= 90)) {
-            hasExtraTime = true;
-          }
+              ((minNum >= 45 && minNum < 55) || minNum >= 90)) {}
         }
       }
     }

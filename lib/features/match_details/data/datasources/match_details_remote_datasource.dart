@@ -27,6 +27,11 @@ abstract class MatchDetailsRemoteDataSource {
     required String lang,
     int? utcOffset,
   });
+  Future<MatchDetailsPayload> getDetailsPayload(
+    String matchId, {
+    required String lang,
+    int? utcOffset,
+  });
   Future<List<MatchNewsItemEntity>> getNews(
     String matchId, {
     required String lang,
@@ -435,6 +440,20 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     required String lang,
     int? utcOffset,
   }) async {
+    final payload = await getDetailsPayload(
+      matchId,
+      lang: lang,
+      utcOffset: utcOffset,
+    );
+    return payload.sections;
+  }
+
+  @override
+  Future<MatchDetailsPayload> getDetailsPayload(
+    String matchId, {
+    required String lang,
+    int? utcOffset,
+  }) async {
     final cleanId = _cleanMatchId(matchId);
     try {
       final queryParams = <String, dynamic>{'lang': lang};
@@ -448,9 +467,26 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       );
 
       final sections = <MatchInfoSectionEntity>[];
-      if (response is Map && response['data'] is List) {
-        final list = response['data'] as List;
-        for (final sec in list) {
+      List? rawSectionsList;
+      dynamic rawOverview;
+
+      if (response is Map) {
+        if (response['data'] is List) {
+          rawSectionsList = response['data'] as List;
+        } else if (response['data'] is Map) {
+          final d = response['data'] as Map;
+          if (d['sections'] is List) {
+            rawSectionsList = d['sections'] as List;
+          }
+          rawOverview = d['overview'] ?? response['overview'];
+        }
+        rawOverview ??= response['overview'];
+      } else if (response is List) {
+        rawSectionsList = response;
+      }
+
+      if (rawSectionsList != null) {
+        for (final sec in rawSectionsList) {
           if (sec is Map) {
             final sectionTitle = sec['section']?.toString() ?? 'Info';
             final itemsRaw = sec['items'] as List? ?? [];
@@ -460,6 +496,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                     final title = it['title']?.toString() ?? '';
                     final content =
                         it['content']?.toString() ??
+                        it['value']?.toString() ??
                         it['name']?.toString() ??
                         '';
 
@@ -473,7 +510,10 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                         it['slug']?.toString() ?? it['entity_slug']?.toString();
                     final link = it['link']?.toString();
 
-                    String? entityType = _detectEntityType(title, link);
+                    String? entityType =
+                        it['type']?.toString() ??
+                        it['entity_type']?.toString() ??
+                        _detectEntityType(title, link);
 
                     // If id or slug are not explicitly present, extract from link if available
                     if (link != null && link.isNotEmpty) {
@@ -533,10 +573,203 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           }
         }
       }
-      return sections;
+
+      final overview = _parseOverview(rawOverview, cleanId, sections);
+
+      return MatchDetailsPayload(
+        sections: sections,
+        overview: overview,
+      );
     } catch (_) {
-      return [];
+      return const MatchDetailsPayload();
     }
+  }
+
+  MatchOverviewDataEntity? _parseOverview(
+    dynamic rawOverview,
+    String matchId,
+    List<MatchInfoSectionEntity> sections,
+  ) {
+    if (rawOverview is Map) {
+      final map = Map<String, dynamic>.from(rawOverview);
+
+      MatchReturnLegEntity? returnLeg;
+      if (map['return_match'] is Map) {
+        final r = map['return_match'] as Map;
+        final scoreParts = (r['result']?.toString() ?? '').split('-');
+        final hScore = int.tryParse(r['home_scores']?.toString() ?? '') ??
+            (scoreParts.length == 2 ? int.tryParse(scoreParts[0].trim()) ?? 0 : 0);
+        final aScore = int.tryParse(r['away_scores']?.toString() ?? '') ??
+            (scoreParts.length == 2 ? int.tryParse(scoreParts[1].trim()) ?? 0 : 0);
+        returnLeg = MatchReturnLegEntity(
+          matchId: r['match_id']?.toString() ?? r['id']?.toString() ?? '',
+          homeTeam: r['home_team']?.toString() ?? '',
+          awayTeam: r['away_team']?.toString() ?? '',
+          homeScores: hScore,
+          awayScores: aScore,
+          aggResult: r['agg_result']?.toString() ?? map['agg_result']?.toString(),
+          penalties: r['penalties']?.toString() ?? map['penalties']?.toString(),
+        );
+      }
+
+      MatchH2HSummaryEntity? h2hSummary;
+      if (map['team_wins'] is Map) {
+        final tw = map['team_wins'] as Map;
+        h2hSummary = MatchH2HSummaryEntity(
+          homeWins: int.tryParse(tw['team1_wins']?.toString() ?? tw['home_wins']?.toString() ?? '') ?? 0,
+          awayWins: int.tryParse(tw['team2_wins']?.toString() ?? tw['away_wins']?.toString() ?? '') ?? 0,
+          draws: int.tryParse(tw['draws']?.toString() ?? '') ?? 0,
+          homeTeamName: tw['team1_name']?.toString() ?? map['home_team']?['name']?.toString(),
+          awayTeamName: tw['team2_name']?.toString() ?? map['away_team']?['name']?.toString(),
+        );
+      }
+
+      MatchRecentFormEntity? recentForm;
+      if (map['played_result'] is Map) {
+        final pr = map['played_result'] as Map;
+        final homeList = <MatchFormItemEntity>[];
+        final awayList = <MatchFormItemEntity>[];
+
+        final rawHome = pr['home'];
+        final homeMatches = rawHome is Map
+            ? (rawHome['matches'] as List? ?? [])
+            : (rawHome is List ? rawHome : []);
+        final homeTeamName = (rawHome is Map ? rawHome['team_name']?.toString() : null) ??
+            map['home_team']?['name']?.toString();
+
+        final rawAway = pr['away'];
+        final awayMatches = rawAway is Map
+            ? (rawAway['matches'] as List? ?? [])
+            : (rawAway is List ? rawAway : []);
+        final awayTeamName = (rawAway is Map ? rawAway['team_name']?.toString() : null) ??
+            map['away_team']?['name']?.toString();
+
+        for (final item in homeMatches) {
+          if (item is Map) {
+            final res = item['result']?.toString() ?? item['win_type']?.toString() ?? 'equal';
+            homeList.add(MatchFormItemEntity(
+              matchId: item['match_id']?.toString() ?? item['id']?.toString() ?? '',
+              opponentName: item['opponent_name']?.toString() ?? item['away_team']?.toString() ?? item['home_team']?.toString() ?? '',
+              opponentLogo: item['opponent_logo']?.toString() ?? item['away_logo']?.toString() ?? item['home_logo']?.toString(),
+              score: item['score']?.toString() ?? '${item['home_scores'] ?? 0} - ${item['away_scores'] ?? 0}',
+              winType: res,
+              isHome: true,
+            ));
+          }
+        }
+
+        for (final item in awayMatches) {
+          if (item is Map) {
+            final res = item['result']?.toString() ?? item['win_type']?.toString() ?? 'equal';
+            awayList.add(MatchFormItemEntity(
+              matchId: item['match_id']?.toString() ?? item['id']?.toString() ?? '',
+              opponentName: item['opponent_name']?.toString() ?? item['home_team']?.toString() ?? item['away_team']?.toString() ?? '',
+              opponentLogo: item['opponent_logo']?.toString() ?? item['home_logo']?.toString() ?? item['away_logo']?.toString(),
+              score: item['score']?.toString() ?? '${item['home_scores'] ?? 0} - ${item['away_scores'] ?? 0}',
+              winType: res,
+              isHome: false,
+            ));
+          }
+        }
+
+        if (homeList.isNotEmpty || awayList.isNotEmpty) {
+          recentForm = MatchRecentFormEntity(
+            homeMatches: homeList,
+            awayMatches: awayList,
+            homeTeamName: homeTeamName,
+            awayTeamName: awayTeamName,
+          );
+        }
+      }
+
+      MatchQuickStatsEntity? quickStats;
+      if (map['quick_stats'] is Map) {
+        final qs = map['quick_stats'] as Map;
+        final home = qs['home'] is Map ? qs['home'] as Map : null;
+        final away = qs['away'] is Map ? qs['away'] as Map : null;
+        quickStats = MatchQuickStatsEntity(
+          homePossession: qs['possession_home']?.toString() ?? home?['ball_possession']?.toString(),
+          awayPossession: qs['possession_away']?.toString() ?? away?['ball_possession']?.toString(),
+          homeShots: int.tryParse(qs['shots_home']?.toString() ?? home?['total_shots']?.toString() ?? ''),
+          awayShots: int.tryParse(qs['shots_away']?.toString() ?? away?['total_shots']?.toString() ?? ''),
+          homeFouls: int.tryParse(qs['fouls_home']?.toString() ?? home?['fouls']?.toString() ?? ''),
+          awayFouls: int.tryParse(qs['fouls_away']?.toString() ?? away?['fouls']?.toString() ?? ''),
+          homeOffsides: int.tryParse(qs['offsides_home']?.toString() ?? home?['offsides']?.toString() ?? ''),
+          awayOffsides: int.tryParse(qs['offsides_away']?.toString() ?? away?['offsides']?.toString() ?? ''),
+        );
+      }
+
+      final referees = <MatchRefereeItemEntity>[];
+      if (map['referees'] is List) {
+        for (final r in map['referees']) {
+          if (r is Map) {
+            referees.add(MatchRefereeItemEntity(
+              id: r['id']?.toString(),
+              name: r['name']?.toString() ?? '',
+              role: r['role']?.toString() ?? '',
+            ));
+          }
+        }
+      }
+
+      return MatchOverviewDataEntity(
+        matchId: matchId,
+        stadiumName: map['venue']?['name']?.toString(),
+        stadiumId: map['venue']?['id']?.toString(),
+        returnLeg: returnLeg,
+        h2hSummary: h2hSummary,
+        recentForm: recentForm,
+        quickStats: quickStats,
+        referees: referees,
+      );
+    }
+
+    // Fallback: extract from enriched sections
+    return _extractOverviewFromSections(sections, matchId);
+  }
+
+  MatchOverviewDataEntity? _extractOverviewFromSections(
+    List<MatchInfoSectionEntity> sections,
+    String matchId,
+  ) {
+    if (sections.isEmpty) return null;
+
+    MatchH2HSummaryEntity? h2h;
+    final h2hSec = sections.firstWhere(
+      (s) => s.section.contains('المواجهات المباشرة') || s.section.toLowerCase().contains('head-to-head'),
+      orElse: () => const MatchInfoSectionEntity(section: '', items: []),
+    );
+    if (h2hSec.items.length >= 3) {
+      h2h = MatchH2HSummaryEntity(
+        homeWins: int.tryParse(h2hSec.items[0].content) ?? 0,
+        draws: int.tryParse(h2hSec.items[1].content) ?? 0,
+        awayWins: int.tryParse(h2hSec.items[2].content) ?? 0,
+      );
+    }
+
+    MatchReturnLegEntity? returnLeg;
+    for (final sec in sections) {
+      for (final it in sec.items) {
+        if (it.title.contains('الذهاب') || it.title.toLowerCase().contains('leg')) {
+          returnLeg = MatchReturnLegEntity(
+            matchId: it.entityId ?? '',
+            homeTeam: '',
+            awayTeam: '',
+            homeScores: 0,
+            awayScores: 0,
+            aggResult: it.content,
+          );
+          break;
+        }
+      }
+      if (returnLeg != null) break;
+    }
+
+    return MatchOverviewDataEntity(
+      matchId: matchId,
+      h2hSummary: h2h,
+      returnLeg: returnLeg,
+    );
   }
 
   String? _detectEntityType(String title, String? link) {

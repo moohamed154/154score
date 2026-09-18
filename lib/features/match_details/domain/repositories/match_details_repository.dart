@@ -19,6 +19,11 @@ abstract class MatchDetailsRepository {
     required String lang,
     int? utcOffset,
   });
+  Future<ApiResult<MatchDetailsPayload>> getDetailsPayload(
+    String matchId, {
+    required String lang,
+    int? utcOffset,
+  });
   Future<ApiResult<List<MatchNewsItemEntity>>> getNews(
     String matchId, {
     required String lang,

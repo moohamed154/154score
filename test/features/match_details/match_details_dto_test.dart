@@ -359,5 +359,132 @@ void main() {
       expect(news.first.title, 'Real Madrid achieves an exciting league victory');
       expect(news.any((n) => n.title.toLowerCase().contains('download yalla shoot')), isFalse);
     });
+
+    test('getDetailsPayload parses rich overview and sections from YallaShoot parity API', () async {
+      when(() => mockApiClient.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          )).thenAnswer(
+        (_) async => {
+          'success': true,
+          'overview': {
+            'team_wins': {
+              'team1_wins': 5,
+              'team2_wins': 3,
+              'draws': 2,
+              'team1_name': 'ليفربول',
+              'team2_name': 'ريال مدريد',
+            },
+            'played_result': {
+              'home': {
+                'team_name': 'ليفربول',
+                'matches': [
+                  {
+                    'id': '101',
+                    'match_id': '101',
+                    'opponent_name': 'مانشستر سيتي',
+                    'score': '2 - 1',
+                    'result': 'win',
+                  },
+                ],
+              },
+              'away': {
+                'team_name': 'ريال مدريد',
+                'matches': [
+                  {
+                    'id': '102',
+                    'match_id': '102',
+                    'opponent_name': 'برشلونة',
+                    'score': '1 - 2',
+                    'result': 'loss',
+                  },
+                ],
+              },
+            },
+            'return_match': {
+              'id': '99',
+              'match_id': '99',
+              'home_team': 'ريال مدريد',
+              'away_team': 'ليفربول',
+              'result': '1 - 1',
+              'agg_result': '3 - 2',
+              'penalties': '4 - 2',
+            },
+            'quick_stats': {
+              'possession_home': '58',
+              'possession_away': '42',
+              'shots_home': 15,
+              'shots_away': 8,
+              'fouls_home': 10,
+              'fouls_away': 12,
+              'offsides_home': 2,
+              'offsides_away': 1,
+            },
+            'referees': [
+              {
+                'id': '501',
+                'name': 'أنتوني تايلور',
+                'role': 'حكم ساحة',
+              },
+            ],
+          },
+          'data': [
+            {
+              'section': 'معلومات اللقاء',
+              'items': [
+                {
+                  'title': 'الملعب',
+                  'value': 'أنفيلد',
+                  'id': '300',
+                  'type': 'stadium',
+                },
+              ],
+            },
+          ],
+        },
+      );
+
+      final payload = await dataSource.getDetailsPayload('5868013', lang: 'ar');
+
+      expect(payload.sections.length, 1);
+      expect(payload.sections.first.section, 'معلومات اللقاء');
+      expect(payload.sections.first.items.first.content, 'أنفيلد');
+      expect(payload.sections.first.items.first.entityId, '300');
+      expect(payload.sections.first.items.first.entityType, 'stadium');
+
+      expect(payload.overview, isNotNull);
+      final overview = payload.overview!;
+
+      // H2H
+      expect(overview.h2hSummary, isNotNull);
+      expect(overview.h2hSummary!.homeWins, 5);
+      expect(overview.h2hSummary!.awayWins, 3);
+      expect(overview.h2hSummary!.draws, 2);
+      expect(overview.h2hSummary!.totalMatches, 10);
+
+      // Form
+      expect(overview.recentForm, isNotNull);
+      expect(overview.recentForm!.homeMatches.length, 1);
+      expect(overview.recentForm!.homeMatches.first.isWin, isTrue);
+      expect(overview.recentForm!.awayMatches.length, 1);
+      expect(overview.recentForm!.awayMatches.first.isLoss, isTrue);
+
+      // Return leg
+      expect(overview.returnLeg, isNotNull);
+      expect(overview.returnLeg!.matchId, '99');
+      expect(overview.returnLeg!.aggResult, '3 - 2');
+      expect(overview.returnLeg!.penalties, '4 - 2');
+
+      // Quick stats
+      expect(overview.quickStats, isNotNull);
+      expect(overview.quickStats!.homePossession, '58');
+      expect(overview.quickStats!.awayPossession, '42');
+      expect(overview.quickStats!.homeShots, 15);
+
+      // Referees
+      expect(overview.referees.length, 1);
+      expect(overview.referees.first.name, 'أنتوني تايلور');
+      expect(overview.referees.first.id, '501');
+    });
   });
 }
