@@ -21,7 +21,7 @@ import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../leagues/presentation/bloc/league_bloc.dart';
 import '../../../leagues/presentation/views/league_view.dart';
 
-enum ChampionshipFilter { all, favorites, featured, leagues, cups }
+enum ChampionshipFilter { all, favorites, featured, leagues, cups, continental, hidden }
 
 class ChampionshipInfo {
   final String id;
@@ -29,10 +29,15 @@ class ChampionshipInfo {
   final String name;
   final String? slug;
   final String logo;
+  final String? logoLight;
   final bool hasStandings;
   final bool isFeatured;
+  final bool isFavorite;
   final int? type;
+  final String? typeName;
   final bool hasScorers;
+  final bool hasCups;
+  final int? rank;
 
   const ChampionshipInfo({
     required this.id,
@@ -40,25 +45,39 @@ class ChampionshipInfo {
     required this.name,
     this.slug,
     required this.logo,
+    this.logoLight,
     this.hasStandings = true,
     this.isFeatured = false,
+    this.isFavorite = false,
     this.type,
+    this.typeName,
     this.hasScorers = true,
+    this.hasCups = false,
+    this.rank,
   });
 
   factory ChampionshipInfo.fromJson(Map<String, dynamic> json) {
     final leagueId =
         json['league_id']?.toString() ?? json['id']?.toString() ?? '';
-    final seasonId = json['season_id']?.toString();
-    final name = json['name']?.toString() ?? json['title']?.toString() ?? '';
+    final seasonId = json['season_id']?.toString() ?? json['url_id']?.toString();
+    final name = json['name']?.toString() ?? json['title2']?.toString() ?? json['title']?.toString() ?? '';
     final slug = json['slug']?.toString();
-    final logo = json['logo']?.toString() ?? '';
-    final hasStandings = json['has_standings'] as bool? ?? true;
-    final isFeatured = json['is_featured'] as bool? ?? false;
+    final rawImage = json['image']?.toString();
+    final logo = json['logo']?.toString() ?? (rawImage != null && rawImage.isNotEmpty ? 'https://imgs.ysscores.com/championship/128/$rawImage' : '');
+    final rawImageLight = json['image_light']?.toString();
+    final logoLight = json['logo_light']?.toString() ?? (rawImageLight != null && rawImageLight.isNotEmpty ? 'https://imgs.ysscores.com/championship/128/$rawImageLight' : null);
+    final hasStandings = json['has_standings'] as bool? ?? (json['standings'] == 1);
+    final isFeatured = json['is_featured'] as bool? ?? (json['followed'] == 1);
+    final isFavorite = json['is_favorite'] as bool? ?? (json['followed'] == 1);
     final type = json['type'] is int
         ? json['type'] as int
         : int.tryParse(json['type']?.toString() ?? '');
-    final hasScorers = json['has_scorers'] as bool? ?? true;
+    final typeName = json['type_name']?.toString();
+    final hasScorers = json['has_scorers'] as bool? ?? (json['players_st'] == 1);
+    final hasCups = json['has_cups'] as bool? ?? (json['cups'] != null);
+    final rank = json['rank'] is int
+        ? json['rank'] as int
+        : int.tryParse(json['rank']?.toString() ?? '');
 
     return ChampionshipInfo(
       id: leagueId.isNotEmpty ? leagueId : (seasonId ?? ''),
@@ -66,10 +85,15 @@ class ChampionshipInfo {
       name: name,
       slug: slug,
       logo: logo,
+      logoLight: logoLight,
       hasStandings: hasStandings,
       isFeatured: isFeatured,
+      isFavorite: isFavorite,
       type: type,
+      typeName: typeName,
       hasScorers: hasScorers,
+      hasCups: hasCups,
+      rank: rank,
     );
   }
 
@@ -79,10 +103,15 @@ class ChampionshipInfo {
     'name': name,
     'slug': slug,
     'logo': logo,
+    'logo_light': logoLight,
     'has_standings': hasStandings,
     'is_featured': isFeatured,
+    'is_favorite': isFavorite,
     'type': type,
+    'type_name': typeName,
     'has_scorers': hasScorers,
+    'has_cups': hasCups,
+    'rank': rank,
   };
 }
 
@@ -272,8 +301,10 @@ class _StandingsViewState extends State<StandingsView> {
       if (resMap != null && resMap['data'] != null && resMap['data'] is Map) {
         final data = Map<String, dynamic>.from(resMap['data'] as Map);
 
-        final featuredRaw = data['featured'] as List? ?? [];
-        final leaguesRaw = data['leagues'] as List? ?? [];
+        final featuredRaw =
+            data['favorites'] as List? ?? (data['featured'] as List? ?? []);
+        final leaguesRaw =
+            data['all'] as List? ?? (data['leagues'] as List? ?? []);
 
         final fetchedFeatured = <ChampionshipInfo>[];
         for (final item in featuredRaw) {
@@ -297,11 +328,13 @@ class _StandingsViewState extends State<StandingsView> {
         if (search.isEmpty &&
             (fetchedAll.isNotEmpty || fetchedFeatured.isNotEmpty)) {
           try {
-            sl<LocalStorageService>().setCachedRankings(
-              jsonEncode({
-                'featured': fetchedFeatured.map((e) => e.toJson()).toList(),
-                'leagues': fetchedAll.map((e) => e.toJson()).toList(),
-              }),
+            unawaited(
+              sl<LocalStorageService>().setCachedRankings(
+                jsonEncode({
+                  'featured': fetchedFeatured.map((e) => e.toJson()).toList(),
+                  'leagues': fetchedAll.map((e) => e.toJson()).toList(),
+                }),
+              ),
             );
           } catch (_) {}
         }
@@ -602,9 +635,13 @@ class _StandingsViewState extends State<StandingsView> {
       case ChampionshipFilter.cups:
         return list
             .where(
-              (item) => item.type == 2 || item.type == 4 || !item.hasStandings,
+              (item) => item.type == 2 || (!item.hasStandings && item.type != 4),
             )
             .toList();
+      case ChampionshipFilter.continental:
+        return list.where((item) => item.type == 4).toList();
+      case ChampionshipFilter.hidden:
+        return list.where((item) => !item.isFavorite).toList();
       case ChampionshipFilter.favorites:
         return list;
     }
@@ -667,16 +704,52 @@ class _StandingsViewState extends State<StandingsView> {
     required bool isDark,
     required AppLocalizations l10n,
   }) {
+    final isArabic = l10n.isArabic;
+    final totalCount = _allLeagues.length;
+    final featuredCount = _featuredLeagues.length;
+    final leaguesCount = _allLeagues.where((i) => i.type == 1).length;
+    final cupsCount = _allLeagues
+        .where((i) => i.type == 2 || (!i.hasStandings && i.type != 4))
+        .length;
+    final continentalCount = _allLeagues.where((i) => i.type == 4).length;
+    final hiddenCount = _allLeagues.where((i) => !i.isFavorite).length;
+
     final filters = [
-      (ChampionshipFilter.all, l10n.translate('filter_all'), null),
+      (
+        ChampionshipFilter.all,
+        l10n.translate('filter_all'),
+        totalCount > 0 ? totalCount.toString() : null,
+      ),
       (
         ChampionshipFilter.favorites,
         l10n.translate('filter_favorites'),
         favoriteCount > 0 ? favoriteCount.toString() : null,
       ),
-      (ChampionshipFilter.featured, l10n.translate('filter_featured'), null),
-      (ChampionshipFilter.leagues, l10n.translate('filter_leagues'), null),
-      (ChampionshipFilter.cups, l10n.translate('filter_cups'), null),
+      (
+        ChampionshipFilter.featured,
+        l10n.translate('filter_featured'),
+        featuredCount > 0 ? featuredCount.toString() : null,
+      ),
+      (
+        ChampionshipFilter.leagues,
+        l10n.translate('filter_leagues'),
+        leaguesCount > 0 ? leaguesCount.toString() : null,
+      ),
+      (
+        ChampionshipFilter.cups,
+        l10n.translate('filter_cups'),
+        cupsCount > 0 ? cupsCount.toString() : null,
+      ),
+      (
+        ChampionshipFilter.continental,
+        isArabic ? 'قارية' : 'Continental',
+        continentalCount > 0 ? continentalCount.toString() : null,
+      ),
+      (
+        ChampionshipFilter.hidden,
+        isArabic ? 'المخفية' : 'Hidden',
+        hiddenCount > 0 ? hiddenCount.toString() : null,
+      ),
     ];
 
     return SingleChildScrollView(
@@ -1047,7 +1120,15 @@ class _StandingsViewState extends State<StandingsView> {
     } else if (item.type == 4) {
       typeBadge = l10n.translate('championship_type_continental');
       typeBadgeColor = const Color(0xFF8B5CF6);
+    } else if (item.type == 3) {
+      typeBadge = isArabic ? 'دولي' : 'International';
+      typeBadgeColor = const Color(0xFF3B82F6);
     }
+
+    final targetLeagueId =
+        (item.seasonId != null && item.seasonId!.isNotEmpty)
+            ? item.seasonId!
+            : item.id;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -1060,11 +1141,13 @@ class _StandingsViewState extends State<StandingsView> {
             final targetTab = item.hasStandings ? 2 : 0;
             try {
               context.push(
-                '/league/${item.id}?tab=$targetTab',
+                '/league/$targetLeagueId?tab=$targetTab',
                 extra: {
                   'title': title,
                   'logo': item.logo.isNotEmpty ? item.logo : null,
                   'tab': targetTab,
+                  'season_id': item.seasonId,
+                  'champ_id': item.id,
                 },
               );
             } catch (_) {
@@ -1073,14 +1156,16 @@ class _StandingsViewState extends State<StandingsView> {
                 MaterialPageRoute(
                   builder: (context) => BlocProvider(
                     create: (_) => sl<LeagueBloc>(
-                      param1: item.id,
+                      param1: targetLeagueId,
                       param2: {
                         'title': title,
                         'logo': item.logo.isNotEmpty ? item.logo : null,
+                        'season_id': item.seasonId,
+                        'champ_id': item.id,
                       },
                     ),
                     child: LeagueView(
-                      leagueId: item.id,
+                      leagueId: targetLeagueId,
                       initialTitle: title,
                       initialLogo: item.logo.isNotEmpty ? item.logo : null,
                       initialTabIndex: targetTab,
