@@ -9,12 +9,16 @@ import '../../domain/entities/match_details_entity.dart';
 
 class MatchReturnLegCard extends StatelessWidget {
   final MatchReturnLegEntity returnLeg;
+  final String? homeTeamFallback;
+  final String? awayTeamFallback;
   final bool? isDark;
   final bool? isArabic;
 
   const MatchReturnLegCard({
     super.key,
     required this.returnLeg,
+    this.homeTeamFallback,
+    this.awayTeamFallback,
     this.isDark,
     this.isArabic,
   });
@@ -26,6 +30,22 @@ class MatchReturnLegCard extends StatelessWidget {
     final arabic = isArabic ?? l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
     final isNavigable = returnLeg.matchId.trim().isNotEmpty && returnLeg.matchId != '0';
+
+    final resolvedHome = (returnLeg.homeTeam.isNotEmpty &&
+            returnLeg.homeTeam != 'المضيف' &&
+            returnLeg.homeTeam != 'Home')
+        ? returnLeg.homeTeam
+        : (awayTeamFallback?.isNotEmpty == true
+            ? awayTeamFallback!
+            : (arabic ? 'المضيف' : 'Home'));
+
+    final resolvedAway = (returnLeg.awayTeam.isNotEmpty &&
+            returnLeg.awayTeam != 'الضيف' &&
+            returnLeg.awayTeam != 'Away')
+        ? returnLeg.awayTeam
+        : (homeTeamFallback?.isNotEmpty == true
+            ? homeTeamFallback!
+            : (arabic ? 'الضيف' : 'Away'));
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
@@ -108,9 +128,7 @@ class MatchReturnLegCard extends StatelessWidget {
                     Expanded(
                       flex: 4,
                       child: Text(
-                        returnLeg.homeTeam.isNotEmpty
-                            ? returnLeg.homeTeam
-                            : (arabic ? 'المضيف' : 'Home'),
+                        resolvedHome,
                         style: AppTypography.getBodyMedium(
                           isDark: dark,
                           isArabic: arabic,
@@ -152,9 +170,7 @@ class MatchReturnLegCard extends StatelessWidget {
                     Expanded(
                       flex: 4,
                       child: Text(
-                        returnLeg.awayTeam.isNotEmpty
-                            ? returnLeg.awayTeam
-                            : (arabic ? 'الضيف' : 'Away'),
+                        resolvedAway,
                         style: AppTypography.getBodyMedium(
                           isDark: dark,
                           isArabic: arabic,

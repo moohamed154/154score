@@ -1217,6 +1217,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       return _buildDetailsSkeleton(context, isDark, isArabic);
     }
 
+    final overview = state.overview;
     final detailsList = List<MatchInfoSectionEntity>.from(state.details);
 
     if (widget.initialMatch != null) {
@@ -1340,7 +1341,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       );
     }
 
-    final overview = state.overview;
+    final homeTeamName = widget.initialMatch?.team1 ??
+        _extractTeamNameFromDetails(detailsList, isHome: true);
+    final awayTeamName = widget.initialMatch?.team2 ??
+        _extractTeamNameFromDetails(detailsList, isHome: false);
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -1354,6 +1358,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           if (overview?.returnLeg case final returnLeg?)
             MatchReturnLegCard(
               returnLeg: returnLeg,
+              homeTeamFallback: homeTeamName,
+              awayTeamFallback: awayTeamName,
               isDark: isDark,
               isArabic: isArabic,
             ),
@@ -1362,6 +1368,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           if (overview?.h2hSummary case final h2hSummary?)
             MatchH2HCard(
               summary: h2hSummary,
+              homeTeamFallback: homeTeamName,
+              awayTeamFallback: awayTeamName,
               isDark: isDark,
               isArabic: isArabic,
             ),
@@ -1415,6 +1423,40 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         ],
       ),
     );
+  }
+
+  String? _extractTeamNameFromDetails(
+    List<MatchInfoSectionEntity> sections, {
+    required bool isHome,
+  }) {
+    for (final sec in sections) {
+      for (final it in sec.items) {
+        final t = it.title.trim().toLowerCase();
+        if (isHome) {
+          if (t.contains('صاحب الأرض') ||
+              t.contains('صاحب الارض') ||
+              t.contains('المضيف') ||
+              t.contains('الفريق الأول') ||
+              t.contains('home')) {
+            final content = it.content.trim();
+            if (content.isNotEmpty && content != '-' && content != 'المضيف') {
+              return content;
+            }
+          }
+        } else {
+          if (t == 'الضيف' ||
+              t.contains('الفريق الضيف') ||
+              t.contains('الفريق الثاني') ||
+              t.contains('away')) {
+            final content = it.content.trim();
+            if (content.isNotEmpty && content != '-' && content != 'الضيف') {
+              return content;
+            }
+          }
+        }
+      }
+    }
+    return null;
   }
 
   // ── Tab 4: الإحصائيات (Full Statistics) ────────────────────────────────────

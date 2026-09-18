@@ -703,6 +703,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
   ) {
     if (rawOverview is Map) {
       final map = Map<String, dynamic>.from(rawOverview);
+      final (secHome, secAway) = _extractTeamNamesFromSections(sections);
 
       MatchReturnLegEntity? returnLeg;
       if (map['return_match'] is Map) {
@@ -712,10 +713,16 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             (scoreParts.length == 2 ? int.tryParse(scoreParts[0].trim()) ?? 0 : 0);
         final aScore = int.tryParse(r['away_scores']?.toString() ?? '') ??
             (scoreParts.length == 2 ? int.tryParse(scoreParts[1].trim()) ?? 0 : 0);
+        final rHome = (r['home_team']?.toString().trim().isNotEmpty == true)
+            ? r['home_team']!.toString()
+            : (secAway ?? '');
+        final rAway = (r['away_team']?.toString().trim().isNotEmpty == true)
+            ? r['away_team']!.toString()
+            : (secHome ?? '');
         returnLeg = MatchReturnLegEntity(
           matchId: r['match_id']?.toString() ?? r['id']?.toString() ?? '',
-          homeTeam: r['home_team']?.toString() ?? '',
-          awayTeam: r['away_team']?.toString() ?? '',
+          homeTeam: rHome,
+          awayTeam: rAway,
           homeScores: hScore,
           awayScores: aScore,
           aggResult: r['agg_result']?.toString() ?? map['agg_result']?.toString(),
@@ -730,8 +737,16 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           homeWins: int.tryParse(tw['team1_wins']?.toString() ?? tw['home_wins']?.toString() ?? '') ?? 0,
           awayWins: int.tryParse(tw['team2_wins']?.toString() ?? tw['away_wins']?.toString() ?? '') ?? 0,
           draws: int.tryParse(tw['draws']?.toString() ?? '') ?? 0,
-          homeTeamName: tw['team1_name']?.toString() ?? map['home_team']?['name']?.toString(),
-          awayTeamName: tw['team2_name']?.toString() ?? map['away_team']?['name']?.toString(),
+          homeTeamName: tw['home_team_name']?.toString() ??
+              tw['team1_name']?.toString() ??
+              map['home_team']?['name']?.toString() ??
+              map['home_team']?['title']?.toString() ??
+              secHome,
+          awayTeamName: tw['away_team_name']?.toString() ??
+              tw['team2_name']?.toString() ??
+              map['away_team']?['name']?.toString() ??
+              map['away_team']?['title']?.toString() ??
+              secAway,
         );
       }
 
@@ -839,11 +854,37 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     return _extractOverviewFromSections(sections, matchId);
   }
 
+  static (String? home, String? away) _extractTeamNamesFromSections(
+    List<MatchInfoSectionEntity> sections,
+  ) {
+    String? home;
+    String? away;
+    for (final sec in sections) {
+      for (final it in sec.items) {
+        final t = it.title.trim().toLowerCase();
+        if (t.contains('صاحب الأرض') ||
+            t.contains('صاحب الارض') ||
+            t.contains('المضيف') ||
+            t.contains('الفريق الأول') ||
+            t.contains('home')) {
+          home ??= it.content.trim();
+        } else if (t == 'الضيف' ||
+            t.contains('الفريق الضيف') ||
+            t.contains('الفريق الثاني') ||
+            t.contains('away')) {
+          away ??= it.content.trim();
+        }
+      }
+    }
+    return (home, away);
+  }
+
   MatchOverviewDataEntity? _extractOverviewFromSections(
     List<MatchInfoSectionEntity> sections,
     String matchId,
   ) {
     if (sections.isEmpty) return null;
+    final (secHome, secAway) = _extractTeamNamesFromSections(sections);
 
     MatchH2HSummaryEntity? h2h;
     final h2hSec = sections.firstWhere(
@@ -855,6 +896,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         homeWins: int.tryParse(h2hSec.items[0].content) ?? 0,
         draws: int.tryParse(h2hSec.items[1].content) ?? 0,
         awayWins: int.tryParse(h2hSec.items[2].content) ?? 0,
+        homeTeamName: secHome,
+        awayTeamName: secAway,
       );
     }
 
@@ -862,12 +905,34 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     for (final sec in sections) {
       for (final it in sec.items) {
         if (it.title.contains('الذهاب') || it.title.toLowerCase().contains('leg')) {
+          String rHome = secAway ?? '';
+          String rAway = secHome ?? '';
+          int rHScore = 0;
+          int rAScore = 0;
+
+          // Parse e.g. "غريميو 5 - 3 بوتافوغو" or "5 - 3"
+          final match = RegExp(r'^(.+?)\s+(\d+)\s*[-–:]\s*(\d+)\s+(.+)$')
+              .firstMatch(it.content.trim());
+          if (match != null) {
+            rHome = match.group(1)?.trim() ?? rHome;
+            rHScore = int.tryParse(match.group(2) ?? '') ?? 0;
+            rAScore = int.tryParse(match.group(3) ?? '') ?? 0;
+            rAway = match.group(4)?.trim() ?? rAway;
+          } else {
+            final scoreMatch = RegExp(r'(\d+)\s*[-–:]\s*(\d+)')
+                .firstMatch(it.content.trim());
+            if (scoreMatch != null) {
+              rHScore = int.tryParse(scoreMatch.group(1) ?? '') ?? 0;
+              rAScore = int.tryParse(scoreMatch.group(2) ?? '') ?? 0;
+            }
+          }
+
           returnLeg = MatchReturnLegEntity(
             matchId: it.entityId ?? '',
-            homeTeam: '',
-            awayTeam: '',
-            homeScores: 0,
-            awayScores: 0,
+            homeTeam: rHome,
+            awayTeam: rAway,
+            homeScores: rHScore,
+            awayScores: rAScore,
             aggResult: it.content,
           );
           break;
