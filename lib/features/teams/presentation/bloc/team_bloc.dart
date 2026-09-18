@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../standings/domain/entities/standings_entity.dart';
 import '../../domain/repositories/teams_repository.dart';
 import 'team_event.dart';
 import 'team_state.dart';
@@ -24,6 +25,7 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
        ) {
     on<LoadTeamProfileEvent>(_onLoadTeamProfile);
     on<ChangeTeamTabEvent>(_onChangeTab);
+    on<SelectChampionshipStandingsEvent>(_onSelectChampionshipStandings);
   }
 
   Future<void> _onLoadTeamProfile(
@@ -44,19 +46,38 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
         lang: lang,
       );
 
-      result.fold(
-        onSuccess: (profile) {
+      await result.fold(
+        onSuccess: (profile) async {
+          final initialChampId = profile.leagueId ??
+              (profile.championships.isNotEmpty
+                  ? (profile.championships.first.urlId ?? profile.championships.first.id)
+                  : null);
+
+          LeagueStandingsEntity? initialStandings;
+          if (initialChampId != null && initialChampId.isNotEmpty) {
+            final stResult = await repository.getChampionshipStandings(
+              initialChampId,
+              lang: lang,
+            );
+            stResult.fold(
+              onSuccess: (st) => initialStandings = st,
+              onFailure: (_) {},
+            );
+          }
+
           emit(
             state.copyWith(
               status: TeamStatus.success,
               teamName: profile.teamName,
               teamLogo: profile.teamLogo ?? state.teamLogo,
               profile: profile,
+              selectedChampionshipId: initialChampId,
+              currentStandings: initialStandings,
               errorMessage: null,
             ),
           );
         },
-        onFailure: (f) {
+        onFailure: (f) async {
           emit(
             state.copyWith(status: TeamStatus.error, errorMessage: f.message),
           );
@@ -75,5 +96,37 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
 
   void _onChangeTab(ChangeTeamTabEvent event, Emitter<TeamState> emit) {
     emit(state.copyWith(selectedTab: event.tabIndex));
+  }
+
+  Future<void> _onSelectChampionshipStandings(
+    SelectChampionshipStandingsEvent event,
+    Emitter<TeamState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        selectedChampionshipId: event.championshipId,
+        isStandingsLoading: true,
+      ),
+    );
+
+    final lang = localStorageService.getLanguage();
+    final result = await repository.getChampionshipStandings(
+      event.championshipId,
+      lang: lang,
+    );
+
+    result.fold(
+      onSuccess: (standings) {
+        emit(
+          state.copyWith(
+            currentStandings: standings,
+            isStandingsLoading: false,
+          ),
+        );
+      },
+      onFailure: (_) {
+        emit(state.copyWith(isStandingsLoading: false));
+      },
+    );
   }
 }

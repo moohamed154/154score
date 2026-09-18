@@ -62,6 +62,14 @@ class ApiEndpoints {
       (slug != null && slug.isNotEmpty)
           ? '/api/teams/$id/$slug/standings'
           : '/api/teams/$id/standings';
+  static String teamTransfers(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/teams/$id/$slug/transfers'
+          : '/api/teams/$id/transfers';
+  static String teamNews(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/teams/$id/$slug/news'
+          : '/api/teams/$id/news';
 
   // 5. Players Operations
   static String playerProfile(String id, [String? slug]) =>

@@ -80,68 +80,107 @@ class TeamHeaderCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
 
-                    // Tappable League Badge
-                    if (leagueName != null && leagueName.isNotEmpty)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(
-                                AppDimensions.radiusSm,
+                    // Tappable League Badge & Country
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (leagueName != null && leagueName.isNotEmpty)
+                          InkWell(
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusSm,
+                            ),
+                            onTap: () {
+                              if (leagueId != null) {
+                                context.push(
+                                  '/league/$leagueId',
+                                  extra: {'title': leagueName},
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
                               ),
-                              onTap: () {
-                                if (leagueId != null) {
-                                  context.push(
-                                    '/league/$leagueId',
-                                    extra: {'title': leagueName},
-                                  );
-                                }
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.12,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.12,
-                                  ),
-                                  borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm,
-                                  ),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusSm,
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.emoji_events_outlined,
-                                      size: 14,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.emoji_events_outlined,
+                                    size: 14,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    leagueName,
+                                    style: AppTypography.getBodySmall(
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                    ).copyWith(
                                       color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
                                     ),
-                                    const SizedBox(width: 4),
-                                    Flexible(
-                                      child: Text(
-                                        leagueName,
-                                        style:
-                                            AppTypography.getBodySmall(
-                                              isDark: isDark,
-                                              isArabic: isArabic,
-                                            ).copyWith(
-                                              color: AppColors.primary,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        if (profile?.country != null && profile!.country!.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusSm,
+                              ),
+                              border: Border.all(
+                                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (profile?.countryFlag != null && profile!.countryFlag!.isNotEmpty) ...[
+                                  AppImage(
+                                    imageUrl: profile!.countryFlag,
+                                    width: 14,
+                                    height: 10,
+                                    borderRadius: 2,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  const SizedBox(width: 4),
+                                ],
+                                Text(
+                                  profile!.country!,
+                                  style: AppTypography.getBodySmall(
+                                    isDark: isDark,
+                                    isArabic: isArabic,
+                                  ).copyWith(
+                                    fontSize: 11,
+                                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),

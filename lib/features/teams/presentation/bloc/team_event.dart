@@ -25,7 +25,7 @@ class LoadTeamProfileEvent extends TeamEvent {
   });
 
   @override
-  List<Object?> get props => [teamId, teamName, leagueId, isRefresh];
+  List<Object?> get props => [teamId, teamName, leagueId, isRefresh, completer];
 }
 
 class ChangeTeamTabEvent extends TeamEvent {
@@ -35,4 +35,13 @@ class ChangeTeamTabEvent extends TeamEvent {
 
   @override
   List<Object?> get props => [tabIndex];
+}
+
+class SelectChampionshipStandingsEvent extends TeamEvent {
+  final String championshipId;
+
+  const SelectChampionshipStandingsEvent(this.championshipId);
+
+  @override
+  List<Object?> get props => [championshipId];
 }
