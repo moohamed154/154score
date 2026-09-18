@@ -123,6 +123,7 @@ class AppLocalizations {
       'filter_featured': 'Featured',
       'filter_leagues': 'Leagues',
       'filter_cups': 'Cups & Continental',
+      'filter_hidden': 'Hidden',
       'no_favorite_championships': 'No favorite championships yet',
       'no_favorite_championships_hint':
           'Tap the star on any competition to add it to your favorites',
@@ -371,6 +372,7 @@ class AppLocalizations {
       'filter_featured': 'أهم البطولات',
       'filter_leagues': 'دوريات',
       'filter_cups': 'كؤوس وقارية',
+      'filter_hidden': 'المخفية',
       'no_favorite_championships': 'لا توجد بطولات في المفضلة',
       'no_favorite_championships_hint':
           'اضغط على النجمة بجانب أي بطولة لإضافتها لمفضلتك',

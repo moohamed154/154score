@@ -25,6 +25,7 @@ abstract class LocalStorageService {
   bool isFavoriteTeam(String teamName);
 
   List<String> getFavoriteCompetitions();
+  bool hasCustomFavoriteCompetitions();
   Future<bool> setFavoriteCompetitions(List<String> list);
   Future<bool> toggleFavoriteCompetition(String compName);
   bool isFavoriteCompetition(String compName);
@@ -132,6 +133,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   List<String> getFavoriteCompetitions() {
     return _prefs.getStringList(_keyFavoriteCompetitions) ?? [];
+  }
+
+  @override
+  bool hasCustomFavoriteCompetitions() {
+    return _prefs.containsKey(_keyFavoriteCompetitions);
   }
 
   @override
