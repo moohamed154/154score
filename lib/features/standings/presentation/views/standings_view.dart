@@ -427,17 +427,15 @@ class _StandingsViewState extends State<StandingsView> {
     final isArabic = l10n.isArabic;
     final storage = sl<LocalStorageService>();
 
-    // Signature YallaShoot Palette
-    const bgDark = Color(0xFF0C101A);
-    const bgLight = Color(0xFFF6F8FA);
-    const cardBgDark = Color(0xFF161C2A);
-    const cardBgLight = Colors.white;
-    const cardBorderDark = Color(0xFF1E283C);
-    const cardBorderLight = Color(0xFFE2E8F0);
-    const accentMint = Color(0xFF2FD6B2);
+    // Centralized AppColors Tokens
+    final bg = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final cardBorder = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final surfaceBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    const primary = AppColors.primary;
 
     return Scaffold(
-      backgroundColor: isDark ? bgDark : bgLight,
+      backgroundColor: bg,
       body: SafeArea(
         bottom: false,
         child: BlocBuilder<FavoritesCubit, FavoritesState>(
@@ -508,7 +506,7 @@ class _StandingsViewState extends State<StandingsView> {
 
             return Column(
               children: [
-                // 1. Top Brand Bar (YallaShoot style)
+                // 1. Top Brand Bar with 154SCORE Brand Green
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
@@ -519,7 +517,7 @@ class _StandingsViewState extends State<StandingsView> {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: accentMint.withValues(alpha: 0.15),
+                          color: primary.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -527,7 +525,7 @@ class _StandingsViewState extends State<StandingsView> {
                           children: [
                             const Icon(
                               Icons.sports_soccer_rounded,
-                              color: accentMint,
+                              color: primary,
                               size: 20,
                             ),
                             const SizedBox(width: 6),
@@ -539,8 +537,8 @@ class _StandingsViewState extends State<StandingsView> {
                                 fontSize: 16,
                                 letterSpacing: 1.2,
                                 color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
                               ),
                             ),
                           ],
@@ -557,13 +555,13 @@ class _StandingsViewState extends State<StandingsView> {
                     context,
                     isDark: isDark,
                     l10n: l10n,
-                    cardBgDark: const Color(0xFF141926),
-                    cardBorderDark: cardBorderDark,
+                    surfaceBg: surfaceBg,
+                    cardBorder: cardBorder,
                   ),
                 ),
                 const SizedBox(height: 10),
 
-                // 3. YallaShoot 2-Segment Control Pill (Pinned)
+                // 3. YallaShoot 2-Segment Control Pill with App Brand Colors
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _buildSegmentControl(
@@ -572,8 +570,9 @@ class _StandingsViewState extends State<StandingsView> {
                     hiddenCount: hiddenCards.length,
                     isDark: isDark,
                     l10n: l10n,
-                    accentMint: accentMint,
-                    cardBorderDark: cardBorderDark,
+                    primary: primary,
+                    surfaceBg: surfaceBg,
+                    cardBorder: cardBorder,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -581,7 +580,7 @@ class _StandingsViewState extends State<StandingsView> {
                 // 4. Scrollable Content Area
                 Expanded(
                   child: RefreshIndicator(
-                    color: accentMint,
+                    color: primary,
                     onRefresh: () async {
                       try {
                         await _fetchRankings(
@@ -594,8 +593,8 @@ class _StandingsViewState extends State<StandingsView> {
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: _buildLoadingSkeletons(
                               isDark,
-                              cardBgDark,
-                              cardBorderDark,
+                              cardBg,
+                              cardBorder,
                             ),
                           )
                         : _errorMessage != null && _allLeagues.isEmpty
@@ -608,6 +607,9 @@ class _StandingsViewState extends State<StandingsView> {
                                     isFavorites: isFavoritesTab,
                                     isSearching: searchQuery.isNotEmpty,
                                     isDark: isDark,
+                                    cardBg: cardBg,
+                                    cardBorder: cardBorder,
+                                    primary: primary,
                                     l10n: l10n,
                                   )
                                 : isFavoritesTab && searchQuery.isEmpty
@@ -641,10 +643,8 @@ class _StandingsViewState extends State<StandingsView> {
                                             isDark: isDark,
                                             isArabic: isArabic,
                                             isSearching: false,
-                                            cardBgDark: cardBgDark,
-                                            cardBgLight: cardBgLight,
-                                            cardBorderDark: cardBorderDark,
-                                            cardBorderLight: cardBorderLight,
+                                            cardBg: cardBg,
+                                            cardBorder: cardBorder,
                                             onToggleStar: () =>
                                                 _toggleFavoriteItem(
                                               context,
@@ -674,10 +674,8 @@ class _StandingsViewState extends State<StandingsView> {
                                             isArabic: isArabic,
                                             isSearching:
                                                 searchQuery.isNotEmpty,
-                                            cardBgDark: cardBgDark,
-                                            cardBgLight: cardBgLight,
-                                            cardBorderDark: cardBorderDark,
-                                            cardBorderLight: cardBorderLight,
+                                            cardBg: cardBg,
+                                            cardBorder: cardBorder,
                                             onToggleStar: () =>
                                                 _toggleFavoriteItem(
                                               context,
@@ -701,16 +699,16 @@ class _StandingsViewState extends State<StandingsView> {
     BuildContext context, {
     required bool isDark,
     required AppLocalizations l10n,
-    required Color cardBgDark,
-    required Color cardBorderDark,
+    required Color surfaceBg,
+    required Color cardBorder,
   }) {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: isDark ? cardBgDark : const Color(0xFFEFF2F8),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? cardBorderDark : const Color(0xFFE2E7F0),
+          color: cardBorder,
           width: 0.8,
         ),
       ),
@@ -725,20 +723,20 @@ class _StandingsViewState extends State<StandingsView> {
         decoration: InputDecoration(
           hintText: l10n.translate('search_championship'),
           hintStyle: TextStyle(
-            color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
             fontSize: 14,
           ),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
             size: 20,
           ),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear_rounded, size: 18),
                   color: isDark
-                      ? const Color(0xFF64748B)
-                      : const Color(0xFF94A3B8),
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
                   onPressed: () {
                     _searchController.clear();
                     setState(() {});
@@ -758,8 +756,9 @@ class _StandingsViewState extends State<StandingsView> {
     required int hiddenCount,
     required bool isDark,
     required AppLocalizations l10n,
-    required Color accentMint,
-    required Color cardBorderDark,
+    required Color primary,
+    required Color surfaceBg,
+    required Color cardBorder,
   }) {
     final isFavoritesActive = _activeTab == StandingsTab.favorites;
     final favTitle = l10n.translate('filter_favorites');
@@ -769,10 +768,10 @@ class _StandingsViewState extends State<StandingsView> {
       height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF141926) : const Color(0xFFE8EDF5),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? cardBorderDark : const Color(0xFFD8E0EC),
+          color: cardBorder,
           width: 0.8,
         ),
       ),
@@ -791,7 +790,7 @@ class _StandingsViewState extends State<StandingsView> {
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
                 decoration: BoxDecoration(
-                  color: isFavoritesActive ? accentMint : Colors.transparent,
+                  color: isFavoritesActive ? primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -804,10 +803,10 @@ class _StandingsViewState extends State<StandingsView> {
                             : Icons.star_border_rounded,
                         size: 18,
                         color: isFavoritesActive
-                            ? const Color(0xFFEAB308)
+                            ? Colors.white
                             : (isDark
-                                ? const Color(0xFF7E8B9F)
-                                : const Color(0xFF64748B)),
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -818,10 +817,10 @@ class _StandingsViewState extends State<StandingsView> {
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: isFavoritesActive
-                              ? const Color(0xFF0D1C18)
+                              ? Colors.white
                               : (isDark
-                                  ? const Color(0xFF7E8B9F)
-                                  : const Color(0xFF64748B)),
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -832,10 +831,10 @@ class _StandingsViewState extends State<StandingsView> {
                         ),
                         decoration: BoxDecoration(
                           color: isFavoritesActive
-                              ? const Color(0x28000000)
+                              ? Colors.black.withValues(alpha: 0.22)
                               : (isDark
-                                  ? const Color(0xFF1E2638)
-                                  : const Color(0xFFDCE3ED)),
+                                  ? AppColors.darkCard
+                                  : AppColors.lightCardElevated),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -844,10 +843,10 @@ class _StandingsViewState extends State<StandingsView> {
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: isFavoritesActive
-                                ? const Color(0xFF0D1C18)
+                                ? Colors.white
                                 : (isDark
-                                    ? const Color(0xFF7E8B9F)
-                                    : const Color(0xFF64748B)),
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary),
                           ),
                         ),
                       ),
@@ -871,7 +870,7 @@ class _StandingsViewState extends State<StandingsView> {
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
                 decoration: BoxDecoration(
-                  color: !isFavoritesActive ? accentMint : Colors.transparent,
+                  color: !isFavoritesActive ? primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -884,10 +883,10 @@ class _StandingsViewState extends State<StandingsView> {
                             : Icons.star_border_rounded,
                         size: 18,
                         color: !isFavoritesActive
-                            ? const Color(0xFFEAB308)
+                            ? Colors.white
                             : (isDark
-                                ? const Color(0xFF7E8B9F)
-                                : const Color(0xFF64748B)),
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -898,10 +897,10 @@ class _StandingsViewState extends State<StandingsView> {
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: !isFavoritesActive
-                              ? const Color(0xFF0D1C18)
+                              ? Colors.white
                               : (isDark
-                                  ? const Color(0xFF7E8B9F)
-                                  : const Color(0xFF64748B)),
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -912,10 +911,10 @@ class _StandingsViewState extends State<StandingsView> {
                         ),
                         decoration: BoxDecoration(
                           color: !isFavoritesActive
-                              ? const Color(0x28000000)
+                              ? Colors.black.withValues(alpha: 0.22)
                               : (isDark
-                                  ? const Color(0xFF1E2638)
-                                  : const Color(0xFFDCE3ED)),
+                                  ? AppColors.darkCard
+                                  : AppColors.lightCardElevated),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -924,10 +923,10 @@ class _StandingsViewState extends State<StandingsView> {
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: !isFavoritesActive
-                                ? const Color(0xFF0D1C18)
+                                ? Colors.white
                                 : (isDark
-                                    ? const Color(0xFF7E8B9F)
-                                    : const Color(0xFF64748B)),
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary),
                           ),
                         ),
                       ),
@@ -951,10 +950,8 @@ class _StandingsViewState extends State<StandingsView> {
     required bool isDark,
     required bool isArabic,
     required bool isSearching,
-    required Color cardBgDark,
-    required Color cardBgLight,
-    required Color cardBorderDark,
-    required Color cardBorderLight,
+    required Color cardBg,
+    required Color cardBorder,
     required VoidCallback onToggleStar,
   }) {
     final title = item.name;
@@ -968,10 +965,10 @@ class _StandingsViewState extends State<StandingsView> {
       key: key,
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isDark ? cardBgDark : cardBgLight,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? cardBorderDark : cardBorderLight,
+          color: cardBorder,
           width: 0.8,
         ),
       ),
@@ -1032,8 +1029,8 @@ class _StandingsViewState extends State<StandingsView> {
                         Icons.drag_indicator_rounded,
                         size: 20,
                         color: isDark
-                            ? const Color(0xFF475569)
-                            : const Color(0xFF94A3B8),
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
                       ),
                     ),
                   ),
@@ -1050,21 +1047,27 @@ class _StandingsViewState extends State<StandingsView> {
                           memCacheWidth: 68,
                           memCacheHeight: 68,
                           fit: BoxFit.contain,
-                          errorWidget: (_, __, ___) => const Icon(
+                          errorWidget: (_, __, ___) => Icon(
                             Icons.emoji_events_rounded,
                             size: 22,
-                            color: Color(0xFF64748B),
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
                           ),
-                          placeholder: (_, __) => const Icon(
+                          placeholder: (_, __) => Icon(
                             Icons.sports_soccer_rounded,
                             size: 20,
-                            color: Color(0xFF94A3B8),
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
                           ),
                         )
-                      : const Icon(
+                      : Icon(
                           Icons.emoji_events_rounded,
                           size: 22,
-                          color: Color(0xFF64748B),
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
                         ),
                 ),
                 const SizedBox(width: 14),
@@ -1079,8 +1082,8 @@ class _StandingsViewState extends State<StandingsView> {
                       fontSize: 14.5,
                       fontWeight: FontWeight.w600,
                       color: isDark
-                          ? const Color(0xFFF1F5F9)
-                          : const Color(0xFF0F172A),
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
                   ),
                 ),
@@ -1096,10 +1099,10 @@ class _StandingsViewState extends State<StandingsView> {
                           ? Icons.star_rounded
                           : Icons.star_border_rounded,
                       color: isFavorite
-                          ? const Color(0xFFFBBF24)
+                          ? AppColors.yellowCard
                           : (isDark
-                              ? const Color(0xFF64748B)
-                              : const Color(0xFF94A3B8)),
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted),
                       size: 24,
                     ),
                   ),
@@ -1116,6 +1119,9 @@ class _StandingsViewState extends State<StandingsView> {
     required bool isFavorites,
     required bool isSearching,
     required bool isDark,
+    required Color cardBg,
+    required Color cardBorder,
+    required Color primary,
     required AppLocalizations l10n,
   }) {
     if (isSearching) {
@@ -1128,7 +1134,7 @@ class _StandingsViewState extends State<StandingsView> {
               Icon(
                 Icons.search_off_rounded,
                 size: 48,
-                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               ),
               const SizedBox(height: 12),
               Text(
@@ -1152,10 +1158,10 @@ class _StandingsViewState extends State<StandingsView> {
         margin: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF161C2A) : Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? const Color(0xFF1E283C) : const Color(0xFFE5E9F2),
+            color: cardBorder,
           ),
         ),
         child: Column(
@@ -1165,14 +1171,14 @@ class _StandingsViewState extends State<StandingsView> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isFavorites
-                    ? Colors.amber.withValues(alpha: 0.15)
-                    : const Color(0xFF2FD6B2).withValues(alpha: 0.15),
+                    ? AppColors.yellowCard.withValues(alpha: 0.15)
+                    : primary.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 isFavorites ? Icons.star_rounded : Icons.visibility_off_rounded,
                 size: 36,
-                color: isFavorites ? Colors.amber : const Color(0xFF2FD6B2),
+                color: isFavorites ? AppColors.yellowCard : primary,
               ),
             ),
             const SizedBox(height: 14),
@@ -1201,8 +1207,8 @@ class _StandingsViewState extends State<StandingsView> {
               style: TextStyle(
                 fontSize: 13,
                 color: isDark
-                    ? const Color(0xFF7E8B9F)
-                    : const Color(0xFF64748B),
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
               ),
             ),
           ],
@@ -1213,8 +1219,8 @@ class _StandingsViewState extends State<StandingsView> {
 
   Widget _buildLoadingSkeletons(
     bool isDark,
-    Color cardBgDark,
-    Color cardBorderDark,
+    Color cardBg,
+    Color cardBorder,
   ) {
     return Skeletonizer(
       enabled: true,
@@ -1225,10 +1231,10 @@ class _StandingsViewState extends State<StandingsView> {
             margin: const EdgeInsets.only(bottom: 8),
             height: 56,
             decoration: BoxDecoration(
-              color: isDark ? cardBgDark : Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDark ? cardBorderDark : const Color(0xFFE5E9F2),
+                color: cardBorder,
               ),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -1239,8 +1245,8 @@ class _StandingsViewState extends State<StandingsView> {
                   height: 34,
                   decoration: BoxDecoration(
                     color: isDark
-                        ? const Color(0xFF1E283C)
-                        : const Color(0xFFE5E9F2),
+                        ? AppColors.darkSurface
+                        : AppColors.lightCardElevated,
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
@@ -1250,8 +1256,8 @@ class _StandingsViewState extends State<StandingsView> {
                     height: 14,
                     decoration: BoxDecoration(
                       color: isDark
-                          ? const Color(0xFF1E283C)
-                          : const Color(0xFFE5E9F2),
+                          ? AppColors.darkSurface
+                          : AppColors.lightCardElevated,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
