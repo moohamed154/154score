@@ -144,8 +144,9 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
               rawPlayer['name']?.toString() ??
               '';
           playerNum = int.tryParse(rawPlayer['pn']?.toString() ?? '');
-          playerPhoto =
-              UrlHelper.normalizeImageUrl(rawPlayer['image']?.toString());
+          playerPhoto = UrlHelper.normalizePlayerPhotoUrl(
+            rawPlayer['image']?.toString() ?? rawPlayer['id']?.toString(),
+          );
           playerShortName = rawPlayer['short_title']?.toString();
         } else {
           playerName = e['text']?.toString() ??
@@ -154,8 +155,9 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
               rawPlayer?.toString() ??
               '';
           playerNum = int.tryParse(e['player_number']?.toString() ?? '');
-          playerPhoto =
-              UrlHelper.normalizeImageUrl(e['player_photo']?.toString());
+          playerPhoto = UrlHelper.normalizePlayerPhotoUrl(
+            e['player_photo']?.toString() ?? e['player_id']?.toString(),
+          );
           playerShortName = e['player_short_name']?.toString();
         }
 
@@ -168,8 +170,9 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           secondaryName = rawAssist['title']?.toString() ??
               rawAssist['name']?.toString();
           secondaryNum = int.tryParse(rawAssist['pn']?.toString() ?? '');
-          secondaryPhoto =
-              UrlHelper.normalizeImageUrl(rawAssist['image']?.toString());
+          secondaryPhoto = UrlHelper.normalizePlayerPhotoUrl(
+            rawAssist['image']?.toString() ?? rawAssist['id']?.toString(),
+          );
           secondaryShortName = rawAssist['short_title']?.toString();
         } else {
           secondaryName = e['subtitle']?.toString() ??
@@ -178,8 +181,11 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
               e['secondary_player']?.toString();
           secondaryNum =
               int.tryParse(e['assist_player_number']?.toString() ?? '');
-          secondaryPhoto =
-              UrlHelper.normalizeImageUrl(e['assist_player_photo']?.toString());
+          secondaryPhoto = UrlHelper.normalizePlayerPhotoUrl(
+            e['assist_player_photo']?.toString() ??
+                e['substitute_out_photo']?.toString() ??
+                e['assist_player_id']?.toString(),
+          );
           secondaryShortName = e['assist_player_short_name']?.toString();
         }
 
@@ -198,6 +204,33 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             e['is_start_end'] == 1 ||
             e['type'] == 'start-end-match' ||
             isPeriodMarker;
+
+        if (isStartEnd || isPeriodMarker) {
+          final statusVal = int.tryParse(e['status']?.toString() ?? '');
+          final minuteVal = parsedMinute.mainMinute;
+          if (statusVal == 1 ||
+              (minuteVal == 0 &&
+                  (playerName.isEmpty || playerName == 'نهاية الشوط'))) {
+            playerName = 'بداية الشوط الأول';
+          } else if (statusVal == 2) {
+            playerName = 'نهاية الشوط الأول';
+          } else if (statusVal == 3) {
+            playerName = 'بداية الشوط الثاني';
+          } else if (statusVal == 4 ||
+              (minuteVal >= 90 && playerName == 'نهاية الشوط')) {
+            playerName = 'نهاية المباراة';
+          } else if (statusVal == 5) {
+            playerName = 'بداية الشوط الإضافي الأول';
+          } else if (statusVal == 6) {
+            playerName = 'نهاية الشوط الإضافي الأول';
+          } else if (statusVal == 7) {
+            playerName = 'بداية الشوط الإضافي الثاني';
+          } else if (statusVal == 8) {
+            playerName = 'نهاية الشوط الإضافي الثاني';
+          } else if (statusVal == 9) {
+            playerName = 'ركلات الترجيح';
+          }
+        }
 
         final typeStr =
             e['type']?.toString() ?? (isStartEnd ? 'start-end-match' : 'event');
@@ -1380,10 +1413,11 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       map['formation_position']?.toString() ?? '',
     );
 
-    final photo = UrlHelper.normalizeImageUrl(
+    final photo = UrlHelper.normalizePlayerPhotoUrl(
       map['photo']?.toString() ??
           map['image']?.toString() ??
-          pMap?['image']?.toString(),
+          pMap?['image']?.toString() ??
+          id,
     );
 
     final rating = map['rating']?.toString();

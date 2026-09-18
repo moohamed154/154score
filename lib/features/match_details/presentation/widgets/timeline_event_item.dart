@@ -64,27 +64,26 @@ class TimelineEventItem extends StatelessWidget {
             const SizedBox(width: 6),
             Flexible(
               child: Text(
-                event.playerName.isNotEmpty
-                    ? event.playerName
-                    : _localizeEventType(event.type, l10n),
-                style:
-                    AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
+                _getPeriodLabel(event, l10n, isArabic),
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             if (event.minute.isNotEmpty &&
                 !event.minute.contains('-') &&
-                event.minute != '0') ...[
+                event.minute != '0' &&
+                event.minute != '0\'' &&
+                !_isFirstHalfStart(event)) ...[
               const SizedBox(width: 6),
               Text(
                 '(${MatchEventHelper.sanitizeMinute(event.minute)}\')',
@@ -520,12 +519,15 @@ class TimelineEventItem extends StatelessWidget {
     bool isDark, {
     double size = 22,
   }) {
-    if (photo != null && photo.isNotEmpty && UrlHelper.isValidImageUrl(photo)) {
+    final normalizedPhoto = UrlHelper.normalizePlayerPhotoUrl(photo);
+    if (normalizedPhoto != null &&
+        normalizedPhoto.isNotEmpty &&
+        UrlHelper.isValidImageUrl(normalizedPhoto)) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: ClipOval(
           child: AppImage(
-            imageUrl: photo,
+            imageUrl: normalizedPhoto,
             width: size,
             height: size,
             fit: BoxFit.cover,
@@ -577,9 +579,60 @@ class TimelineEventItem extends StatelessWidget {
         lower.contains('منتصف المباراة') ||
         lower.contains('بدأت المباراة') ||
         lower.contains('انتهت المباراة') ||
+        lower.contains('بداية الشوط') ||
         lower.contains('نهاية الشوط') ||
+        lower.contains('نهاية المباراة') ||
         lower == 'ht' ||
         lower == 'ft';
+  }
+
+  String _getPeriodLabel(
+    MatchEventEntity event,
+    AppLocalizations l10n,
+    bool isArabic,
+  ) {
+    final name = event.playerName;
+    if (name.contains('بداية الشوط الأول') ||
+        name.toLowerCase().contains('first half start')) {
+      return isArabic ? 'بداية الشوط الأول' : 'First Half Start';
+    }
+    if (name.contains('نهاية الشوط الأول') ||
+        name.toLowerCase().contains('first half end')) {
+      return isArabic ? 'نهاية الشوط الأول' : 'First Half End';
+    }
+    if (name.contains('بداية الشوط الثاني') ||
+        name.toLowerCase().contains('second half start')) {
+      return isArabic ? 'بداية الشوط الثاني' : 'Second Half Start';
+    }
+    if (name.contains('نهاية المباراة') ||
+        name.toLowerCase().contains('full time') ||
+        name.contains('انتهت المباراة')) {
+      return isArabic ? 'نهاية المباراة' : 'Full Time';
+    }
+    if (name.contains('بداية الشوط الإضافي الأول')) {
+      return isArabic ? 'بداية الشوط الإضافي الأول' : 'Extra Time 1st Half Start';
+    }
+    if (name.contains('نهاية الشوط الإضافي الأول')) {
+      return isArabic ? 'نهاية الشوط الإضافي الأول' : 'Extra Time 1st Half End';
+    }
+    if (name.contains('بداية الشوط الإضافي الثاني')) {
+      return isArabic ? 'بداية الشوط الإضافي الثاني' : 'Extra Time 2nd Half Start';
+    }
+    if (name.contains('نهاية الشوط الإضافي الثاني')) {
+      return isArabic ? 'نهاية الشوط الإضافي الثاني' : 'Extra Time 2nd Half End';
+    }
+    if (name.contains('ركلات الترجيح')) {
+      return isArabic ? 'ركلات الترجيح' : 'Penalty Shootout';
+    }
+    if (name.isNotEmpty) return name;
+    return _localizeEventType(event.type, l10n);
+  }
+
+  bool _isFirstHalfStart(MatchEventEntity event) {
+    return event.minute == '0' ||
+        event.minute == '0\'' ||
+        event.playerName.contains('بداية الشوط الأول') ||
+        event.playerName.toLowerCase().contains('first half start');
   }
 
   String _localizeEventType(String type, AppLocalizations l10n) {

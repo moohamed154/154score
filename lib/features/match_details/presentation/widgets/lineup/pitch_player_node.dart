@@ -66,10 +66,12 @@ class PitchPlayerNode extends StatelessWidget {
                     ],
                   ),
                   child: ClipOval(
-                    child: (player.photo != null &&
-                            UrlHelper.isValidImageUrl(player.photo))
+                    child: (UrlHelper.normalizePlayerPhotoUrl(player.photo) != null &&
+                            UrlHelper.isValidImageUrl(
+                              UrlHelper.normalizePlayerPhotoUrl(player.photo),
+                            ))
                         ? CachedNetworkImage(
-                            imageUrl: player.photo!,
+                            imageUrl: UrlHelper.normalizePlayerPhotoUrl(player.photo)!,
                             width: 44,
                             height: 44,
                             fit: BoxFit.cover,
@@ -322,10 +324,12 @@ class PitchPlayerNode extends StatelessWidget {
                         border: Border.all(color: AppColors.primary, width: 2),
                       ),
                       child: ClipOval(
-                        child: (p.photo != null &&
-                                UrlHelper.isValidImageUrl(p.photo))
-                            ? CachedNetworkImage(
-                                imageUrl: p.photo!,
+                        child: (UrlHelper.normalizePlayerPhotoUrl(p.photo) != null &&
+                              UrlHelper.isValidImageUrl(
+                                UrlHelper.normalizePlayerPhotoUrl(p.photo),
+                              ))
+                          ? CachedNetworkImage(
+                              imageUrl: UrlHelper.normalizePlayerPhotoUrl(p.photo)!,
                                 width: 60,
                                 height: 60,
                                 fit: BoxFit.cover,

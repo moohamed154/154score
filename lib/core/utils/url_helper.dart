@@ -55,6 +55,41 @@ class UrlHelper {
     return trimmed;
   }
 
+  /// Specifically normalizes player photo URLs from the API.
+  /// Handles bare filenames, player IDs, and redirects any accidental /teams/ URLs to /player/.
+  static String? normalizePlayerPhotoUrl(String? url, {int size = 150}) {
+    if (url == null) return null;
+    final trimmed = url.trim();
+    if (trimmed.isEmpty ||
+        trimmed == 'null' ||
+        trimmed == 'undefined' ||
+        trimmed == '0' ||
+        trimmed == '-1') {
+      return null;
+    }
+
+    // Bare numeric filename (e.g. "751690196981.png")
+    if (RegExp(r'^\d+\.(png|jpg|jpeg|webp)$', caseSensitive: false).hasMatch(trimmed)) {
+      return 'https://imgs.ysscores.com/player/$size/$trimmed';
+    }
+
+    // Bare numeric ID (e.g. "561198")
+    if (RegExp(r'^\d+$').hasMatch(trimmed)) {
+      return 'https://imgs.ysscores.com/player/$size/$trimmed.png';
+    }
+
+    // If it's already a full CDN URL pointing to /teams/, redirect to /player/
+    if (trimmed.contains('imgs.ysscores.com/teams/')) {
+      final fixed = trimmed.replaceAll(
+        RegExp(r'imgs\.ysscores\.com/teams/\d+/'),
+        'imgs.ysscores.com/player/$size/',
+      );
+      return normalizeImageUrl(fixed);
+    }
+
+    return normalizeImageUrl(trimmed);
+  }
+
   /// Checks if a normalized URL is a valid web image URL.
   static bool isValidImageUrl(String? url) {
     final normalized = normalizeImageUrl(url);
