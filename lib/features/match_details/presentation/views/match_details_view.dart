@@ -147,6 +147,137 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     return '';
   }
 
+  MatchEntity _resolveActiveMatch({
+    required MatchEntity fallbackMatch,
+    MatchEntity? liveFromMatches,
+    required MatchDetailsState state,
+  }) {
+    // 1. Resolve Team 1 (Home)
+    String effectiveTeam1 = fallbackMatch.team1;
+    if (effectiveTeam1 == 'Home Team' || effectiveTeam1.isEmpty || effectiveTeam1 == 'الفريق الأول') {
+      final fromOverview = state.overview?.homeTeamName?.trim();
+      final fromLineup = state.lineup?.home?.displayName.trim();
+      final fromSections = _extractTeamNameFromDetails(state.details, isHome: true);
+      if (fromOverview != null && fromOverview.isNotEmpty) {
+        effectiveTeam1 = fromOverview;
+      } else if (fromLineup != null && fromLineup.isNotEmpty) {
+        effectiveTeam1 = fromLineup;
+      } else if (fromSections != null && fromSections.isNotEmpty) {
+        effectiveTeam1 = fromSections;
+      }
+    }
+
+    // 2. Resolve Team 2 (Away)
+    String effectiveTeam2 = fallbackMatch.team2;
+    if (effectiveTeam2 == 'Away Team' || effectiveTeam2.isEmpty || effectiveTeam2 == 'الفريق الثاني') {
+      final fromOverview = state.overview?.awayTeamName?.trim();
+      final fromLineup = state.lineup?.away?.displayName.trim();
+      final fromSections = _extractTeamNameFromDetails(state.details, isHome: false);
+      if (fromOverview != null && fromOverview.isNotEmpty) {
+        effectiveTeam2 = fromOverview;
+      } else if (fromLineup != null && fromLineup.isNotEmpty) {
+        effectiveTeam2 = fromLineup;
+      } else if (fromSections != null && fromSections.isNotEmpty) {
+        effectiveTeam2 = fromSections;
+      }
+    }
+
+    // 3. Resolve Team IDs
+    final effectiveTeam1Id = fallbackMatch.team1Id ??
+        state.overview?.homeTeamId ??
+        state.lineup?.home?.teamId;
+    final effectiveTeam2Id = fallbackMatch.team2Id ??
+        state.overview?.awayTeamId ??
+        state.lineup?.away?.teamId;
+
+    // 4. Resolve Logos
+    final effectiveLogo1 = fallbackMatch.team1Logo ??
+        state.overview?.homeTeamLogo ??
+        state.lineup?.home?.teamLogo ??
+        (effectiveTeam1Id != null ? UrlHelper.resolveTeamLogo(effectiveTeam1Id) : null);
+
+    final effectiveLogo2 = fallbackMatch.team2Logo ??
+        state.overview?.awayTeamLogo ??
+        state.lineup?.away?.teamLogo ??
+        (effectiveTeam2Id != null ? UrlHelper.resolveTeamLogo(effectiveTeam2Id) : null);
+
+    // 5. Resolve Scores
+    String? effectiveScore1 = state.liveScore1 ??
+        liveFromMatches?.score1 ??
+        fallbackMatch.score1 ??
+        state.overview?.score1;
+    String? effectiveScore2 = state.liveScore2 ??
+        liveFromMatches?.score2 ??
+        fallbackMatch.score2 ??
+        state.overview?.score2;
+
+    if ((effectiveScore1 == null || effectiveScore2 == null) && state.events.isNotEmpty) {
+      int hGoals = 0;
+      int aGoals = 0;
+      bool hasGoals = false;
+      for (final e in state.events) {
+        final t = e.type.toLowerCase();
+        if ((t == 'goal' || t.contains('goal')) && !t.contains('disallow') && !t.contains('miss')) {
+          hasGoals = true;
+          if (e.isHomeTeam) {
+            hGoals++;
+          } else {
+            aGoals++;
+          }
+        }
+      }
+      if (hasGoals) {
+        effectiveScore1 ??= hGoals.toString();
+        effectiveScore2 ??= aGoals.toString();
+      }
+    }
+
+    // 6. Resolve League Info
+    final effectiveLeagueTitle = (fallbackMatch.leagueTitle != null && fallbackMatch.leagueTitle!.isNotEmpty)
+        ? fallbackMatch.leagueTitle
+        : (state.overview?.championshipTitle ?? _getEffectiveLeagueTitle(fallbackMatch, state));
+
+    final effectiveLeagueId = state.championshipId ??
+        state.overview?.championshipId ??
+        fallbackMatch.leagueId ??
+        LeagueResolver.resolveId(effectiveLeagueTitle ?? '');
+
+    final effectiveLeagueLogo = fallbackMatch.leagueLogo ??
+        state.overview?.championshipLogo ??
+        UrlHelper.resolveChampionshipLogo(effectiveLeagueId);
+
+    // 7. Status & Time
+    final effectiveStatus = state.liveStatus ??
+        liveFromMatches?.status ??
+        fallbackMatch.status ??
+        state.overview?.status;
+
+    final effectiveStatusCode = state.liveStatusCode ??
+        liveFromMatches?.statusCode ??
+        fallbackMatch.statusCode;
+
+    final effectiveTime = fallbackMatch.time ?? state.overview?.time;
+
+    return fallbackMatch.copyWith(
+      team1: effectiveTeam1,
+      team2: effectiveTeam2,
+      team1Logo: effectiveLogo1,
+      team2Logo: effectiveLogo2,
+      team1Id: effectiveTeam1Id,
+      team2Id: effectiveTeam2Id,
+      score1: effectiveScore1,
+      score2: effectiveScore2,
+      penaltyScore1: state.livePenaltyScore1 ?? liveFromMatches?.penaltyScore1 ?? fallbackMatch.penaltyScore1,
+      penaltyScore2: state.livePenaltyScore2 ?? liveFromMatches?.penaltyScore2 ?? fallbackMatch.penaltyScore2,
+      status: effectiveStatus,
+      statusCode: effectiveStatusCode,
+      time: effectiveTime,
+      leagueTitle: effectiveLeagueTitle,
+      leagueId: effectiveLeagueId,
+      leagueLogo: effectiveLeagueLogo,
+    );
+  }
+
   Future<void> _handleRefresh() async {
     final completer = Completer<void>();
     context.read<MatchDetailsBloc>().add(
@@ -173,15 +304,19 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         ? effectiveTitle
         : (isArabic ? 'مركز المباراة' : 'Match Center');
 
-    final effectiveLogo = match.leagueLogo;
+    final effectiveLeagueId = state.championshipId ??
+        match.leagueId ??
+        LeagueResolver.resolveId(effectiveTitle);
+
+    final effectiveLogo = match.leagueLogo ??
+        UrlHelper.resolveChampionshipLogo(effectiveLeagueId);
 
     return InkWell(
       borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
       onTap: () {
-        if (match.leagueId != null || effectiveTitle.isNotEmpty) {
-          final lId = match.leagueId ??
-              LeagueResolver.resolveId(effectiveTitle) ??
-              '937599';
+        final lId = effectiveLeagueId ??
+            LeagueResolver.resolveId(displayTitle);
+        if (lId != null && lId.isNotEmpty) {
           context.push(
             '/league/$lId',
             extra: {'title': displayTitle, 'logo': effectiveLogo},
@@ -285,11 +420,15 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           },
         ),
         title: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
-          buildWhen: (prev, curr) => prev.details != curr.details,
           builder: (context, state) {
+            final activeMatch = _resolveActiveMatch(
+              fallbackMatch: fallbackMatch,
+              liveFromMatches: liveFromMatches,
+              state: state,
+            );
             return _buildAppBarLeagueBadge(
               context,
-              fallbackMatch,
+              activeMatch,
               state,
               isDark,
               isArabic,
@@ -311,10 +450,19 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                     ),
                   ),
                 )
-              : IconButton(
-                  icon: const Icon(Icons.share_rounded),
-                  tooltip: isArabic ? 'مشاركة المباراة' : 'Share Match',
-                  onPressed: () => _shareMatch(fallbackMatch, l10n),
+              : BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
+                  builder: (context, state) {
+                    final activeMatch = _resolveActiveMatch(
+                      fallbackMatch: fallbackMatch,
+                      liveFromMatches: liveFromMatches,
+                      state: state,
+                    );
+                    return IconButton(
+                      icon: const Icon(Icons.share_rounded),
+                      tooltip: isArabic ? 'مشاركة المباراة' : 'Share Match',
+                      onPressed: () => _shareMatch(activeMatch, l10n),
+                    );
+                  },
                 ),
         ],
       ),
@@ -324,6 +472,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
           child: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
             builder: (context, state) {
+              final activeMatch = _resolveActiveMatch(
+                fallbackMatch: fallbackMatch,
+                liveFromMatches: liveFromMatches,
+                state: state,
+              );
               return Column(
                 children: [
                   // ── Top Score Hero Banner ──────────────────────────────────
@@ -341,16 +494,16 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                       duration: const Duration(milliseconds: 1500),
                     ),
                     child: MatchHeaderBanner(
-                      match: fallbackMatch,
-                      liveScore1: state.liveScore1 ?? liveFromMatches?.score1,
-                      liveScore2: state.liveScore2 ?? liveFromMatches?.score2,
-                      liveStatus: state.liveStatus ?? liveFromMatches?.status,
-                      liveStatusCode: state.liveStatusCode ?? liveFromMatches?.statusCode,
-                      liveMinute: state.liveMinute ?? liveFromMatches?.minute,
-                      liveExtraTime: state.liveExtraTime ?? liveFromMatches?.extraTime,
-                      livePeriod: state.livePeriod ?? liveFromMatches?.period,
-                      penaltyScore1: state.livePenaltyScore1 ?? liveFromMatches?.penaltyScore1 ?? fallbackMatch.penaltyScore1,
-                      penaltyScore2: state.livePenaltyScore2 ?? liveFromMatches?.penaltyScore2 ?? fallbackMatch.penaltyScore2,
+                      match: activeMatch,
+                      liveScore1: activeMatch.score1,
+                      liveScore2: activeMatch.score2,
+                      liveStatus: activeMatch.status,
+                      liveStatusCode: activeMatch.statusCode,
+                      liveMinute: state.liveMinute ?? liveFromMatches?.minute ?? activeMatch.minute,
+                      liveExtraTime: state.liveExtraTime ?? liveFromMatches?.extraTime ?? activeMatch.extraTime,
+                      livePeriod: state.livePeriod ?? liveFromMatches?.period ?? activeMatch.period,
+                      penaltyScore1: activeMatch.penaltyScore1,
+                      penaltyScore2: activeMatch.penaltyScore2,
                     ),
                   ),
 
@@ -404,7 +557,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                               _buildEventsTab(
                                 context,
                                 state,
-                                fallbackMatch,
+                                activeMatch,
                                 isDark,
                                 isArabic,
                               ),
@@ -413,6 +566,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                               _buildDetailsTab(
                                 context,
                                 state,
+                                activeMatch,
                                 isDark,
                                 isArabic,
                               ),
@@ -424,12 +578,19 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                               _buildStatsTab(
                                 context,
                                 state,
+                                activeMatch,
                                 isDark,
                                 isArabic,
                               ),
 
                               // 5. الترتيب (Standings)
-                              _buildStandingsTab(context, state, isDark, isArabic),
+                              _buildStandingsTab(
+                                context,
+                                state,
+                                activeMatch,
+                                isDark,
+                                isArabic,
+                              ),
 
                               // 6. الأخبار (News)
                               _buildNewsTab(context, state, isDark, isArabic),
@@ -1209,6 +1370,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   Widget _buildDetailsTab(
     BuildContext context,
     MatchDetailsState state,
+    MatchEntity match,
     bool isDark,
     bool isArabic,
   ) {
@@ -1220,9 +1382,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     final overview = state.overview;
     final detailsList = List<MatchInfoSectionEntity>.from(state.details);
 
-    if (widget.initialMatch != null) {
-      final m = widget.initialMatch!;
+    final m = (match.team1 != 'Home Team' && match.team1.isNotEmpty)
+        ? match
+        : (widget.initialMatch ?? match);
 
+    if (m.team1 != 'Home Team' || widget.initialMatch != null) {
       final fallbackItems = <MatchInfoItemEntity>[];
       if (m.leagueTitle != null && m.leagueTitle!.isNotEmpty) {
         fallbackItems.add(
@@ -1341,10 +1505,14 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       );
     }
 
-    final homeTeamName = widget.initialMatch?.team1 ??
-        _extractTeamNameFromDetails(detailsList, isHome: true);
-    final awayTeamName = widget.initialMatch?.team2 ??
-        _extractTeamNameFromDetails(detailsList, isHome: false);
+    final homeTeamName = (match.team1.isNotEmpty && match.team1 != 'Home Team')
+        ? match.team1
+        : (widget.initialMatch?.team1 ??
+            _extractTeamNameFromDetails(detailsList, isHome: true));
+    final awayTeamName = (match.team2.isNotEmpty && match.team2 != 'Away Team')
+        ? match.team2
+        : (widget.initialMatch?.team2 ??
+            _extractTeamNameFromDetails(detailsList, isHome: false));
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -1463,6 +1631,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   Widget _buildStatsTab(
     BuildContext context,
     MatchDetailsState state,
+    MatchEntity match,
     bool isDark,
     bool isArabic,
   ) {
@@ -1493,10 +1662,14 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       );
     }
 
-    final homeName = widget.initialMatch?.team1 ?? (isArabic ? 'صاحب الأرض' : 'Home');
-    final awayName = widget.initialMatch?.team2 ?? (isArabic ? 'الضيف' : 'Away');
-    final homeLogo = widget.initialMatch?.team1Logo;
-    final awayLogo = widget.initialMatch?.team2Logo;
+    final homeName = (match.team1.isNotEmpty && match.team1 != 'Home Team')
+        ? match.team1
+        : (widget.initialMatch?.team1 ?? (isArabic ? 'صاحب الأرض' : 'Home'));
+    final awayName = (match.team2.isNotEmpty && match.team2 != 'Away Team')
+        ? match.team2
+        : (widget.initialMatch?.team2 ?? (isArabic ? 'الضيف' : 'Away'));
+    final homeLogo = match.team1Logo ?? widget.initialMatch?.team1Logo;
+    final awayLogo = match.team2Logo ?? widget.initialMatch?.team2Logo;
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -1744,12 +1917,16 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     return list;
   }
 
-  String? _resolveLeagueId() {
-    final rawId = widget.initialMatch?.leagueId;
+  String? _resolveLeagueId([MatchEntity? match]) {
+    final rawId = match?.leagueId ?? widget.initialMatch?.leagueId;
     if (rawId != null && rawId.isNotEmpty && rawId != 'null') {
       return rawId;
     }
-    final title = widget.initialMatch?.leagueTitle?.toLowerCase() ?? '';
+    final title = (match?.leagueTitle ?? widget.initialMatch?.leagueTitle ?? '').toLowerCase();
+    final resolved = LeagueResolver.resolveId(title);
+    if (resolved != null && resolved.isNotEmpty) {
+      return resolved;
+    }
     if (title.contains('إسباني') ||
         title.contains('laliga') ||
         title.contains('spain')) {
@@ -1796,10 +1973,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   Widget _buildStandingsTab(
     BuildContext context,
     MatchDetailsState state,
+    MatchEntity match,
     bool isDark,
     bool isArabic,
   ) {
-    final leagueId = state.championshipId ?? _resolveLeagueId();
+    final leagueId = state.championshipId ??
+        match.leagueId ??
+        _resolveLeagueId(match);
 
     if (leagueId == null) {
       return RefreshIndicator(

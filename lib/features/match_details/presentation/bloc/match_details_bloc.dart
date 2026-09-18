@@ -186,9 +186,35 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
       final resolvedLineup = lineupsRes ?? state.lineup;
       final resolvedChampionshipId =
-          eventsPayloadRes.championshipId ?? state.championshipId;
+          eventsPayloadRes.championshipId ??
+          resolvedOverview?.championshipId ??
+          state.championshipId;
       final resolvedHalfScores =
           eventsPayloadRes.halfScores ?? state.halfScores;
+
+      String? calculatedScore1 = state.liveScore1;
+      String? calculatedScore2 = state.liveScore2;
+      if ((calculatedScore1 == null || calculatedScore2 == null) && resolvedEvents.isNotEmpty) {
+        int g1 = 0;
+        int g2 = 0;
+        bool hasGoals = false;
+        for (final ev in resolvedEvents) {
+          if (ev.type.toLowerCase().contains('goal')) {
+            hasGoals = true;
+            if (ev.isHomeTeam) {
+              g1++;
+            } else {
+              g2++;
+            }
+          }
+        }
+        if (hasGoals) {
+          calculatedScore1 ??= g1.toString();
+          calculatedScore2 ??= g2.toString();
+        }
+      }
+      calculatedScore1 ??= resolvedOverview?.score1;
+      calculatedScore2 ??= resolvedOverview?.score2;
 
       emit(
         state.copyWith(
@@ -203,6 +229,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           lineup: resolvedLineup,
           championshipId: resolvedChampionshipId,
           halfScores: resolvedHalfScores,
+          liveScore1: calculatedScore1,
+          liveScore2: calculatedScore2,
+          liveStatus: state.liveStatus ?? resolvedOverview?.status,
           errorMessage: null,
         ),
       );

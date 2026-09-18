@@ -838,8 +838,56 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         }
       }
 
+      final homeName = map['home_team']?['name']?.toString() ??
+          map['home_team']?['title']?.toString() ??
+          map['home_team']?['full_name']?.toString() ??
+          secHome;
+      final awayName = map['away_team']?['name']?.toString() ??
+          map['away_team']?['title']?.toString() ??
+          map['away_team']?['full_name']?.toString() ??
+          secAway;
+      final homeLogo = UrlHelper.normalizeImageUrl(
+          map['home_team']?['logo']?.toString() ??
+          map['home_team']?['image']?.toString());
+      final awayLogo = UrlHelper.normalizeImageUrl(
+          map['away_team']?['logo']?.toString() ??
+          map['away_team']?['image']?.toString());
+      final homeId = map['home_team']?['id']?.toString() ??
+          map['home_team']?['row_id']?.toString();
+      final awayId = map['away_team']?['id']?.toString() ??
+          map['away_team']?['row_id']?.toString();
+
+      final champId = map['championship']?['id']?.toString() ??
+          map['championship']?['url_id']?.toString();
+      final champTitle = map['championship']?['title']?.toString() ??
+          map['championship']?['name']?.toString();
+      final champLogo = UrlHelper.normalizeImageUrl(
+          map['championship']?['image']?.toString() ??
+          map['championship']?['logo']?.toString()) ??
+          UrlHelper.resolveChampionshipLogo(champId);
+
+      final score1 = map['home_scores']?.toString() ?? map['score1']?.toString();
+      final score2 = map['away_scores']?.toString() ?? map['score2']?.toString();
+      final status = map['status']?.toString();
+      final time = map['time']?.toString();
+      final round = map['round']?.toString();
+
       return MatchOverviewDataEntity(
         matchId: matchId,
+        homeTeamName: homeName,
+        awayTeamName: awayName,
+        homeTeamLogo: homeLogo,
+        awayTeamLogo: awayLogo,
+        homeTeamId: homeId,
+        awayTeamId: awayId,
+        championshipId: champId,
+        championshipTitle: champTitle,
+        championshipLogo: champLogo,
+        score1: score1,
+        score2: score2,
+        status: status,
+        time: time,
+        round: round,
         stadiumName: map['venue']?['name']?.toString(),
         stadiumId: map['venue']?['id']?.toString(),
         returnLeg: returnLeg,
@@ -943,6 +991,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
 
     return MatchOverviewDataEntity(
       matchId: matchId,
+      homeTeamName: secHome,
+      awayTeamName: secAway,
       h2hSummary: h2h,
       returnLeg: returnLeg,
     );

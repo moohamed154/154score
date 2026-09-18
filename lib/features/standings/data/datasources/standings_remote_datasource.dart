@@ -30,8 +30,21 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
     final legends = <StandingLegendEntity>[];
     String leagueName = 'League Standings';
 
-    if (response is Map && response['data'] is Map) {
-      final data = response['data'] as Map;
+    dynamic dataNode;
+    if (response is Map) {
+      if (response['data'] is Map) {
+        dataNode = response['data'] as Map;
+      } else if (response['data'] is List) {
+        dataNode = {'table': response['data']};
+      } else {
+        dataNode = response;
+      }
+    } else if (response is List) {
+      dataNode = {'table': response};
+    }
+
+    if (dataNode is Map) {
+      final data = dataNode;
       final raw = (data['raw'] is Map) ? (data['raw'] as Map) : data;
 
       if (data['league_name'] != null &&
@@ -51,7 +64,10 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         // Check if items have meaningful team data (not just color stubs)
         final hasTeamData = tableList.any((item) =>
             item is Map &&
-            (item['team_name'] != null || item['team_id'] != null));
+            (item['team_name'] != null ||
+             item['team_id'] != null ||
+             item['team'] != null ||
+             item['name'] != null));
 
         if (hasTeamData) {
           for (int i = 0; i < tableList.length; i++) {

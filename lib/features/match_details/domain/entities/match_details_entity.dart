@@ -35,6 +35,7 @@ class MatchEventEntity extends Equatable {
   });
 
   bool get hasVideo => videoUrl != null && videoUrl!.trim().isNotEmpty;
+  bool get isHome => isHomeTeam;
 
   MatchEventEntity copyWith({
     String? minute,
@@ -793,6 +794,20 @@ class MatchRefereeItemEntity extends Equatable {
 
 class MatchOverviewDataEntity extends Equatable {
   final String matchId;
+  final String? homeTeamName;
+  final String? awayTeamName;
+  final String? homeTeamLogo;
+  final String? awayTeamLogo;
+  final String? homeTeamId;
+  final String? awayTeamId;
+  final String? championshipId;
+  final String? championshipTitle;
+  final String? championshipLogo;
+  final String? score1;
+  final String? score2;
+  final String? status;
+  final String? time;
+  final String? round;
   final String? stadiumName;
   final String? stadiumId;
   final MatchReturnLegEntity? returnLeg;
@@ -804,6 +819,20 @@ class MatchOverviewDataEntity extends Equatable {
 
   const MatchOverviewDataEntity({
     required this.matchId,
+    this.homeTeamName,
+    this.awayTeamName,
+    this.homeTeamLogo,
+    this.awayTeamLogo,
+    this.homeTeamId,
+    this.awayTeamId,
+    this.championshipId,
+    this.championshipTitle,
+    this.championshipLogo,
+    this.score1,
+    this.score2,
+    this.status,
+    this.time,
+    this.round,
     this.stadiumName,
     this.stadiumId,
     this.returnLeg,
@@ -817,6 +846,20 @@ class MatchOverviewDataEntity extends Equatable {
   @override
   List<Object?> get props => [
     matchId,
+    homeTeamName,
+    awayTeamName,
+    homeTeamLogo,
+    awayTeamLogo,
+    homeTeamId,
+    awayTeamId,
+    championshipId,
+    championshipTitle,
+    championshipLogo,
+    score1,
+    score2,
+    status,
+    time,
+    round,
     stadiumName,
     stadiumId,
     returnLeg,

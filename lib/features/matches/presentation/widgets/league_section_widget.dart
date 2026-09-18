@@ -6,7 +6,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../domain/entities/match_entity.dart';
@@ -93,14 +95,19 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                     onTap: () {
-                      final lId = widget.league.leagueId ?? '937599';
-                      context.push(
-                        '/league/$lId',
-                        extra: {
-                          'title': widget.league.leagueTitle,
-                          'logo': widget.league.leagueLogo,
-                        },
-                      );
+                      final lId = widget.league.leagueId ??
+                          LeagueResolver.resolveId(widget.league.leagueTitle);
+                      if (lId != null && lId.isNotEmpty) {
+                        final logo = widget.league.leagueLogo ??
+                            UrlHelper.resolveChampionshipLogo(lId);
+                        context.push(
+                          '/league/$lId',
+                          extra: {
+                            'title': widget.league.leagueTitle,
+                            'logo': logo,
+                          },
+                        );
+                      }
                     },
                     child: Row(
                       children: [

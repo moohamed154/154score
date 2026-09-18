@@ -8,6 +8,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/circular_live_clock.dart';
 import '../../../../core/widgets/penalty_shootout_widget.dart';
@@ -103,13 +104,13 @@ class MatchHeaderBanner extends StatelessWidget {
             InkWell(
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
               onTap: () {
-                if (match.leagueId != null || match.leagueTitle != null) {
-                  final lId = match.leagueId ??
-                      LeagueResolver.resolveId(match.leagueTitle) ??
-                      '937599';
+                final lId = match.leagueId ??
+                    LeagueResolver.resolveId(match.leagueTitle);
+                if (lId != null && lId.isNotEmpty) {
+                  final logo = match.leagueLogo ?? UrlHelper.resolveChampionshipLogo(lId);
                   context.push(
                     '/league/$lId',
-                    extra: {'title': match.leagueTitle, 'logo': match.leagueLogo},
+                    extra: {'title': match.leagueTitle, 'logo': logo},
                   );
                 }
               },

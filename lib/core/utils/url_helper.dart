@@ -141,8 +141,21 @@ class UrlHelper {
         'https://imgs.ysscores.com/championship/128/5481703687014.png', // Supercopa
       '943009' =>
         'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
+      '40224' || '916145' =>
+        'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
       _ => null,
     };
+  }
+
+  /// Resolves deterministic team logo URL given a team ID or filename.
+  static String? resolveTeamLogo(String? teamId, {int size = 64}) {
+    if (teamId == null) return null;
+    final clean = teamId.trim();
+    if (clean.isEmpty || clean == 'null' || clean == '0') return null;
+    if (clean.endsWith('.png') || clean.endsWith('.jpg') || clean.endsWith('.jpeg') || clean.endsWith('.webp')) {
+      return 'https://imgs.ysscores.com/teams/$size/$clean';
+    }
+    return 'https://imgs.ysscores.com/teams/$size/$clean.png';
   }
 
   /// Normalizes video URLs from various API fields and video providers.

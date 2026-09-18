@@ -16,6 +16,7 @@ class StandingLegendEntity extends Equatable {
 class StandingRowEntity extends Equatable {
   final int position;
   final String teamName;
+  final String? teamId;
   final String? teamLogo;
   final int played;
   final int wins;
@@ -31,6 +32,7 @@ class StandingRowEntity extends Equatable {
   const StandingRowEntity({
     required this.position,
     required this.teamName,
+    this.teamId,
     this.teamLogo,
     required this.played,
     required this.wins,
@@ -48,6 +50,7 @@ class StandingRowEntity extends Equatable {
   List<Object?> get props => [
     position,
     teamName,
+    teamId,
     teamLogo,
     played,
     wins,
