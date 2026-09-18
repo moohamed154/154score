@@ -8,6 +8,7 @@ import '../../../../core/network/api_result.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/match_event_helper.dart';
 import '../../../../core/utils/realtime_merge_engine.dart';
+import '../../../../core/utils/score_helper.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../domain/entities/match_details_entity.dart';
 import '../../domain/repositories/match_details_repository.dart';
@@ -216,6 +217,31 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       calculatedScore1 ??= resolvedOverview?.score1;
       calculatedScore2 ??= resolvedOverview?.score2;
 
+      String? resolvedStatus = state.liveStatus ?? resolvedOverview?.status;
+      String? resolvedStatusCode = state.liveStatusCode;
+
+      final hasFinishedEvent = resolvedEvents.any((e) =>
+          e.isPeriodMarker &&
+          (e.playerName.contains('نهاية') ||
+           e.playerName.toLowerCase().contains('full') ||
+           e.playerName.toLowerCase().contains('end') ||
+           e.playerName.toLowerCase().contains('ft')));
+
+      final effectiveDate = resolvedOverview?.date;
+      final isPastMatch = effectiveDate != null &&
+          DateTime.tryParse(effectiveDate)?.isBefore(
+            DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+          ) == true;
+
+      if (hasFinishedEvent || (isPastMatch && (calculatedScore1 != null || resolvedEvents.isNotEmpty))) {
+        if (resolvedStatus == null ||
+            resolvedStatus.isEmpty ||
+            !ScoreHelper.isFinishedStatus(resolvedStatus)) {
+          resolvedStatus = 'انتهت';
+          resolvedStatusCode = 'FINISHED';
+        }
+      }
+
       emit(
         state.copyWith(
           status: MatchDetailsStatus.success,
@@ -231,7 +257,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           halfScores: resolvedHalfScores,
           liveScore1: calculatedScore1,
           liveScore2: calculatedScore2,
-          liveStatus: state.liveStatus ?? resolvedOverview?.status,
+          liveStatus: resolvedStatus,
+          liveStatusCode: resolvedStatusCode,
           errorMessage: null,
         ),
       );

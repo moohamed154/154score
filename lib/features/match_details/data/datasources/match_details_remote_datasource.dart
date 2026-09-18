@@ -870,6 +870,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       final score2 = map['away_scores']?.toString() ?? map['score2']?.toString();
       final status = map['status']?.toString();
       final time = map['time']?.toString();
+      final date = map['date']?.toString();
       final round = map['round']?.toString();
 
       return MatchOverviewDataEntity(
@@ -887,6 +888,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         score2: score2,
         status: status,
         time: time,
+        date: date,
         round: round,
         stadiumName: map['venue']?['name']?.toString(),
         stadiumId: map['venue']?['id']?.toString(),
@@ -989,12 +991,65 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       if (returnLeg != null) break;
     }
 
+    String? time;
+    String? date;
+    String? champTitle;
+    String? champId;
+    String? round;
+    String? stadiumName;
+    String? stadiumId;
+    String? status;
+
+    final infoSec = sections.firstWhere(
+      (s) =>
+          s.section.contains('معلومات اللقاء') ||
+          s.section.contains('معلومات المباراة') ||
+          s.section.toLowerCase().contains('match info'),
+      orElse: () => const MatchInfoSectionEntity(section: '', items: []),
+    );
+    for (final item in infoSec.items) {
+      final t = item.title.trim().toLowerCase();
+      if (t.contains('وقت') || t.contains('time')) {
+        time ??= item.content.trim();
+      } else if (t.contains('تاريخ') || t.contains('date')) {
+        date ??= item.content.trim();
+      } else if (t.contains('بطولة') ||
+          t.contains('دوري') ||
+          t.contains('league') ||
+          t.contains('championship')) {
+        champTitle ??= item.content.trim();
+        champId ??= item.entityId ??
+            item.link
+                ?.split('/')
+                .lastWhere((e) => e.isNotEmpty, orElse: () => '');
+      } else if (t.contains('جولة') || t.contains('round')) {
+        round ??= item.content.trim();
+      } else if (t.contains('ملعب') ||
+          t.contains('استاد') ||
+          t.contains('stadium') ||
+          t.contains('venue')) {
+        stadiumName ??= item.content.trim();
+        stadiumId ??= item.entityId;
+      } else if (t.contains('حالة') || t.contains('status')) {
+        status ??= item.content.trim();
+      }
+    }
+
     return MatchOverviewDataEntity(
       matchId: matchId,
       homeTeamName: secHome,
       awayTeamName: secAway,
       h2hSummary: h2h,
       returnLeg: returnLeg,
+      time: time,
+      date: date,
+      championshipTitle: champTitle,
+      championshipId: champId,
+      championshipLogo: champId != null ? UrlHelper.resolveChampionshipLogo(champId) : null,
+      round: round,
+      stadiumName: stadiumName,
+      stadiumId: stadiumId,
+      status: status,
     );
   }
 

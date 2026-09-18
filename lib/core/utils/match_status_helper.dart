@@ -144,6 +144,46 @@ class MatchStatusHelper {
       return MatchPhase.cancelled;
     }
 
+    final currentTime = now ?? DateTime.now();
+    final todayStr = DateFormatter.toApiDateString(currentTime);
+    final today = DateTime(currentTime.year, currentTime.month, currentTime.day);
+
+    DateTime? matchDate;
+    if (date != null && date.trim().isNotEmpty) {
+      matchDate = DateTime.tryParse(date.trim());
+    }
+    final isPastDate = matchDate != null &&
+        DateTime(matchDate.year, matchDate.month, matchDate.day).isBefore(today);
+    final isFutureDate = matchDate != null &&
+        DateTime(matchDate.year, matchDate.month, matchDate.day).isAfter(today);
+
+    // 5.1 Historical match guard: A match on a past date can NEVER be live or upcoming
+    if (isPastDate) {
+      if (code == 'POSTPONED' ||
+          s.contains('تأجل') ||
+          s.contains('مؤجلة') ||
+          s.contains('postponed') ||
+          s.contains('delayed')) {
+        return MatchPhase.postponed;
+      }
+      if (code == 'CANCELLED' ||
+          code == 'ABANDONED' ||
+          s.contains('ألغيت') ||
+          s.contains('ملغاة') ||
+          s.contains('cancelled') ||
+          s.contains('canceled')) {
+        return MatchPhase.cancelled;
+      }
+      return MatchPhase.finished;
+    }
+
+    // 5.2 Future match guard
+    if (isFutureDate) {
+      if (code == 'POSTPONED' || s.contains('تأجل')) return MatchPhase.postponed;
+      if (code == 'CANCELLED' || s.contains('ألغيت')) return MatchPhase.cancelled;
+      return MatchPhase.upcoming;
+    }
+
     // 6. Explicit Live / In-play keywords or minute/extraTime from API
     if (s.contains('مباشر') ||
         s.contains('live') ||
@@ -167,9 +207,15 @@ class MatchStatusHelper {
     }
 
     // 7. Time-based in-play detection: If the match is scheduled for today and kickoff has arrived
-    final currentTime = now ?? DateTime.now();
-    final todayStr = DateFormatter.toApiDateString(currentTime);
-    final isToday = date == null || date.isEmpty || date == todayStr;
+    final isToday = date != null && date.trim().isNotEmpty && date.trim() == todayStr;
+
+    final hasActiveScores = (score1 != null &&
+        score2 != null &&
+        score1.isNotEmpty &&
+        score2.isNotEmpty &&
+        score1 != '-' &&
+        score2 != '-' &&
+        (score1 != '0' || score2 != '0'));
 
     if (isToday && time != null && time.isNotEmpty && time != '-') {
       final startMins = parseTimeToMinutes(time);
@@ -184,20 +230,20 @@ class MatchStatusHelper {
             return MatchPhase.halfTime;
           }
           return MatchPhase.live;
+        } else if (elapsed > 135 && hasActiveScores) {
+          return MatchPhase.finished;
         }
       }
     }
 
     // 8. Score-based in-play detection: If scores are active and non-zero on today's date
-    final hasActiveScores = (score1 != null &&
-        score2 != null &&
-        score1.isNotEmpty &&
-        score2.isNotEmpty &&
-        score1 != '-' &&
-        score2 != '-' &&
-        (score1 != '0' || score2 != '0'));
     if (isToday && hasActiveScores) {
       return MatchPhase.live;
+    }
+
+    // If date is not today, but match has non-zero scores and no upcoming indicator, it is finished
+    if (!isToday && date != null && date.trim().isNotEmpty && hasActiveScores) {
+      return MatchPhase.finished;
     }
 
     // 9. Upcoming
@@ -211,6 +257,9 @@ class MatchStatusHelper {
     }
 
     if (status == null || status.trim().isEmpty) {
+      if (hasActiveScores) {
+        return MatchPhase.finished;
+      }
       return (time != null && time.isNotEmpty)
           ? MatchPhase.upcoming
           : MatchPhase.unknown;

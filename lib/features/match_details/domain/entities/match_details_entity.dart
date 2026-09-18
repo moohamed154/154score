@@ -807,6 +807,7 @@ class MatchOverviewDataEntity extends Equatable {
   final String? score2;
   final String? status;
   final String? time;
+  final String? date;
   final String? round;
   final String? stadiumName;
   final String? stadiumId;
@@ -832,6 +833,7 @@ class MatchOverviewDataEntity extends Equatable {
     this.score2,
     this.status,
     this.time,
+    this.date,
     this.round,
     this.stadiumName,
     this.stadiumId,
@@ -859,6 +861,7 @@ class MatchOverviewDataEntity extends Equatable {
     score2,
     status,
     time,
+    date,
     round,
     stadiumName,
     stadiumId,

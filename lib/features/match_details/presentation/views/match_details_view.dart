@@ -18,6 +18,7 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/utils/league_resolver.dart';
+import '../../../../core/utils/score_helper.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../standings/presentation/bloc/standings_bloc.dart';
@@ -246,17 +247,40 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         state.overview?.championshipLogo ??
         UrlHelper.resolveChampionshipLogo(effectiveLeagueId);
 
-    // 7. Status & Time
-    final effectiveStatus = state.liveStatus ??
+    // 7. Status & Time & Date
+    String? effectiveStatus = state.liveStatus ??
         liveFromMatches?.status ??
         fallbackMatch.status ??
         state.overview?.status;
 
-    final effectiveStatusCode = state.liveStatusCode ??
+    String? effectiveStatusCode = state.liveStatusCode ??
         liveFromMatches?.statusCode ??
         fallbackMatch.statusCode;
 
     final effectiveTime = fallbackMatch.time ?? state.overview?.time;
+    final effectiveDate = fallbackMatch.date ?? state.overview?.date;
+
+    // Guard: Check if timeline events or past match date indicate match has completed
+    final hasFinishedEvent = state.events.any((e) =>
+        e.isPeriodMarker &&
+        (e.playerName.contains('نهاية') ||
+         e.playerName.toLowerCase().contains('full') ||
+         e.playerName.toLowerCase().contains('end') ||
+         e.playerName.toLowerCase().contains('ft')));
+
+    final isPastMatch = effectiveDate != null &&
+        DateTime.tryParse(effectiveDate)?.isBefore(
+          DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+        ) == true;
+
+    if (hasFinishedEvent || (isPastMatch && (effectiveScore1 != null || state.events.isNotEmpty))) {
+      if (effectiveStatus == null ||
+          effectiveStatus.isEmpty ||
+          !ScoreHelper.isFinishedStatus(effectiveStatus)) {
+        effectiveStatus = 'انتهت';
+        effectiveStatusCode = 'FINISHED';
+      }
+    }
 
     return fallbackMatch.copyWith(
       team1: effectiveTeam1,
@@ -272,6 +296,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       status: effectiveStatus,
       statusCode: effectiveStatusCode,
       time: effectiveTime,
+      date: effectiveDate,
       leagueTitle: effectiveLeagueTitle,
       leagueId: effectiveLeagueId,
       leagueLogo: effectiveLeagueLogo,
