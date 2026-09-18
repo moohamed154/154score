@@ -225,97 +225,101 @@ class TimelineEventItem extends StatelessWidget {
         ? event.playerName
         : event.secondaryPlayerName;
 
-    final textWidget = Column(
-      crossAxisAlignment: isHome
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Player Name & Score & Video
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: isHome
-              ? [
-                  if (event.score != null && event.score!.isNotEmpty) ...[
-                    _buildScorePill(event.score!, isDark),
-                    const SizedBox(width: 4),
-                  ],
-                  if (event.hasVideo) ...[
-                    _buildVideoBadge(context, isDark, isArabic, isSmall),
-                    const SizedBox(width: 5),
-                  ],
-                  Flexible(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      onTap: () => _navigateToPlayer(context, mainPlayerName),
-                      child: Text(
-                        mainPlayerName,
-                        style:
-                            AppTypography.getBodyMedium(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: isSmall ? 12 : 14,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                            ),
-                        textAlign: TextAlign.end,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark),
-                ]
-              : [
-                  _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark),
-                  Flexible(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      onTap: () => _navigateToPlayer(context, mainPlayerName),
-                      child: Text(
-                        mainPlayerName,
-                        style:
-                            AppTypography.getBodyMedium(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: isSmall ? 12 : 14,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                            ),
-                        textAlign: TextAlign.start,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  if (event.hasVideo) ...[
-                    const SizedBox(width: 5),
-                    _buildVideoBadge(context, isDark, isArabic, isSmall),
-                  ],
-                  if (event.score != null && event.score!.isNotEmpty) ...[
-                    const SizedBox(width: 4),
-                    _buildScorePill(event.score!, isDark),
-                  ],
-                ],
-        ),
+    final iconWidget = Container(
+      padding: EdgeInsets.all(isSmall ? 4 : 6),
+      decoration: BoxDecoration(
+        color: iconColor.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: isSmall ? 14 : 16, color: iconColor),
+    );
 
-        // Event Type / Secondary Player / Substitution In-Out
-        if (isSub &&
-            subPlayerOutName != null &&
-            subPlayerOutName.isNotEmpty) ...[
+    // Substitution events: two distinct players, each with their own avatar
+    if (isSub && subPlayerOutName != null && subPlayerOutName.isNotEmpty) {
+      final subWidget = Column(
+        crossAxisAlignment: isHome
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Player IN (mainPlayerName)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: isHome
+                ? [
+                    if (event.score != null && event.score!.isNotEmpty) ...[
+                      _buildScorePill(event.score!, isDark),
+                      const SizedBox(width: 4),
+                    ],
+                    if (event.hasVideo) ...[
+                      _buildVideoBadge(context, isDark, isArabic, isSmall),
+                      const SizedBox(width: 5),
+                    ],
+                    Flexible(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(4),
+                        onTap: () => _navigateToPlayer(context, mainPlayerName),
+                        child: Text(
+                          mainPlayerName,
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: isSmall ? 12 : 14,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                          textAlign: isHome ? TextAlign.end : TextAlign.start,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark),
+                  ]
+                : [
+                    _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark),
+                    Flexible(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(4),
+                        onTap: () => _navigateToPlayer(context, mainPlayerName),
+                        child: Text(
+                          mainPlayerName,
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: isSmall ? 12 : 14,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                          textAlign: isHome ? TextAlign.end : TextAlign.start,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    if (event.hasVideo) ...[
+                      const SizedBox(width: 5),
+                      _buildVideoBadge(context, isDark, isArabic, isSmall),
+                    ],
+                    if (event.score != null && event.score!.isNotEmpty) ...[
+                      const SizedBox(width: 4),
+                      _buildScorePill(event.score!, isDark),
+                    ],
+                  ],
+          ),
+
+          // Player OUT (subPlayerOutName)
           const SizedBox(height: 2),
           Row(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: isHome
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: isHome
                 ? [
                     Flexible(
@@ -329,7 +333,7 @@ class TimelineEventItem extends StatelessWidget {
                             color: AppColors.redCard,
                             fontWeight: FontWeight.w600,
                           ),
-                          textAlign: TextAlign.end,
+                          textAlign: isHome ? TextAlign.end : TextAlign.start,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -372,7 +376,7 @@ class TimelineEventItem extends StatelessWidget {
                             color: AppColors.redCard,
                             fontWeight: FontWeight.w600,
                           ),
-                          textAlign: TextAlign.start,
+                          textAlign: isHome ? TextAlign.end : TextAlign.start,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -380,7 +384,113 @@ class TimelineEventItem extends StatelessWidget {
                     ),
                   ],
           ),
-        ] else if (event.secondaryPlayerName != null &&
+        ],
+      );
+
+      return Row(
+        mainAxisAlignment: isHome
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: isHome
+            ? [
+                Flexible(child: subWidget),
+                SizedBox(width: isSmall ? 6 : 8),
+                iconWidget,
+              ]
+            : [
+                iconWidget,
+                SizedBox(width: isSmall ? 6 : 8),
+                Flexible(child: subWidget),
+              ],
+      );
+    }
+
+    // Standard events (Goal, Card, Penalty, VAR, etc.): Single player avatar beside the text column
+    final playerAvatar = _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark);
+
+    final textWidget = Column(
+      crossAxisAlignment: isHome
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Player Name & Score & Video
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: isHome
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: isHome
+              ? [
+                  if (event.score != null && event.score!.isNotEmpty) ...[
+                    _buildScorePill(event.score!, isDark),
+                    const SizedBox(width: 4),
+                  ],
+                  if (event.hasVideo) ...[
+                    _buildVideoBadge(context, isDark, isArabic, isSmall),
+                    const SizedBox(width: 5),
+                  ],
+                  Flexible(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () => _navigateToPlayer(context, mainPlayerName),
+                      child: Text(
+                        mainPlayerName,
+                        style: AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 12 : 14,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                        textAlign: isHome ? TextAlign.end : TextAlign.start,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ]
+              : [
+                  Flexible(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () => _navigateToPlayer(context, mainPlayerName),
+                      child: Text(
+                        mainPlayerName,
+                        style: AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 12 : 14,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                        textAlign: isHome ? TextAlign.end : TextAlign.start,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  if (event.hasVideo) ...[
+                    const SizedBox(width: 5),
+                    _buildVideoBadge(context, isDark, isArabic, isSmall),
+                  ],
+                  if (event.score != null && event.score!.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    _buildScorePill(event.score!, isDark),
+                  ],
+                ],
+        ),
+
+        // Subtitle / Event Label / Assist Player
+        if (event.secondaryPlayerName != null &&
             event.secondaryPlayerName!.isNotEmpty) ...[
           const SizedBox(height: 1),
           InkWell(
@@ -388,16 +498,15 @@ class TimelineEventItem extends StatelessWidget {
             onTap: () => _navigateToPlayer(context, event.secondaryPlayerName),
             child: Text(
               event.secondaryPlayerName!,
-              style:
-                  AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontSize: isSmall ? 10 : 11,
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
+              style: AppTypography.getBodySmall(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontSize: isSmall ? 10 : 11,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
+              ),
               textAlign: isHome ? TextAlign.end : TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -418,15 +527,6 @@ class TimelineEventItem extends StatelessWidget {
       ],
     );
 
-    final iconWidget = Container(
-      padding: EdgeInsets.all(isSmall ? 4 : 6),
-      decoration: BoxDecoration(
-        color: iconColor.withValues(alpha: 0.15),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: isSmall ? 14 : 16, color: iconColor),
-    );
-
     return Row(
       mainAxisAlignment: isHome
           ? MainAxisAlignment.end
@@ -435,12 +535,14 @@ class TimelineEventItem extends StatelessWidget {
       children: isHome
           ? [
               Flexible(child: textWidget),
-              SizedBox(width: isSmall ? 6 : 8),
+              playerAvatar,
+              SizedBox(width: isSmall ? 2 : 4),
               iconWidget,
             ]
           : [
               iconWidget,
-              SizedBox(width: isSmall ? 6 : 8),
+              SizedBox(width: isSmall ? 2 : 4),
+              playerAvatar,
               Flexible(child: textWidget),
             ],
     );
