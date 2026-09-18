@@ -185,6 +185,10 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final resolvedOverview = overviewRes ?? state.overview;
       final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
       final resolvedLineup = lineupsRes ?? state.lineup;
+      final resolvedChampionshipId =
+          eventsPayloadRes.championshipId ?? state.championshipId;
+      final resolvedHalfScores =
+          eventsPayloadRes.halfScores ?? state.halfScores;
 
       emit(
         state.copyWith(
@@ -197,6 +201,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           overview: resolvedOverview,
           news: resolvedNews,
           lineup: resolvedLineup,
+          championshipId: resolvedChampionshipId,
+          halfScores: resolvedHalfScores,
           errorMessage: null,
         ),
       );

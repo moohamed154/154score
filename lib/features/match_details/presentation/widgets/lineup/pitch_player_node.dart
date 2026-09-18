@@ -116,6 +116,35 @@ class PitchPlayerNode extends StatelessWidget {
                     ),
                   ),
 
+                // Man of the Match Star Badge
+                if (player.isManOfMatch)
+                  Positioned(
+                    top: -3,
+                    right: isArabic ? null : -3,
+                    left: isArabic ? -3 : null,
+                    child: Container(
+                      width: 17,
+                      height: 17,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD700),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.star_rounded,
+                        size: 13,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+
                 // Rating Pill (if present)
                 if (player.rating != null && player.rating!.isNotEmpty)
                   Positioned(

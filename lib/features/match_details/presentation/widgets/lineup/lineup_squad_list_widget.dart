@@ -401,24 +401,117 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      player.position ??
-                          (player.isGoalkeeper
-                              ? (isArabic ? 'حارس المرمى' : 'Goalkeeper')
-                              : '-'),
-                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                        fontSize: 11,
-                        color:
-                            isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        if (player.detailedPosition != null &&
+                            player.detailedPosition!.isNotEmpty) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.darkCardElevated
+                                  : AppColors.lightCardElevated,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.lightBorder,
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Text(
+                              player.detailedPosition!,
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                        ],
+                        Flexible(
+                          child: Text(
+                            player.position ??
+                                (player.isGoalkeeper
+                                    ? (isArabic ? 'حارس المرمى' : 'Goalkeeper')
+                                    : '-'),
+                            style: (isArabic
+                                ? GoogleFonts.cairo
+                                : GoogleFonts.inter)(
+                              fontSize: 11,
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+
+              // In-game stats badges (goals, cards)
+              if (player.goals > 0 ||
+                  player.yellowCards > 0 ||
+                  player.redCards > 0) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (player.goals > 0) ...[
+                      const Text('⚽', style: TextStyle(fontSize: 11)),
+                      if (player.goals > 1)
+                        Text(
+                          '${player.goals}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      const SizedBox(width: 4),
+                    ],
+                    if (player.yellowCards > 0) ...[
+                      Container(
+                        width: 7,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: AppColors.yellowCard,
+                          borderRadius: BorderRadius.circular(1.5),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    if (player.redCards > 0) ...[
+                      Container(
+                        width: 7,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: AppColors.redCard,
+                          borderRadius: BorderRadius.circular(1.5),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                  ],
+                ),
+                const SizedBox(width: 6),
+              ],
+
+              // Man of the Match Star
+              if (player.isManOfMatch) ...[
+                const Icon(
+                  Icons.star_rounded,
+                  size: 18,
+                  color: Color(0xFFFFD700),
+                ),
+                const SizedBox(width: 4),
+              ],
 
               // Rating Badge (if present)
               if (player.rating != null && player.rating!.isNotEmpty) ...[
@@ -557,6 +650,27 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
       ),
       child: Row(
         children: [
+          if (injury.number != null) ...[
+            Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkCardElevated
+                    : AppColors.lightCardElevated,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '${injury.number}',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           ClipOval(
             child: AppImage(
               imageUrl: injury.photo,

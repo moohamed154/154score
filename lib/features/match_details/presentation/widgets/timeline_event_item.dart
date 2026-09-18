@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -7,6 +8,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/match_event_helper.dart';
 import '../../../../core/utils/url_helper.dart';
+import '../../../../core/widgets/app_image.dart';
 import '../../domain/entities/match_details_entity.dart';
 
 class TimelineEventItem extends StatelessWidget {
@@ -267,8 +269,10 @@ class TimelineEventItem extends StatelessWidget {
                       ),
                     ),
                   ),
+                  _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark),
                 ]
               : [
+                  _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark),
                   Flexible(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(4),
@@ -338,8 +342,20 @@ class TimelineEventItem extends StatelessWidget {
                       size: 11,
                       color: AppColors.redCard,
                     ),
+                    _buildPlayerAvatar(
+                      event.secondaryPlayerPhoto,
+                      event.secondaryPlayerNumber,
+                      isDark,
+                      size: 16,
+                    ),
                   ]
                 : [
+                    _buildPlayerAvatar(
+                      event.secondaryPlayerPhoto,
+                      event.secondaryPlayerNumber,
+                      isDark,
+                      size: 16,
+                    ),
                     const Icon(
                       Icons.arrow_downward_rounded,
                       size: 11,
@@ -498,10 +514,61 @@ class TimelineEventItem extends StatelessWidget {
     );
   }
 
+  Widget _buildPlayerAvatar(
+    String? photo,
+    int? number,
+    bool isDark, {
+    double size = 22,
+  }) {
+    if (photo != null && photo.isNotEmpty && UrlHelper.isValidImageUrl(photo)) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: ClipOval(
+          child: AppImage(
+            imageUrl: photo,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            placeholderIcon: Icons.person,
+          ),
+        ),
+      );
+    }
+    if (number != null) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.darkCardElevated
+              : AppColors.lightCardElevated,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            width: 0.5,
+          ),
+        ),
+        child: Text(
+          '$number',
+          style: GoogleFonts.outfit(
+            fontSize: size <= 16 ? 8.5 : 10,
+            fontWeight: FontWeight.w700,
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
+          ),
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
   bool _isPeriodEvent(String type, String text) {
+    if (event.isPeriodMarker) return true;
     final lower = '$type $text'.toLowerCase();
     return lower.contains('start-end-match') ||
         lower.contains('start_end') ||
+        lower.contains('period_marker') ||
         lower.contains('whistle') ||
         lower.contains('period') ||
         lower.contains('match-start') ||
@@ -510,6 +577,7 @@ class TimelineEventItem extends StatelessWidget {
         lower.contains('منتصف المباراة') ||
         lower.contains('بدأت المباراة') ||
         lower.contains('انتهت المباراة') ||
+        lower.contains('نهاية الشوط') ||
         lower == 'ht' ||
         lower == 'ft';
   }

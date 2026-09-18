@@ -9,6 +9,13 @@ class MatchEventEntity extends Equatable {
   final bool isHomeTeam;
   final String? score;
   final String? videoUrl;
+  final int? playerNumber;
+  final String? playerPhoto;
+  final String? playerShortName;
+  final int? secondaryPlayerNumber;
+  final String? secondaryPlayerPhoto;
+  final String? secondaryPlayerShortName;
+  final bool isPeriodMarker;
 
   const MatchEventEntity({
     required this.minute,
@@ -18,6 +25,13 @@ class MatchEventEntity extends Equatable {
     this.isHomeTeam = true,
     this.score,
     this.videoUrl,
+    this.playerNumber,
+    this.playerPhoto,
+    this.playerShortName,
+    this.secondaryPlayerNumber,
+    this.secondaryPlayerPhoto,
+    this.secondaryPlayerShortName,
+    this.isPeriodMarker = false,
   });
 
   bool get hasVideo => videoUrl != null && videoUrl!.trim().isNotEmpty;
@@ -30,6 +44,13 @@ class MatchEventEntity extends Equatable {
     bool? isHomeTeam,
     String? score,
     String? videoUrl,
+    int? playerNumber,
+    String? playerPhoto,
+    String? playerShortName,
+    int? secondaryPlayerNumber,
+    String? secondaryPlayerPhoto,
+    String? secondaryPlayerShortName,
+    bool? isPeriodMarker,
   }) {
     return MatchEventEntity(
       minute: minute ?? this.minute,
@@ -39,6 +60,13 @@ class MatchEventEntity extends Equatable {
       isHomeTeam: isHomeTeam ?? this.isHomeTeam,
       score: score ?? this.score,
       videoUrl: videoUrl ?? this.videoUrl,
+      playerNumber: playerNumber ?? this.playerNumber,
+      playerPhoto: playerPhoto ?? this.playerPhoto,
+      playerShortName: playerShortName ?? this.playerShortName,
+      secondaryPlayerNumber: secondaryPlayerNumber ?? this.secondaryPlayerNumber,
+      secondaryPlayerPhoto: secondaryPlayerPhoto ?? this.secondaryPlayerPhoto,
+      secondaryPlayerShortName: secondaryPlayerShortName ?? this.secondaryPlayerShortName,
+      isPeriodMarker: isPeriodMarker ?? this.isPeriodMarker,
     );
   }
 
@@ -51,6 +79,13 @@ class MatchEventEntity extends Equatable {
     isHomeTeam,
     score,
     videoUrl,
+    playerNumber,
+    playerPhoto,
+    playerShortName,
+    secondaryPlayerNumber,
+    secondaryPlayerPhoto,
+    secondaryPlayerShortName,
+    isPeriodMarker,
   ];
 }
 
@@ -127,16 +162,18 @@ class MatchNewsItemEntity extends Equatable {
   final String? image;
   final String? link;
   final String? date;
+  final String? description;
 
   const MatchNewsItemEntity({
     required this.title,
     this.image,
     this.link,
     this.date,
+    this.description,
   });
 
   @override
-  List<Object?> get props => [title, image, link, date];
+  List<Object?> get props => [title, image, link, date, description];
 }
 
 class MatchLineupEntity extends Equatable {
@@ -229,12 +266,18 @@ class LineupPlayerEntity extends Equatable {
   final int? number;
   final String? position;
   final String? positionCode; // "G", "D", "M", "F", "SUB"
+  final String? detailedPosition; // "GK", "RB", "CB", "LB", "CDM", "CM", "RW", "LW", "CF"
   final int? formationPosition;
   final String? photo;
   final String? rating;
   final bool isCaptain;
   final bool isStarter;
   final bool isSubstitute;
+  final bool isManOfMatch;
+  final int yellowCards;
+  final int redCards;
+  final int goals;
+  final int assists;
 
   const LineupPlayerEntity({
     this.playerId,
@@ -242,12 +285,18 @@ class LineupPlayerEntity extends Equatable {
     this.number,
     this.position,
     this.positionCode,
+    this.detailedPosition,
     this.formationPosition,
     this.photo,
     this.rating,
     this.isCaptain = false,
     this.isStarter = true,
     this.isSubstitute = false,
+    this.isManOfMatch = false,
+    this.yellowCards = 0,
+    this.redCards = 0,
+    this.goals = 0,
+    this.assists = 0,
   });
 
   String? get id => playerId;
@@ -264,12 +313,18 @@ class LineupPlayerEntity extends Equatable {
     number,
     position,
     positionCode,
+    detailedPosition,
     formationPosition,
     photo,
     rating,
     isCaptain,
     isStarter,
     isSubstitute,
+    isManOfMatch,
+    yellowCards,
+    redCards,
+    goals,
+    assists,
   ];
 }
 
@@ -571,14 +626,18 @@ class MatchVideosEntity extends Equatable {
 class MatchEventsPayload extends Equatable {
   final List<MatchEventEntity> events;
   final MatchVideosEntity videos;
+  final String? championshipId;
+  final Map<String, dynamic>? halfScores;
 
   const MatchEventsPayload({
     this.events = const [],
     this.videos = const MatchVideosEntity(),
+    this.championshipId,
+    this.halfScores,
   });
 
   @override
-  List<Object?> get props => [events, videos];
+  List<Object?> get props => [events, videos, championshipId, halfScores];
 }
 
 class MatchH2HSummaryEntity extends Equatable {

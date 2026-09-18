@@ -94,6 +94,29 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       final videos =
           MatchVideosEntity.fromJson(parsed, isArabic: lang != 'en');
 
+      String? championshipId;
+      Map<String, dynamic>? halfScores;
+
+      if (parsed is List && parsed.isNotEmpty) {
+        final first = parsed[0];
+        if (first is Map && first['items'] is Map) {
+          final items = first['items'] as Map;
+          championshipId = items['championship_id']?.toString();
+          if (items['half_scores'] is Map) {
+            halfScores = Map<String, dynamic>.from(items['half_scores'] as Map);
+          }
+        }
+      } else if (parsed is Map) {
+        final data = parsed['data'] ?? parsed;
+        if (data is Map) {
+          championshipId = data['championship_id']?.toString() ??
+              data['championship']?['url_id']?.toString();
+          if (data['half_scores'] is Map) {
+            halfScores = Map<String, dynamic>.from(data['half_scores'] as Map);
+          }
+        }
+      }
+
       final rawEvents = _extractRawEvents(parsed);
       final events = <MatchEventEntity>[];
 
@@ -111,18 +134,54 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             e['is_home'] == true ||
             e['isHome'] == true;
 
-        final playerName =
-            e['text']?.toString() ??
-            e['player']?.toString() ??
-            e['name']?.toString() ??
-            e['player_name']?.toString() ??
-            '';
+        final rawPlayer = e['player_name'] ?? e['player'];
+        String playerName;
+        int? playerNum;
+        String? playerPhoto;
+        String? playerShortName;
+        if (rawPlayer is Map) {
+          playerName = rawPlayer['title']?.toString() ??
+              rawPlayer['name']?.toString() ??
+              '';
+          playerNum = int.tryParse(rawPlayer['pn']?.toString() ?? '');
+          playerPhoto =
+              UrlHelper.normalizeImageUrl(rawPlayer['image']?.toString());
+          playerShortName = rawPlayer['short_title']?.toString();
+        } else {
+          playerName = e['text']?.toString() ??
+              e['player']?.toString() ??
+              e['name']?.toString() ??
+              rawPlayer?.toString() ??
+              '';
+          playerNum = int.tryParse(e['player_number']?.toString() ?? '');
+          playerPhoto =
+              UrlHelper.normalizeImageUrl(e['player_photo']?.toString());
+          playerShortName = e['player_short_name']?.toString();
+        }
 
-        final secondaryName =
-            e['subtitle']?.toString() ??
-            e['assist']?.toString() ??
-            e['player_out']?.toString() ??
-            e['secondary_player']?.toString();
+        final rawAssist = e['assist_player_name'] ?? e['assist'];
+        String? secondaryName;
+        int? secondaryNum;
+        String? secondaryPhoto;
+        String? secondaryShortName;
+        if (rawAssist is Map) {
+          secondaryName = rawAssist['title']?.toString() ??
+              rawAssist['name']?.toString();
+          secondaryNum = int.tryParse(rawAssist['pn']?.toString() ?? '');
+          secondaryPhoto =
+              UrlHelper.normalizeImageUrl(rawAssist['image']?.toString());
+          secondaryShortName = rawAssist['short_title']?.toString();
+        } else {
+          secondaryName = e['subtitle']?.toString() ??
+              rawAssist?.toString() ??
+              e['player_out']?.toString() ??
+              e['secondary_player']?.toString();
+          secondaryNum =
+              int.tryParse(e['assist_player_number']?.toString() ?? '');
+          secondaryPhoto =
+              UrlHelper.normalizeImageUrl(e['assist_player_photo']?.toString());
+          secondaryShortName = e['assist_player_short_name']?.toString();
+        }
 
         final rawTime = e['time']?.toString();
         final rawMinute = e['minute']?.toString();
@@ -131,11 +190,14 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           (rawTime != null && rawTime.trim().isNotEmpty) ? rawTime : rawMinute,
         );
 
+        final isPeriodMarker =
+            e['is_period_marker'] == true || parsedMinute.isPeriodMarker;
+
         final isStartEnd =
             e['is_start_end'] == true ||
             e['is_start_end'] == 1 ||
             e['type'] == 'start-end-match' ||
-            parsedMinute.isPeriodMarker;
+            isPeriodMarker;
 
         final typeStr =
             e['type']?.toString() ?? (isStartEnd ? 'start-end-match' : 'event');
@@ -165,11 +227,23 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             isHomeTeam: isHome,
             score: scoreStr,
             videoUrl: videoUrl,
+            playerNumber: playerNum,
+            playerPhoto: playerPhoto,
+            playerShortName: playerShortName,
+            secondaryPlayerNumber: secondaryNum,
+            secondaryPlayerPhoto: secondaryPhoto,
+            secondaryPlayerShortName: secondaryShortName,
+            isPeriodMarker: isPeriodMarker,
           ),
         );
       }
 
-      return MatchEventsPayload(events: events, videos: videos);
+      return MatchEventsPayload(
+        events: events,
+        videos: videos,
+        championshipId: championshipId,
+        halfScores: halfScores,
+      );
     } catch (_) {
       return const MatchEventsPayload();
     }
@@ -423,13 +497,17 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       homePct = 0.5;
     }
 
+    final resolvedCategory = category ??
+        item['category']?.toString() ??
+        item['section']?.toString();
+
     stats.add(
       MatchStatItemEntity(
         title: title,
         homeValue: home,
         awayValue: away,
         homePercentage: homePct.clamp(0.0, 1.0),
-        category: category,
+        category: resolvedCategory,
       ),
     );
   }
@@ -916,12 +994,17 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           item['time']?.toString() ??
           item['created_at']?.toString();
 
+      final description = item['description']?.toString() ??
+          item['summary']?.toString() ??
+          item['news_desc']?.toString();
+
       newsList.add(
         MatchNewsItemEntity(
           title: title,
           image: normImg,
           link: link,
           date: date,
+          description: description,
         ),
       );
     }
@@ -1310,18 +1393,48 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         map['is_captain'] == 1 ||
         map['captain'] == 1;
 
+    final detailedPos = map['detailed_position']?.toString() ?? pos;
+    final isMotm = map['man_of_match'] == true ||
+        map['man_of_match'] == 1 ||
+        map['man_match'] == true ||
+        map['man_match'] == 1;
+    final yellowCards = int.tryParse(
+          map['yellow_cards']?.toString() ??
+              map['yellow_card']?.toString() ??
+              '',
+        ) ??
+        0;
+    final redCards = int.tryParse(
+          map['red_cards']?.toString() ?? map['red_card']?.toString() ?? '',
+        ) ??
+        0;
+    final goals = int.tryParse(
+          map['goals']?.toString() ?? map['goal']?.toString() ?? '',
+        ) ??
+        0;
+    final assists = int.tryParse(
+          map['assists']?.toString() ?? map['assist']?.toString() ?? '',
+        ) ??
+        0;
+
     return LineupPlayerEntity(
       playerId: id,
       name: name,
       number: numVal,
       position: pos,
       positionCode: posCode,
+      detailedPosition: detailedPos,
       formationPosition: formPos,
       photo: photo,
       rating: rating,
       isCaptain: isCap,
       isStarter: map['is_starter'] == true || isStarter,
       isSubstitute: map['is_substitute'] == true || isSubstitute,
+      isManOfMatch: isMotm,
+      yellowCards: yellowCards,
+      redCards: redCards,
+      goals: goals,
+      assists: assists,
     );
   }
 }

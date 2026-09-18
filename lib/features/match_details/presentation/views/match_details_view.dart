@@ -429,7 +429,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                               ),
 
                               // 5. الترتيب (Standings)
-                              _buildStandingsTab(context, isDark, isArabic),
+                              _buildStandingsTab(context, state, isDark, isArabic),
 
                               // 6. الأخبار (News)
                               _buildNewsTab(context, state, isDark, isArabic),
@@ -1557,10 +1557,88 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           ),
 
           // Stats Rows
-          ...effectiveStats.map((stat) => StatComparisonBar(stat: stat)),
+          if (effectiveStats.any((s) => s.category != null && s.category!.trim().isNotEmpty)) ...[
+            ..._buildCategorizedStatsWidgets(effectiveStats, isDark, isArabic),
+          ] else ...[
+            ...effectiveStats.map((stat) => StatComparisonBar(stat: stat)),
+          ],
         ],
       ),
     );
+  }
+
+  List<Widget> _buildCategorizedStatsWidgets(
+    List<MatchStatItemEntity> stats,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final Map<String, List<MatchStatItemEntity>> grouped = {};
+    for (final s in stats) {
+      final cat = (s.category != null && s.category!.trim().isNotEmpty)
+          ? s.category!.trim()
+          : (isArabic ? 'إحصائيات عامة' : 'General');
+      grouped.putIfAbsent(cat, () => []).add(s);
+    }
+
+    final widgets = <Widget>[];
+    for (final entry in grouped.entries) {
+      IconData icon = Icons.analytics_outlined;
+      final lower = entry.key.toLowerCase();
+      if (lower.contains('هجوم') || lower.contains('attack')) {
+        icon = Icons.sports_soccer_rounded;
+      } else if (lower.contains('تمرير') ||
+          lower.contains('تحكم') ||
+          lower.contains('pass') ||
+          lower.contains('control')) {
+        icon = Icons.swap_horiz_rounded;
+      } else if (lower.contains('دفاع') ||
+          lower.contains('انضباط') ||
+          lower.contains('defen') ||
+          lower.contains('discip')) {
+        icon = Icons.shield_outlined;
+      }
+
+      widgets.add(
+        Container(
+          margin: const EdgeInsets.only(
+            top: AppDimensions.md,
+            bottom: AppDimensions.xs,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkCardElevated.withValues(alpha: 0.6)
+                : AppColors.lightSurface,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+            border: Border.all(
+              color: (isDark ? AppColors.darkBorder : AppColors.lightBorder)
+                  .withValues(alpha: 0.5),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 16, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                entry.key,
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      widgets.addAll(entry.value.map((stat) => StatComparisonBar(stat: stat)));
+    }
+    return widgets;
   }
 
   List<MatchStatItemEntity> _buildStatsFromQuickStats(
@@ -1673,8 +1751,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   }
 
   // ── Tab 5: الترتيب (Standings) ─────────────────────────────────────────────
-  Widget _buildStandingsTab(BuildContext context, bool isDark, bool isArabic) {
-    final leagueId = _resolveLeagueId();
+  Widget _buildStandingsTab(
+    BuildContext context,
+    MatchDetailsState state,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final leagueId = state.championshipId ?? _resolveLeagueId();
 
     if (leagueId == null) {
       return RefreshIndicator(
@@ -1965,21 +2048,47 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                   isArabic: isArabic,
                 ).copyWith(fontWeight: FontWeight.w600),
               ),
-              subtitle: item.date != null && item.date!.isNotEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        item.date!,
-                        style: AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
+              subtitle: (item.description != null && item.description!.isNotEmpty) ||
+                      (item.date != null && item.date!.isNotEmpty)
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (item.description != null &&
+                            item.description!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              item.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        if (item.date != null && item.date!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              item.date!,
+                              style: AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                      ],
                     )
                   : null,
               onTap: () {
