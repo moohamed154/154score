@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/app_image.dart';
@@ -103,7 +104,9 @@ class MatchHeaderBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
               onTap: () {
                 if (match.leagueId != null || match.leagueTitle != null) {
-                  final lId = match.leagueId ?? '937599';
+                  final lId = match.leagueId ??
+                      LeagueResolver.resolveId(match.leagueTitle) ??
+                      '937599';
                   context.push(
                     '/league/$lId',
                     extra: {'title': match.leagueTitle, 'logo': match.leagueLogo},

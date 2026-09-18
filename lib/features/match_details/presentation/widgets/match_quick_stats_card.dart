@@ -8,25 +8,32 @@ import '../../domain/entities/match_details_entity.dart';
 
 class MatchQuickStatsCard extends StatelessWidget {
   final MatchQuickStatsEntity stats;
+  final bool? isDark;
+  final bool? isArabic;
 
-  const MatchQuickStatsCard({super.key, required this.stats});
+  const MatchQuickStatsCard({
+    super.key,
+    required this.stats,
+    this.isDark,
+    this.isArabic,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (stats.isEmpty) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = l10n.isArabic;
+    final dark = isDark ?? (Theme.of(context).brightness == Brightness.dark);
+    final arabic = isArabic ?? l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: dark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: dark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
       ),
       child: Padding(
@@ -44,10 +51,10 @@ class MatchQuickStatsCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isArabic ? 'إحصائيات سريعة' : 'Quick Match Statistics',
+                  arabic ? 'إحصائيات سريعة' : 'Quick Match Statistics',
                   style: AppTypography.getBodyLarge(
-                    isDark: isDark,
-                    isArabic: isArabic,
+                    isDark: dark,
+                    isArabic: arabic,
                   ).copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -56,57 +63,60 @@ class MatchQuickStatsCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            const Divider(height: 1),
+            Divider(
+              height: 1,
+              color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
             const SizedBox(height: 10),
 
             // Stat bars
             if (stats.homePossession != null || stats.awayPossession != null)
               _buildStatRow(
-                title: isArabic ? 'الاستحواذ' : 'Ball Possession',
+                title: arabic ? 'الاستحواذ' : 'Ball Possession',
                 homeValStr: '${stats.homePossession ?? '50'}%',
                 awayValStr: '${stats.awayPossession ?? '50'}%',
                 homeVal: double.tryParse(stats.homePossession ?? '50') ?? 50,
                 awayVal: double.tryParse(stats.awayPossession ?? '50') ?? 50,
-                isDark: isDark,
-                isArabic: isArabic,
+                isDark: dark,
+                isArabic: arabic,
               ),
 
             if (stats.homeShots != null || stats.awayShots != null) ...[
               const SizedBox(height: 10),
               _buildStatRow(
-                title: isArabic ? 'إجمالي التسديدات' : 'Total Shots',
+                title: arabic ? 'إجمالي التسديدات' : 'Total Shots',
                 homeValStr: '${stats.homeShots ?? 0}',
                 awayValStr: '${stats.awayShots ?? 0}',
                 homeVal: (stats.homeShots ?? 0).toDouble(),
                 awayVal: (stats.awayShots ?? 0).toDouble(),
-                isDark: isDark,
-                isArabic: isArabic,
+                isDark: dark,
+                isArabic: arabic,
               ),
             ],
 
             if (stats.homeFouls != null || stats.awayFouls != null) ...[
               const SizedBox(height: 10),
               _buildStatRow(
-                title: isArabic ? 'الأخطاء' : 'Fouls',
+                title: arabic ? 'الأخطاء' : 'Fouls',
                 homeValStr: '${stats.homeFouls ?? 0}',
                 awayValStr: '${stats.awayFouls ?? 0}',
                 homeVal: (stats.homeFouls ?? 0).toDouble(),
                 awayVal: (stats.awayFouls ?? 0).toDouble(),
-                isDark: isDark,
-                isArabic: isArabic,
+                isDark: dark,
+                isArabic: arabic,
               ),
             ],
 
             if (stats.homeOffsides != null || stats.awayOffsides != null) ...[
               const SizedBox(height: 10),
               _buildStatRow(
-                title: isArabic ? 'التسلل' : 'Offsides',
+                title: arabic ? 'التسلل' : 'Offsides',
                 homeValStr: '${stats.homeOffsides ?? 0}',
                 awayValStr: '${stats.awayOffsides ?? 0}',
                 homeVal: (stats.homeOffsides ?? 0).toDouble(),
                 awayVal: (stats.awayOffsides ?? 0).toDouble(),
-                isDark: isDark,
-                isArabic: isArabic,
+                isDark: dark,
+                isArabic: arabic,
               ),
             ],
           ],

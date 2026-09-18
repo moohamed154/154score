@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ysscores/core/constants/app_colors.dart';
 import 'package:ysscores/core/constants/app_dimensions.dart';
@@ -295,121 +296,154 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     required bool isArabic,
     required bool isHome,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
-      ),
-      child: Row(
-        children: [
-          // Jersey Number
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              player.number != null ? '${player.number}' : '-',
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-              ),
+        onTap: () {
+          final cleanName = player.name.trim();
+          if (cleanName.isNotEmpty) {
+            final pId = player.playerId ?? '0';
+            final slug = Uri.encodeComponent(
+              cleanName.replaceAll(RegExp(r'\s+'), '-'),
+            );
+            context.push('/player/$pId/$slug');
+          }
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
             ),
           ),
-          const SizedBox(width: 10),
-
-          // Player Avatar
-          Stack(
-            clipBehavior: Clip.none,
+          child: Row(
             children: [
-              ClipOval(
-                child: AppImage(
-                  imageUrl: player.photo,
-                  width: 34,
-                  height: 34,
-                  placeholderIcon: Icons.person,
+              // Jersey Number
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color:
+                      isDark
+                          ? AppColors.darkCardElevated
+                          : AppColors.lightCardElevated,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  player.number != null ? '${player.number}' : '-',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
                 ),
               ),
-              if (player.isCaptain)
-                Positioned(
-                  top: -2,
-                  right: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF59E0B),
-                      shape: BoxShape.circle,
+              const SizedBox(width: 10),
+
+              // Player Avatar
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ClipOval(
+                    child: AppImage(
+                      imageUrl: player.photo,
+                      width: 34,
+                      height: 34,
+                      placeholderIcon: Icons.person,
                     ),
-                    child: Text(
-                      isArabic ? 'ق' : 'C',
-                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.outfit)(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.black,
+                  ),
+                  if (player.isCaptain)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF59E0B),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          isArabic ? 'ق' : 'C',
+                          style: (isArabic
+                              ? GoogleFonts.cairo
+                              : GoogleFonts.outfit)(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.black,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 12),
+                ],
+              ),
+              const SizedBox(width: 12),
 
-          // Name and Position
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  player.name,
-                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              // Name and Position
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      player.name,
+                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color:
+                            isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      player.position ??
+                          (player.isGoalkeeper
+                              ? (isArabic ? 'حارس المرمى' : 'Goalkeeper')
+                              : '-'),
+                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                        fontSize: 11,
+                        color:
+                            isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  player.position ?? (player.isGoalkeeper ? (isArabic ? 'حارس المرمى' : 'Goalkeeper') : '-'),
-                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                    fontSize: 11,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
+
+              // Rating Badge (if present)
+              if (player.rating != null && player.rating!.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  decoration: BoxDecoration(
+                    color: _getRatingColor(player.rating!),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    player.rating!,
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
-            ),
+            ],
           ),
-
-          // Rating Badge (if present)
-          if (player.rating != null && player.rating!.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: _getRatingColor(player.rating!),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                player.rating!,
-                style: GoogleFonts.outfit(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -420,64 +454,88 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     required bool isArabic,
     required AppLocalizations l10n,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        onTap: () {
+          final cleanName = coach.name?.trim() ?? '';
+          if (cleanName.isNotEmpty) {
+            final slug = Uri.encodeComponent(
+              cleanName.replaceAll(RegExp(r'\s+'), '-'),
+            );
+            context.push('/player/0/$slug');
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
+          ),
+          child: Row(
+            children: [
+              ClipOval(
+                child: AppImage(
+                  imageUrl: coach.photo,
+                  width: 38,
+                  height: 38,
+                  placeholderIcon: Icons.sports,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      (coach.name != null && coach.name!.isNotEmpty)
+                          ? coach.name!
+                          : (isArabic ? 'المدير الفني' : 'Coach'),
+                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color:
+                            isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isArabic ? 'المدرب الفني' : 'Head Coach',
+                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                        fontSize: 11,
+                        color:
+                            isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color:
+                      isDark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  Icons.sports,
+                  size: 16,
+                  color: isDark ? AppColors.primary : AppColors.primaryDark,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          ClipOval(
-            child: AppImage(
-              imageUrl: coach.photo,
-              width: 38,
-              height: 38,
-              placeholderIcon: Icons.sports,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  (coach.name != null && coach.name!.isNotEmpty)
-                      ? coach.name!
-                      : (isArabic ? 'المدير الفني' : 'Coach'),
-                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isArabic ? 'المدرب الفني' : 'Head Coach',
-                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                    fontSize: 11,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Icon(
-              Icons.sports,
-              size: 16,
-              color: isDark ? AppColors.primary : AppColors.primaryDark,
-            ),
-          ),
-        ],
       ),
     );
   }

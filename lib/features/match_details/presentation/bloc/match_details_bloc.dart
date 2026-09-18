@@ -179,7 +179,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       }
 
       final resolvedEvents = eventsRes.isNotEmpty ? eventsRes : state.events;
-      final resolvedVideos = videosRes ?? state.videos;
+      final resolvedVideos = videosRes.isNotEmpty ? videosRes : state.videos;
       final resolvedStats = statsRes.isNotEmpty ? statsRes : state.stats;
       final resolvedDetails = detailsRes.isNotEmpty ? detailsRes : state.details;
       final resolvedOverview = overviewRes ?? state.overview;

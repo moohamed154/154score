@@ -6,19 +6,27 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/commentator_resolver.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
 
 class MatchInfoCard extends StatelessWidget {
   final MatchInfoSectionEntity section;
+  final bool? isDark;
+  final bool? isArabic;
 
-  const MatchInfoCard({super.key, required this.section});
+  const MatchInfoCard({
+    super.key,
+    required this.section,
+    this.isDark,
+    this.isArabic,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = l10n.isArabic;
+    final dark = isDark ?? (Theme.of(context).brightness == Brightness.dark);
+    final arabic = isArabic ?? l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
     final isSmall = AppDimensions.isSmallScreen(context);
 
@@ -27,10 +35,10 @@ class MatchInfoCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: dark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: dark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
       ),
       child: Column(
@@ -52,8 +60,8 @@ class MatchInfoCard extends StatelessWidget {
                     section.section,
                     style:
                         AppTypography.getBodyLarge(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.primary,
@@ -63,14 +71,20 @@ class MatchInfoCard extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
 
           // Items
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: section.items.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, __) => Divider(
+              height: 1,
+              color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
             itemBuilder: (context, index) {
               final item = section.items[index];
               final isClickable = _canNavigate(item);
@@ -101,7 +115,7 @@ class MatchInfoCard extends StatelessWidget {
                           size: 16,
                           color: isClickable
                               ? AppColors.primary
-                              : (isDark
+                              : (dark
                                     ? AppColors.darkTextMuted
                                     : AppColors.lightTextMuted),
                         ),
@@ -114,10 +128,10 @@ class MatchInfoCard extends StatelessWidget {
                             item.title,
                             style:
                                 AppTypography.getBodySmall(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
+                                  isDark: dark,
+                                  isArabic: arabic,
                                 ).copyWith(
-                                  color: isDark
+                                  color: dark
                                       ? AppColors.darkTextMuted
                                       : AppColors.lightTextMuted,
                                   fontWeight: FontWeight.w500,
@@ -137,15 +151,15 @@ class MatchInfoCard extends StatelessWidget {
                                   item.content,
                                   style:
                                       AppTypography.getBodyMedium(
-                                        isDark: isDark,
-                                        isArabic: isArabic,
+                                        isDark: dark,
+                                        isArabic: arabic,
                                       ).copyWith(
                                         fontWeight: isClickable
                                             ? FontWeight.w700
                                             : FontWeight.w600,
                                         color: isClickable
                                             ? AppColors.primary
-                                            : (isDark
+                                            : (dark
                                                   ? AppColors.darkTextPrimary
                                                   : AppColors.lightTextPrimary),
                                       ),
@@ -157,7 +171,7 @@ class MatchInfoCard extends StatelessWidget {
                               if (isClickable) ...[
                                 const SizedBox(width: 4),
                                 Icon(
-                                  isArabic
+                                  arabic
                                       ? Icons.chevron_left_rounded
                                       : Icons.chevron_right_rounded,
                                   size: 18,
@@ -205,6 +219,21 @@ class MatchInfoCard extends StatelessWidget {
       }
     }
 
+    final isChampionship = item.entityType?.toLowerCase() == 'championship' ||
+        item.title.toLowerCase().contains('championship') ||
+        item.title.toLowerCase().contains('league') ||
+        item.title.contains('بطولة') ||
+        item.title.contains('دوري') ||
+        item.title.contains('كأس');
+
+    if (isChampionship && (id == '0' || id.isEmpty)) {
+      final resolvedId = LeagueResolver.resolveId(item.content) ??
+          LeagueResolver.resolveId(item.slug);
+      if (resolvedId != null) {
+        id = resolvedId;
+      }
+    }
+
     final rawSlug = (item.slug != null && item.slug!.isNotEmpty)
         ? item.slug!
         : item.content.trim().replaceAll(RegExp(r'\s+'), '-');
@@ -213,6 +242,7 @@ class MatchInfoCard extends StatelessWidget {
 
     final type = item.entityType?.toLowerCase();
     String finalRoute = '';
+    Map<String, dynamic>? extra;
 
     if (type == 'referee') {
       finalRoute = '/referee/$id/$slug';
@@ -220,10 +250,12 @@ class MatchInfoCard extends StatelessWidget {
       finalRoute = '/stadium/$id/$slug';
     } else if (type == 'commentator') {
       finalRoute = '/commentator/$id/$slug';
-    } else if (type == 'championship') {
+    } else if (type == 'championship' || isChampionship) {
       finalRoute = '/league/$id/$slug';
+      extra = {'title': item.content, 'slug': slug};
     } else if (type == 'team') {
       finalRoute = '/team/$id/$slug';
+      extra = {'name': item.content, 'slug': slug};
     } else if (type == 'match') {
       finalRoute = '/match/$id';
     } else {
@@ -241,6 +273,7 @@ class MatchInfoCard extends StatelessWidget {
           titleLower.contains('دوري') ||
           titleLower.contains('league')) {
         finalRoute = '/league/$id/$slug';
+        extra = {'title': item.content, 'slug': slug};
       } else if (titleLower.contains('ذهاب') ||
           titleLower.contains('إياب') ||
           titleLower.contains('match')) {
@@ -249,7 +282,7 @@ class MatchInfoCard extends StatelessWidget {
     }
 
     if (finalRoute.isNotEmpty) {
-      context.push(finalRoute);
+      context.push(finalRoute, extra: extra);
     }
   }
 

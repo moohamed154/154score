@@ -10,8 +10,15 @@ import '../../domain/entities/match_details_entity.dart';
 
 class MatchFormCard extends StatefulWidget {
   final MatchRecentFormEntity recentForm;
+  final bool? isDark;
+  final bool? isArabic;
 
-  const MatchFormCard({super.key, required this.recentForm});
+  const MatchFormCard({
+    super.key,
+    required this.recentForm,
+    this.isDark,
+    this.isArabic,
+  });
 
   @override
   State<MatchFormCard> createState() => _MatchFormCardState();
@@ -23,8 +30,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = l10n.isArabic;
+    final dark = widget.isDark ?? (Theme.of(context).brightness == Brightness.dark);
+    final arabic = widget.isArabic ?? l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     final homeMatches = widget.recentForm.homeMatches;
@@ -37,10 +44,10 @@ class _MatchFormCardState extends State<MatchFormCard> {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: dark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: dark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
       ),
       child: Padding(
@@ -60,10 +67,10 @@ class _MatchFormCardState extends State<MatchFormCard> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isArabic ? 'آخر المباريات' : 'Recent Form',
+                    arabic ? 'آخر المباريات' : 'Recent Form',
                     style: AppTypography.getBodyLarge(
-                      isDark: isDark,
-                      isArabic: isArabic,
+                      isDark: dark,
+                      isArabic: arabic,
                     ).copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
@@ -75,7 +82,7 @@ class _MatchFormCardState extends State<MatchFormCard> {
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: isDark
+                    color: dark
                         ? AppColors.darkTextMuted
                         : AppColors.lightTextMuted,
                   ),
@@ -83,23 +90,29 @@ class _MatchFormCardState extends State<MatchFormCard> {
               ),
             ),
             const SizedBox(height: 10),
-            const Divider(height: 1),
+            Divider(
+              height: 1,
+              color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
             const SizedBox(height: 12),
 
             // Home Team Form Row
             if (homeMatches.isNotEmpty) ...[
               _buildTeamFormRow(
                 teamName: widget.recentForm.homeTeamName ??
-                    (isArabic ? 'صاحب الأرض' : 'Home Team'),
+                    (arabic ? 'صاحب الأرض' : 'Home Team'),
                 matches: homeMatches,
-                isDark: isDark,
-                isArabic: isArabic,
+                isDark: dark,
+                isArabic: arabic,
               ),
             ],
 
             if (homeMatches.isNotEmpty && awayMatches.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Divider(height: 1),
+              Divider(
+                height: 1,
+                color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
               const SizedBox(height: 12),
             ],
 
@@ -107,25 +120,28 @@ class _MatchFormCardState extends State<MatchFormCard> {
             if (awayMatches.isNotEmpty) ...[
               _buildTeamFormRow(
                 teamName: widget.recentForm.awayTeamName ??
-                    (isArabic ? 'الضيف' : 'Away Team'),
+                    (arabic ? 'الضيف' : 'Away Team'),
                 matches: awayMatches,
-                isDark: isDark,
-                isArabic: isArabic,
+                isDark: dark,
+                isArabic: arabic,
               ),
             ],
 
             // Expanded Match List
             if (_expanded) ...[
               const SizedBox(height: 14),
-              const Divider(height: 1),
+              Divider(
+                height: 1,
+                color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
               const SizedBox(height: 10),
               if (homeMatches.isNotEmpty) ...[
                 Text(
                   widget.recentForm.homeTeamName ??
-                      (isArabic ? 'مباريات المضيف' : 'Home Matches'),
+                      (arabic ? 'مباريات المضيف' : 'Home Matches'),
                   style: AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
+                    isDark: dark,
+                    isArabic: arabic,
                   ).copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -135,8 +151,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 ...homeMatches.map(
                   (m) => _buildDetailedMatchTile(
                     m,
-                    isDark: isDark,
-                    isArabic: isArabic,
+                    isDark: dark,
+                    isArabic: arabic,
                   ),
                 ),
               ],
@@ -144,10 +160,10 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 const SizedBox(height: 10),
                 Text(
                   widget.recentForm.awayTeamName ??
-                      (isArabic ? 'مباريات الضيف' : 'Away Matches'),
+                      (arabic ? 'مباريات الضيف' : 'Away Matches'),
                   style: AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
+                    isDark: dark,
+                    isArabic: arabic,
                   ).copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -157,8 +173,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 ...awayMatches.map(
                   (m) => _buildDetailedMatchTile(
                     m,
-                    isDark: isDark,
-                    isArabic: isArabic,
+                    isDark: dark,
+                    isArabic: arabic,
                   ),
                 ),
               ],

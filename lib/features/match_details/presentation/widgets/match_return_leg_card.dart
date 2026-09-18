@@ -9,24 +9,31 @@ import '../../domain/entities/match_details_entity.dart';
 
 class MatchReturnLegCard extends StatelessWidget {
   final MatchReturnLegEntity returnLeg;
+  final bool? isDark;
+  final bool? isArabic;
 
-  const MatchReturnLegCard({super.key, required this.returnLeg});
+  const MatchReturnLegCard({
+    super.key,
+    required this.returnLeg,
+    this.isDark,
+    this.isArabic,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = l10n.isArabic;
+    final dark = isDark ?? (Theme.of(context).brightness == Brightness.dark);
+    final arabic = isArabic ?? l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
     final isNavigable = returnLeg.matchId.trim().isNotEmpty && returnLeg.matchId != '0';
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: dark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: dark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
       ),
       child: Material(
@@ -51,10 +58,10 @@ class MatchReturnLegCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      isArabic ? 'مباراة الذهاب' : 'First Leg Match',
+                      arabic ? 'مباراة الذهاب' : 'First Leg Match',
                       style: AppTypography.getBodyLarge(
-                        isDark: isDark,
-                        isArabic: isArabic,
+                        isDark: dark,
+                        isArabic: arabic,
                       ).copyWith(
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
@@ -73,12 +80,12 @@ class MatchReturnLegCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          isArabic
+                          arabic
                               ? 'الإجمالي: ${returnLeg.aggResult}'
                               : 'Agg: ${returnLeg.aggResult}',
                           style: AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
+                            isDark: dark,
+                            isArabic: arabic,
                           ).copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
@@ -89,7 +96,10 @@ class MatchReturnLegCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Divider(height: 1),
+                Divider(
+                  height: 1,
+                  color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
                 const SizedBox(height: 10),
 
                 // Match Teams and Score Row
@@ -100,12 +110,12 @@ class MatchReturnLegCard extends StatelessWidget {
                       child: Text(
                         returnLeg.homeTeam.isNotEmpty
                             ? returnLeg.homeTeam
-                            : (isArabic ? 'المضيف' : 'Home'),
+                            : (arabic ? 'المضيف' : 'Home'),
                         style: AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(fontWeight: FontWeight.w600),
-                        textAlign: isArabic ? TextAlign.left : TextAlign.right,
+                        textAlign: arabic ? TextAlign.left : TextAlign.right,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -117,12 +127,12 @@ class MatchReturnLegCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: isDark
+                        color: dark
                             ? AppColors.darkSurface
                             : AppColors.lightSurface,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: isDark
+                          color: dark
                               ? AppColors.darkBorder
                               : AppColors.lightBorder,
                         ),
@@ -130,8 +140,8 @@ class MatchReturnLegCard extends StatelessWidget {
                       child: Text(
                         returnLeg.scoreText,
                         style: AppTypography.getBodyLarge(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary,
@@ -144,12 +154,12 @@ class MatchReturnLegCard extends StatelessWidget {
                       child: Text(
                         returnLeg.awayTeam.isNotEmpty
                             ? returnLeg.awayTeam
-                            : (isArabic ? 'الضيف' : 'Away'),
+                            : (arabic ? 'الضيف' : 'Away'),
                         style: AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(fontWeight: FontWeight.w600),
-                        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                        textAlign: arabic ? TextAlign.right : TextAlign.left,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -157,7 +167,7 @@ class MatchReturnLegCard extends StatelessWidget {
                     if (isNavigable) ...[
                       const SizedBox(width: 6),
                       Icon(
-                        isArabic
+                        arabic
                             ? Icons.chevron_left_rounded
                             : Icons.chevron_right_rounded,
                         size: 18,
@@ -172,14 +182,14 @@ class MatchReturnLegCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Center(
                     child: Text(
-                      isArabic
+                      arabic
                           ? 'ركلات الترجيح: ${returnLeg.penalties}'
                           : 'Penalties: ${returnLeg.penalties}',
                       style: AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
+                        isDark: dark,
+                        isArabic: arabic,
                       ).copyWith(
-                        color: isDark
+                        color: dark
                             ? AppColors.darkTextMuted
                             : AppColors.lightTextMuted,
                         fontStyle: FontStyle.italic,

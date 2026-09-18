@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/di/injection_container.dart';
+import '../../core/utils/league_resolver.dart';
+import '../../core/utils/url_helper.dart';
 import '../../features/favorites/presentation/views/favorites_view.dart';
 import '../../features/home/presentation/views/home_view.dart';
 
@@ -138,16 +140,48 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/league/:id',
         builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '';
+          var id = state.pathParameters['id'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
           final tabParam = state.uri.queryParameters['tab'];
           final initialTab = extra?['tab'] as int? ??
               (tabParam != null ? int.tryParse(tabParam) ?? 0 : 0);
+          final title = extra?['title']?.toString();
+          if ((id == '0' || id.isEmpty) && title != null) {
+            id = LeagueResolver.resolveId(title) ?? id;
+          }
           return BlocProvider(
             create: (_) => sl<LeagueBloc>(param1: id, param2: extra),
             child: LeagueView(
               leagueId: id,
-              initialTitle: extra?['title']?.toString(),
+              initialTitle: title,
+              initialLogo: extra?['logo']?.toString(),
+              initialTabIndex: initialTab,
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/league/:id/:slug',
+        builder: (context, state) {
+          var id = state.pathParameters['id'] ?? '';
+          final slug = state.pathParameters['slug'] ?? '';
+          final extra = state.extra as Map<String, dynamic>?;
+          final tabParam = state.uri.queryParameters['tab'];
+          final initialTab = extra?['tab'] as int? ??
+              (tabParam != null ? int.tryParse(tabParam) ?? 0 : 0);
+          final title = extra?['title']?.toString() ??
+              (slug.isNotEmpty ? UrlHelper.slugToName(slug) : null);
+          if (id == '0' || id.isEmpty) {
+            id = LeagueResolver.resolveId(title) ??
+                LeagueResolver.resolveId(slug) ??
+                id;
+          }
+          return BlocProvider(
+            create: (_) => sl<LeagueBloc>(param1: id, param2: extra),
+            child: LeagueView(
+              leagueId: id,
+              initialTitle: title,
               initialLogo: extra?['logo']?.toString(),
               initialTabIndex: initialTab,
             ),
@@ -167,6 +201,26 @@ class AppRouter {
             child: TeamView(
               teamId: id,
               initialName: extra?['name']?.toString(),
+              initialLogo: extra?['logo']?.toString(),
+              leagueId: extra?['leagueId']?.toString(),
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/team/:id/:slug',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final slug = state.pathParameters['slug'] ?? '';
+          final extra = state.extra as Map<String, dynamic>?;
+          final name = extra?['name']?.toString() ??
+              (slug.isNotEmpty ? UrlHelper.slugToName(slug) : null);
+          return BlocProvider(
+            create: (_) => sl<TeamBloc>(param1: id, param2: extra),
+            child: TeamView(
+              teamId: id,
+              initialName: name,
               initialLogo: extra?['logo']?.toString(),
               leagueId: extra?['leagueId']?.toString(),
             ),

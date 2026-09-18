@@ -250,6 +250,8 @@ class LineupPlayerEntity extends Equatable {
     this.isSubstitute = false,
   });
 
+  String? get id => playerId;
+
   bool get isGoalkeeper =>
       positionCode == 'G' ||
       position?.toLowerCase().contains('goal') == true ||

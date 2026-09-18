@@ -17,6 +17,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../standings/presentation/bloc/standings_bloc.dart';
@@ -178,7 +179,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
       onTap: () {
         if (match.leagueId != null || effectiveTitle.isNotEmpty) {
-          final lId = match.leagueId ?? '937599';
+          final lId = match.leagueId ??
+              LeagueResolver.resolveId(effectiveTitle) ??
+              '937599';
           context.push(
             '/league/$lId',
             extra: {'title': displayTitle, 'logo': effectiveLogo},
@@ -640,58 +643,58 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     const dummyEvents = [
       MatchEventEntity(
         minute: "89'",
-        playerName: "بابلو مافيو",
-        secondaryPlayerName: "بطاقة صفراء",
-        type: "yellow_card",
+        playerName: 'بابلو مافيو',
+        secondaryPlayerName: 'بطاقة صفراء',
+        type: 'yellow_card',
         isHomeTeam: true,
       ),
       MatchEventEntity(
         minute: "84'",
-        playerName: "خوليو دياز",
-        secondaryPlayerName: "كوريا",
-        type: "substitution",
+        playerName: 'خوليو دياز',
+        secondaryPlayerName: 'كوريا',
+        type: 'substitution',
         isHomeTeam: false,
       ),
       MatchEventEntity(
         minute: "83'",
-        playerName: "هوغو دورو",
-        secondaryPlayerName: "غيرا",
-        type: "substitution",
+        playerName: 'هوغو دورو',
+        secondaryPlayerName: 'غيرا',
+        type: 'substitution',
         isHomeTeam: true,
       ),
       MatchEventEntity(
         minute: "83'",
-        playerName: "خيسوس فاسكيز",
-        secondaryPlayerName: "غايا",
-        type: "substitution",
+        playerName: 'خيسوس فاسكيز',
+        secondaryPlayerName: 'غايا',
+        type: 'substitution',
         isHomeTeam: true,
       ),
       MatchEventEntity(
         minute: "83'",
-        playerName: "جون غوريدي",
-        secondaryPlayerName: "ستاسين",
-        type: "substitution",
+        playerName: 'جون غوريدي',
+        secondaryPlayerName: 'ستاسين',
+        type: 'substitution',
         isHomeTeam: false,
       ),
       MatchEventEntity(
         minute: "81'",
-        playerName: "خوان إغليسياس",
-        type: "goal",
-        score: "0 - 1",
+        playerName: 'خوان إغليسياس',
+        type: 'goal',
+        score: '0 - 1',
         isHomeTeam: false,
       ),
       MatchEventEntity(
         minute: "71'",
-        playerName: "جيورجي كوشوراشفيلي",
-        secondaryPlayerName: "فوفانا",
-        type: "substitution",
+        playerName: 'جيورجي كوشوراشفيلي',
+        secondaryPlayerName: 'فوفانا',
+        type: 'substitution',
         isHomeTeam: false,
       ),
       MatchEventEntity(
         minute: "67'",
-        playerName: "تشيديرا إيجوكي",
-        secondaryPlayerName: "بطاقة صفراء",
-        type: "yellow_card",
+        playerName: 'تشيديرا إيجوكي',
+        secondaryPlayerName: 'بطاقة صفراء',
+        type: 'yellow_card',
         isHomeTeam: true,
       ),
     ];
@@ -1349,20 +1352,36 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         children: [
           // 1. First Leg / Return Leg
           if (overview?.returnLeg case final returnLeg?)
-            MatchReturnLegCard(returnLeg: returnLeg),
+            MatchReturnLegCard(
+              returnLeg: returnLeg,
+              isDark: isDark,
+              isArabic: isArabic,
+            ),
 
           // 2. Head-to-Head Record
           if (overview?.h2hSummary case final h2hSummary?)
-            MatchH2HCard(summary: h2hSummary),
+            MatchH2HCard(
+              summary: h2hSummary,
+              isDark: isDark,
+              isArabic: isArabic,
+            ),
 
           // 3. Recent Form (Last 5 matches)
           if (overview?.recentForm case final recentForm?)
-            MatchFormCard(recentForm: recentForm),
+            MatchFormCard(
+              recentForm: recentForm,
+              isDark: isDark,
+              isArabic: isArabic,
+            ),
 
           // 4. Quick Match Statistics
           if (overview?.quickStats case final quickStats?
               when !quickStats.isEmpty)
-            MatchQuickStatsCard(stats: quickStats),
+            MatchQuickStatsCard(
+              stats: quickStats,
+              isDark: isDark,
+              isArabic: isArabic,
+            ),
 
           // 5. Enriched Info Sections
           ...detailsList
@@ -1386,7 +1405,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                 }
                 return true;
               })
-              .map((sec) => MatchInfoCard(section: sec)),
+              .map(
+                (sec) => MatchInfoCard(
+                  section: sec,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
+              ),
         ],
       ),
     );
@@ -1406,7 +1431,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       return _buildStatsSkeleton(context, isDark, isArabic);
     }
 
-    if (state.stats.isEmpty) {
+    final effectiveStats = state.stats.isNotEmpty
+        ? state.stats
+        : _buildStatsFromQuickStats(state.overview?.quickStats, isArabic);
+
+    if (effectiveStats.isEmpty) {
       return RefreshIndicator(
         color: AppColors.primary,
         onRefresh: _handleRefresh,
@@ -1422,19 +1451,177 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       );
     }
 
+    final homeName = widget.initialMatch?.team1 ?? (isArabic ? 'صاحب الأرض' : 'Home');
+    final awayName = widget.initialMatch?.team2 ?? (isArabic ? 'الضيف' : 'Away');
+    final homeLogo = widget.initialMatch?.team1Logo;
+    final awayLogo = widget.initialMatch?.team2Logo;
+
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: _handleRefresh,
-      child: ListView.builder(
+      child: ListView(
         key: const PageStorageKey('stats_tab_list'),
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.all(hMargin),
-        itemCount: state.stats.length,
-        itemBuilder: (context, index) {
-          return StatComparisonBar(stat: state.stats[index]);
-        },
+        children: [
+          // Team Comparison Header
+          Container(
+            margin: const EdgeInsets.only(bottom: AppDimensions.md),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkCardElevated
+                  : AppColors.lightCardElevated,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Home Team
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (homeLogo != null && homeLogo.isNotEmpty) ...[
+                        AppImage(
+                          imageUrl: homeLogo,
+                          width: 24,
+                          height: 24,
+                          placeholderIcon: Icons.shield_outlined,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Flexible(
+                        child: Text(
+                          homeName,
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Center vs
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    isArabic ? 'الإحصائيات' : 'Stats',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+
+                // Away Team
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          awayName,
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(fontWeight: FontWeight.w700),
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (awayLogo != null && awayLogo.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        AppImage(
+                          imageUrl: awayLogo,
+                          width: 24,
+                          height: 24,
+                          placeholderIcon: Icons.shield_outlined,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Stats Rows
+          ...effectiveStats.map((stat) => StatComparisonBar(stat: stat)),
+        ],
       ),
     );
+  }
+
+  List<MatchStatItemEntity> _buildStatsFromQuickStats(
+    MatchQuickStatsEntity? qs,
+    bool isArabic,
+  ) {
+    if (qs == null || qs.isEmpty) return [];
+    final list = <MatchStatItemEntity>[];
+    if (qs.homePossession != null || qs.awayPossession != null) {
+      final hVal = double.tryParse(qs.homePossession ?? '50') ?? 50;
+      final aVal = double.tryParse(qs.awayPossession ?? '50') ?? 50;
+      final total = hVal + aVal;
+      list.add(
+        MatchStatItemEntity(
+          title: isArabic ? 'الاستحواذ' : 'Ball Possession',
+          homeValue: '${qs.homePossession ?? '50'}%',
+          awayValue: '${qs.awayPossession ?? '50'}%',
+          homePercentage: total > 0 ? (hVal / total) : 0.5,
+        ),
+      );
+    }
+    if (qs.homeShots != null || qs.awayShots != null) {
+      final h = qs.homeShots ?? 0;
+      final a = qs.awayShots ?? 0;
+      final total = (h + a).toDouble();
+      list.add(
+        MatchStatItemEntity(
+          title: isArabic ? 'إجمالي التسديدات' : 'Total Shots',
+          homeValue: '$h',
+          awayValue: '$a',
+          homePercentage: total > 0 ? (h / total) : 0.5,
+        ),
+      );
+    }
+    if (qs.homeFouls != null || qs.awayFouls != null) {
+      final h = qs.homeFouls ?? 0;
+      final a = qs.awayFouls ?? 0;
+      final total = (h + a).toDouble();
+      list.add(
+        MatchStatItemEntity(
+          title: isArabic ? 'الأخطاء' : 'Fouls',
+          homeValue: '$h',
+          awayValue: '$a',
+          homePercentage: total > 0 ? (h / total) : 0.5,
+        ),
+      );
+    }
+    if (qs.homeOffsides != null || qs.awayOffsides != null) {
+      final h = qs.homeOffsides ?? 0;
+      final a = qs.awayOffsides ?? 0;
+      final total = (h + a).toDouble();
+      list.add(
+        MatchStatItemEntity(
+          title: isArabic ? 'التسلل' : 'Offsides',
+          homeValue: '$h',
+          awayValue: '$a',
+          homePercentage: total > 0 ? (h / total) : 0.5,
+        ),
+      );
+    }
+    return list;
   }
 
   String? _resolveLeagueId() {
@@ -1761,39 +1948,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               ),
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
-                child: item.image != null && item.image!.isNotEmpty
-                    ? Image.network(
-                        item.image!,
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          width: 56,
-                          height: 56,
-                          color: isDark
-                              ? AppColors.darkSurface
-                              : AppColors.lightSurface,
-                          child: Icon(
-                            Icons.article_rounded,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                        ),
-                      )
-                    : Container(
-                        width: 56,
-                        height: 56,
-                        color: isDark
-                            ? AppColors.darkSurface
-                            : AppColors.lightSurface,
-                        child: Icon(
-                          Icons.article_rounded,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                        ),
-                      ),
+                child: AppImage(
+                  imageUrl: item.image,
+                  width: 56,
+                  height: 56,
+                  fit: BoxFit.cover,
+                  placeholderIcon: Icons.article_rounded,
+                ),
               ),
               title: Text(
                 item.title,

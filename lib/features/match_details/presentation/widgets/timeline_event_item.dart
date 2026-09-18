@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -12,6 +13,18 @@ class TimelineEventItem extends StatelessWidget {
   final MatchEventEntity event;
 
   const TimelineEventItem({super.key, required this.event});
+
+  void _navigateToPlayer(BuildContext context, String? name) {
+    if (name == null ||
+        name.trim().isEmpty ||
+        name.trim() == '-' ||
+        name.trim() == 'غير محدد') {
+      return;
+    }
+    final cleanName = name.trim();
+    final slug = Uri.encodeComponent(cleanName.replaceAll(RegExp(r'\s+'), '-'));
+    context.push('/player/0/$slug');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,43 +245,51 @@ class TimelineEventItem extends StatelessWidget {
                     const SizedBox(width: 5),
                   ],
                   Flexible(
-                    child: Text(
-                      mainPlayerName,
-                      style:
-                          AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 12 : 14,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                      textAlign: TextAlign.end,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () => _navigateToPlayer(context, mainPlayerName),
+                      child: Text(
+                        mainPlayerName,
+                        style:
+                            AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: isSmall ? 12 : 14,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
+                        textAlign: TextAlign.end,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                 ]
               : [
                   Flexible(
-                    child: Text(
-                      mainPlayerName,
-                      style:
-                          AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 12 : 14,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                      textAlign: TextAlign.start,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () => _navigateToPlayer(context, mainPlayerName),
+                      child: Text(
+                        mainPlayerName,
+                        style:
+                            AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: isSmall ? 12 : 14,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
+                        textAlign: TextAlign.start,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                   if (event.hasVideo) ...[
@@ -295,16 +316,20 @@ class TimelineEventItem extends StatelessWidget {
             children: isHome
                 ? [
                     Flexible(
-                      child: Text(
-                        subPlayerOutName,
-                        style: TextStyle(
-                          fontSize: isSmall ? 10 : 11,
-                          color: AppColors.redCard,
-                          fontWeight: FontWeight.w600,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(4),
+                        onTap: () => _navigateToPlayer(context, subPlayerOutName),
+                        child: Text(
+                          subPlayerOutName,
+                          style: TextStyle(
+                            fontSize: isSmall ? 10 : 11,
+                            color: AppColors.redCard,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        textAlign: TextAlign.end,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 2),
@@ -322,16 +347,20 @@ class TimelineEventItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 2),
                     Flexible(
-                      child: Text(
-                        subPlayerOutName,
-                        style: TextStyle(
-                          fontSize: isSmall ? 10 : 11,
-                          color: AppColors.redCard,
-                          fontWeight: FontWeight.w600,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(4),
+                        onTap: () => _navigateToPlayer(context, subPlayerOutName),
+                        child: Text(
+                          subPlayerOutName,
+                          style: TextStyle(
+                            fontSize: isSmall ? 10 : 11,
+                            color: AppColors.redCard,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        textAlign: TextAlign.start,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -339,21 +368,25 @@ class TimelineEventItem extends StatelessWidget {
         ] else if (event.secondaryPlayerName != null &&
             event.secondaryPlayerName!.isNotEmpty) ...[
           const SizedBox(height: 1),
-          Text(
-            event.secondaryPlayerName!,
-            style:
-                AppTypography.getBodySmall(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontSize: isSmall ? 10 : 11,
-                  color: isDark
-                      ? AppColors.darkTextMuted
-                      : AppColors.lightTextMuted,
-                ),
-            textAlign: isHome ? TextAlign.end : TextAlign.start,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          InkWell(
+            borderRadius: BorderRadius.circular(4),
+            onTap: () => _navigateToPlayer(context, event.secondaryPlayerName),
+            child: Text(
+              event.secondaryPlayerName!,
+              style:
+                  AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontSize: isSmall ? 10 : 11,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                  ),
+              textAlign: isHome ? TextAlign.end : TextAlign.start,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ] else if (eventLabel != null) ...[
           const SizedBox(height: 1),

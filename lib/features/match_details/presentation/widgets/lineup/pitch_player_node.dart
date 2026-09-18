@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ysscores/core/constants/app_colors.dart';
 import 'package:ysscores/core/constants/app_dimensions.dart';
@@ -400,7 +401,41 @@ class PitchPlayerNode extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      final cleanName = p.name.trim();
+                      if (cleanName.isNotEmpty) {
+                        final pId = p.playerId ?? '0';
+                        final slug = Uri.encodeComponent(
+                          cleanName.replaceAll(RegExp(r'\s+'), '-'),
+                        );
+                        context.push('/player/$pId/$slug');
+                      }
+                    },
+                    icon: const Icon(Icons.person_outline_rounded, size: 18),
+                    label: Text(
+                      isArabic
+                          ? 'الملف الشخصي للاعب'
+                          : 'View Player Profile',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
               ],
             ),
           ),

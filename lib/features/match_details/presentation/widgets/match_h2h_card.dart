@@ -8,14 +8,21 @@ import '../../domain/entities/match_details_entity.dart';
 
 class MatchH2HCard extends StatelessWidget {
   final MatchH2HSummaryEntity summary;
+  final bool? isDark;
+  final bool? isArabic;
 
-  const MatchH2HCard({super.key, required this.summary});
+  const MatchH2HCard({
+    super.key,
+    required this.summary,
+    this.isDark,
+    this.isArabic,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = l10n.isArabic;
+    final dark = isDark ?? (Theme.of(context).brightness == Brightness.dark);
+    final arabic = isArabic ?? l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     final total = summary.totalMatches;
@@ -26,10 +33,10 @@ class MatchH2HCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: dark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: dark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
       ),
       child: Padding(
@@ -47,10 +54,10 @@ class MatchH2HCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isArabic ? 'سجل المواجهات المباشرة' : 'Head-to-Head Record',
+                  arabic ? 'سجل المواجهات المباشرة' : 'Head-to-Head Record',
                   style: AppTypography.getBodyLarge(
-                    isDark: isDark,
-                    isArabic: isArabic,
+                    isDark: dark,
+                    isArabic: arabic,
                   ).copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -59,12 +66,12 @@ class MatchH2HCard extends StatelessWidget {
                 const Spacer(),
                 if (total > 0)
                   Text(
-                    isArabic ? '$total مباريات' : '$total Matches',
+                    arabic ? '$total مباريات' : '$total Matches',
                     style: AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
+                      isDark: dark,
+                      isArabic: arabic,
                     ).copyWith(
-                      color: isDark
+                      color: dark
                           ? AppColors.darkTextMuted
                           : AppColors.lightTextMuted,
                       fontWeight: FontWeight.w600,
@@ -73,7 +80,10 @@ class MatchH2HCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            const Divider(height: 1),
+            Divider(
+              height: 1,
+              color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
             const SizedBox(height: 14),
 
             // Stat numbers & team labels
@@ -87,8 +97,8 @@ class MatchH2HCard extends StatelessWidget {
                       Text(
                         '$homeWins',
                         style: AppTypography.getHeadingLarge(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(
                           color: AppColors.uclGreen,
                           fontWeight: FontWeight.w800,
@@ -98,12 +108,12 @@ class MatchH2HCard extends StatelessWidget {
                       Text(
                         summary.homeTeamName?.isNotEmpty == true
                             ? summary.homeTeamName!
-                            : (isArabic ? 'فوز المضيف' : 'Home Wins'),
+                            : (arabic ? 'فوز المضيف' : 'Home Wins'),
                         style: AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(
-                          color: isDark
+                          color: dark
                               ? AppColors.darkTextPrimary
                               : AppColors.lightTextPrimary,
                           fontWeight: FontWeight.w600,
@@ -123,10 +133,10 @@ class MatchH2HCard extends StatelessWidget {
                       Text(
                         '$draws',
                         style: AppTypography.getHeadingLarge(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(
-                          color: isDark
+                          color: dark
                               ? AppColors.darkTextMuted
                               : AppColors.lightTextMuted,
                           fontWeight: FontWeight.w800,
@@ -134,12 +144,12 @@ class MatchH2HCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isArabic ? 'تعادل' : 'Draws',
+                        arabic ? 'تعادل' : 'Draws',
                         style: AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(
-                          color: isDark
+                          color: dark
                               ? AppColors.darkTextMuted
                               : AppColors.lightTextMuted,
                           fontWeight: FontWeight.w600,
@@ -157,8 +167,8 @@ class MatchH2HCard extends StatelessWidget {
                       Text(
                         '$awayWins',
                         style: AppTypography.getHeadingLarge(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(
                           color: AppColors.relegationRed,
                           fontWeight: FontWeight.w800,
@@ -168,12 +178,12 @@ class MatchH2HCard extends StatelessWidget {
                       Text(
                         summary.awayTeamName?.isNotEmpty == true
                             ? summary.awayTeamName!
-                            : (isArabic ? 'فوز الضيف' : 'Away Wins'),
+                            : (arabic ? 'فوز الضيف' : 'Away Wins'),
                         style: AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
+                          isDark: dark,
+                          isArabic: arabic,
                         ).copyWith(
-                          color: isDark
+                          color: dark
                               ? AppColors.darkTextPrimary
                               : AppColors.lightTextPrimary,
                           fontWeight: FontWeight.w600,
@@ -206,7 +216,7 @@ class MatchH2HCard extends StatelessWidget {
                         Expanded(
                           flex: draws,
                           child: Container(
-                            color: isDark
+                            color: dark
                                 ? AppColors.darkTextMuted.withValues(alpha: 0.4)
                                 : AppColors.lightTextMuted.withValues(alpha: 0.4),
                           ),
