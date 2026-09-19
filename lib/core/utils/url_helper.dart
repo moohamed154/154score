@@ -11,7 +11,7 @@ class UrlHelper {
   /// Handles protocol-relative URLs (`//imgs...`), non-secure `http:`, and trims whitespace.
   static String? normalizeImageUrl(String? url) {
     if (url == null) return null;
-    final trimmed = url.trim();
+    var trimmed = url.trim();
     if (trimmed.isEmpty ||
         trimmed == 'null' ||
         trimmed == 'undefined' ||
@@ -20,12 +20,20 @@ class UrlHelper {
       return null;
     }
 
+    // Fix broken stadium 820/800 CDN paths to canonical 600
+    if (trimmed.contains('/stadium/820/') || trimmed.contains('/stadium/800/')) {
+      trimmed = trimmed.replaceAll(
+        RegExp(r'/stadium/(820|800)/'),
+        '/stadium/600/',
+      );
+    }
+
     if (trimmed.startsWith('//')) {
       return 'https:$trimmed';
     }
 
     if (trimmed.startsWith('http://')) {
-      return trimmed.replaceFirst('http://', 'https://');
+      trimmed = trimmed.replaceFirst('http://', 'https://');
     }
 
     if (trimmed.startsWith('https://')) {
@@ -47,12 +55,33 @@ class UrlHelper {
           trimmed.startsWith('player/') ||
           trimmed.startsWith('championship/') ||
           trimmed.startsWith('flags/') ||
-          trimmed.startsWith('country/')) {
+          trimmed.startsWith('country/') ||
+          trimmed.startsWith('stadium/')) {
         return 'https://imgs.ysscores.com/$trimmed';
       }
     }
 
     return trimmed;
+  }
+
+  /// Specifically normalizes stadium hero image URLs from the API.
+  static String? normalizeStadiumImageUrl(String? url, {int size = 600}) {
+    if (url == null) return null;
+    final trimmed = url.trim();
+    if (trimmed.isEmpty ||
+        trimmed == 'null' ||
+        trimmed == 'undefined' ||
+        trimmed == '0' ||
+        trimmed == '-1') {
+      return null;
+    }
+
+    // Bare numeric image filename (e.g. "1461724761244.jpg")
+    if (RegExp(r'^\d+\.(png|jpg|jpeg|webp)$', caseSensitive: false).hasMatch(trimmed)) {
+      return 'https://imgs.ysscores.com/stadium/$size/$trimmed';
+    }
+
+    return normalizeImageUrl(trimmed);
   }
 
   /// Specifically normalizes player photo URLs from the API.
@@ -103,7 +132,9 @@ class UrlHelper {
     }
 
     // 2. Reject known broken CDN paths that return HTTP 200 text/html (<!-- 404 -->)
-    if (lower.contains('/champ/64/')) {
+    if (lower.contains('/champ/64/') ||
+        lower.contains('/stadium/820/') ||
+        lower.contains('/stadium/800/')) {
       return false;
     }
 

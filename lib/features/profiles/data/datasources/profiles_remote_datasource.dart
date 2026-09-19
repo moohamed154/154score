@@ -149,9 +149,15 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
         englishName = map['name_en'].toString();
       }
       if (map['photo'] != null || map['image'] != null) {
-        image = UrlHelper.normalizeImageUrl(
-          (map['photo'] ?? map['image'])?.toString(),
-        );
+        final rawImg = (map['photo'] ?? map['image'])?.toString();
+        if (rawImg != null &&
+            (map['seats'] != null ||
+                map['capacity'] != null ||
+                map['stadium_teams'] != null)) {
+          image = UrlHelper.normalizeStadiumImageUrl(rawImg);
+        } else {
+          image = UrlHelper.normalizeImageUrl(rawImg);
+        }
       }
       if (map['country_flag'] != null || map['flag'] != null) {
         flag = UrlHelper.normalizeImageUrl(

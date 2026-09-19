@@ -47,10 +47,10 @@ class AppImage extends StatelessWidget {
 
     final safeIconSize = (safeWidth != null)
         ? (safeWidth * 0.5).clamp(14.0, 40.0)
-        : 20.0;
+        : (safeHeight != null ? (safeHeight * 0.35).clamp(16.0, 48.0) : 32.0);
     final safePlaceholderIconSize = (safeWidth != null)
         ? (safeWidth * 0.4).clamp(12.0, 36.0)
-        : 16.0;
+        : (safeHeight != null ? (safeHeight * 0.25).clamp(14.0, 40.0) : 24.0);
 
     final cacheW = (safeWidth != null && safeWidth > 0)
         ? (safeWidth * 2).toInt()
