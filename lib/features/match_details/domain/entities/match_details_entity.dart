@@ -298,6 +298,7 @@ class LineupPlayerEntity extends Equatable {
   final int? substituteTime;
   final int? substitutePlus;
   final String? subbedForName;
+  final String? subbedForId;
 
   const LineupPlayerEntity({
     this.playerId,
@@ -324,6 +325,7 @@ class LineupPlayerEntity extends Equatable {
     this.substituteTime,
     this.substitutePlus,
     this.subbedForName,
+    this.subbedForId,
   });
 
   String? get id => playerId;
@@ -337,6 +339,62 @@ class LineupPlayerEntity extends Equatable {
       positionCode == 'G' ||
       position?.toLowerCase().contains('goal') == true ||
       position?.contains('حارس') == true;
+
+  LineupPlayerEntity copyWith({
+    String? playerId,
+    String? name,
+    String? shortName,
+    int? number,
+    String? position,
+    String? positionCode,
+    String? detailedPosition,
+    int? formationPosition,
+    String? photo,
+    String? rating,
+    bool? isCaptain,
+    bool? isStarter,
+    bool? isSubstitute,
+    bool? isManOfMatch,
+    int? yellowCards,
+    int? redCards,
+    int? goals,
+    int? ownGoals,
+    int? assists,
+    bool? substituteIn,
+    bool? substituteOut,
+    int? substituteTime,
+    int? substitutePlus,
+    String? subbedForName,
+    String? subbedForId,
+  }) {
+    return LineupPlayerEntity(
+      playerId: playerId ?? this.playerId,
+      name: name ?? this.name,
+      shortName: shortName ?? this.shortName,
+      number: number ?? this.number,
+      position: position ?? this.position,
+      positionCode: positionCode ?? this.positionCode,
+      detailedPosition: detailedPosition ?? this.detailedPosition,
+      formationPosition: formationPosition ?? this.formationPosition,
+      photo: photo ?? this.photo,
+      rating: rating ?? this.rating,
+      isCaptain: isCaptain ?? this.isCaptain,
+      isStarter: isStarter ?? this.isStarter,
+      isSubstitute: isSubstitute ?? this.isSubstitute,
+      isManOfMatch: isManOfMatch ?? this.isManOfMatch,
+      yellowCards: yellowCards ?? this.yellowCards,
+      redCards: redCards ?? this.redCards,
+      goals: goals ?? this.goals,
+      ownGoals: ownGoals ?? this.ownGoals,
+      assists: assists ?? this.assists,
+      substituteIn: substituteIn ?? this.substituteIn,
+      substituteOut: substituteOut ?? this.substituteOut,
+      substituteTime: substituteTime ?? this.substituteTime,
+      substitutePlus: substitutePlus ?? this.substitutePlus,
+      subbedForName: subbedForName ?? this.subbedForName,
+      subbedForId: subbedForId ?? this.subbedForId,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -364,6 +422,7 @@ class LineupPlayerEntity extends Equatable {
     substituteTime,
     substitutePlus,
     subbedForName,
+    subbedForId,
   ];
 }
 

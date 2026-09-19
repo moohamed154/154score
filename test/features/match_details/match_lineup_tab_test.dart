@@ -1060,5 +1060,64 @@ void main() {
       final playerTextWidget = tester.widget<Text>(find.text('كورتوا').first);
       expect(playerTextWidget.style?.fontFamily, contains('Cairo'));
     });
+
+    testWidgets('9. Separates Substitutions and Bench with player IN / OUT pairs matching Yalla Shoot layout', (
+      tester,
+    ) async {
+      const subbedInPlayer = LineupPlayerEntity(
+        playerId: '101',
+        name: 'كيم مين جاي',
+        number: 3,
+        rating: '6.8',
+        substituteIn: true,
+        substituteTime: 46,
+        subbedForName: 'أوباميكانو',
+      );
+      const benchPlayer = LineupPlayerEntity(
+        playerId: '102',
+        name: 'يوناس أوربيغ',
+        number: 40,
+        substituteIn: false,
+      );
+
+      final team = TeamLineupEntity(
+        teamName: 'بايرن ميونخ',
+        startingXi: const [
+          LineupPlayerEntity(
+            playerId: '1',
+            name: 'أوباميكانو',
+            number: 2,
+            substituteOut: true,
+            substituteTime: 46,
+          ),
+        ],
+        substitutes: const [subbedInPlayer, benchPlayer],
+      );
+
+      await tester.pumpWidget(
+        buildTestApp(
+          locale: const Locale('ar'),
+          child: LineupSquadListWidget(
+            home: team,
+            away: team,
+            showStarters: false,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Expect distinct headers for Substitutions and Bench
+      expect(find.text('التبديلات'), findsOneWidget);
+      expect(find.text('دكة البدلاء'), findsOneWidget);
+
+      // Verify Player IN (كيم مين جاي) and Player OUT (أوباميكانو) are displayed
+      expect(find.text('كيم مين جاي'), findsOneWidget);
+      expect(find.text('أوباميكانو'), findsOneWidget);
+      expect(find.text("46'"), findsOneWidget);
+
+      // Verify Bench Player is displayed
+      expect(find.text('يوناس أوربيغ'), findsOneWidget);
+    });
   });
 }

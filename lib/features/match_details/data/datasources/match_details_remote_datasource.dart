@@ -1568,6 +1568,44 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       }
     }
 
+    // Enrich starters with subbed out times from substitutes if missing
+    for (int i = 0; i < starters.length; i++) {
+      final starter = starters[i];
+      if (starter.substituteOut) {
+        LineupPlayerEntity? matchingSub;
+        for (final sub in substitutes) {
+          if (sub.substituteIn &&
+              ((sub.subbedForId != null && sub.subbedForId == starter.playerId) ||
+               (sub.subbedForName != null &&
+                (sub.subbedForName == starter.name || sub.subbedForName == starter.shortName)))) {
+            matchingSub = sub;
+            break;
+          }
+        }
+        if (matchingSub != null && matchingSub.substituteTime != null) {
+          starters[i] = starter.copyWith(
+            substituteTime: matchingSub.substituteTime,
+            substitutePlus: matchingSub.substitutePlus,
+          );
+        }
+      }
+    }
+
+    // Enrich substitutes subbedForName from starters if missing
+    for (int i = 0; i < substitutes.length; i++) {
+      final sub = substitutes[i];
+      if (sub.substituteIn && (sub.subbedForName == null || sub.subbedForName!.isEmpty)) {
+        if (sub.subbedForId != null) {
+          for (final s in starters) {
+            if (s.playerId == sub.subbedForId) {
+              substitutes[i] = sub.copyWith(subbedForName: s.displayName);
+              break;
+            }
+          }
+        }
+      }
+    }
+
     return TeamLineupEntity(
       teamId: teamId,
       teamName: teamName,
@@ -1687,14 +1725,29 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     );
 
     String? subbedFor;
+    String? subbedForId;
     if (map['subbed_for'] is Map) {
       final sMap = Map<String, dynamic>.from(map['subbed_for'] as Map);
-      subbedFor = sMap['short_name']?.toString() ?? sMap['name']?.toString();
+      subbedForId = sMap['player_id']?.toString() ?? sMap['id']?.toString();
+      subbedFor = sMap['short_name']?.toString() ??
+          sMap['name']?.toString() ??
+          sMap['title']?.toString() ??
+          sMap['short_title']?.toString();
+    } else if (map['subbed_for'] is String &&
+        (map['subbed_for'] as String).trim().isNotEmpty) {
+      subbedFor = map['subbed_for'] as String;
     } else if (map['player_lineup'] is Map) {
       final sMap = Map<String, dynamic>.from(map['player_lineup'] as Map);
+      subbedForId = sMap['player_id']?.toString() ?? sMap['id']?.toString();
       subbedFor = sMap['short_title']?.toString() ??
           sMap['title']?.toString() ??
           sMap['name']?.toString();
+    } else if (map['player_out'] is Map) {
+      final sMap = Map<String, dynamic>.from(map['player_out'] as Map);
+      subbedForId = sMap['player_id']?.toString() ?? sMap['id']?.toString();
+      subbedFor = sMap['short_name']?.toString() ?? sMap['name']?.toString();
+    } else if (map['player_out'] is String) {
+      subbedFor = map['player_out'] as String;
     }
 
     return LineupPlayerEntity(
@@ -1722,6 +1775,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       substituteTime: subTime,
       substitutePlus: subPlus,
       subbedForName: subbedFor,
+      subbedForId: subbedForId,
     );
   }
 }

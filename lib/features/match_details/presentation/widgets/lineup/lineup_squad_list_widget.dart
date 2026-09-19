@@ -16,6 +16,7 @@ class LineupSquadListWidget extends StatefulWidget {
   final int? selectedTeamIndex;
   final ValueChanged<int>? onTeamChanged;
   final bool showTeamSwitcher;
+  final bool showStarters;
 
   const LineupSquadListWidget({
     super.key,
@@ -24,6 +25,7 @@ class LineupSquadListWidget extends StatefulWidget {
     this.selectedTeamIndex,
     this.onTeamChanged,
     this.showTeamSwitcher = true,
+    this.showStarters = true,
   });
 
   @override
@@ -53,6 +55,11 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     final currentTeam = _selectedTeamIndex == 0 ? widget.home : widget.away;
     final isHome = _selectedTeamIndex == 0;
 
+    final subbedInPlayers =
+        currentTeam.substitutes.where((p) => p.substituteIn).toList();
+    final benchPlayers =
+        currentTeam.substitutes.where((p) => !p.substituteIn).toList();
+
     return Column(
       children: [
         // Team Segmented Tab Switcher
@@ -60,43 +67,47 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 8),
             child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkCardElevated
+                    : AppColors.lightCardElevated,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildTeamTabItem(
+                      title: widget.home.displayName.isNotEmpty
+                          ? widget.home.displayName
+                          : (widget.home.teamName ??
+                              (isArabic ? 'صاحب الأرض' : 'Home')),
+                      formation: widget.home.formation,
+                      isSelected: _selectedTeamIndex == 0,
+                      isDark: isDark,
+                      isArabic: isArabic,
+                      onTap: () => _onSelectTeam(0),
+                    ),
+                  ),
+                  Expanded(
+                    child: _buildTeamTabItem(
+                      title: widget.away.displayName.isNotEmpty
+                          ? widget.away.displayName
+                          : (widget.away.teamName ??
+                              (isArabic ? 'الضيف' : 'Away')),
+                      formation: widget.away.formation,
+                      isSelected: _selectedTeamIndex == 1,
+                      isDark: isDark,
+                      isArabic: isArabic,
+                      onTap: () => _onSelectTeam(1),
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildTeamTabItem(
-                    title: widget.home.displayName.isNotEmpty
-                        ? widget.home.displayName
-                        : (widget.home.teamName ?? (isArabic ? 'صاحب الأرض' : 'Home')),
-                    formation: widget.home.formation,
-                    isSelected: _selectedTeamIndex == 0,
-                    isDark: isDark,
-                    isArabic: isArabic,
-                    onTap: () => _onSelectTeam(0),
-                  ),
-                ),
-                Expanded(
-                  child: _buildTeamTabItem(
-                    title: widget.away.displayName.isNotEmpty
-                        ? widget.away.displayName
-                        : (widget.away.teamName ?? (isArabic ? 'الضيف' : 'Away')),
-                    formation: widget.away.formation,
-                    isSelected: _selectedTeamIndex == 1,
-                    isDark: isDark,
-                    isArabic: isArabic,
-                    onTap: () => _onSelectTeam(1),
-                  ),
-                ),
-              ],
-            ),
           ),
-        ),
 
         // Squad Content
         Padding(
@@ -104,50 +115,19 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Coach / Manager Card (if present)
-              if (currentTeam.coach != null)
-                _buildCoachCard(
-                  coach: currentTeam.coach!,
-                  isDark: isDark,
-                  isArabic: isArabic,
-                  l10n: l10n,
-                ),
-
-              const SizedBox(height: 12),
-
-              // Starting XI Section
-              _buildSectionHeader(
-                title: isArabic ? 'التشكيلة الأساسية' : 'Starting XI',
-                count: currentTeam.startingXi.length,
-                isDark: isDark,
-                isArabic: isArabic,
-                icon: Icons.people_alt_rounded,
-                accentColor: AppColors.primary,
-              ),
-              const SizedBox(height: 8),
-              ...currentTeam.startingXi.map(
-                (p) => _buildPlayerListTile(
-                  player: p,
-                  isDark: isDark,
-                  isArabic: isArabic,
-                  isHome: isHome,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Substitutes Section
-              if (currentTeam.substitutes.isNotEmpty) ...[
+              // 1. Starting XI Section (Shown only in list view, hidden below pitch)
+              if (widget.showStarters &&
+                  currentTeam.startingXi.isNotEmpty) ...[
                 _buildSectionHeader(
-                  title: isArabic ? 'دكة البدلاء' : 'Substitutes',
-                  count: currentTeam.substitutes.length,
+                  title: isArabic ? 'التشكيلة الأساسية' : 'Starting XI',
+                  count: currentTeam.startingXi.length,
                   isDark: isDark,
                   isArabic: isArabic,
-                  icon: Icons.airline_seat_recline_normal_rounded,
-                  accentColor: Colors.amber,
+                  icon: Icons.people_alt_rounded,
+                  accentColor: AppColors.primary,
                 ),
                 const SizedBox(height: 8),
-                ...currentTeam.substitutes.map(
+                ...currentTeam.startingXi.map(
                   (p) => _buildPlayerListTile(
                     player: p,
                     isDark: isDark,
@@ -155,10 +135,75 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                     isHome: isHome,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
               ],
 
-              // Absences & Injuries Section
+              // 2. Coach (Shown at top when below pitch, or after starters in list view)
+              if (!widget.showStarters && currentTeam.coach != null) ...[
+                _buildCoachCard(
+                  coach: currentTeam.coach!,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                  l10n: l10n,
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // 3. Substitutions Section (Players who were substituted in)
+              if (subbedInPlayers.isNotEmpty) ...[
+                _buildSectionHeader(
+                  title: isArabic ? 'التبديلات' : 'Substitutions',
+                  count: subbedInPlayers.length,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                  icon: Icons.swap_horiz_rounded,
+                  accentColor: const Color(0xFF10B981),
+                ),
+                const SizedBox(height: 8),
+                ...subbedInPlayers.map(
+                  (p) => _buildSubstitutionCard(
+                    playerIn: p,
+                    team: currentTeam,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // 4. Bench Section (Unused substitutes)
+              if (benchPlayers.isNotEmpty) ...[
+                _buildSectionHeader(
+                  title: isArabic ? 'دكة البدلاء' : 'Bench',
+                  count: benchPlayers.length,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                  icon: Icons.airline_seat_recline_normal_rounded,
+                  accentColor: Colors.amber,
+                ),
+                const SizedBox(height: 8),
+                ...benchPlayers.map(
+                  (p) => _buildBenchPlayerCard(
+                    player: p,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // 5. Coach (Shown after bench in list view)
+              if (widget.showStarters && currentTeam.coach != null) ...[
+                _buildCoachCard(
+                  coach: currentTeam.coach!,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                  l10n: l10n,
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // 6. Absences & Injuries Section
               if (currentTeam.injuries.isNotEmpty) ...[
                 _buildSectionHeader(
                   title: isArabic ? 'الغيابات والإصابات' : 'Absences & Injuries',
@@ -592,95 +637,531 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     );
   }
 
+  String _resolveSubbedOutName(
+    LineupPlayerEntity playerIn,
+    TeamLineupEntity team,
+    bool isArabic,
+  ) {
+    if (playerIn.subbedForName != null &&
+        playerIn.subbedForName!.trim().isNotEmpty) {
+      return playerIn.subbedForName!.trim();
+    }
+    if (playerIn.subbedForId != null) {
+      for (final s in team.startingXi) {
+        if (s.playerId == playerIn.subbedForId) {
+          return s.displayName;
+        }
+      }
+    }
+    if (playerIn.substituteTime != null) {
+      for (final s in team.startingXi) {
+        if (s.substituteOut && s.substituteTime == playerIn.substituteTime) {
+          return s.displayName;
+        }
+      }
+    }
+    final subbedOutStarters =
+        team.startingXi.where((s) => s.substituteOut).toList();
+    if (subbedOutStarters.isNotEmpty) {
+      final subbedInSubs =
+          team.substitutes.where((s) => s.substituteIn).toList();
+      final idx = subbedInSubs.indexOf(playerIn);
+      if (idx != -1 && idx < subbedOutStarters.length) {
+        return subbedOutStarters[idx].displayName;
+      }
+    }
+    return isArabic ? 'لاعب مستبدل' : 'Substituted Player';
+  }
+
+  Widget _buildSubstitutionCard({
+    required LineupPlayerEntity playerIn,
+    required TeamLineupEntity team,
+    required bool isDark,
+    required bool isArabic,
+  }) {
+    final subbedOutName = _resolveSubbedOutName(playerIn, team, isArabic);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          final cleanName = playerIn.name.trim();
+          if (cleanName.isNotEmpty) {
+            final pId = playerIn.playerId ?? '0';
+            final slug = Uri.encodeComponent(
+              cleanName.replaceAll(RegExp(r'\s+'), '-'),
+            );
+            context.push('/player/$pId/$slug');
+          }
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131A2A) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+              width: 0.8,
+            ),
+          ),
+          child: Row(
+            children: [
+              // Avatar Stack with Jersey Number and Rating
+              SizedBox(
+                width: 44,
+                height: 48,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: AppImage(
+                        imageUrl: playerIn.photo,
+                        width: 40,
+                        height: 40,
+                        placeholderIcon: Icons.person,
+                      ),
+                    ),
+                    if (playerIn.number != null)
+                      Positioned(
+                        top: -3,
+                        left: -2,
+                        child: Text(
+                          '${playerIn.number}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    if (playerIn.rating != null &&
+                        playerIn.rating!.isNotEmpty &&
+                        playerIn.rating != '0' &&
+                        playerIn.rating != '-')
+                      Positioned(
+                        bottom: -4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getRatingColor(playerIn.rating!),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            playerIn.rating!,
+                            style: GoogleFonts.outfit(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Player IN (green) and Player OUT (red)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // IN Row
+                    Row(
+                      children: [
+                        Icon(
+                          isArabic
+                              ? Icons.arrow_back_rounded
+                              : Icons.arrow_forward_rounded,
+                          size: 15,
+                          color: const Color(0xFF10B981),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            playerIn.displayName,
+                            style: (isArabic
+                                ? GoogleFonts.cairo
+                                : GoogleFonts.inter)(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF34D399),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    // OUT Row
+                    Row(
+                      children: [
+                        Icon(
+                          isArabic
+                              ? Icons.arrow_forward_rounded
+                              : Icons.arrow_back_rounded,
+                          size: 15,
+                          color: const Color(0xFFEF4444),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            subbedOutName,
+                            style: (isArabic
+                                ? GoogleFonts.cairo
+                                : GoogleFonts.inter)(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFEF4444),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Trailing: In-game event badges & substitution minute
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (playerIn.goals > 0) ...[
+                    const Text('⚽', style: TextStyle(fontSize: 12)),
+                    if (playerIn.goals > 1)
+                      Text(
+                        ' x${playerIn.goals}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (playerIn.assists > 0) ...[
+                    const Text('👟', style: TextStyle(fontSize: 12)),
+                    if (playerIn.assists > 1)
+                      Text(
+                        ' x${playerIn.assists}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (playerIn.yellowCards > 0) ...[
+                    Container(
+                      width: 8,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: AppColors.yellowCard,
+                        borderRadius: BorderRadius.circular(1.5),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (playerIn.redCards > 0) ...[
+                    Container(
+                      width: 8,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: AppColors.redCard,
+                        borderRadius: BorderRadius.circular(1.5),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (playerIn.substituteTime != null)
+                    Text(
+                      "${playerIn.substituteTime}'",
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBenchPlayerCard({
+    required LineupPlayerEntity player,
+    required bool isDark,
+    required bool isArabic,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          final cleanName = player.name.trim();
+          if (cleanName.isNotEmpty) {
+            final pId = player.playerId ?? '0';
+            final slug = Uri.encodeComponent(
+              cleanName.replaceAll(RegExp(r'\s+'), '-'),
+            );
+            context.push('/player/$pId/$slug');
+          }
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131A2A) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+              width: 0.8,
+            ),
+          ),
+          child: Row(
+            children: [
+              // Avatar Stack with Jersey Number and optional rating
+              SizedBox(
+                width: 44,
+                height: 48,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: AppImage(
+                        imageUrl: player.photo,
+                        width: 40,
+                        height: 40,
+                        placeholderIcon: Icons.person,
+                      ),
+                    ),
+                    if (player.number != null)
+                      Positioned(
+                        top: -3,
+                        left: -2,
+                        child: Text(
+                          '${player.number}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    if (player.rating != null &&
+                        player.rating!.isNotEmpty &&
+                        player.rating != '0' &&
+                        player.rating != '-')
+                      Positioned(
+                        bottom: -4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getRatingColor(player.rating!),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            player.rating!,
+                            style: GoogleFonts.outfit(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Player Name & Position
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      player.displayName,
+                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (player.detailedPosition != null &&
+                        player.detailedPosition!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        player.detailedPosition!,
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Cards if received while on bench
+              if (player.yellowCards > 0 || player.redCards > 0)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (player.yellowCards > 0) ...[
+                      Container(
+                        width: 8,
+                        height: 11,
+                        decoration: BoxDecoration(
+                          color: AppColors.yellowCard,
+                          borderRadius: BorderRadius.circular(1.5),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    if (player.redCards > 0)
+                      Container(
+                        width: 8,
+                        height: 11,
+                        decoration: BoxDecoration(
+                          color: AppColors.redCard,
+                          borderRadius: BorderRadius.circular(1.5),
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCoachCard({
     required LineupCoachEntity coach,
     required bool isDark,
     required bool isArabic,
     required AppLocalizations l10n,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        onTap: () {
-          final cleanName = coach.name?.trim() ?? '';
-          if (cleanName.isNotEmpty) {
-            final slug = Uri.encodeComponent(
-              cleanName.replaceAll(RegExp(r'\s+'), '-'),
-            );
-            context.push('/player/0/$slug');
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : AppColors.lightCard,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-            ),
-          ),
-          child: Row(
-            children: [
-              ClipOval(
-                child: AppImage(
-                  imageUrl: coach.photo,
-                  width: 38,
-                  height: 38,
-                  placeholderIcon: Icons.sports,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          title: isArabic ? 'المدرب' : 'Coach',
+          count: 1,
+          isDark: isDark,
+          isArabic: isArabic,
+          icon: Icons.sports,
+          accentColor:
+              isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+        ),
+        const SizedBox(height: 8),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              final cleanName = coach.name?.trim() ?? '';
+              if (cleanName.isNotEmpty) {
+                final slug = Uri.encodeComponent(
+                  cleanName.replaceAll(RegExp(r'\s+'), '-'),
+                );
+                context.push('/player/0/$slug');
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF131A2A) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFE2E8F0),
+                  width: 0.8,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      (coach.name != null && coach.name!.isNotEmpty)
-                          ? coach.name!
-                          : (isArabic ? 'المدير الفني' : 'Coach'),
-                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color:
-                            isDark
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: AppImage(
+                      imageUrl: coach.photo,
+                      width: 40,
+                      height: 40,
+                      placeholderIcon: Icons.sports,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          (coach.name != null && coach.name!.isNotEmpty)
+                              ? coach.name!
+                              : (isArabic ? 'المدير الفني' : 'Coach'),
+                          style: (isArabic
+                              ? GoogleFonts.cairo
+                              : GoogleFonts.inter)(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13.5,
+                            color: isDark
                                 ? AppColors.darkTextPrimary
                                 : AppColors.lightTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isArabic ? 'المدرب الفني' : 'Head Coach',
-                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                        fontSize: 11,
-                        color:
-                            isDark
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isArabic ? 'المدرب الفني' : 'Head Coach',
+                          style: (isArabic
+                              ? GoogleFonts.cairo
+                              : GoogleFonts.inter)(
+                            fontSize: 11,
+                            color: isDark
                                 ? AppColors.darkTextMuted
                                 : AppColors.lightTextMuted,
-                      ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color:
-                      isDark
-                          ? Colors.white10
-                          : Colors.black.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(
-                  Icons.sports,
-                  size: 16,
-                  color: isDark ? AppColors.primary : AppColors.primaryDark,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -690,69 +1171,79 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     required bool isArabic,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        color: isDark ? const Color(0xFF131A2A) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.redAccent.withValues(alpha: 0.3),
+          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+          width: 0.8,
         ),
       ),
       child: Row(
         children: [
-          if (injury.number != null) ...[
-            Container(
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkCardElevated
-                    : AppColors.lightCardElevated,
-                borderRadius: BorderRadius.circular(6),
-              ),
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: Stack(
+              clipBehavior: Clip.none,
               alignment: Alignment.center,
-              child: Text(
-                '${injury.number}',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: AppImage(
+                    imageUrl: injury.photo,
+                    width: 40,
+                    height: 40,
+                    placeholderIcon: Icons.person,
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          ClipOval(
-            child: AppImage(
-              imageUrl: injury.photo,
-              width: 32,
-              height: 32,
-              placeholderIcon: Icons.person,
+                if (injury.number != null)
+                  Positioned(
+                    top: -3,
+                    left: -2,
+                    child: Text(
+                      '${injury.number}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  injury.name,
+                  injury.displayName,
                   style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  injury.position ?? '',
-                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                    fontSize: 11,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                if (injury.position != null && injury.position!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    injury.position!,
+                    style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

@@ -154,6 +154,7 @@ class _LineupTabViewState extends State<LineupTabView> {
                     onTeamChanged: (idx) =>
                         setState(() => _selectedTeamIndex = idx),
                     showTeamSwitcher: false,
+                    showStarters: false,
                   ),
                 ] else ...[
                   // Dedicated List View (Starters, Bench, Coaches, Injuries)
@@ -163,6 +164,7 @@ class _LineupTabViewState extends State<LineupTabView> {
                     selectedTeamIndex: _selectedTeamIndex,
                     onTeamChanged: (idx) =>
                         setState(() => _selectedTeamIndex = idx),
+                    showStarters: true,
                   ),
                 ],
               ],
