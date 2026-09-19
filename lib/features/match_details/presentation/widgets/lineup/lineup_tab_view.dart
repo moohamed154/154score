@@ -121,7 +121,11 @@ class _LineupTabViewState extends State<LineupTabView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Status Badge (Confirmed vs Probable)
-                      _buildStatusPill(lineup.isConfirmed, isArabic),
+                      _buildStatusPill(
+                        lineup.isConfirmedLineup,
+                        isArabic,
+                        customText: lineup.formationTypeText,
+                      ),
 
                       // View Mode Switcher: Pitch vs List
                       _buildViewSwitcher(isDark, isArabic),
@@ -169,14 +173,20 @@ class _LineupTabViewState extends State<LineupTabView> {
     );
   }
 
-  Widget _buildStatusPill(bool isConfirmed, bool isArabic) {
+  Widget _buildStatusPill(
+    bool isConfirmed,
+    bool isArabic, {
+    String? customText,
+  }) {
     final color = isConfirmed
         ? const Color(0xFF10B981) // Emerald
         : const Color(0xFFF59E0B); // Amber
 
-    final label = isConfirmed
-        ? (isArabic ? 'تشكيلة مؤكدة' : 'Confirmed Lineup')
-        : (isArabic ? 'تشكيلة متوقعة' : 'Probable Lineup');
+    final label = (customText != null && customText.trim().isNotEmpty)
+        ? customText.trim()
+        : (isConfirmed
+            ? (isArabic ? 'تشكيلة مؤكدة' : 'Confirmed Lineup')
+            : (isArabic ? 'تشكيلة متوقعة' : 'Probable Lineup'));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

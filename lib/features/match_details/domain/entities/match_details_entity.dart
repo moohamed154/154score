@@ -181,6 +181,9 @@ class MatchLineupEntity extends Equatable {
   final String matchId;
   final bool lineupsAvailable;
   final String? formationType; // 'confirmed', 'probable'
+  final int? formationTypeId; // 0 = confirmed, 2 = probable
+  final String? formationTypeText; // 'تشكيلة مؤكدة' / 'Confirmed Lineup'
+  final bool? isConfirmed;
   final TeamLineupEntity? home;
   final TeamLineupEntity? away;
 
@@ -188,11 +191,17 @@ class MatchLineupEntity extends Equatable {
     required this.matchId,
     required this.lineupsAvailable,
     this.formationType,
+    this.formationTypeId,
+    this.formationTypeText,
+    this.isConfirmed,
     this.home,
     this.away,
   });
 
-  bool get isConfirmed => formationType?.toLowerCase() == 'confirmed';
+  bool get isConfirmedLineup =>
+      isConfirmed ??
+      (formationTypeId == 0 || formationType?.toLowerCase() == 'confirmed');
+
   bool get hasLineups =>
       lineupsAvailable &&
       ((home != null && home!.startingXi.isNotEmpty) ||
@@ -203,6 +212,9 @@ class MatchLineupEntity extends Equatable {
     matchId,
     lineupsAvailable,
     formationType,
+    formationTypeId,
+    formationTypeText,
+    isConfirmed,
     home,
     away,
   ];
@@ -264,6 +276,7 @@ class TeamLineupEntity extends Equatable {
 class LineupPlayerEntity extends Equatable {
   final String? playerId;
   final String name;
+  final String? shortName;
   final int? number;
   final String? position;
   final String? positionCode; // "G", "D", "M", "F", "SUB"
@@ -278,11 +291,18 @@ class LineupPlayerEntity extends Equatable {
   final int yellowCards;
   final int redCards;
   final int goals;
+  final int ownGoals;
   final int assists;
+  final bool substituteIn;
+  final bool substituteOut;
+  final int? substituteTime;
+  final int? substitutePlus;
+  final String? subbedForName;
 
   const LineupPlayerEntity({
     this.playerId,
     required this.name,
+    this.shortName,
     this.number,
     this.position,
     this.positionCode,
@@ -297,10 +317,21 @@ class LineupPlayerEntity extends Equatable {
     this.yellowCards = 0,
     this.redCards = 0,
     this.goals = 0,
+    this.ownGoals = 0,
     this.assists = 0,
+    this.substituteIn = false,
+    this.substituteOut = false,
+    this.substituteTime,
+    this.substitutePlus,
+    this.subbedForName,
   });
 
   String? get id => playerId;
+
+  String get displayName =>
+      (shortName != null && shortName!.trim().isNotEmpty)
+          ? shortName!.trim()
+          : name;
 
   bool get isGoalkeeper =>
       positionCode == 'G' ||
@@ -311,6 +342,7 @@ class LineupPlayerEntity extends Equatable {
   List<Object?> get props => [
     playerId,
     name,
+    shortName,
     number,
     position,
     positionCode,
@@ -325,7 +357,13 @@ class LineupPlayerEntity extends Equatable {
     yellowCards,
     redCards,
     goals,
+    ownGoals,
     assists,
+    substituteIn,
+    substituteOut,
+    substituteTime,
+    substitutePlus,
+    subbedForName,
   ];
 }
 
@@ -349,6 +387,7 @@ class LineupCoachEntity extends Equatable {
 class LineupInjuryEntity extends Equatable {
   final String? playerId;
   final String name;
+  final String? shortName;
   final int? number;
   final String? position;
   final String? photo;
@@ -358,6 +397,7 @@ class LineupInjuryEntity extends Equatable {
   const LineupInjuryEntity({
     this.playerId,
     required this.name,
+    this.shortName,
     this.number,
     this.position,
     this.photo,
@@ -365,10 +405,16 @@ class LineupInjuryEntity extends Equatable {
     this.absenceTypeId,
   });
 
+  String get displayName =>
+      (shortName != null && shortName!.trim().isNotEmpty)
+          ? shortName!.trim()
+          : name;
+
   @override
   List<Object?> get props => [
     playerId,
     name,
+    shortName,
     number,
     position,
     photo,

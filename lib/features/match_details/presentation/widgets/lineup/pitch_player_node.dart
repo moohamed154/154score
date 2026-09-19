@@ -147,14 +147,50 @@ class PitchPlayerNode extends StatelessWidget {
                     ),
                   ),
 
-                // Rating Pill (if present)
-                if (player.rating != null && player.rating!.isNotEmpty)
+                // Permanent Number Badge overlapping bottom edge of avatar (Matches screenshot: #30)
+                if (player.number != null)
                   Positioned(
-                    bottom: -5,
+                    bottom: -6,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 5.5,
-                        vertical: 1.2,
+                        horizontal: 5.0,
+                        vertical: 1.0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.88),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          width: 0.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '#${player.number}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Rating Pill (placed at top edge so number remains visible)
+                if (player.rating != null && player.rating!.isNotEmpty)
+                  Positioned(
+                    top: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5.0,
+                        vertical: 1.0,
                       ),
                       decoration: BoxDecoration(
                         color: _getRatingColor(player.rating!),
@@ -170,60 +206,62 @@ class PitchPlayerNode extends StatelessWidget {
                       child: Text(
                         player.rating!,
                         style: GoogleFonts.outfit(
-                          fontSize: 9.5,
+                          fontSize: 9,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                           height: 1.1,
                         ),
                       ),
                     ),
-                  )
-                else if (player.number != null)
+                  ),
+
+                // Substitution Out Indicator (red down arrow if starter subbed off)
+                if (player.substituteOut)
                   Positioned(
-                    bottom: -5,
+                    bottom: -2,
+                    right: isArabic ? null : -4,
+                    left: isArabic ? -4 : null,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5.0,
-                        vertical: 1.0,
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: AppColors.redCard,
+                        shape: BoxShape.circle,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.75),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: Text(
-                        '#${player.number}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          height: 1.1,
-                        ),
+                      child: const Icon(
+                        Icons.arrow_downward_rounded,
+                        size: 9,
+                        color: Colors.white,
                       ),
                     ),
                   ),
               ],
             ),
 
-            const SizedBox(height: 4.5),
+            const SizedBox(height: 6),
 
-            // Player Short Name Tag
+            // Player Short Name Tag (Matches screenshot dark capsule with short name)
             Container(
-              constraints: const BoxConstraints(maxWidth: 76),
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              constraints: const BoxConstraints(maxWidth: 84),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.68),
-                borderRadius: BorderRadius.circular(4),
+                color: Colors.black.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.25),
-                  width: 0.5,
+                  width: 0.6,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
               child: Text(
-                _getShortName(player.name),
+                player.displayName.isNotEmpty
+                    ? player.displayName
+                    : _getShortName(player.name),
                 style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,

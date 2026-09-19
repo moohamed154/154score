@@ -213,6 +213,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         ? team.displayName
         : (team.teamName ?? (isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
 
+    const activeBorderColor = Color(0xFF00B4D8); // Cyan active border from Yalla Shoot screenshot
+    const activeGreenColor = Color(0xFF10B981); // Emerald dot and formation badge
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -221,17 +224,22 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? const Color(0xFF1E293B) : Colors.white)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+              ? (isDark ? const Color(0xFF0E253A) : Colors.white)
+              : (isDark ? const Color(0xFF141D2A) : Colors.black.withValues(alpha: 0.03)),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm + 2),
           border: isSelected
-              ? Border.all(color: accentColor.withValues(alpha: 0.7), width: 1.2)
-              : null,
+              ? Border.all(color: activeBorderColor, width: 1.5)
+              : Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.08),
+                  width: 1.0,
+                ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: accentColor.withValues(alpha: 0.18),
-                    blurRadius: 6,
+                    color: activeBorderColor.withValues(alpha: 0.2),
+                    blurRadius: 8,
                     offset: const Offset(0, 1),
                   ),
                 ]
@@ -240,23 +248,23 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Team indicator dot
+            // Team indicator dot (bright green when active, muted when inactive)
             Container(
-              width: 7,
-              height: 7,
+              width: 7.5,
+              height: 7.5,
               decoration: BoxDecoration(
-                color: isSelected ? accentColor : accentColor.withValues(alpha: 0.4),
+                color: isSelected ? activeGreenColor : Colors.grey.shade600,
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 7),
 
             // Team Name
             Flexible(
               child: Text(
                 displayName,
                 style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                  fontSize: 12,
+                  fontSize: 12.5,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   color: isSelected
                       ? (isDark ? Colors.white : AppColors.lightTextPrimary)
@@ -269,22 +277,22 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
 
             // Formation Pill
             if (team.formation != null && team.formation!.isNotEmpty) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: 7),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5.5, vertical: 1.0),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? accentColor.withValues(alpha: 0.22)
+                      ? activeGreenColor.withValues(alpha: 0.22)
                       : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   team.formation!,
                   style: GoogleFonts.outfit(
-                    fontSize: 10,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w800,
                     color: isSelected
-                        ? accentColor
+                        ? activeGreenColor
                         : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
                   ),
                 ),
@@ -454,6 +462,14 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
       }
     }
 
+    // Sort outfield tactically first: Defenders -> Midfielders -> Forwards
+    outfield.sort((a, b) {
+      final wA = _tacticalLineWeight(a);
+      final wB = _tacticalLineWeight(b);
+      if (wA != wB) return wA.compareTo(wB);
+      return (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0);
+    });
+
     // 2. Parse formation numbers from API response (e.g. "4-2-3-1" -> [4, 2, 3, 1])
     final formationCounts = _parseFormationCounts(team.formation);
     final tacticalLines = <List<LineupPlayerEntity>>[];
@@ -538,5 +554,39 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
       }
     } catch (_) {}
     return null;
+  }
+
+  static int _tacticalLineWeight(LineupPlayerEntity p) {
+    if (p.positionCode == 'D') return 1;
+    if (p.positionCode == 'M') return 2;
+    if (p.positionCode == 'F' || p.positionCode == 'S') return 3;
+    final pos = (p.position ?? '').toLowerCase();
+    if (pos.contains('دفاع') ||
+        pos.contains('ظهير') ||
+        pos.contains('back') ||
+        pos.contains('defender') ||
+        pos == 'cb' ||
+        pos == 'lb' ||
+        pos == 'rb') {
+      return 1;
+    }
+    if (pos.contains('وسط') ||
+        pos.contains('midfield') ||
+        pos == 'cdm' ||
+        pos == 'cm' ||
+        pos == 'cam') {
+      return 2;
+    }
+    if (pos.contains('هجوم') ||
+        pos.contains('جناح') ||
+        pos.contains('forward') ||
+        pos.contains('striker') ||
+        pos == 'cf' ||
+        pos == 'st' ||
+        pos == 'lw' ||
+        pos == 'rw') {
+      return 3;
+    }
+    return 2;
   }
 }

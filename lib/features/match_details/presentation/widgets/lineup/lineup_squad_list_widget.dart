@@ -457,10 +457,13 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                 ),
               ),
 
-              // In-game stats badges (goals, cards)
+              // In-game stats badges (goals, own goals, cards, substitutions)
               if (player.goals > 0 ||
+                  player.ownGoals > 0 ||
                   player.yellowCards > 0 ||
-                  player.redCards > 0) ...[
+                  player.redCards > 0 ||
+                  player.substituteIn ||
+                  player.substituteOut) ...[
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -474,6 +477,24 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                      const SizedBox(width: 4),
+                    ],
+                    if (player.ownGoals > 0) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.redCard.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          isArabic ? 'هدف ذاتي' : 'OG',
+                          style: GoogleFonts.outfit(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.redCard,
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 4),
                     ],
                     if (player.yellowCards > 0) ...[
@@ -495,6 +516,36 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                           color: AppColors.redCard,
                           borderRadius: BorderRadius.circular(1.5),
                         ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    if (player.substituteIn) ...[
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.arrow_upward_rounded,
+                            size: 13,
+                            color: Color(0xFF10B981),
+                          ),
+                          if (player.substituteTime != null)
+                            Text(
+                              "${player.substituteTime}'",
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    if (player.substituteOut) ...[
+                      const Icon(
+                        Icons.arrow_downward_rounded,
+                        size: 13,
+                        color: AppColors.redCard,
                       ),
                       const SizedBox(width: 4),
                     ],
