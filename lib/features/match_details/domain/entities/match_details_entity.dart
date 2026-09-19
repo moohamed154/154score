@@ -207,6 +207,28 @@ class MatchLineupEntity extends Equatable {
       ((home != null && home!.startingXi.isNotEmpty) ||
           (away != null && away!.startingXi.isNotEmpty));
 
+  MatchLineupEntity copyWith({
+    String? matchId,
+    bool? lineupsAvailable,
+    String? formationType,
+    int? formationTypeId,
+    String? formationTypeText,
+    bool? isConfirmed,
+    TeamLineupEntity? home,
+    TeamLineupEntity? away,
+  }) {
+    return MatchLineupEntity(
+      matchId: matchId ?? this.matchId,
+      lineupsAvailable: lineupsAvailable ?? this.lineupsAvailable,
+      formationType: formationType ?? this.formationType,
+      formationTypeId: formationTypeId ?? this.formationTypeId,
+      formationTypeText: formationTypeText ?? this.formationTypeText,
+      isConfirmed: isConfirmed ?? this.isConfirmed,
+      home: home ?? this.home,
+      away: away ?? this.away,
+    );
+  }
+
   @override
   List<Object?> get props => [
     matchId,
@@ -240,6 +262,28 @@ class TeamLineupEntity extends Equatable {
     this.substitutes = const [],
     this.injuries = const [],
   });
+
+  TeamLineupEntity copyWith({
+    String? teamId,
+    String? teamName,
+    String? teamLogo,
+    String? formation,
+    LineupCoachEntity? coach,
+    List<LineupPlayerEntity>? startingXi,
+    List<LineupPlayerEntity>? substitutes,
+    List<LineupInjuryEntity>? injuries,
+  }) {
+    return TeamLineupEntity(
+      teamId: teamId ?? this.teamId,
+      teamName: teamName ?? this.teamName,
+      teamLogo: teamLogo ?? this.teamLogo,
+      formation: formation ?? this.formation,
+      coach: coach ?? this.coach,
+      startingXi: startingXi ?? this.startingXi,
+      substitutes: substitutes ?? this.substitutes,
+      injuries: injuries ?? this.injuries,
+    );
+  }
 
   /// Sanitizes team name by removing scraped prefixes/suffixes like
   /// "أخبار نادي" / "اخبار نادي" in Arabic or the word "news" in English.

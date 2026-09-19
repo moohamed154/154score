@@ -185,7 +185,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final resolvedDetails = detailsRes.isNotEmpty ? detailsRes : state.details;
       final resolvedOverview = overviewRes ?? state.overview;
       final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
-      final resolvedLineup = lineupsRes ?? state.lineup;
+      final rawLineup = lineupsRes ?? state.lineup;
+      final resolvedLineup = _enrichLineupWithEvents(rawLineup, resolvedEvents);
       final resolvedChampionshipId =
           eventsPayloadRes.championshipId ??
           resolvedOverview?.championshipId ??
@@ -350,6 +351,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           liveExtraTime: update.extraTime ?? state.liveExtraTime,
           livePeriod: update.period ?? state.livePeriod,
           events: updatedEvents,
+          lineup: _enrichLineupWithEvents(state.lineup, updatedEvents),
         ),
       );
 
@@ -369,6 +371,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         existingEvents: state.events,
         update: update,
       );
+      final effectiveEvents =
+          mergeResult.isUpdated ? mergeResult.data : state.events;
 
       emit(
         state.copyWith(
@@ -399,7 +403,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           liveMinute: update.minute ?? state.liveMinute,
           liveExtraTime: update.extraTime ?? state.liveExtraTime,
           livePeriod: update.period ?? state.livePeriod,
-          events: mergeResult.isUpdated ? mergeResult.data : state.events,
+          events: effectiveEvents,
+          lineup: _enrichLineupWithEvents(state.lineup, effectiveEvents),
         ),
       );
 
@@ -408,6 +413,119 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         _triggerBackgroundRefresh();
       }
     }
+  }
+
+  static MatchLineupEntity? _enrichLineupWithEvents(
+    MatchLineupEntity? lineup,
+    List<MatchEventEntity> events,
+  ) {
+    if (lineup == null || events.isEmpty) return lineup;
+
+    TeamLineupEntity? enrichTeam(TeamLineupEntity? team, bool isHome) {
+      if (team == null) return null;
+
+      LineupPlayerEntity enrichPlayer(LineupPlayerEntity player) {
+        int goalCount = player.goals;
+        int assistCount = player.assists;
+        int yellowCount = player.yellowCards;
+        int redCount = player.redCards;
+        bool subOut = player.substituteOut;
+        bool subIn = player.substituteIn;
+
+        final pName = player.name.trim().toLowerCase();
+        final pShort = (player.shortName ?? '').trim().toLowerCase();
+        final pNum = player.number;
+
+        bool matchesEvent(String eventName, int? eventNum, bool eventIsHome) {
+          if (eventIsHome != isHome) return false;
+          if (pNum != null && eventNum != null && pNum == eventNum) return true;
+          final eClean = eventName.trim().toLowerCase();
+          if (eClean.isEmpty) return false;
+          return pName == eClean ||
+              (pShort.isNotEmpty && pShort == eClean) ||
+              pName.contains(eClean) ||
+              eClean.contains(pName) ||
+              (pShort.isNotEmpty &&
+                  (pShort.contains(eClean) || eClean.contains(pShort)));
+        }
+
+        int evGoals = 0;
+        int evAssists = 0;
+        int evYellows = 0;
+        int evReds = 0;
+
+        for (final e in events) {
+          if (e.isPeriodMarker) continue;
+          final t = e.type.toLowerCase();
+          final isGoal = t.contains('goal') && !t.contains('own');
+          if (isGoal) {
+            if (matchesEvent(e.playerName, e.playerNumber, e.isHomeTeam)) {
+              evGoals++;
+            }
+            if (e.secondaryPlayerName != null &&
+                matchesEvent(
+                  e.secondaryPlayerName!,
+                  e.secondaryPlayerNumber,
+                  e.isHomeTeam,
+                )) {
+              evAssists++;
+            }
+          } else if (t.contains('yellow')) {
+            if (matchesEvent(e.playerName, e.playerNumber, e.isHomeTeam)) {
+              evYellows++;
+            }
+          } else if (t.contains('red')) {
+            if (matchesEvent(e.playerName, e.playerNumber, e.isHomeTeam)) {
+              evReds++;
+            }
+          } else if (t.contains('sub')) {
+            if (matchesEvent(e.playerName, e.playerNumber, e.isHomeTeam)) {
+              subIn = true;
+            }
+            if (e.secondaryPlayerName != null &&
+                matchesEvent(
+                  e.secondaryPlayerName!,
+                  e.secondaryPlayerNumber,
+                  e.isHomeTeam,
+                )) {
+              subOut = true;
+            }
+          }
+        }
+
+        if (evGoals > goalCount) goalCount = evGoals;
+        if (evAssists > assistCount) assistCount = evAssists;
+        if (evYellows > yellowCount) yellowCount = evYellows;
+        if (evReds > redCount) redCount = evReds;
+
+        if (goalCount != player.goals ||
+            assistCount != player.assists ||
+            yellowCount != player.yellowCards ||
+            redCount != player.redCards ||
+            subOut != player.substituteOut ||
+            subIn != player.substituteIn) {
+          return player.copyWith(
+            goals: goalCount,
+            assists: assistCount,
+            yellowCards: yellowCount,
+            redCards: redCount,
+            substituteOut: subOut,
+            substituteIn: subIn,
+          );
+        }
+        return player;
+      }
+
+      return team.copyWith(
+        startingXi: team.startingXi.map(enrichPlayer).toList(),
+        substitutes: team.substitutes.map(enrichPlayer).toList(),
+      );
+    }
+
+    return lineup.copyWith(
+      home: enrichTeam(lineup.home, true),
+      away: enrichTeam(lineup.away, false),
+    );
   }
 
   void _triggerBackgroundRefresh() {

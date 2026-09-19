@@ -1673,24 +1673,66 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         map['man_of_match'] == 1 ||
         map['man_match'] == true ||
         map['man_match'] == 1;
-    final yellowCards = int.tryParse(
+    int evGoals = 0;
+    int evAssists = 0;
+    int evYellows = 0;
+    int evReds = 0;
+    final eventsRaw = map['events'] ?? pMap?['events'];
+    if (eventsRaw is List) {
+      for (final ev in eventsRaw) {
+        if (ev is Map) {
+          final t = ev['type']?.toString().toLowerCase() ?? '';
+          if (t.contains('goal') || t == 'g') evGoals++;
+          if (t.contains('assist') || t == 'a') evAssists++;
+          if (t.contains('yellow')) evYellows++;
+          if (t.contains('red')) evReds++;
+        }
+      }
+    }
+
+    final parsedYellows = int.tryParse(
           map['yellow_cards']?.toString() ??
               map['yellow_card']?.toString() ??
+              pMap?['yellow_cards']?.toString() ??
+              pMap?['yellow_card']?.toString() ??
               '',
         ) ??
         0;
-    final redCards = int.tryParse(
-          map['red_cards']?.toString() ?? map['red_card']?.toString() ?? '',
+    final yellowCards = evYellows > parsedYellows ? evYellows : parsedYellows;
+
+    final parsedReds = int.tryParse(
+          map['red_cards']?.toString() ??
+              map['red_card']?.toString() ??
+              pMap?['red_cards']?.toString() ??
+              pMap?['red_card']?.toString() ??
+              '',
         ) ??
         0;
-    final goals = int.tryParse(
-          map['goals']?.toString() ?? map['goal']?.toString() ?? '',
+    final redCards = evReds > parsedReds ? evReds : parsedReds;
+
+    final parsedGoals = int.tryParse(
+          map['goals']?.toString() ??
+              map['goal']?.toString() ??
+              map['goals_count']?.toString() ??
+              map['goal_count']?.toString() ??
+              pMap?['goals']?.toString() ??
+              pMap?['goal']?.toString() ??
+              '',
         ) ??
         0;
-    final assists = int.tryParse(
-          map['assists']?.toString() ?? map['assist']?.toString() ?? '',
+    final goals = evGoals > parsedGoals ? evGoals : parsedGoals;
+
+    final parsedAssists = int.tryParse(
+          map['assists']?.toString() ??
+              map['assist']?.toString() ??
+              map['assists_count']?.toString() ??
+              map['assist_count']?.toString() ??
+              pMap?['assists']?.toString() ??
+              pMap?['assist']?.toString() ??
+              '',
         ) ??
         0;
+    final assists = evAssists > parsedAssists ? evAssists : parsedAssists;
 
     final shortName = map['short_name']?.toString() ??
         map['short_title']?.toString() ??

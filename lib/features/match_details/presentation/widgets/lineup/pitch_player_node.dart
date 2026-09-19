@@ -42,24 +42,24 @@ class PitchPlayerNode extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Avatar Stack with Number, Rating, and Captain Badge
+            // Avatar Stack with Number, Rating, Cards, Goals, Assists, Captain & Sub Badges
             Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
-                // Circular Avatar
+                // Circular Avatar with Crisp White Border
                 Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: ringColor,
-                      width: 2.2,
+                      color: Colors.white,
+                      width: 2.0,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.35),
+                        color: Colors.black.withValues(alpha: 0.4),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -85,19 +85,164 @@ class PitchPlayerNode extends StatelessWidget {
                   ),
                 ),
 
+                // Goals & Assists Badges Stacked Vertically on Left Edge
+                if (player.goals > 0 || player.assists > 0)
+                  Positioned(
+                    left: -19,
+                    top: 3,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        // Goals Badge (e.g. "2 ⚽" or "⚽")
+                        if (player.goals > 0)
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: player.goals > 1 ? 4.0 : 2.5,
+                              vertical: 2.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F172A),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.35),
+                                width: 0.7,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (player.goals > 1) ...[
+                                  Text(
+                                    '${player.goals}',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2.5),
+                                ],
+                                const Icon(
+                                  Icons.sports_soccer_rounded,
+                                  size: 11,
+                                  color: Color(0xFF34D399),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        if (player.goals > 0 && player.assists > 0)
+                          const SizedBox(height: 2),
+
+                        // Assists Badge (e.g. "2 👟" or "👟")
+                        if (player.assists > 0)
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: player.assists > 1 ? 4.0 : 3.0,
+                              vertical: 2.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F172A),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.35),
+                                width: 0.7,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (player.assists > 1) ...[
+                                  Text(
+                                    '${player.assists}',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2.5),
+                                ],
+                                const CustomPaint(
+                                  size: Size(11, 7.5),
+                                  painter: FootballBootPainter(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                // Yellow / Red Card Badge (Top-Left)
+                if (player.redCards > 0)
+                  Positioned(
+                    top: -2,
+                    left: -2,
+                    child: Container(
+                      width: 7.5,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444),
+                        borderRadius: BorderRadius.circular(1.5),
+                        border: Border.all(color: Colors.white, width: 0.8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (player.yellowCards > 0)
+                  Positioned(
+                    top: -2,
+                    left: -2,
+                    child: Container(
+                      width: 7.5,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFACC15),
+                        borderRadius: BorderRadius.circular(1.5),
+                        border: Border.all(color: Colors.white, width: 0.8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // Captain 'C' Badge
                 if (player.isCaptain)
                   Positioned(
-                    top: -3,
-                    left: isArabic ? null : -3,
-                    right: isArabic ? -3 : null,
+                    top: (player.yellowCards > 0 || player.redCards > 0) ? 9 : -2,
+                    left: -3,
                     child: Container(
-                      width: 16.5,
-                      height: 16.5,
+                      width: 15,
+                      height: 15,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF59E0B),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.2),
+                        border: Border.all(color: Colors.white, width: 1.0),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.4),
@@ -109,7 +254,7 @@ class PitchPlayerNode extends StatelessWidget {
                       child: Text(
                         isArabic ? 'ق' : 'C',
                         style: (isArabic ? GoogleFonts.cairo : GoogleFonts.outfit)(
-                          fontSize: 9.5,
+                          fontSize: 8.5,
                           fontWeight: FontWeight.w900,
                           color: Colors.black,
                           height: 1.0,
@@ -121,16 +266,15 @@ class PitchPlayerNode extends StatelessWidget {
                 // Man of the Match Star Badge
                 if (player.isManOfMatch)
                   Positioned(
-                    top: -3,
-                    right: isArabic ? null : -3,
-                    left: isArabic ? -3 : null,
+                    top: -5,
+                    right: player.number != null ? 10 : -2,
                     child: Container(
-                      width: 17,
-                      height: 17,
+                      width: 15,
+                      height: 15,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFD700),
+                        color: const Color(0xFF0F172A),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.2),
+                        border: Border.all(color: const Color(0xFFFFD700), width: 1.0),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.4),
@@ -141,60 +285,65 @@ class PitchPlayerNode extends StatelessWidget {
                       alignment: Alignment.center,
                       child: const Icon(
                         Icons.star_rounded,
-                        size: 13,
-                        color: Colors.black,
+                        size: 11,
+                        color: Color(0xFFFFD700),
                       ),
                     ),
                   ),
 
-                // Permanent Number Badge overlapping bottom edge of avatar (Matches screenshot: #30)
+                // Player Jersey Number Badge (Top-Right)
                 if (player.number != null)
                   Positioned(
-                    bottom: -6,
+                    top: -2,
+                    right: -4,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5.0,
-                        vertical: 1.0,
-                      ),
+                      width: 17,
+                      height: 17,
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.88),
-                        borderRadius: BorderRadius.circular(6),
+                        color: player.isGoalkeeper
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF0F172A),
+                        shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.65),
-                          width: 0.8,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          width: 0.9,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.4),
                             blurRadius: 2,
-                            offset: const Offset(0, 1),
                           ),
                         ],
                       ),
+                      alignment: Alignment.center,
                       child: Text(
-                        '#${player.number}',
+                        '${player.number}',
                         style: GoogleFonts.outfit(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
-                          height: 1.1,
+                          height: 1.0,
                         ),
                       ),
                     ),
                   ),
 
-                // Rating Pill (placed at top edge so number remains visible)
-                if (player.rating != null && player.rating!.isNotEmpty)
+                // Rating Pill (Bottom-Right)
+                if (player.rating != null &&
+                    player.rating!.isNotEmpty &&
+                    player.rating != '0' &&
+                    player.rating != '-')
                   Positioned(
-                    top: -6,
+                    bottom: -2,
+                    right: -6,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 5.0,
-                        vertical: 1.0,
+                        horizontal: 4.5,
+                        vertical: 1.5,
                       ),
                       decoration: BoxDecoration(
                         color: _getRatingColor(player.rating!),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(5),
                         border: Border.all(color: Colors.white, width: 0.8),
                         boxShadow: [
                           BoxShadow(
@@ -206,7 +355,7 @@ class PitchPlayerNode extends StatelessWidget {
                       child: Text(
                         player.rating!,
                         style: GoogleFonts.outfit(
-                          fontSize: 9,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                           height: 1.1,
@@ -215,22 +364,39 @@ class PitchPlayerNode extends StatelessWidget {
                     ),
                   ),
 
-                // Substitution Out Indicator (red down arrow if starter subbed off)
-                if (player.substituteOut)
+                // Substitution Swap Indicator (Bottom-Left)
+                if (player.substituteOut || player.substituteIn)
                   Positioned(
-                    bottom: -2,
-                    right: isArabic ? null : -4,
-                    left: isArabic ? -4 : null,
+                    bottom: -3,
+                    left: 1,
                     child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: AppColors.redCard,
-                        shape: BoxShape.circle,
+                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.white24, width: 0.6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            blurRadius: 2,
+                          ),
+                        ],
                       ),
-                      child: const Icon(
-                        Icons.arrow_downward_rounded,
-                        size: 9,
-                        color: Colors.white,
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.arrow_back_rounded,
+                            size: 7.5,
+                            color: Color(0xFF10B981),
+                          ),
+                          SizedBox(width: 1),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 7.5,
+                            color: Color(0xFFEF4444),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -298,9 +464,10 @@ class PitchPlayerNode extends StatelessWidget {
 
   static Color _getRatingColor(String ratingStr) {
     final val = double.tryParse(ratingStr);
-    if (val == null) return AppColors.primary;
-    if (val >= 7.2) return const Color(0xFF16A34A); // High rating green
-    if (val >= 6.2) return const Color(0xFFD97706); // Mid rating amber
+    if (val == null) return const Color(0xFF10B981);
+    if (val >= 8.0) return const Color(0xFF38BDF8); // Sky blue
+    if (val >= 7.0) return const Color(0xFF22C55E); // Green
+    if (val >= 6.0) return const Color(0xFFF59E0B); // Amber / Orange
     return const Color(0xFFDC2626); // Low rating red
   }
 
@@ -550,4 +717,61 @@ class PitchPlayerNode extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Custom painter rendering a vector silhouette of a football cleat/boot with studs.
+class FootballBootPainter extends CustomPainter {
+  final Color color;
+
+  const FootballBootPainter({this.color = Colors.white});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final w = size.width;
+    final h = size.height;
+
+    final path = Path();
+    path.moveTo(w * 0.15, h * 0.20);
+    path.quadraticBezierTo(w * 0.05, h * 0.50, w * 0.10, h * 0.78);
+    path.lineTo(w * 0.45, h * 0.78);
+    path.lineTo(w * 0.88, h * 0.74);
+    path.quadraticBezierTo(w * 1.02, h * 0.62, w * 0.94, h * 0.48);
+    path.quadraticBezierTo(w * 0.65, h * 0.38, w * 0.40, h * 0.20);
+    path.quadraticBezierTo(w * 0.28, h * 0.25, w * 0.15, h * 0.20);
+    path.close();
+
+    canvas.drawPath(path, paint);
+
+    // Cleat studs on outsole
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(w * 0.16, h * 0.78, w * 0.12, h * 0.18),
+        const Radius.circular(0.8),
+      ),
+      paint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(w * 0.60, h * 0.74, w * 0.11, h * 0.20),
+        const Radius.circular(0.8),
+      ),
+      paint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(w * 0.78, h * 0.74, w * 0.11, h * 0.20),
+        const Radius.circular(0.8),
+      ),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant FootballBootPainter oldDelegate) =>
+      color != oldDelegate.color;
 }

@@ -17,6 +17,7 @@ import 'package:ysscores/features/match_details/presentation/widgets/lineup/line
 import 'package:ysscores/features/match_details/presentation/widgets/lineup/lineup_squad_list_widget.dart';
 import 'package:ysscores/features/match_details/presentation/widgets/lineup/lineup_tab_view.dart';
 import 'package:ysscores/features/match_details/presentation/widgets/lineup/match_pitch_widget.dart';
+import 'package:ysscores/features/match_details/presentation/widgets/lineup/pitch_player_node.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 
@@ -1118,6 +1119,52 @@ void main() {
 
       // Verify Bench Player is displayed
       expect(find.text('يوناس أوربيغ'), findsOneWidget);
+    });
+
+    testWidgets(
+        '10. Renders Goal and Assist badges on PitchPlayerNode when player has goals and assists',
+        (tester) async {
+      final playerWithGoalsAndAssists = LineupPlayerEntity(
+        playerId: '9',
+        name: 'هاري كين',
+        number: 9,
+        position: 'مهاجم',
+        positionCode: 'S',
+        goals: 2,
+        assists: 1,
+        rating: '8.2',
+        yellowCards: 0,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: PitchPlayerNode(
+                player: playerWithGoalsAndAssists,
+                isHome: true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Verify number 9 (present on fallback avatar jersey + number badge)
+      expect(find.text('9'), findsNWidgets(2));
+
+      // Verify rating 8.2
+      expect(find.text('8.2'), findsOneWidget);
+
+      // Verify goal count 2 and soccer ball icon
+      expect(find.text('2'), findsOneWidget);
+      expect(find.byIcon(Icons.sports_soccer_rounded), findsOneWidget);
+
+      // Verify FootballBootPainter is rendered for assist
+      final customPaints = tester.widgetList<CustomPaint>(find.byType(CustomPaint));
+      final hasBootPainter = customPaints.any((cp) => cp.painter is FootballBootPainter);
+      expect(hasBootPainter, isTrue);
     });
   });
 }
