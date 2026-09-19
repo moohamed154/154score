@@ -1,15 +1,15 @@
-import 'package:bloc_test/bloc_test.dart';
+﻿import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/core/network/api_result.dart';
-import 'package:ysscores/core/storage/local_storage_service.dart';
-import 'package:ysscores/core/websocket/websocket_event.dart';
-import 'package:ysscores/core/websocket/websocket_service.dart';
-import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
-import 'package:ysscores/features/matches/domain/repositories/matches_repository.dart';
-import 'package:ysscores/features/matches/presentation/bloc/matches_bloc.dart';
-import 'package:ysscores/features/matches/presentation/bloc/matches_event.dart';
-import 'package:ysscores/features/matches/presentation/bloc/matches_state.dart';
+import 'package:score154/core/network/api_result.dart';
+import 'package:score154/core/storage/local_storage_service.dart';
+import 'package:score154/core/websocket/websocket_event.dart';
+import 'package:score154/core/websocket/websocket_service.dart';
+import 'package:score154/features/matches/domain/entities/match_entity.dart';
+import 'package:score154/features/matches/domain/repositories/matches_repository.dart';
+import 'package:score154/features/matches/presentation/bloc/matches_bloc.dart';
+import 'package:score154/features/matches/presentation/bloc/matches_event.dart';
+import 'package:score154/features/matches/presentation/bloc/matches_state.dart';
 
 class MockMatchesRepository extends Mock implements MatchesRepository {}
 

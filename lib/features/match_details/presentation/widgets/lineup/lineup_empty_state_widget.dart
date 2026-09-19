@@ -1,12 +1,12 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:ysscores/core/constants/app_colors.dart';
-import 'package:ysscores/core/constants/app_dimensions.dart';
-import 'package:ysscores/core/localization/app_localizations.dart';
-import 'package:ysscores/features/match_details/presentation/bloc/match_details_bloc.dart';
-import 'package:ysscores/features/match_details/presentation/bloc/match_details_event.dart';
+import 'package:score154/core/constants/app_colors.dart';
+import 'package:score154/core/constants/app_dimensions.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/features/match_details/presentation/bloc/match_details_bloc.dart';
+import 'package:score154/features/match_details/presentation/bloc/match_details_event.dart';
 
 /// Clean, informative empty state displayed when lineups are not yet released by the official organizers.
 class LineupEmptyStateWidget extends StatelessWidget {

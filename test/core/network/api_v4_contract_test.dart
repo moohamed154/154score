@@ -1,12 +1,12 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/constants/api_endpoints.dart';
-import 'package:ysscores/core/network/api_client.dart';
-import 'package:ysscores/features/matches/data/datasources/matches_remote_datasource.dart';
-import 'package:ysscores/features/match_details/data/datasources/match_details_remote_datasource.dart';
-import 'package:ysscores/features/standings/data/datasources/standings_remote_datasource.dart';
-import 'package:ysscores/features/transfers/data/datasources/transfers_remote_datasource.dart';
-import 'package:ysscores/features/videos/data/datasources/videos_remote_datasource.dart';
-import 'package:ysscores/features/profiles/data/datasources/profiles_remote_datasource.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:score154/core/constants/api_endpoints.dart';
+import 'package:score154/core/network/api_client.dart';
+import 'package:score154/features/matches/data/datasources/matches_remote_datasource.dart';
+import 'package:score154/features/match_details/data/datasources/match_details_remote_datasource.dart';
+import 'package:score154/features/standings/data/datasources/standings_remote_datasource.dart';
+import 'package:score154/features/transfers/data/datasources/transfers_remote_datasource.dart';
+import 'package:score154/features/videos/data/datasources/videos_remote_datasource.dart';
+import 'package:score154/features/profiles/data/datasources/profiles_remote_datasource.dart';
 
 void main() {
   group('154Score V4.2 Production API Contract Tests', () {

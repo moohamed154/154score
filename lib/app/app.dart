@@ -61,7 +61,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           return BlocBuilder<LocaleCubit, Locale>(
             builder: (context, currentLocale) {
               return MaterialApp.router(
-                title: '154Score',
+                title: '154 SCORE',
                 debugShowCheckedModeBanner: false,
                 routerConfig: AppRouter.router,
                 theme: AppTheme.lightTheme,

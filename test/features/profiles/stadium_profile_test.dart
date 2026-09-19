@@ -1,8 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/core/network/api_client.dart';
-import 'package:ysscores/core/utils/url_helper.dart';
-import 'package:ysscores/features/profiles/data/datasources/profiles_remote_datasource.dart';
+import 'package:score154/core/network/api_client.dart';
+import 'package:score154/core/utils/url_helper.dart';
+import 'package:score154/features/profiles/data/datasources/profiles_remote_datasource.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 

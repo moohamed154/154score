@@ -1,10 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
-import 'package:ysscores/core/constants/api_endpoints.dart';
-import 'package:ysscores/core/websocket/websocket_event.dart';
-import 'package:ysscores/core/websocket/websocket_service.dart';
+import 'package:score154/core/constants/api_endpoints.dart';
+import 'package:score154/core/websocket/websocket_event.dart';
+import 'package:score154/core/websocket/websocket_service.dart';
 
 void main() {
   group('Production 154Score WebSocket Backend Dynamic Verification', () {

@@ -1,9 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/utils/realtime_merge_engine.dart';
-import 'package:ysscores/core/websocket/websocket_event.dart';
-import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
-import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
-import 'package:ysscores/features/transfers/domain/entities/transfer_entity.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:score154/core/utils/realtime_merge_engine.dart';
+import 'package:score154/core/websocket/websocket_event.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/features/matches/domain/entities/match_entity.dart';
+import 'package:score154/features/transfers/domain/entities/transfer_entity.dart';
 
 void main() {
   group('WebSocket Event Models & Parsing', () {

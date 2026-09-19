@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/websocket/websocket_event.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:score154/core/websocket/websocket_event.dart';
 
 void main() {
   group('LiveMatchUpdate Model Tests', () {

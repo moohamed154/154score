@@ -1,21 +1,21 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/errors/failures.dart';
-import 'package:ysscores/core/localization/app_localizations.dart';
-import 'package:ysscores/core/utils/match_event_helper.dart';
-import 'package:ysscores/core/utils/match_status_helper.dart';
-import 'package:ysscores/core/widgets/animated_score_text.dart';
-import 'package:ysscores/core/widgets/live_match_clock.dart';
-import 'package:ysscores/core/widgets/penalty_shootout_widget.dart';
-import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
-import 'package:ysscores/features/match_details/presentation/widgets/timeline_event_item.dart';
-import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
-import 'package:ysscores/features/matches/presentation/widgets/league_section_widget.dart';
-import 'package:ysscores/features/matches/presentation/widgets/match_card.dart';
+import 'package:score154/core/errors/failures.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/core/utils/match_event_helper.dart';
+import 'package:score154/core/utils/match_status_helper.dart';
+import 'package:score154/core/widgets/animated_score_text.dart';
+import 'package:score154/core/widgets/live_match_clock.dart';
+import 'package:score154/core/widgets/penalty_shootout_widget.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/features/match_details/presentation/widgets/timeline_event_item.dart';
+import 'package:score154/features/matches/domain/entities/match_entity.dart';
+import 'package:score154/features/matches/presentation/widgets/league_section_widget.dart';
+import 'package:score154/features/matches/presentation/widgets/match_card.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ysscores/core/storage/local_storage_service.dart';
-import 'package:ysscores/features/favorites/presentation/cubit/favorites_cubit.dart';
+import 'package:score154/core/storage/local_storage_service.dart';
+import 'package:score154/features/favorites/presentation/cubit/favorites_cubit.dart';
 
 class _MockStorageForLiveScore implements LocalStorageService {
   @override

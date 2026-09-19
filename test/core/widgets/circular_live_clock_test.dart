@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/widgets/circular_live_clock.dart';
+import 'package:score154/core/widgets/circular_live_clock.dart';
 
 void main() {
   group('CircularLiveClock Extra Time & Refresh Tests', () {

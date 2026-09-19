@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/features/players/data/models/player_profile_dto.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:score154/features/players/data/models/player_profile_dto.dart';
 
 void main() {
   group('PlayerProfileDto', () {

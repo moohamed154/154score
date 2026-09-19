@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
+﻿import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/network/debug_console.dart';
+import 'package:score154/core/network/debug_console.dart';
 
 void main() {
   setUp(() {

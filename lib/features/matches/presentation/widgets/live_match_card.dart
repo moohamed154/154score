@@ -1,6 +1,6 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ysscores/core/widgets/live_match_clock.dart';
+import 'package:score154/core/widgets/live_match_clock.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';

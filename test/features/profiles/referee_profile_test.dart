@@ -1,9 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/core/errors/failures.dart';
-import 'package:ysscores/core/network/api_result.dart';
-import 'package:ysscores/features/profiles/domain/entities/profile_entity.dart';
-import 'package:ysscores/features/profiles/domain/repositories/profiles_repository.dart';
+import 'package:score154/core/errors/failures.dart';
+import 'package:score154/core/network/api_result.dart';
+import 'package:score154/features/profiles/domain/entities/profile_entity.dart';
+import 'package:score154/features/profiles/domain/repositories/profiles_repository.dart';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 class MockProfilesRepository extends Mock implements ProfilesRepository {}

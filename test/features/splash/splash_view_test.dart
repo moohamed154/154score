@@ -1,13 +1,13 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+﻿import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/features/home/presentation/cubit/home_cubit.dart';
-import 'package:ysscores/features/matches/presentation/bloc/matches_bloc.dart';
-import 'package:ysscores/features/matches/presentation/bloc/matches_event.dart';
-import 'package:ysscores/features/matches/presentation/bloc/matches_state.dart';
-import 'package:ysscores/features/splash/presentation/views/splash_view.dart';
+import 'package:score154/features/home/presentation/cubit/home_cubit.dart';
+import 'package:score154/features/matches/presentation/bloc/matches_bloc.dart';
+import 'package:score154/features/matches/presentation/bloc/matches_event.dart';
+import 'package:score154/features/matches/presentation/bloc/matches_state.dart';
+import 'package:score154/features/splash/presentation/views/splash_view.dart';
 
 class MockHomeCubit extends Mock implements HomeCubit {}
 class MockMatchesBloc extends Mock implements MatchesBloc {}

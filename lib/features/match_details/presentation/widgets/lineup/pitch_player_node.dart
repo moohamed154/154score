@@ -1,15 +1,15 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ysscores/core/constants/app_colors.dart';
-import 'package:ysscores/core/constants/app_dimensions.dart';
-import 'package:ysscores/core/constants/app_typography.dart';
-import 'package:ysscores/core/localization/app_localizations.dart';
-import 'package:ysscores/core/utils/url_helper.dart';
+import 'package:score154/core/constants/app_colors.dart';
+import 'package:score154/core/constants/app_dimensions.dart';
+import 'package:score154/core/constants/app_typography.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/core/utils/url_helper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 import '../../bloc/match_details_bloc.dart';
 
 /// Renders a single player node positioned tactically on the pitch board.

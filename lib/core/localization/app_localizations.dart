@@ -20,7 +20,7 @@ class AppLocalizations {
 
   static final Map<String, Map<String, String>> _localizedValues = {
     'en': {
-      'app_name': '154Score',
+      'app_name': '154 SCORE',
       'app_tagline': 'Real-Time Live Football Scores & News',
 
       // Navigation
@@ -270,7 +270,7 @@ class AppLocalizations {
       'rating': 'Rating',
     },
     'ar': {
-      'app_name': '154Score',
+      'app_name': '154 SCORE',
       'app_tagline': 'نتائج مباريات وأخبار كرة القدم المباشرة',
 
       // Navigation

@@ -1,4 +1,4 @@
-package com.example.ysscores
+package com.hamdy.app154score
 
 import io.flutter.embedding.android.FlutterActivity
 

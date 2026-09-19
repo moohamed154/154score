@@ -1,9 +1,9 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/localization/app_localizations.dart';
-import 'package:ysscores/core/theme/app_theme.dart';
-import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
-import 'package:ysscores/features/match_details/presentation/widgets/lineup/pitch_player_node.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/core/theme/app_theme.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/features/match_details/presentation/widgets/lineup/pitch_player_node.dart';
 
 Widget buildTestApp({
   required Widget child,

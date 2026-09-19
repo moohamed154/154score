@@ -1,22 +1,22 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/core/constants/api_endpoints.dart';
-import 'package:ysscores/core/localization/app_localizations.dart';
-import 'package:ysscores/core/network/api_result.dart';
-import 'package:ysscores/core/storage/local_storage_service.dart';
-import 'package:ysscores/core/theme/app_theme.dart';
-import 'package:ysscores/core/utils/match_minute_parser.dart';
-import 'package:ysscores/core/websocket/websocket_service.dart';
-import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
-import 'package:ysscores/features/match_details/domain/repositories/match_details_repository.dart';
-import 'package:ysscores/features/match_details/presentation/bloc/match_details_bloc.dart';
-import 'package:ysscores/features/match_details/presentation/bloc/match_details_event.dart';
-import 'package:ysscores/features/match_details/presentation/views/match_details_view.dart';
-import 'package:ysscores/features/match_details/presentation/widgets/timeline_event_item.dart';
-import 'package:ysscores/core/widgets/status_pill.dart';
-import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
+import 'package:score154/core/constants/api_endpoints.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/core/network/api_result.dart';
+import 'package:score154/core/storage/local_storage_service.dart';
+import 'package:score154/core/theme/app_theme.dart';
+import 'package:score154/core/utils/match_minute_parser.dart';
+import 'package:score154/core/websocket/websocket_service.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/features/match_details/domain/repositories/match_details_repository.dart';
+import 'package:score154/features/match_details/presentation/bloc/match_details_bloc.dart';
+import 'package:score154/features/match_details/presentation/bloc/match_details_event.dart';
+import 'package:score154/features/match_details/presentation/views/match_details_view.dart';
+import 'package:score154/features/match_details/presentation/widgets/timeline_event_item.dart';
+import 'package:score154/core/widgets/status_pill.dart';
+import 'package:score154/features/matches/domain/entities/match_entity.dart';
 
 class MockMatchDetailsRepository extends Mock
     implements MatchDetailsRepository {}

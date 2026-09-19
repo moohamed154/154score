@@ -1,13 +1,13 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ysscores/core/constants/app_colors.dart';
-import 'package:ysscores/core/constants/app_dimensions.dart';
-import 'package:ysscores/core/constants/app_typography.dart';
-import 'package:ysscores/core/localization/app_localizations.dart';
-import 'package:ysscores/core/widgets/app_image.dart';
-import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/core/constants/app_colors.dart';
+import 'package:score154/core/constants/app_dimensions.dart';
+import 'package:score154/core/constants/app_typography.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/core/widgets/app_image.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 import 'pitch_player_node.dart';
 
 /// Detailed list view of Starting XI, Substitutes bench, Coaches, and Injuries.

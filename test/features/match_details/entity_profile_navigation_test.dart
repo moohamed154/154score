@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 
 void main() {
   group('Entity Profile Navigation — V4.7.3 Regression Tests', () {

@@ -1,9 +1,9 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:ysscores/core/constants/app_colors.dart';
-import 'package:ysscores/core/constants/app_dimensions.dart';
-import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/core/constants/app_colors.dart';
+import 'package:score154/core/constants/app_dimensions.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 import 'pitch_painter.dart';
 import 'pitch_player_node.dart';
 

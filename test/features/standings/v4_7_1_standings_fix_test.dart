@@ -1,11 +1,11 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/core/localization/app_localizations.dart';
-import 'package:ysscores/core/network/api_client.dart';
-import 'package:ysscores/features/standings/data/datasources/standings_remote_datasource.dart';
-import 'package:ysscores/features/standings/domain/entities/standings_entity.dart';
-import 'package:ysscores/features/standings/presentation/widgets/standings_table.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/core/network/api_client.dart';
+import 'package:score154/features/standings/data/datasources/standings_remote_datasource.dart';
+import 'package:score154/features/standings/domain/entities/standings_entity.dart';
+import 'package:score154/features/standings/presentation/widgets/standings_table.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 

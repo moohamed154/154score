@@ -1,7 +1,7 @@
-import 'package:flutter/widgets.dart';
+﻿import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/websocket/websocket_event.dart';
-import 'package:ysscores/core/websocket/websocket_service.dart';
+import 'package:score154/core/websocket/websocket_event.dart';
+import 'package:score154/core/websocket/websocket_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

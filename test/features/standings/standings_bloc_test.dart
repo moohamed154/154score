@@ -1,11 +1,11 @@
-import 'package:bloc_test/bloc_test.dart';
+﻿import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/core/network/api_result.dart';
-import 'package:ysscores/core/storage/local_storage_service.dart';
-import 'package:ysscores/features/standings/domain/entities/standings_entity.dart';
-import 'package:ysscores/features/standings/domain/repositories/standings_repository.dart';
-import 'package:ysscores/features/standings/presentation/bloc/standings_bloc.dart';
+import 'package:score154/core/network/api_result.dart';
+import 'package:score154/core/storage/local_storage_service.dart';
+import 'package:score154/features/standings/domain/entities/standings_entity.dart';
+import 'package:score154/features/standings/domain/repositories/standings_repository.dart';
+import 'package:score154/features/standings/presentation/bloc/standings_bloc.dart';
 
 class MockStandingsRepository extends Mock implements StandingsRepository {}
 

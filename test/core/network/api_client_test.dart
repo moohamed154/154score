@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/errors/failures.dart';
-import 'package:ysscores/core/network/api_result.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:score154/core/errors/failures.dart';
+import 'package:score154/core/network/api_result.dart';
 
 void main() {
   group('ApiResult Tests', () {

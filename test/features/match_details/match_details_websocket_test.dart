@@ -1,14 +1,14 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/core/network/api_result.dart';
-import 'package:ysscores/core/storage/local_storage_service.dart';
-import 'package:ysscores/core/websocket/websocket_event.dart';
-import 'package:ysscores/core/websocket/websocket_service.dart';
-import 'package:ysscores/features/match_details/domain/repositories/match_details_repository.dart';
-import 'package:ysscores/features/match_details/presentation/bloc/match_details_bloc.dart';
-import 'package:ysscores/features/match_details/presentation/bloc/match_details_event.dart';
+import 'package:score154/core/network/api_result.dart';
+import 'package:score154/core/storage/local_storage_service.dart';
+import 'package:score154/core/websocket/websocket_event.dart';
+import 'package:score154/core/websocket/websocket_service.dart';
+import 'package:score154/features/match_details/domain/repositories/match_details_repository.dart';
+import 'package:score154/features/match_details/presentation/bloc/match_details_bloc.dart';
+import 'package:score154/features/match_details/presentation/bloc/match_details_event.dart';
 
 class MockMatchDetailsRepository extends Mock
     implements MatchDetailsRepository {}

@@ -1,8 +1,8 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ysscores/core/localization/app_localizations.dart';
-import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
-import 'package:ysscores/features/matches/presentation/widgets/match_card.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/features/matches/domain/entities/match_entity.dart';
+import 'package:score154/features/matches/presentation/widgets/match_card.dart';
 
 void main() {
   testWidgets('MatchCard renders teams and score correctly', (

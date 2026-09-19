@@ -1,11 +1,11 @@
-import 'package:bloc_test/bloc_test.dart';
+﻿import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ysscores/core/network/api_result.dart';
-import 'package:ysscores/core/storage/local_storage_service.dart';
-import 'package:ysscores/features/transfers/domain/entities/transfer_entity.dart';
-import 'package:ysscores/features/transfers/domain/repositories/transfers_repository.dart';
-import 'package:ysscores/features/transfers/presentation/bloc/transfers_bloc.dart';
+import 'package:score154/core/network/api_result.dart';
+import 'package:score154/core/storage/local_storage_service.dart';
+import 'package:score154/features/transfers/domain/entities/transfer_entity.dart';
+import 'package:score154/features/transfers/domain/repositories/transfers_repository.dart';
+import 'package:score154/features/transfers/presentation/bloc/transfers_bloc.dart';
 
 class MockTransfersRepository extends Mock implements TransfersRepository {}
 
