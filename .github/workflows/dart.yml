@@ -32,16 +32,10 @@ jobs:
       - name: Run tests
         run: flutter test || true
 
-      - name: Configure iOS and Install CocoaPods
+      - name: Build iOS (Release)
         run: |
           flutter precache --ios
-          flutter build ios --config-only --no-codesign
-          cd ios
-          pod install --repo-update || pod install
-          cd ..
-
-      - name: Build iOS (Release)
-        run: flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign
 
       - name: Create IPA (fixed structure)
         run: |
