@@ -12,8 +12,14 @@ import '../../domain/entities/top_scorer_entity.dart';
 class TopScorersTable extends StatelessWidget {
   final List<TopScorerEntity> scorers;
   final int? maxRows;
+  final bool isAssists;
 
-  const TopScorersTable({super.key, required this.scorers, this.maxRows});
+  const TopScorersTable({
+    super.key,
+    required this.scorers,
+    this.maxRows,
+    this.isAssists = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +30,11 @@ class TopScorersTable extends StatelessWidget {
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     if (scorers.isEmpty) {
-      return const EmptyView(
+      return EmptyView(
         titleKey: 'tab_overview',
-        customMessage: 'No top scorers data available',
+        customMessage: isAssists
+            ? (isArabic ? 'لا توجد بيانات لصناع اللعب' : 'No top assists data available')
+            : (isArabic ? 'لا توجد بيانات للهدافين' : 'No top scorers data available'),
         icon: Icons.emoji_events_outlined,
       );
     }
@@ -62,16 +70,15 @@ class TopScorersTable extends StatelessWidget {
                   width: isSmall ? 28 : 34,
                   child: Text(
                     '#',
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -79,35 +86,86 @@ class TopScorersTable extends StatelessWidget {
                 Expanded(
                   child: Text(
                     isArabic ? 'اللاعب' : 'Player',
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
                   ),
                 ),
-                SizedBox(
-                  width: isSmall ? 40 : 50,
-                  child: Text(
-                    isArabic ? 'الأهداف' : 'Goals',
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
-                    textAlign: TextAlign.center,
+                if (!isAssists) ...[
+                  SizedBox(
+                    width: isSmall ? 36 : 46,
+                    child: Text(
+                      isArabic ? 'الأهداف' : 'Goals',
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
+                  SizedBox(
+                    width: isSmall ? 28 : 36,
+                    child: Text(
+                      isArabic ? 'ر.ج' : 'P.G',
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: isSmall ? 10 : 11,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  SizedBox(
+                    width: isSmall ? 28 : 36,
+                    child: Text(
+                      isArabic ? 'ض.ج' : 'P.M',
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: isSmall ? 10 : 11,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ] else ...[
+                  SizedBox(
+                    width: isSmall ? 44 : 56,
+                    child: Text(
+                      isArabic ? 'صناعة' : 'Assists',
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -292,49 +350,94 @@ class TopScorersTable extends StatelessWidget {
             ),
           ),
 
-          // Goals Badge & Penalty Indicator
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                width: isSmall ? 40 : 50,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                ),
-                child: Text(
-                  scorer.goals.toString(),
-                  style:
-                      AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                        fontSize: isSmall ? 12 : 13,
-                      ),
-                ),
-              ),
-              if (scorer.penaltyGoals != null && scorer.penaltyGoals! > 0) ...[
-                const SizedBox(height: 2),
-                Text(
-                  '${scorer.penaltyGoals} ${isArabic ? "جزاء" : "pen"}',
-                  style: AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontSize: 9,
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
+          // Stats columns
+          if (!isAssists) ...[
+            // Goals
+            SizedBox(
+              width: isSmall ? 36 : 46,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                  ),
+                  child: Text(
+                    scorer.goals.toString(),
+                    style: AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                      fontSize: isSmall ? 12 : 13,
+                    ),
                   ),
                 ),
-              ],
-            ],
-          ),
+              ),
+            ),
+            // P.G (Penalty Goals)
+            SizedBox(
+              width: isSmall ? 28 : 36,
+              child: Text(
+                '${scorer.penaltyGoals ?? 0}',
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: isSmall ? 11 : 12,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            // P.M (Penalties Missed)
+            SizedBox(
+              width: isSmall ? 28 : 36,
+              child: Text(
+                '${scorer.penaltiesMissed ?? 0}',
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: isSmall ? 11 : 12,
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ] else ...[
+            // Assists
+            SizedBox(
+              width: isSmall ? 44 : 56,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                  ),
+                  child: Text(
+                    (scorer.assists ?? scorer.goals).toString(),
+                    style: AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                      fontSize: isSmall ? 12 : 13,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

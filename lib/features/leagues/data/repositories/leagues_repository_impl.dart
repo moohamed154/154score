@@ -38,6 +38,19 @@ class LeaguesRepositoryImpl implements LeaguesRepository {
   }
 
   @override
+  Future<ApiResult<List<TopScorerEntity>>> getLeagueAssists(
+    String leagueId, {
+    required String lang,
+  }) async {
+    try {
+      final res = await _dataSource.getAssists(leagueId, lang: lang);
+      return ApiSuccess(res);
+    } catch (e) {
+      return ApiFailure(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<ApiResult<List<MatchEntity>>> getLeagueMatches(
     String leagueId, {
     required String lang,

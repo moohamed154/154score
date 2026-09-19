@@ -18,6 +18,11 @@ abstract class LeaguesRemoteDataSource {
     required String lang,
   });
 
+  Future<List<TopScorerEntity>> getAssists(
+    String leagueId, {
+    required String lang,
+  });
+
   Future<List<MatchEntity>> getMatches(
     String leagueId, {
     required String lang,
@@ -69,6 +74,52 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
           rawList = data['scorers'] as List;
         } else if (data['table'] is List) {
           rawList = data['table'] as List;
+        }
+      }
+
+      for (int i = 0; i < rawList.length; i++) {
+        final item = rawList[i];
+        if (item is Map<String, dynamic>) {
+          list.add(TopScorerDto.fromJson(i + 1, item).toEntity());
+        } else if (item is Map) {
+          list.add(
+            TopScorerDto.fromJson(
+              i + 1,
+              Map<String, dynamic>.from(item),
+            ).toEntity(),
+          );
+        }
+      }
+    }
+
+    return list;
+  }
+
+  @override
+  Future<List<TopScorerEntity>> getAssists(
+    String leagueId, {
+    required String lang,
+  }) async {
+    final response = await _client.get(
+      ApiEndpoints.leagueAssists(leagueId),
+      queryParameters: {'lang': lang},
+    );
+
+    final list = <TopScorerEntity>[];
+
+    if (response is Map && response['data'] != null) {
+      final data = response['data'];
+      List rawList = [];
+
+      if (data is List) {
+        rawList = data;
+      } else if (data is Map) {
+        if (data['assists'] is List) {
+          rawList = data['assists'] as List;
+        } else if (data['table'] is List) {
+          rawList = data['table'] as List;
+        } else if (data['scorers'] is List) {
+          rawList = data['scorers'] as List;
         }
       }
 

@@ -130,4 +130,8 @@ class ApiEndpoints {
       (slug != null && slug.isNotEmpty)
           ? '/api/leagues/$id/$slug/teams'
           : '/api/leagues/$id/teams';
+  static String leagueAssists(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/leagues/$id/$slug/assists'
+          : '/api/leagues/$id/assists';
 }

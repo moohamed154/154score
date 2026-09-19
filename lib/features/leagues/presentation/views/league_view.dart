@@ -125,10 +125,10 @@ class _LeagueViewState extends State<LeagueView>
                     isArabic: isArabic,
                   ).copyWith(fontWeight: FontWeight.w700),
                   tabs: [
-                    Tab(text: l10n.translate('tab_overview')),
-                    Tab(text: l10n.translate('nav_matches')),
-                    Tab(text: l10n.translate('nav_standings')),
+                    Tab(text: isArabic ? 'المباريات' : 'Matches'),
+                    Tab(text: isArabic ? 'الترتيب' : 'Standings'),
                     Tab(text: isArabic ? 'الهدافون' : 'Top Scorers'),
+                    Tab(text: isArabic ? 'صناع اللعب' : 'Assists'),
                   ],
                 ),
               ),
@@ -207,7 +207,6 @@ class _LeagueViewState extends State<LeagueView>
                       : TabBarView(
                           controller: _tabController,
                           children: [
-                            _buildOverviewTab(context, state, isDark, isArabic),
                             _buildMatchesTab(context, state, isDark, isArabic),
                             _buildStandingsTab(
                               context,
@@ -221,6 +220,12 @@ class _LeagueViewState extends State<LeagueView>
                               isDark,
                               isArabic,
                             ),
+                            _buildTopAssistsTab(
+                              context,
+                              state,
+                              isDark,
+                              isArabic,
+                            ),
                           ],
                         ),
                 ),
@@ -229,65 +234,6 @@ class _LeagueViewState extends State<LeagueView>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildOverviewTab(
-    BuildContext context,
-    LeagueState state,
-    bool isDark,
-    bool isArabic,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    final hasStandings =
-        state.standings != null && state.standings!.rows.isNotEmpty;
-    final hasMatches = state.matches.isNotEmpty;
-    final hasScorers = state.topScorers.isNotEmpty;
-
-    if (!hasStandings && !hasMatches && !hasScorers) {
-      return const EmptyView(
-        titleKey: 'tab_overview',
-        customMessage: 'No competition data currently available',
-        icon: Icons.emoji_events_outlined,
-      );
-    }
-
-    return ListView(
-      padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-      children: [
-        // 1. Matches Preview
-        if (hasMatches) ...[
-          SectionHeader(
-            title: l10n.translate('nav_matches'),
-            actionText: l10n.translate('view_all'),
-            onActionTap: () => _tabController.animateTo(1),
-          ),
-          ...state.matches.take(4).map((m) => MatchCard(match: m)),
-          const SizedBox(height: 12),
-        ],
-
-        // 2. Standings Preview (Top 5)
-        if (hasStandings) ...[
-          SectionHeader(
-            title: l10n.translate('nav_standings'),
-            actionText: l10n.translate('view_all'),
-            onActionTap: () => _tabController.animateTo(2),
-          ),
-          StandingsTable(rows: state.standings!.rows.take(5).toList()),
-          const SizedBox(height: 12),
-        ],
-
-        // 3. Top Scorers Preview (Top 5)
-        if (hasScorers) ...[
-          SectionHeader(
-            title: isArabic ? 'أبرز الهدافين' : 'Top Scorers',
-            actionText: l10n.translate('view_all'),
-            onActionTap: () => _tabController.animateTo(3),
-          ),
-          TopScorersTable(scorers: state.topScorers, maxRows: 5),
-          const SizedBox(height: 12),
-        ],
-      ],
     );
   }
 
@@ -498,15 +444,18 @@ class _LeagueViewState extends State<LeagueView>
     bool isArabic,
   ) {
     if (state.standings == null || state.standings!.rows.isEmpty) {
-      return const EmptyView(
+      return EmptyView(
         titleKey: 'no_matches_date',
-        customMessage: 'No standings data available for this competition',
+        customMessage: isArabic
+            ? 'لا توجد بيانات جدول الترتيب متاحة لهذه البطولة'
+            : 'No standings data available for this competition',
         icon: Icons.table_chart_outlined,
       );
     }
 
     final standings = state.standings!;
     final hasGroups = standings.hasMultipleGroups;
+    final hMargin = AppDimensions.getHorizontalMargin(context);
 
     return ListView(
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
@@ -578,6 +527,89 @@ class _LeagueViewState extends State<LeagueView>
               }).toList(),
             ),
           ),
+        if (standings.rulesList != null && standings.rulesList!.isNotEmpty)
+          Container(
+            margin: EdgeInsets.symmetric(
+              horizontal: hMargin,
+              vertical: 8,
+            ),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.rule_rounded,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isArabic ? 'معايير كسر التعادل' : 'Tiebreaker Rules',
+                      style: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ...standings.rulesList!.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final rule = entry.value;
+                  final isPreamble = idx == 0 && rule.contains('في حالة');
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (!isPreamble) ...[
+                          Container(
+                            margin: const EdgeInsets.only(top: 6),
+                            width: 5,
+                            height: 5,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: Text(
+                            rule,
+                            style: AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontSize: isPreamble ? 12 : 11.5,
+                              fontWeight: isPreamble ? FontWeight.w600 : FontWeight.w400,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -589,16 +621,50 @@ class _LeagueViewState extends State<LeagueView>
     bool isArabic,
   ) {
     if (state.topScorers.isEmpty) {
-      return const EmptyView(
+      return EmptyView(
         titleKey: 'tab_overview',
-        customMessage: 'No top scorers available for this competition',
+        customMessage: isArabic
+            ? 'لا توجد بيانات للهدافين حاليًا'
+            : 'No top scorers available for this competition',
         icon: Icons.emoji_events_outlined,
       );
     }
 
     return ListView(
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-      children: [TopScorersTable(scorers: state.topScorers)],
+      children: [
+        TopScorersTable(
+          scorers: state.topScorers,
+          isAssists: false,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTopAssistsTab(
+    BuildContext context,
+    LeagueState state,
+    bool isDark,
+    bool isArabic,
+  ) {
+    if (state.topAssists.isEmpty) {
+      return EmptyView(
+        titleKey: 'tab_overview',
+        customMessage: isArabic
+            ? 'لا توجد بيانات لصناع اللعب حاليًا'
+            : 'No top assists available for this competition',
+        icon: Icons.emoji_events_outlined,
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+      children: [
+        TopScorersTable(
+          scorers: state.topAssists,
+          isAssists: true,
+        ),
+      ],
     );
   }
 }

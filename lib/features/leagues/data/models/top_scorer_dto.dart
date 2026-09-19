@@ -99,7 +99,10 @@ class TopScorerDto {
         0;
 
     final assists = int.tryParse(
-      json['assists']?.toString() ?? json['assist']?.toString() ?? '',
+      json['assists']?.toString() ??
+          json['assist']?.toString() ??
+          json['count']?.toString() ??
+          '',
     );
     final penalties = int.tryParse(
       json['penalties_scored']?.toString() ??

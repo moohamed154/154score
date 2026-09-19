@@ -28,6 +28,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
     final rows = <StandingRowEntity>[];
     final groups = <String, List<StandingRowEntity>>{};
     final legends = <StandingLegendEntity>[];
+    List<String>? rulesList;
     String leagueName = 'League Standings';
 
     dynamic dataNode;
@@ -52,9 +53,37 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         leagueName = data['league_name'].toString();
       }
 
-      // Parse Promotion / Qualification Legends from HTML or raw array
-      final promotionData = raw['promotion'] ?? data['promotion'];
-      legends.addAll(_parsePromotionLegends(promotionData));
+      // Parse structured colors (legends) if available
+      final colorsData = data['colors'] ?? raw['color'] ?? data['color'];
+      if (colorsData is List && colorsData.isNotEmpty) {
+        for (final c in colorsData) {
+          if (c is Map) {
+            final color = c['color']?.toString();
+            final desc = c['description']?.toString() ??
+                c['league_to']?.toString() ??
+                c['name']?.toString() ??
+                '';
+            if (color != null && color.isNotEmpty && desc.isNotEmpty) {
+              legends.add(StandingLegendEntity(colorHex: color, description: desc));
+            }
+          }
+        }
+      }
+
+      // Fallback: Parse Promotion / Qualification Legends from HTML or raw array
+      if (legends.isEmpty) {
+        final promotionData = raw['promotion'] ?? data['promotion'];
+        legends.addAll(_parsePromotionLegends(promotionData));
+      }
+
+      // Parse rules_list / tiebreaker rules
+      final rulesData = data['rules_list'] ?? raw['rules_list'] ?? data['tiebreak_rules'];
+      if (rulesData is List && rulesData.isNotEmpty) {
+        rulesList = rulesData
+            .map((e) => e?.toString() ?? '')
+            .where((s) => s.trim().isNotEmpty)
+            .toList();
+      }
 
       // 1. Primary Source: data['table'] — flat list with full team data
       //    This is the most reliable source; always try it first.
@@ -223,6 +252,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
       rows: rows,
       groups: groups.length > 1 ? groups : null,
       legends: legends.isNotEmpty ? legends : null,
+      rulesList: rulesList != null && rulesList.isNotEmpty ? rulesList : null,
     );
   }
 

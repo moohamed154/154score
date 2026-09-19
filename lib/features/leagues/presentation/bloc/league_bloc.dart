@@ -66,6 +66,10 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
         event.leagueId,
         lang: lang,
       );
+      final assistsFuture = repository.getLeagueAssists(
+        event.leagueId,
+        lang: lang,
+      );
       final matchesFuture = repository.getLeagueMatches(
         event.leagueId,
         lang: lang,
@@ -75,17 +79,20 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
         profileFuture,
         standingsFuture,
         scorersFuture,
+        assistsFuture,
         matchesFuture,
       ]);
 
       final profileRes = results[0] as dynamic;
       final standingsRes = results[1] as dynamic;
       final scorersRes = results[2] as dynamic;
-      final matchesRes = results[3] as dynamic;
+      final assistsRes = results[3] as dynamic;
+      final matchesRes = results[4] as dynamic;
 
       final profileMap = profileRes?.dataOrNull as Map<String, dynamic>?;
       final standings = standingsRes?.dataOrNull as dynamic;
       final scorers = (scorersRes?.dataOrNull ?? []) as List<dynamic>;
+      final assists = (assistsRes?.dataOrNull ?? []) as List<dynamic>;
       final matches = (matchesRes?.dataOrNull ?? []) as List<dynamic>;
 
       final profileCountry = profileMap?['country']?.toString();
@@ -115,6 +122,7 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
           season: profileSeason ?? state.season,
           standings: standings,
           topScorers: scorers.cast(),
+          topAssists: assists.cast(),
           matches: matches.cast(),
           errorMessage: null,
         ),

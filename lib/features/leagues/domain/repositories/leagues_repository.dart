@@ -20,6 +20,11 @@ abstract class LeaguesRepository {
     String? date,
   });
 
+  Future<ApiResult<List<TopScorerEntity>>> getLeagueAssists(
+    String leagueId, {
+    required String lang,
+  });
+
   Future<ApiResult<Map<String, dynamic>?>> getLeagueProfile(
     String leagueId, {
     required String lang,

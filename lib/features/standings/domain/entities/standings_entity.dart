@@ -71,6 +71,7 @@ class LeagueStandingsEntity extends Equatable {
   final List<StandingRowEntity> rows;
   final Map<String, List<StandingRowEntity>>? groups;
   final List<StandingLegendEntity>? legends;
+  final List<String>? rulesList;
 
   const LeagueStandingsEntity({
     required this.leagueId,
@@ -78,10 +79,11 @@ class LeagueStandingsEntity extends Equatable {
     required this.rows,
     this.groups,
     this.legends,
+    this.rulesList,
   });
 
   bool get hasMultipleGroups => groups != null && groups!.length > 1;
 
   @override
-  List<Object?> get props => [leagueId, leagueTitle, rows, groups, legends];
+  List<Object?> get props => [leagueId, leagueTitle, rows, groups, legends, rulesList];
 }

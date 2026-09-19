@@ -977,7 +977,7 @@ class _StandingsViewState extends State<StandingsView> {
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: () {
-            final targetTab = item.hasStandings ? 2 : 0;
+            final targetTab = item.hasStandings ? 1 : 0;
             try {
               context.push(
                 '/league/$targetLeagueId?tab=$targetTab',
