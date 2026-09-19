@@ -1,9 +1,15 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../home/presentation/cubit/home_cubit.dart';
+import '../../../matches/presentation/bloc/matches_bloc.dart';
+import '../../../matches/presentation/bloc/matches_event.dart';
+import '../../../matches/presentation/bloc/matches_state.dart';
 
 /// A custom, high-performance animated splash screen for 154Score.
 /// Built with zero external dependencies, leveraging pure Flutter animations
@@ -100,6 +106,37 @@ class _SplashViewState extends State<SplashView>
     });
 
     _controller.forward();
+    _startBackgroundPreload();
+  }
+
+  /// Asynchronously preloads home screen feeds and live matches
+  /// in the background without blocking the splash screen animation.
+  void _startBackgroundPreload() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Stagger by 120ms to allow smooth initial GPU rasterization of entrance animation
+      Future.delayed(const Duration(milliseconds: 120), () {
+        if (!mounted) return;
+
+        // 1. Preload Home Cubit (videos, transfers, cached feeds)
+        try {
+          final homeCubit = context.read<HomeCubit>();
+          if (homeCubit.state.status == HomeStatus.initial) {
+            unawaited(homeCubit.loadHomeData());
+          }
+        } catch (_) {}
+
+        // 2. Preload Matches Bloc (today's fixtures, live scores, leagues)
+        try {
+          final matchesBloc = context.read<MatchesBloc>();
+          if (matchesBloc.state.status == MatchesStatus.initial) {
+            matchesBloc.add(
+              LoadMatchesEvent(date: matchesBloc.state.selectedDate),
+            );
+          }
+        } catch (_) {}
+      });
+    });
   }
 
   void _navigateToNext() {

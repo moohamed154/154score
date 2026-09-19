@@ -1,14 +1,27 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:ysscores/features/home/presentation/cubit/home_cubit.dart';
+import 'package:ysscores/features/matches/presentation/bloc/matches_bloc.dart';
+import 'package:ysscores/features/matches/presentation/bloc/matches_event.dart';
+import 'package:ysscores/features/matches/presentation/bloc/matches_state.dart';
 import 'package:ysscores/features/splash/presentation/views/splash_view.dart';
 
+class MockHomeCubit extends Mock implements HomeCubit {}
+class MockMatchesBloc extends Mock implements MatchesBloc {}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(LoadMatchesEvent(date: DateTime.now()));
+  });
+
   group('SplashView Widget & Animation Tests', () {
     testWidgets('renders all brand, logo, title, and progress bar elements cleanly', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: const SplashView(),
+        const MaterialApp(
+          home: SplashView(),
         ),
       );
 
@@ -98,6 +111,43 @@ void main() {
 
       expect(currentPath, equals('/'));
       expect(find.text('Home Screen'), findsOneWidget);
+    });
+
+    testWidgets('triggers background preload for HomeCubit and MatchesBloc when present in context', (tester) async {
+      final mockHome = MockHomeCubit();
+      final mockMatches = MockMatchesBloc();
+
+      when(() => mockHome.state).thenReturn(const HomeState(status: HomeStatus.initial));
+      when(() => mockHome.loadHomeData()).thenAnswer((_) async {});
+      when(() => mockHome.stream).thenAnswer((_) => const Stream<HomeState>.empty());
+
+      final dummyMatchesState = MatchesState(
+        selectedDate: DateTime(2026, 9, 20),
+        status: MatchesStatus.initial,
+      );
+      when(() => mockMatches.state).thenReturn(dummyMatchesState);
+      when(() => mockMatches.stream).thenAnswer((_) => const Stream<MatchesState>.empty());
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<HomeCubit>.value(value: mockHome),
+            BlocProvider<MatchesBloc>.value(value: mockMatches),
+          ],
+          child: const MaterialApp(
+            home: SplashView(),
+          ),
+        ),
+      );
+
+      // Immediately after mount, preload has not triggered yet (waiting 120ms post frame)
+      verifyNever(() => mockHome.loadHomeData());
+
+      // Advance by 200ms to trigger the staggered background preload
+      await tester.pump(const Duration(milliseconds: 200));
+
+      verify(() => mockHome.loadHomeData()).called(1);
+      verify(() => mockMatches.add(any(that: isA<LoadMatchesEvent>()))).called(1);
     });
 
     testWidgets('renders with zero overflow on small 320px screen width', (tester) async {
