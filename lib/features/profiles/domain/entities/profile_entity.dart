@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../matches/domain/entities/match_entity.dart';
 
 class ProfileItemEntity extends Equatable {
   final String title;
@@ -41,6 +42,8 @@ class ProfileEntity extends Equatable {
   final String? voiceUrl;
   final String? role;
   final List<ProfileSectionEntity> sections;
+  final List<MatchEntity> upcomingMatches;
+  final List<MatchEntity> recentMatches;
 
   const ProfileEntity({
     required this.id,
@@ -56,6 +59,8 @@ class ProfileEntity extends Equatable {
     this.voiceUrl,
     this.role,
     required this.sections,
+    this.upcomingMatches = const [],
+    this.recentMatches = const [],
   });
 
   @override
@@ -73,5 +78,7 @@ class ProfileEntity extends Equatable {
     voiceUrl,
     role,
     sections,
+    upcomingMatches,
+    recentMatches,
   ];
 }

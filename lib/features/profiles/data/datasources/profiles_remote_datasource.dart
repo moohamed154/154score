@@ -1,5 +1,7 @@
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/url_helper.dart';
+import '../../../matches/data/models/match_dto.dart';
+import '../../../matches/domain/entities/match_entity.dart';
 import '../../domain/entities/profile_entity.dart';
 
 abstract class ProfilesRemoteDataSource {
@@ -217,13 +219,96 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
           }
         }
       }
-      if (transferItems.isNotEmpty) {
-        sections.add(
-          ProfileSectionEntity(
-            section: lang == 'ar' ? 'سجل الانتقالات' : 'Transfers',
-            items: transferItems,
-          ),
-        );
+      if (map['country'] != null && map['country'].toString().isNotEmpty) {
+        country = map['country'].toString();
+      }
+      if (map['channel'] != null && map['channel'].toString().isNotEmpty) {
+        channel = map['channel'].toString();
+      }
+      if (map['birth_date'] != null && map['birth_date'].toString().isNotEmpty) {
+        birthDate = map['birth_date'].toString();
+      }
+      if (map['commentary_language'] != null &&
+          map['commentary_language'].toString().isNotEmpty) {
+        commentaryLanguage = map['commentary_language'].toString();
+      }
+      if (map['voice_url'] != null && map['voice_url'].toString().isNotEmpty) {
+        voiceUrl = map['voice_url'].toString();
+      } else if (map['link_commentator'] != null &&
+          map['link_commentator'].toString().isNotEmpty) {
+        voiceUrl = map['link_commentator'].toString();
+      }
+
+      // Check sections from map if not yet populated
+      if (map['sections'] is List && sections.isEmpty) {
+        for (final sec in map['sections'] as List) {
+          if (sec is Map) {
+            final sName = sec['section']?.toString() ?? '';
+            final rawItems = sec['items'] as List? ?? [];
+            final items = <ProfileItemEntity>[];
+            for (final it in rawItems) {
+              if (it is Map) {
+                final t = (it['title'] ?? it['label'] ?? '').toString().trim();
+                final c = (it['content'] ?? it['value'] ?? '').toString().trim();
+                if (t.isNotEmpty && c.isNotEmpty) {
+                  items.add(
+                    ProfileItemEntity(
+                      title: t,
+                      content: c,
+                      icon: it['icon']?.toString(),
+                      link: (it['link'] ?? it['url'])?.toString(),
+                    ),
+                  );
+                }
+              }
+            }
+            if (items.isNotEmpty && sName.isNotEmpty) {
+              sections.add(ProfileSectionEntity(section: sName, items: items));
+            }
+          }
+        }
+      }
+    }
+
+    final upcomingMatches = <MatchEntity>[];
+    final recentMatches = <MatchEntity>[];
+
+    if (response is Map && response['data'] is Map) {
+      final map = response['data'] as Map;
+      final rawUpcoming = map['upcoming_matches'] as List? ??
+          (map['matches'] is Map
+              ? (map['matches']['coming'] as List? ??
+                  (map['matches']['coming'] is Map
+                      ? map['matches']['coming']['data'] as List?
+                      : null))
+              : null) ??
+          [];
+      for (final m in rawUpcoming) {
+        if (m is Map) {
+          try {
+            upcomingMatches.add(
+              MatchDto.fromJson(Map<String, dynamic>.from(m)).toEntity(),
+            );
+          } catch (_) {}
+        }
+      }
+
+      final rawRecent = map['recent_matches'] as List? ??
+          (map['matches'] is Map
+              ? (map['matches']['end'] as List? ??
+                  (map['matches']['end'] is Map
+                      ? map['matches']['end']['data'] as List?
+                      : null))
+              : null) ??
+          [];
+      for (final m in rawRecent) {
+        if (m is Map) {
+          try {
+            recentMatches.add(
+              MatchDto.fromJson(Map<String, dynamic>.from(m)).toEntity(),
+            );
+          } catch (_) {}
+        }
       }
     }
 
@@ -241,6 +326,8 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
       voiceUrl: voiceUrl,
       role: role,
       sections: sections,
+      upcomingMatches: upcomingMatches,
+      recentMatches: recentMatches,
     );
   }
 }

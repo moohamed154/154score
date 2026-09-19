@@ -11,6 +11,7 @@ import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../matches/presentation/widgets/match_card.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profiles_repository.dart';
 
@@ -272,7 +273,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
         ],
 
         // Detail Sections (only if any unique non-redundant sections exist)
-        if (visibleSections.isEmpty && !hasHighlights)
+        if (visibleSections.isEmpty && !hasHighlights && p.upcomingMatches.isEmpty && p.recentMatches.isEmpty)
           const EmptyView(
             titleKey: 'tab_info',
             customMessage: 'No further details available',
@@ -283,8 +284,97 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             return _buildSectionCard(context, sec, isDark, isArabic);
           }),
 
+        // Commentator Upcoming Matches
+        if (p.upcomingMatches.isNotEmpty) ...[
+          const SizedBox(height: AppDimensions.sm),
+          _buildMatchesSectionHeader(
+            context,
+            title: isArabic ? 'المباريات القادمة' : 'Upcoming Fixtures',
+            icon: Icons.event_available_rounded,
+            count: p.upcomingMatches.length,
+            isDark: isDark,
+            isArabic: isArabic,
+          ),
+          ...p.upcomingMatches.map((m) => Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: MatchCard(match: m),
+          )),
+        ],
+
+        // Commentator Recent/Past Matches
+        if (p.recentMatches.isNotEmpty) ...[
+          const SizedBox(height: AppDimensions.sm),
+          _buildMatchesSectionHeader(
+            context,
+            title: isArabic ? 'المباريات السابقة' : 'Past Matches',
+            icon: Icons.history_rounded,
+            count: p.recentMatches.length,
+            isDark: isDark,
+            isArabic: isArabic,
+          ),
+          ...p.recentMatches.map((m) => Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: MatchCard(match: m),
+          )),
+        ],
+
         const SizedBox(height: AppDimensions.lg),
       ],
+    );
+  }
+
+  Widget _buildMatchesSectionHeader(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required int count,
+    required bool isDark,
+    required bool isArabic,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: AppColors.primary),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: AppTypography.getBodyLarge(
+              isDark: isDark,
+              isArabic: isArabic,
+            ).copyWith(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '$count',
+              style: AppTypography.getBodySmall(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

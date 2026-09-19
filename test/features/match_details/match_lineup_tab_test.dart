@@ -1141,9 +1141,9 @@ void main() {
         substituteIn: false,
       );
 
-      final team = TeamLineupEntity(
+      const team = TeamLineupEntity(
         teamName: 'بايرن ميونخ',
-        startingXi: const [
+        startingXi: [
           LineupPlayerEntity(
             playerId: '1',
             name: 'أوباميكانو',
@@ -1152,13 +1152,13 @@ void main() {
             substituteTime: 46,
           ),
         ],
-        substitutes: const [subbedInPlayer, benchPlayer],
+        substitutes: [subbedInPlayer, benchPlayer],
       );
 
       await tester.pumpWidget(
         buildTestApp(
           locale: const Locale('ar'),
-          child: LineupSquadListWidget(
+          child: const LineupSquadListWidget(
             home: team,
             away: team,
             showStarters: false,
@@ -1184,7 +1184,7 @@ void main() {
     testWidgets(
         '10. Renders Goal and Assist badges on PitchPlayerNode when player has goals and assists',
         (tester) async {
-      final playerWithGoalsAndAssists = LineupPlayerEntity(
+      const playerWithGoalsAndAssists = LineupPlayerEntity(
         playerId: '9',
         name: 'هاري كين',
         number: 9,

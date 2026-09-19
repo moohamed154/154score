@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:ysscores/core/errors/failures.dart';
 import 'package:ysscores/core/network/api_result.dart';
 import 'package:ysscores/core/utils/commentator_resolver.dart';
+import 'package:ysscores/features/matches/domain/entities/match_entity.dart';
 import 'package:ysscores/features/profiles/domain/entities/profile_entity.dart';
 import 'package:ysscores/features/profiles/domain/repositories/profiles_repository.dart';
 
@@ -254,6 +255,39 @@ void main() {
       expect(CommentatorResolver.resolveId('خليل البلوشي'), equals('6'));
       expect(CommentatorResolver.resolveId('حفيظ دراجي'), equals('7'));
       expect(CommentatorResolver.resolveId('رؤوف خليف'), equals('1'));
+    });
+
+    // ── 9. Commentator Entity Supports Upcoming and Recent Matches ────────
+    test('ProfileEntity carries upcomingMatches and recentMatches', () {
+      const match1 = MatchEntity(
+        id: '5868072',
+        team1: 'أتلتيكو مدريد',
+        team2: 'ريال مدريد',
+        time: '17:15:00',
+        date: '2026-09-20',
+      );
+      const match2 = MatchEntity(
+        id: '5795456',
+        team1: 'برينتفورد',
+        team2: 'تشيلسي',
+        score1: '3',
+        score2: '0',
+        date: '2026-09-18',
+      );
+
+      const entity = ProfileEntity(
+        id: '4',
+        slug: 'ali-saeed-al-kaabi',
+        name: 'علي سعيد الكعبي',
+        sections: [],
+        upcomingMatches: [match1],
+        recentMatches: [match2],
+      );
+
+      expect(entity.upcomingMatches.length, equals(1));
+      expect(entity.recentMatches.length, equals(1));
+      expect(entity.upcomingMatches.first.team1, equals('أتلتيكو مدريد'));
+      expect(entity.recentMatches.first.team2, equals('تشيلسي'));
     });
   });
 }
