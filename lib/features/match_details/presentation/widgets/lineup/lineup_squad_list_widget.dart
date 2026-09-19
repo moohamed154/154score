@@ -609,8 +609,10 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                 const SizedBox(width: 4),
               ],
 
-              // Rating Badge (if present)
-              if (player.rating != null && player.rating!.isNotEmpty) ...[
+              // Rating Badge (if present, only for players who actually played)
+              if (player.rating != null &&
+                  player.rating!.isNotEmpty &&
+                  (!player.isSubstitute || player.substituteIn)) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 7,
@@ -935,10 +937,10 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
           ),
           child: Row(
             children: [
-              // Avatar Stack with Jersey Number and optional rating
+              // Avatar Stack with Jersey Number (no rating for unused bench players)
               SizedBox(
                 width: 44,
-                height: 48,
+                height: 44,
                 child: Stack(
                   clipBehavior: Clip.none,
                   alignment: Alignment.center,
@@ -962,31 +964,6 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                             fontSize: 10.5,
                             fontWeight: FontWeight.w800,
                             color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                      ),
-                    if (player.rating != null &&
-                        player.rating!.isNotEmpty &&
-                        player.rating != '0' &&
-                        player.rating != '-')
-                      Positioned(
-                        bottom: -4,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getRatingColor(player.rating!),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            player.rating!,
-                            style: GoogleFonts.outfit(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.black,
-                            ),
                           ),
                         ),
                       ),

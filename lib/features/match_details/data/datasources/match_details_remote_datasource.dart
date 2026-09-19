@@ -1760,7 +1760,9 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       detailedPosition: detailedPos,
       formationPosition: formPos,
       photo: photo,
-      rating: rating,
+      rating: ((map['is_substitute'] == true || isSubstitute) && !subIn)
+          ? null
+          : rating,
       isCaptain: isCap,
       isStarter: map['is_starter'] == true || isStarter,
       isSubstitute: map['is_substitute'] == true || isSubstitute,
