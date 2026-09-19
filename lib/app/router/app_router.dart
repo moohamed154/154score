@@ -14,6 +14,8 @@ import '../../features/match_details/presentation/bloc/match_details_bloc.dart';
 import '../../features/match_details/presentation/views/match_details_view.dart';
 import '../../features/matches/domain/entities/match_entity.dart';
 import '../../features/matches/presentation/views/matches_view.dart';
+import '../../features/players/presentation/bloc/player_bloc.dart';
+import '../../features/players/presentation/views/player_view.dart';
 import '../../features/profiles/presentation/views/generic_profile_view.dart';
 import '../../features/search/presentation/views/search_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
@@ -301,10 +303,21 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.uri.queryParameters['slug'] ?? '';
-          return GenericProfileView(
-            id: id,
-            slug: slug,
-            type: ProfileType.player,
+          final extra = state.extra as Map<String, dynamic>?;
+          return BlocProvider(
+            create: (_) => sl<PlayerBloc>(
+              param1: id,
+              param2: {
+                'slug': slug,
+                if (extra != null) ...extra,
+              },
+            ),
+            child: PlayerView(
+              playerId: id,
+              initialSlug: slug,
+              initialName: extra?['name']?.toString(),
+              initialPhoto: extra?['photo']?.toString(),
+            ),
           );
         },
       ),
@@ -314,10 +327,21 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
-          return GenericProfileView(
-            id: id,
-            slug: slug,
-            type: ProfileType.player,
+          final extra = state.extra as Map<String, dynamic>?;
+          return BlocProvider(
+            create: (_) => sl<PlayerBloc>(
+              param1: id,
+              param2: {
+                'slug': slug,
+                if (extra != null) ...extra,
+              },
+            ),
+            child: PlayerView(
+              playerId: id,
+              initialSlug: slug,
+              initialName: extra?['name']?.toString(),
+              initialPhoto: extra?['photo']?.toString(),
+            ),
           );
         },
       ),

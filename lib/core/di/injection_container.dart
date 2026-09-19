@@ -46,6 +46,11 @@ import '../../features/profiles/data/datasources/profiles_remote_datasource.dart
 import '../../features/profiles/data/repositories/profiles_repository_impl.dart';
 import '../../features/profiles/domain/repositories/profiles_repository.dart';
 
+import '../../features/players/data/datasources/player_remote_datasource.dart';
+import '../../features/players/data/repositories/player_repository_impl.dart';
+import '../../features/players/domain/repositories/player_repository.dart';
+import '../../features/players/presentation/bloc/player_bloc.dart';
+
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/favorites/presentation/cubit/favorites_cubit.dart';
 import '../../features/settings/presentation/cubit/settings_cubits.dart';
@@ -97,6 +102,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ProfilesRemoteDataSource>(
     () => ProfilesRemoteDataSourceImpl(sl()),
   );
+  sl.registerLazySingleton<PlayerRemoteDataSource>(
+    () => PlayerRemoteDataSourceImpl(sl()),
+  );
 
   // 3. Repositories
   sl.registerLazySingleton<MatchesRepository>(
@@ -118,6 +126,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<VideosRepository>(() => VideosRepositoryImpl(sl()));
   sl.registerLazySingleton<ProfilesRepository>(
     () => ProfilesRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<PlayerRepository>(
+    () => PlayerRepositoryImpl(sl()),
   );
 
   // 4. ViewModels / Blocs / Cubits
@@ -156,6 +167,17 @@ Future<void> initDependencies() async {
       teamId: teamId,
       initialName: extra?['name']?.toString(),
       initialLogo: extra?['logo']?.toString(),
+    ),
+  );
+
+  sl.registerFactoryParam<PlayerBloc, String, Map<String, dynamic>?>(
+    (playerId, extra) => PlayerBloc(
+      repository: sl(),
+      localStorageService: sl(),
+      initialId: playerId,
+      initialName: extra?['name']?.toString(),
+      initialPhoto: extra?['photo']?.toString(),
+      initialSlug: extra?['slug']?.toString(),
     ),
   );
 
