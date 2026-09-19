@@ -8,6 +8,7 @@ import 'package:ysscores/core/constants/app_typography.dart';
 import 'package:ysscores/core/localization/app_localizations.dart';
 import 'package:ysscores/core/widgets/app_image.dart';
 import 'package:ysscores/features/match_details/domain/entities/match_details_entity.dart';
+import 'pitch_player_node.dart';
 
 /// Detailed list view of Starting XI, Substitutes bench, Coaches, and Injuries.
 class LineupSquadListWidget extends StatefulWidget {
@@ -345,16 +346,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        onTap: () {
-          final cleanName = player.name.trim();
-          if (cleanName.isNotEmpty) {
-            final pId = player.playerId ?? '0';
-            final slug = Uri.encodeComponent(
-              cleanName.replaceAll(RegExp(r'\s+'), '-'),
-            );
-            context.push('/player/$pId/$slug');
-          }
-        },
+        onTap: () => showLineupPlayerModal(context, player),
         child: Container(
           margin: const EdgeInsets.only(bottom: 6),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -687,16 +679,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          final cleanName = playerIn.name.trim();
-          if (cleanName.isNotEmpty) {
-            final pId = playerIn.playerId ?? '0';
-            final slug = Uri.encodeComponent(
-              cleanName.replaceAll(RegExp(r'\s+'), '-'),
-            );
-            context.push('/player/$pId/$slug');
-          }
-        },
+        onTap: () => showLineupPlayerModal(context, playerIn),
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -914,16 +897,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          final cleanName = player.name.trim();
-          if (cleanName.isNotEmpty) {
-            final pId = player.playerId ?? '0';
-            final slug = Uri.encodeComponent(
-              cleanName.replaceAll(RegExp(r'\s+'), '-'),
-            );
-            context.push('/player/$pId/$slug');
-          }
-        },
+        onTap: () => showLineupPlayerModal(context, player),
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
