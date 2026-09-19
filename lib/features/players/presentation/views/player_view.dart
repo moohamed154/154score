@@ -249,28 +249,20 @@ class _PlayerViewState extends State<PlayerView>
           const SizedBox(height: AppDimensions.md),
 
           // Active Tab Content
-          IndexedStack(
-            index: state.selectedTab.clamp(0, 2),
-            children: [
-              // 1. Statistics Tab
-              PlayerStatsTabView(
+          switch (state.selectedTab) {
+            0 => PlayerStatsTabView(
                 statistics: profile.statistics,
                 isGoalkeeper: isGoalkeeper,
                 isDark: isDark,
                 isArabic: isArabic,
               ),
-
-              // 2. Transfers Tab
-              PlayerTransfersTabView(
+            1 => PlayerTransfersTabView(
                 transfers: profile.transfers,
                 isDark: isDark,
                 isArabic: isArabic,
               ),
-
-              // 3. Overview / Additional Information
-              _buildOverviewTab(profile, isDark, isArabic),
-            ],
-          ),
+            _ => _buildOverviewTab(profile, isDark, isArabic),
+          },
 
           const SizedBox(height: AppDimensions.lg),
         ],
