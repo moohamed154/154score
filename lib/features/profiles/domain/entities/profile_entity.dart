@@ -28,6 +28,25 @@ class ProfileSectionEntity extends Equatable {
   List<Object?> get props => [section, items];
 }
 
+class ProfileTeamEntity extends Equatable {
+  final String id;
+  final String name;
+  final String? fullName;
+  final String? logo;
+  final int? worldRanking;
+
+  const ProfileTeamEntity({
+    required this.id,
+    required this.name,
+    this.fullName,
+    this.logo,
+    this.worldRanking,
+  });
+
+  @override
+  List<Object?> get props => [id, name, fullName, logo, worldRanking];
+}
+
 class ProfileEntity extends Equatable {
   final String id;
   final String slug;
@@ -41,9 +60,15 @@ class ProfileEntity extends Equatable {
   final String? commentaryLanguage;
   final String? voiceUrl;
   final String? role;
+  final String? capacity;
+  final String? builtDate;
+  final String? pitchSurface;
+  final String? city;
+  final String? mapUrl;
   final List<ProfileSectionEntity> sections;
   final List<MatchEntity> upcomingMatches;
   final List<MatchEntity> recentMatches;
+  final List<ProfileTeamEntity> residentTeams;
 
   const ProfileEntity({
     required this.id,
@@ -58,9 +83,15 @@ class ProfileEntity extends Equatable {
     this.commentaryLanguage,
     this.voiceUrl,
     this.role,
+    this.capacity,
+    this.builtDate,
+    this.pitchSurface,
+    this.city,
+    this.mapUrl,
     required this.sections,
     this.upcomingMatches = const [],
     this.recentMatches = const [],
+    this.residentTeams = const [],
   });
 
   @override
@@ -77,8 +108,14 @@ class ProfileEntity extends Equatable {
     commentaryLanguage,
     voiceUrl,
     role,
+    capacity,
+    builtDate,
+    pitchSurface,
+    city,
+    mapUrl,
     sections,
     upcomingMatches,
     recentMatches,
+    residentTeams,
   ];
 }

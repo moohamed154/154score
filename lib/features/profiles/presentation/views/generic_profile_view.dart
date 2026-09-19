@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -273,7 +274,11 @@ class _GenericProfileViewState extends State<GenericProfileView> {
         ],
 
         // Detail Sections (only if any unique non-redundant sections exist)
-        if (visibleSections.isEmpty && !hasHighlights && p.upcomingMatches.isEmpty && p.recentMatches.isEmpty)
+        if (visibleSections.isEmpty &&
+            !hasHighlights &&
+            p.upcomingMatches.isEmpty &&
+            p.recentMatches.isEmpty &&
+            p.residentTeams.isEmpty)
           const EmptyView(
             titleKey: 'tab_info',
             customMessage: 'No further details available',
@@ -284,7 +289,13 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             return _buildSectionCard(context, sec, isDark, isArabic);
           }),
 
-        // Commentator Upcoming Matches
+        // Resident Teams / Clubs (for Stadiums)
+        if (p.residentTeams.isNotEmpty) ...[
+          const SizedBox(height: AppDimensions.sm),
+          _buildResidentTeamsCard(context, p, isDark, isArabic),
+        ],
+
+        // Upcoming Matches (Commentators, Referees)
         if (p.upcomingMatches.isNotEmpty) ...[
           const SizedBox(height: AppDimensions.sm),
           _buildMatchesSectionHeader(
@@ -301,7 +312,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           )),
         ],
 
-        // Commentator Recent/Past Matches
+        // Recent/Past Matches (Commentators, Referees)
         if (p.recentMatches.isNotEmpty) ...[
           const SizedBox(height: AppDimensions.sm),
           _buildMatchesSectionHeader(
@@ -320,6 +331,95 @@ class _GenericProfileViewState extends State<GenericProfileView> {
 
         const SizedBox(height: AppDimensions.lg),
       ],
+    );
+  }
+
+  Widget _buildResidentTeamsCard(
+    BuildContext context,
+    ProfileEntity p,
+    bool isDark,
+    bool isArabic,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppDimensions.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+            child: Row(
+              children: [
+                const Icon(Icons.shield_outlined, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  isArabic ? 'الأندية والفرق المقيمة' : 'Home Teams & Clubs',
+                  style: AppTypography.getBodyLarge(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: p.residentTeams.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final team = p.residentTeams[index];
+              return InkWell(
+                onTap: team.id.isNotEmpty
+                    ? () => context.push(
+                          '/team/${team.id}?slug=${Uri.encodeComponent(team.name)}',
+                        )
+                    : null,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(
+                    children: [
+                      AppImage(
+                        imageUrl: team.logo,
+                        width: 32,
+                        height: 32,
+                        placeholderIcon: Icons.shield_outlined,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          team.fullName ?? team.name,
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 

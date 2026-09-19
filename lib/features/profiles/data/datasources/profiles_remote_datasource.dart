@@ -272,9 +272,21 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
 
     final upcomingMatches = <MatchEntity>[];
     final recentMatches = <MatchEntity>[];
+    final residentTeams = <ProfileTeamEntity>[];
+    String? capacity;
+    String? builtDate;
+    String? pitchSurface;
+    String? city;
+    String? mapUrl;
 
     if (response is Map && response['data'] is Map) {
       final map = response['data'] as Map;
+      capacity = (map['capacity'] ?? map['seats'])?.toString();
+      builtDate = (map['built_date'] ?? map['create'])?.toString();
+      pitchSurface = (map['pitch_surface'] ?? map['floor'] ?? map['surface'])?.toString();
+      city = map['city']?.toString();
+      mapUrl = (map['map_link'] ?? map['link_map'])?.toString();
+
       final rawUpcoming = map['upcoming_matches'] as List? ??
           (map['matches'] is Map
               ? (map['matches']['coming'] as List? ??
@@ -310,6 +322,34 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
           } catch (_) {}
         }
       }
+
+      final rawTeams = map['teams'] as List? ??
+          (map['stadium_teams'] is List
+              ? map['stadium_teams'] as List
+              : (map['stadium_teams'] is Map
+                  ? (map['stadium_teams'] as Map).values.toList()
+                  : null)) ??
+          [];
+      for (final t in rawTeams) {
+        if (t is Map) {
+          final tId = (t['id'] ?? t['row_id'] ?? '').toString();
+          final tName = (t['name'] ?? t['title'] ?? '').toString();
+          final tFullName = (t['full_name'] ?? t['full_title'])?.toString();
+          final tLogo = UrlHelper.normalizeImageUrl((t['logo'] ?? t['image'])?.toString());
+          final tRank = t['world_ranking'] is num ? (t['world_ranking'] as num).toInt() : null;
+          if (tId.isNotEmpty || tName.isNotEmpty) {
+            residentTeams.add(
+              ProfileTeamEntity(
+                id: tId,
+                name: tName,
+                fullName: tFullName,
+                logo: tLogo,
+                worldRanking: tRank,
+              ),
+            );
+          }
+        }
+      }
     }
 
     return ProfileEntity(
@@ -325,9 +365,15 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
       commentaryLanguage: commentaryLanguage,
       voiceUrl: voiceUrl,
       role: role,
+      capacity: capacity,
+      builtDate: builtDate,
+      pitchSurface: pitchSurface,
+      city: city,
+      mapUrl: mapUrl,
       sections: sections,
       upcomingMatches: upcomingMatches,
       recentMatches: recentMatches,
+      residentTeams: residentTeams,
     );
   }
 }
