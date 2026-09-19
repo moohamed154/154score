@@ -15,12 +15,15 @@ class MatchPitchWidget extends StatefulWidget {
   final int? selectedTeamIndex;
   final ValueChanged<int>? onTeamChanged;
 
+  final bool isConfirmed;
+
   const MatchPitchWidget({
     super.key,
     required this.home,
     required this.away,
     this.selectedTeamIndex,
     this.onTeamChanged,
+    this.isConfirmed = true,
   });
 
   @override
@@ -214,7 +217,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         : (team.teamName ?? (isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
 
     const activeBorderColor = Color(0xFF00B4D8); // Cyan active border from Yalla Shoot screenshot
-    const activeGreenColor = Color(0xFF10B981); // Emerald dot and formation badge
+    final activeStatusColor = widget.isConfirmed
+        ? const Color(0xFF10B981) // Emerald (Confirmed)
+        : const Color(0xFFF59E0B); // Amber (Probable)
 
     return GestureDetector(
       onTap: onTap,
@@ -248,12 +253,12 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Team indicator dot (bright green when active, muted when inactive)
+            // Team indicator dot (emerald for confirmed, amber for probable, muted when inactive)
             Container(
               width: 7.5,
               height: 7.5,
               decoration: BoxDecoration(
-                color: isSelected ? activeGreenColor : Colors.grey.shade600,
+                color: isSelected ? activeStatusColor : Colors.grey.shade600,
                 shape: BoxShape.circle,
               ),
             ),
@@ -282,7 +287,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? activeGreenColor.withValues(alpha: 0.22)
+                      ? activeStatusColor.withValues(alpha: 0.22)
                       : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -292,7 +297,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                     fontSize: 10.5,
                     fontWeight: FontWeight.w800,
                     color: isSelected
-                        ? activeGreenColor
+                        ? activeStatusColor
                         : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
                   ),
                 ),

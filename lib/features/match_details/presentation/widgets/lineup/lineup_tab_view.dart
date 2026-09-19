@@ -142,6 +142,7 @@ class _LineupTabViewState extends State<LineupTabView> {
                     selectedTeamIndex: _selectedTeamIndex,
                     onTeamChanged: (idx) =>
                         setState(() => _selectedTeamIndex = idx),
+                    isConfirmed: lineup.isConfirmedLineup,
                   ),
 
                   const SizedBox(height: 16),
@@ -181,14 +182,29 @@ class _LineupTabViewState extends State<LineupTabView> {
     String? customText,
   }) {
     final color = isConfirmed
-        ? const Color(0xFF10B981) // Emerald
-        : const Color(0xFFF59E0B); // Amber
+        ? const Color(0xFF10B981) // Emerald (Confirmed)
+        : const Color(0xFFF59E0B); // Amber (Probable)
 
-    final label = (customText != null && customText.trim().isNotEmpty)
-        ? customText.trim()
-        : (isConfirmed
-            ? (isArabic ? 'تشكيلة مؤكدة' : 'Confirmed Lineup')
-            : (isArabic ? 'تشكيلة متوقعة' : 'Probable Lineup'));
+    final defaultText = isConfirmed
+        ? (isArabic ? 'تشكيلة مؤكدة' : 'Confirmed Lineup')
+        : (isArabic ? 'تشكيلة متوقعة' : 'Probable Lineup');
+
+    final String label;
+    if (customText != null && customText.trim().isNotEmpty) {
+      final trimmed = customText.trim();
+      final textIsProbable = trimmed.contains('متوقعة') ||
+          trimmed.toLowerCase().contains('probable') ||
+          trimmed.toLowerCase().contains('predicted');
+      if (isConfirmed && textIsProbable) {
+        label = defaultText;
+      } else if (!isConfirmed && !textIsProbable) {
+        label = defaultText;
+      } else {
+        label = trimmed;
+      }
+    } else {
+      label = defaultText;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

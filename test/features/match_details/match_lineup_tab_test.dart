@@ -219,6 +219,66 @@ void main() {
       expect(result, isNull);
     });
 
+    test('3.1 Parses probable lineup with 0 substitutes as isConfirmed == false and تشكيلة متوقعة', () async {
+      when(
+        () => mockClient.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => {
+          'success': true,
+          'data': {
+            'match_id': '5103634',
+            'lineups_available': true,
+            'formation_type': 'probable',
+            'formation_type_id': 2,
+            'formation_type_text': 'تشكيلة متوقعة',
+            'is_confirmed': false,
+            'home': {
+              'team_id': '9770',
+              'team_name': 'فلامينغو',
+              'formation': '4-2-3-1',
+              'starting_xi': [
+                {
+                  'player_id': '1',
+                  'name': 'روسي',
+                  'number': 1,
+                  'position_code': 'G',
+                  'is_starter': true,
+                },
+              ],
+              'substitutes': [],
+            },
+            'away': {
+              'team_id': '109705',
+              'team_name': 'براغانتينو',
+              'formation': '4-2-3-1',
+              'starting_xi': [
+                {
+                  'player_id': '2',
+                  'name': 'كليتون',
+                  'number': 1,
+                  'position_code': 'G',
+                  'is_starter': true,
+                },
+              ],
+              'substitutes': [],
+            },
+          },
+        },
+      );
+
+      final result = await dataSource.getLineups('5103634', lang: 'ar');
+
+      expect(result, isNotNull);
+      expect(result!.isConfirmed, isFalse);
+      expect(result.isConfirmedLineup, isFalse);
+      expect(result.formationTypeId, 2);
+      expect(result.formationType, 'probable');
+      expect(result.formationTypeText, 'تشكيلة متوقعة');
+    });
+
     test('4. Strips "أخبار نادي" and "اخبار نادي" prefixes from team names cleanly', () async {
       when(
         () => mockClient.get(

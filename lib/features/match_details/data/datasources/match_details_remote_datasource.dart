@@ -1242,13 +1242,13 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
 
       final mId = dataMap['match_id']?.toString() ?? matchId;
       final available = dataMap['lineups_available'] == true;
-      final formType = dataMap['formation_type']?.toString();
-      final formTypeId = int.tryParse(
-        dataMap['formation_type_id']?.toString() ?? '',
+      String? formType = dataMap['formation_type']?.toString();
+      int? formTypeId = int.tryParse(
+        dataMap['formation_type_id']?.toString() ??
+            dataMap['type_formation']?.toString() ??
+            '',
       );
-      final formTypeText = dataMap['formation_type_text']?.toString();
-      final isConfirmed = (dataMap['is_confirmed'] as bool?) ??
-          (formTypeId == 0 || formType?.toLowerCase() == 'confirmed');
+      String? formTypeText = dataMap['formation_type_text']?.toString();
 
       TeamLineupEntity? homeLineup = _parseTeamLineup(dataMap['home']);
       TeamLineupEntity? awayLineup = _parseTeamLineup(dataMap['away']);
@@ -1269,6 +1269,41 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         );
         homeLineup = healed.$1;
         awayLineup = healed.$2;
+      }
+
+      final hasSubstitutes = (homeLineup?.substitutes.isNotEmpty ?? false) ||
+          (awayLineup?.substitutes.isNotEmpty ?? false);
+
+      final bool isConfirmed;
+      if (dataMap['is_confirmed'] == false ||
+          formTypeId == 2 ||
+          formType?.toLowerCase() == 'probable' ||
+          formType?.toLowerCase() == 'predicted' ||
+          dataMap['type_formation'] == 2) {
+        isConfirmed = false;
+        formTypeId ??= 2;
+        formType = 'probable';
+        formTypeText = (lang == 'en') ? 'Probable Lineup' : 'تشكيلة متوقعة';
+      } else if (!hasSubstitutes) {
+        // Lineup with 0 substitutes on both teams is a probable/expected lineup
+        isConfirmed = false;
+        formTypeId = 2;
+        formType = 'probable';
+        formTypeText = (lang == 'en') ? 'Probable Lineup' : 'تشكيلة متوقعة';
+      } else {
+        final bool rawConfirmed = (dataMap['is_confirmed'] as bool?) ??
+            (formTypeId == 0 || formType?.toLowerCase() == 'confirmed');
+        if (rawConfirmed) {
+          isConfirmed = true;
+          formTypeId ??= 0;
+          formType = 'confirmed';
+          formTypeText = (lang == 'en') ? 'Confirmed Lineup' : 'تشكيلة مؤكدة';
+        } else {
+          isConfirmed = false;
+          formTypeId = 2;
+          formType = 'probable';
+          formTypeText = (lang == 'en') ? 'Probable Lineup' : 'تشكيلة متوقعة';
+        }
       }
 
       return MatchLineupEntity(

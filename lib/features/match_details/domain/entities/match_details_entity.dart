@@ -198,9 +198,15 @@ class MatchLineupEntity extends Equatable {
     this.away,
   });
 
-  bool get isConfirmedLineup =>
-      isConfirmed ??
-      (formationTypeId == 0 || formationType?.toLowerCase() == 'confirmed');
+  bool get isConfirmedLineup {
+    if (isConfirmed != null) return isConfirmed!;
+    if (formationTypeId == 2 ||
+        formationType?.toLowerCase() == 'probable' ||
+        formationType?.toLowerCase() == 'predicted') {
+      return false;
+    }
+    return formationTypeId == 0 || formationType?.toLowerCase() == 'confirmed';
+  }
 
   bool get hasLineups =>
       lineupsAvailable &&
