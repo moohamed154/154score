@@ -32,9 +32,16 @@ jobs:
       - name: Run tests
         run: flutter test || true
 
-      - name: Install CocoaPods
+      - name: Configure iOS and Install CocoaPods
         run: |
+          flutter precache --ios
+          sed -i '' -E "s/platform :ios, '[0-9.]+'/platform :ios, '15.0'/g" ios/Podfile 2>/dev/null || sed -i -E "s/platform :ios, '[0-9.]+'/platform :ios, '15.0'/g" ios/Podfile 2>/dev/null || true
+          sed -i '' -E "s/IPHONEOS_DEPLOYMENT_TARGET'\] = '[0-9.]+'/IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'/g" ios/Podfile 2>/dev/null || sed -i -E "s/IPHONEOS_DEPLOYMENT_TARGET'\] = '[0-9.]+'/IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'/g" ios/Podfile 2>/dev/null || true
+          sed -i '' "s/'13.0'/'15.0'/g" ios/Podfile 2>/dev/null || sed -i "s/'13.0'/'15.0'/g" ios/Podfile 2>/dev/null || true
+          rm -f ios/Flutter/Generated.xcconfig
+          flutter build ios --config-only --no-codesign
           cd ios
+          rm -rf Podfile.lock Pods
           pod install --repo-update || pod install
           cd ..
 
