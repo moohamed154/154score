@@ -104,6 +104,9 @@ class MockLocalStorageService implements LocalStorageService {
 
   @override
   Future<bool> setMatchesSortOrder(String sortOrder) async => true;
+
+  @override
+  bool hasCustomFavoriteCompetitions() => false;
 }
 
 class MockLeaguesRepository implements LeaguesRepository {
@@ -217,6 +220,14 @@ class MockLeaguesRepository implements LeaguesRepository {
       'name': 'الدوري الإسباني',
     });
   }
+
+  @override
+  Future<ApiResult<List<TopScorerEntity>>> getLeagueAssists(
+    String leagueId, {
+    required String lang,
+  }) async {
+    return const ApiSuccess([]);
+  }
 }
 
 class MockTeamsRepository implements TeamsRepository {
@@ -272,6 +283,20 @@ class MockTeamsRepository implements TeamsRepository {
             leagueTitle: 'الدوري الإسباني',
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Future<ApiResult<LeagueStandingsEntity>> getChampionshipStandings(
+    String championshipId, {
+    required String lang,
+  }) async {
+    return const ApiSuccess(
+      LeagueStandingsEntity(
+        leagueId: '937599',
+        leagueTitle: 'الدوري الإسباني الدرجة الأولى',
+        rows: [],
       ),
     );
   }

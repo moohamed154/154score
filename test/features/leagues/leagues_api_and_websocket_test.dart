@@ -59,6 +59,8 @@ class MockLocalStorageService implements LocalStorageService {
   @override
   bool isReorderTipDismissed() => true;
   @override
+  bool hasCustomFavoriteCompetitions() => false;
+  @override
   Future<bool> setReorderTipDismissed(bool dismissed) async => true;
   @override
   String? getMatchesFilter() => null;
