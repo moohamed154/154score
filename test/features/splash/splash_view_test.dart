@@ -1,4 +1,4 @@
-﻿import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
@@ -172,6 +172,26 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 1500));
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('renders title in LTR order (154 then SCORE) even in Arabic locale', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          locale: Locale('ar'),
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: SplashView(),
+          ),
+        ),
+      );
+
+      final pos154 = tester.getTopLeft(find.text('154'));
+      final posScore = tester.getTopLeft(find.text('SCORE'));
+
+      // 154 must be to the left of SCORE (dx of 154 < dx of SCORE)
+      expect(pos154.dx, lessThan(posScore.dx));
+
+      await tester.pump(const Duration(milliseconds: 200));
     });
   });
 }

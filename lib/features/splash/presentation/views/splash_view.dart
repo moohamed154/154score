@@ -36,6 +36,7 @@ class _SplashViewState extends State<SplashView>
   late final Animation<double> _exitFadeAnimation;
 
   bool _hasNavigated = false;
+  Timer? _preloadTimer;
 
   @override
   void initState() {
@@ -115,7 +116,7 @@ class _SplashViewState extends State<SplashView>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       // Stagger by 120ms to allow smooth initial GPU rasterization of entrance animation
-      Future.delayed(const Duration(milliseconds: 120), () {
+      _preloadTimer = Timer(const Duration(milliseconds: 120), () {
         if (!mounted) return;
 
         // 1. Preload Home Cubit (videos, transfers, cached feeds)
@@ -153,6 +154,7 @@ class _SplashViewState extends State<SplashView>
 
   @override
   void dispose() {
+    _preloadTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -322,6 +324,7 @@ class _SplashViewState extends State<SplashView>
         position: _titleSlideAnimation,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          textDirection: TextDirection.ltr,
           children: [
             Text(
               '154',
@@ -430,6 +433,7 @@ class _SplashViewState extends State<SplashView>
       opacity: _subtitleFadeAnimation,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        textDirection: TextDirection.ltr,
         children: [
           Container(
             width: 6,
