@@ -1785,19 +1785,25 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         ) ??
         0;
 
-    final subIn = map['substitute_in'] == true ||
+    final isActuallyStarter = map['is_starter'] == true || isStarter;
+    final isActuallySub = map['is_substitute'] == true || isSubstitute;
+
+    // Starters start the game on the pitch and can never be subbed in.
+    final subIn = !isActuallyStarter && (
+        map['substitute_in'] == true ||
         map['substitute_in'] == 1 ||
         map['sub_in'] == true ||
         map['sub_in'] == 1 ||
-        map['substitute_time'] != null ||
-        map['subbed_for'] != null;
+        (isActuallySub && (map['substitute_time'] != null || map['subbed_for'] != null)));
 
+    // A starter who has substitute_time or subbed_for is being substituted OUT.
     final subOut = map['substitute_out'] == true ||
         map['substitute_out'] == 1 ||
         map['sub_out'] == true ||
         map['sub_out'] == 1 ||
         map['substitute'] == true ||
-        map['substitute'] == 1;
+        map['substitute'] == 1 ||
+        (isActuallyStarter && (map['substitute_time'] != null || map['subbed_for'] != null));
 
     final subTime = int.tryParse(
       map['substitute_time']?.toString() ?? map['sub_time']?.toString() ?? '',

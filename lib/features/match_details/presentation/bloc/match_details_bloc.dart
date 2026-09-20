@@ -7,6 +7,7 @@ import '../../../../core/network/api_result.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/match_event_helper.dart';
+import '../../../../core/utils/match_minute_parser.dart';
 import '../../../../core/utils/realtime_merge_engine.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/websocket/websocket_service.dart';
@@ -464,7 +465,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         int yellowCount = player.yellowCards;
         int redCount = player.redCards;
         bool subOut = player.substituteOut;
-        bool subIn = player.substituteIn;
+        bool subIn = player.isStarter ? false : player.substituteIn;
+        int? subTime = player.substituteTime;
+        String? subbedFor = player.subbedForName;
 
         final pName = player.name.trim().toLowerCase();
         final pShort = (player.shortName ?? '').trim().toLowerCase();
@@ -512,17 +515,38 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
             if (matchesEvent(e.playerName, e.playerNumber, e.isHomeTeam)) {
               evReds++;
             }
-          } else if (t.contains('sub')) {
-            if (matchesEvent(e.playerName, e.playerNumber, e.isHomeTeam)) {
-              subIn = true;
-            }
-            if (e.secondaryPlayerName != null &&
+          } else if (t.contains('sub') || t.contains('تبديل')) {
+            final isPrimary =
+                matchesEvent(e.playerName, e.playerNumber, e.isHomeTeam);
+            final isSecondary = e.secondaryPlayerName != null &&
                 matchesEvent(
                   e.secondaryPlayerName!,
                   e.secondaryPlayerNumber,
                   e.isHomeTeam,
-                )) {
-              subOut = true;
+                );
+
+            if (isPrimary || isSecondary) {
+              final pMin = MatchMinuteParser.parse(e.minute);
+              final eventMin = pMin.mainMinute > 0 ? pMin.mainMinute : null;
+              final otherPlayer =
+                  isPrimary ? e.secondaryPlayerName : e.playerName;
+
+              if (player.isStarter) {
+                // Starters start the game on the pitch: in a substitution, they leave the pitch (SUBBED OUT).
+                subOut = true;
+                subIn = false;
+                if (eventMin != null) subTime ??= eventMin;
+                if (otherPlayer != null && otherPlayer.isNotEmpty) {
+                  subbedFor ??= otherPlayer;
+                }
+              } else {
+                // Bench players start off the pitch: in a substitution, they enter the pitch (SUBBED IN).
+                subIn = true;
+                if (eventMin != null) subTime ??= eventMin;
+                if (otherPlayer != null && otherPlayer.isNotEmpty) {
+                  subbedFor ??= otherPlayer;
+                }
+              }
             }
           }
         }
@@ -537,7 +561,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
             yellowCount != player.yellowCards ||
             redCount != player.redCards ||
             subOut != player.substituteOut ||
-            subIn != player.substituteIn) {
+            subIn != player.substituteIn ||
+            subTime != player.substituteTime ||
+            subbedFor != player.subbedForName) {
           return player.copyWith(
             goals: goalCount,
             assists: assistCount,
@@ -545,6 +571,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
             redCards: redCount,
             substituteOut: subOut,
             substituteIn: subIn,
+            substituteTime: subTime,
+            subbedForName: subbedFor,
           );
         }
         return player;

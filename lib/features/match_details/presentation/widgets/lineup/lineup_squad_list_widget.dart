@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
@@ -556,7 +556,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                       ),
                       const SizedBox(width: 4),
                     ],
-                    if (player.substituteIn) ...[
+                    if (player.substituteIn && !player.isStarter) ...[
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -578,11 +578,26 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                       ),
                       const SizedBox(width: 4),
                     ],
-                    if (player.substituteOut) ...[
-                      const Icon(
-                        Icons.arrow_downward_rounded,
-                        size: 13,
-                        color: AppColors.redCard,
+                    if (player.substituteOut &&
+                        (!player.isSubstitute || player.substituteIn)) ...[
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.arrow_downward_rounded,
+                            size: 13,
+                            color: AppColors.redCard,
+                          ),
+                          if (player.isStarter && player.substituteTime != null)
+                            Text(
+                              "${player.substituteTime}'",
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.redCard,
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(width: 4),
                     ],

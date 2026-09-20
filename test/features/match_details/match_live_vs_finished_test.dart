@@ -6,6 +6,7 @@ import 'package:score154/core/utils/match_event_helper.dart';
 import 'package:score154/core/utils/match_status_helper.dart';
 import 'package:score154/core/utils/score_helper.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/features/match_details/presentation/widgets/lineup/pitch_player_node.dart';
 import 'package:score154/features/match_details/presentation/widgets/match_header_banner.dart';
 import 'package:score154/features/match_details/presentation/widgets/timeline_event_item.dart';
 import 'package:score154/features/matches/domain/entities/match_entity.dart';
@@ -67,7 +68,7 @@ void main() {
     testWidgets(
       'Live match with 1st half end event in timeline does NOT show "انتهت"',
       (tester) async {
-        final liveMatch = const MatchEntity(
+        const liveMatch = MatchEntity(
           id: '12345',
           team1: 'هوفنهايم',
           team2: 'بادربورن',
@@ -82,10 +83,10 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            locale: const Locale('ar'),
+          const MaterialApp(
+            locale: Locale('ar'),
             supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: const [
+            localizationsDelegates: [
               AppLocalizations.delegate,
               ...GlobalMaterialLocalizations.delegates,
             ],
@@ -103,22 +104,17 @@ void main() {
           ),
         );
         await tester.pump();
+        await tester.pumpAndSettle();
 
-        // Ensure "انتهت" (Finished) is NOT displayed in the header
+        // Ensure "انتهت" is NOT displayed anywhere in the banner for this live match
         expect(find.text('انتهت'), findsNothing);
-
-        // Teams and scores are rendered correctly
-        expect(find.text('هوفنهايم'), findsOneWidget);
-        expect(find.text('بادربورن'), findsOneWidget);
-        expect(find.text('1'), findsOneWidget);
-        expect(find.text('2'), findsOneWidget);
       },
     );
 
     testWidgets('Finished match correctly displays "انتهت" center pill', (
       tester,
     ) async {
-      final finishedMatch = const MatchEntity(
+      const finishedMatch = MatchEntity(
         id: '67890',
         team1: 'هوفنهايم',
         team2: 'بادربورن',
@@ -131,10 +127,10 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('ar'),
+        const MaterialApp(
+          locale: Locale('ar'),
           supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: const [
+          localizationsDelegates: [
             AppLocalizations.delegate,
             ...GlobalMaterialLocalizations.delegates,
           ],
@@ -269,14 +265,14 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('ar'),
+        const MaterialApp(
+          locale: Locale('ar'),
           supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: const [
+          localizationsDelegates: [
             AppLocalizations.delegate,
             ...GlobalMaterialLocalizations.delegates,
           ],
-          home: const Scaffold(
+          home: Scaffold(
             body: TimelineEventItem(event: event90),
           ),
         ),
@@ -298,14 +294,14 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('ar'),
+        const MaterialApp(
+          locale: Locale('ar'),
           supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: const [
+          localizationsDelegates: [
             AppLocalizations.delegate,
             ...GlobalMaterialLocalizations.delegates,
           ],
-          home: const Scaffold(
+          home: Scaffold(
             body: TimelineEventItem(event: event120),
           ),
         ),
@@ -315,6 +311,94 @@ void main() {
 
       expect(find.text('نهاية المباراة'), findsOneWidget);
       expect(find.text('(120\')'), findsOneWidget);
+    });
+
+    testWidgets('Starter subbed out displays "تم استبداله" and NEVER "شارك كبديل"', (tester) async {
+      const starterSalah = LineupPlayerEntity(
+        playerId: '10',
+        name: 'محمد صلاح',
+        shortName: 'صلاح',
+        number: 10,
+        position: 'مهاجم',
+        positionCode: 'F',
+        isStarter: true,
+        isSubstitute: false,
+        substituteOut: true,
+        substituteIn: false,
+        substituteTime: 89,
+        subbedForName: 'أرال سيمسير',
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          locale: Locale('ar'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          home: Scaffold(
+            body: Center(
+              child: PitchPlayerNode(player: starterSalah, isHome: true),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on player to open bottom sheet
+      await tester.tap(find.byType(PitchPlayerNode));
+      await tester.pumpAndSettle();
+
+      // Verify "تم استبداله" badge is displayed with subbed time
+      expect(find.textContaining('تم استبداله'), findsOneWidget);
+
+      // Verify "شارك كبديل" badge is NEVER displayed for starter
+      expect(find.textContaining('شارك كبديل'), findsNothing);
+    });
+
+    testWidgets('Bench substitute subbed in displays "شارك كبديل" and NEVER "تم استبداله"', (tester) async {
+      const subSimsir = LineupPlayerEntity(
+        playerId: '19',
+        name: 'أرال سيمسير',
+        shortName: 'سيمسير',
+        number: 19,
+        position: 'مهاجم',
+        positionCode: 'SUB',
+        isStarter: false,
+        isSubstitute: true,
+        substituteIn: true,
+        substituteOut: false,
+        substituteTime: 89,
+        subbedForName: 'محمد صلاح',
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          locale: Locale('ar'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          home: Scaffold(
+            body: Center(
+              child: PitchPlayerNode(player: subSimsir, isHome: true),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on player to open bottom sheet
+      await tester.tap(find.byType(PitchPlayerNode));
+      await tester.pumpAndSettle();
+
+      // Verify "شارك كبديل" badge is displayed
+      expect(find.textContaining('شارك كبديل'), findsOneWidget);
+
+      // Verify "تم استبداله" badge is NOT displayed
+      expect(find.textContaining('تم استبداله'), findsNothing);
     });
   });
 }

@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
@@ -856,7 +856,7 @@ void showLineupPlayerModal(
                                 isDark: isDark,
                                 isArabic: isArabic,
                               ),
-                            if (p.substituteOut)
+                            if (p.substituteOut && (!p.isSubstitute || p.substituteIn))
                               _buildContributionBadge(
                                 icon: Icons.swap_horiz_rounded,
                                 label: isArabic
@@ -866,7 +866,7 @@ void showLineupPlayerModal(
                                 isDark: isDark,
                                 isArabic: isArabic,
                               ),
-                            if (p.substituteIn)
+                            if (p.substituteIn && !p.isStarter)
                               _buildContributionBadge(
                                 icon: Icons.swap_horiz_rounded,
                                 label: isArabic
