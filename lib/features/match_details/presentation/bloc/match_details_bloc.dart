@@ -221,12 +221,41 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       String? resolvedStatus = state.liveStatus ?? resolvedOverview?.status;
       String? resolvedStatusCode = state.liveStatusCode;
 
-      final hasFinishedEvent = resolvedEvents.any((e) =>
-          e.isPeriodMarker &&
-          (e.playerName.contains('نهاية') ||
-           e.playerName.toLowerCase().contains('full') ||
-           e.playerName.toLowerCase().contains('end') ||
-           e.playerName.toLowerCase().contains('ft')));
+      final hasFinishedEvent = resolvedEvents.any((e) {
+        if (!e.isPeriodMarker) return false;
+        final name = e.playerName.trim().toLowerCase();
+        // Exclude first half, half time, or start markers
+        if (name.contains('الأول') ||
+            name.contains('اول') ||
+            name.contains('1st') ||
+            name.contains('half time') ||
+            name.contains('halftime') ||
+            name.contains('ht') ||
+            name.contains('استراحة') ||
+            name.contains('بداية')) {
+          return false;
+        }
+        return name == 'نهاية المباراة' ||
+            name == 'نهاية اللقاء' ||
+            name.contains('نهاية المباراة') ||
+            name.contains('نهاية اللقاء') ||
+            name.contains('نهاية الوقت الأصلي واللقاء') ||
+            name.contains('نهاية الشوط الإضافي الثاني') ||
+            name == 'full time' ||
+            name == 'ft' ||
+            name.contains('full time') ||
+            name.contains('full-time') ||
+            name == 'match finished' ||
+            name.contains('match finished');
+      });
+
+      final isCurrentlyLive = ScoreHelper.isLiveStatus(resolvedStatus) ||
+          ScoreHelper.isLiveStatus(state.liveStatus) ||
+          (resolvedStatusCode != null &&
+              (resolvedStatusCode == 'LIVE' ||
+               resolvedStatusCode.startsWith('IN_PLAY') ||
+               resolvedStatusCode == 'HALF_TIME' ||
+               resolvedStatusCode == 'HT'));
 
       final effectiveDate = resolvedOverview?.date;
       final isPastMatch = effectiveDate != null &&
@@ -234,7 +263,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
             DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
           ) == true;
 
-      if (hasFinishedEvent || (isPastMatch && (calculatedScore1 != null || resolvedEvents.isNotEmpty))) {
+      if (!isCurrentlyLive &&
+          (hasFinishedEvent || (isPastMatch && (calculatedScore1 != null || resolvedEvents.isNotEmpty)))) {
         if (resolvedStatus == null ||
             resolvedStatus.isEmpty ||
             !ScoreHelper.isFinishedStatus(resolvedStatus)) {

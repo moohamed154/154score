@@ -17,11 +17,19 @@ class ScoreHelper {
   static bool isFinishedStatus(String? status) {
     if (status == null) return false;
     final lower = status.toLowerCase();
+    if (lower.contains('مباشر') || lower.contains('live') || lower.contains('شوط')) {
+      return false;
+    }
+    if ((lower.contains('penalties') || lower.contains('ترجيح')) &&
+        !lower.contains('بعد') &&
+        !lower.contains('انتهت') &&
+        !lower.contains('ft') &&
+        !lower.contains('ended')) {
+      return false;
+    }
     return lower.contains('ended') ||
         lower.contains('انتهت') ||
         lower.contains('ft') ||
-        lower.contains('penalties') ||
-        lower.contains('ترجيح') ||
         lower.contains('final');
   }
 

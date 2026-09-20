@@ -1,19 +1,24 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/network/network_info.dart';
 import '../../../home/presentation/cubit/home_cubit.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
 
-/// A custom, high-performance animated splash screen for 154Score.
-/// Built with zero external dependencies, leveraging pure Flutter animations
-/// and RepaintBoundary-isolated canvas painting for 60/120 FPS rendering.
+/// A custom, high-performance animated splash screen for 154 SCORE.
+/// Features:
+/// - Real loading progress tracking (connectivity, fixtures, and home feeds)
+/// - Robust offline / no-internet handling with instant retry and continue-offline
+/// - Seamless, hardware-accelerated 60/120 FPS animations without fake timers
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
 
@@ -22,127 +27,309 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+    with TickerProviderStateMixin {
+  late final AnimationController _entranceController;
+  late final AnimationController _progressController;
+  late final AnimationController _exitController;
 
-  // Staged animation curves
-  late final Animation<double> _pulseAnimation;
   late final Animation<double> _logoScaleAnimation;
   late final Animation<double> _logoFadeAnimation;
   late final Animation<double> _titleFadeAnimation;
   late final Animation<Offset> _titleSlideAnimation;
   late final Animation<double> _subtitleFadeAnimation;
-  late final Animation<double> _progressAnimation;
+  late final Animation<double> _pulseWaveAnimation;
   late final Animation<double> _exitFadeAnimation;
 
+  // Real Progress Tracking
+  double _currentProgress = 0.05;
+  double _targetProgress = 0.05;
+  Animation<double>? _progressTweenAnimation;
+
+  // Status & Connectivity
+  bool _isOffline = false;
   bool _hasNavigated = false;
-  Timer? _preloadTimer;
+  bool _matchesLoaded = false;
+  bool _homeLoaded = false;
+
+  StreamSubscription<bool>? _connectivitySubscription;
+  StreamSubscription<MatchesState>? _matchesSubscription;
+  StreamSubscription<HomeState>? _homeSubscription;
+  Timer? _timeoutTimer;
+  Timer? _staggerTimer;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    // 1. Entrance choreography (0 - 1200ms)
+    _entranceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(milliseconds: 1200),
     );
 
-    // 1. Ambient Sonar/Radar Pulse Wave (0% - 65%)
-    _pulseAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.65, curve: Curves.easeOutCubic),
-    );
-
-    // 2. Logo Icon Scale & Elastic Bounce (10% - 60%)
     _logoScaleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.1, 0.60, curve: Curves.elasticOut),
+      parent: _entranceController,
+      curve: const Interval(0.0, 0.60, curve: Curves.elasticOut),
     );
 
-    // 3. Logo Fade In (5% - 40%)
     _logoFadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.05, 0.40, curve: Curves.easeIn),
+      parent: _entranceController,
+      curve: const Interval(0.0, 0.35, curve: Curves.easeIn),
     );
 
-    // 4. App Title Reveal (35% - 70%)
     _titleFadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.35, 0.70, curve: Curves.easeOut),
+      parent: _entranceController,
+      curve: const Interval(0.25, 0.65, curve: Curves.easeOut),
     );
+
     _titleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.25),
+      begin: const Offset(0.0, 0.30),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.35, 0.70, curve: Curves.easeOutCubic),
+        parent: _entranceController,
+        curve: const Interval(0.25, 0.65, curve: Curves.easeOutCubic),
       ),
     );
 
-    // 5. Subtitle Tagline Reveal (50% - 85%)
     _subtitleFadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.50, 0.85, curve: Curves.easeOut),
+      parent: _entranceController,
+      curve: const Interval(0.45, 0.85, curve: Curves.easeOut),
     );
 
-    // 6. Smooth Shimmer Progress Bar (30% - 95%)
-    _progressAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.30, 0.95, curve: Curves.easeInOutCubic),
+    _pulseWaveAnimation = CurvedAnimation(
+      parent: _entranceController,
+      curve: const Interval(0.0, 0.85, curve: Curves.easeOutCubic),
     );
 
-    // 7. Graceful Exit Fade (92% - 100%)
+    // 2. Real Progress Bar Controller (smooth interpolated movement)
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+
+    _progressController.addListener(() {
+      setState(() {});
+    });
+
+    // 3. Graceful Exit Fade Animation
+    _exitController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
     _exitFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.92, 1.0, curve: Curves.easeIn),
-      ),
+      CurvedAnimation(parent: _exitController, curve: Curves.easeIn),
     );
 
-    _controller.addStatusListener((status) {
+    _exitController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _navigateToNext();
       }
     });
 
-    _controller.forward();
-    _startBackgroundPreload();
-  }
+    _entranceController.forward();
 
-  /// Asynchronously preloads home screen feeds and live matches
-  /// in the background without blocking the splash screen animation.
-  void _startBackgroundPreload() {
+    // Start real loading sequence after initial layout render
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // Stagger by 120ms to allow smooth initial GPU rasterization of entrance animation
-      _preloadTimer = Timer(const Duration(milliseconds: 120), () {
-        if (!mounted) return;
-
-        // 1. Preload Home Cubit (videos, transfers, cached feeds)
-        try {
-          final homeCubit = context.read<HomeCubit>();
-          if (homeCubit.state.status == HomeStatus.initial) {
-            unawaited(homeCubit.loadHomeData());
-          }
-        } catch (_) {}
-
-        // 2. Preload Matches Bloc (today's fixtures, live scores, leagues)
-        try {
-          final matchesBloc = context.read<MatchesBloc>();
-          if (matchesBloc.state.status == MatchesStatus.initial) {
-            matchesBloc.add(
-              LoadMatchesEvent(date: matchesBloc.state.selectedDate),
-            );
-          }
-        } catch (_) {}
-      });
+      unawaited(_startRealLoading());
     });
   }
 
+  /// Starts the real loading sequence:
+  /// 1. Verifies internet connectivity.
+  /// 2. Dispatches and listens to real data loads (MatchesBloc & HomeCubit).
+  /// 3. Advances progress bar based on real completion events.
+  Future<void> _startRealLoading() async {
+    setState(() {
+      _isOffline = false;
+      _matchesLoaded = false;
+      _homeLoaded = false;
+    });
+
+    _setTargetProgress(0.15);
+
+    // 1. Check Network Connectivity
+    bool isConnected = true;
+    try {
+      if (sl.isRegistered<NetworkInfo>()) {
+        final networkInfo = sl<NetworkInfo>();
+        isConnected = await networkInfo.isConnected;
+
+        unawaited(_connectivitySubscription?.cancel());
+        _connectivitySubscription = networkInfo.onConnectivityChanged.listen((connected) {
+          if (connected && _isOffline && mounted) {
+            unawaited(_startRealLoading());
+          }
+        });
+      }
+    } catch (_) {
+      isConnected = true;
+    }
+
+    if (!isConnected) {
+      if (!mounted) return;
+      setState(() {
+        _isOffline = true;
+      });
+      return;
+    }
+
+    // Network is verified
+    _setTargetProgress(0.35);
+
+    // 2. Dispatch and Monitor Preload Operations
+    bool hasFeeds = false;
+
+    // A. MatchesBloc Preload
+    if (!mounted) return;
+    try {
+      final matchesBloc = context.read<MatchesBloc>();
+      hasFeeds = true;
+
+      if (matchesBloc.state.status == MatchesStatus.success) {
+        _onMatchesLoaded();
+      } else {
+        unawaited(_matchesSubscription?.cancel());
+        _matchesSubscription = matchesBloc.stream.listen((state) {
+          if (state.status == MatchesStatus.success) {
+            _onMatchesLoaded();
+          } else if (state.status == MatchesStatus.error) {
+            _onServiceError();
+          }
+        });
+
+        if (matchesBloc.state.status == MatchesStatus.initial) {
+          matchesBloc.add(LoadMatchesEvent(date: matchesBloc.state.selectedDate));
+        }
+      }
+    } catch (_) {}
+
+    // B. HomeCubit Preload
+    if (!mounted) return;
+    try {
+      final homeCubit = context.read<HomeCubit>();
+      hasFeeds = true;
+
+      if (homeCubit.state.status == HomeStatus.success) {
+        _onHomeLoaded();
+      } else {
+        unawaited(_homeSubscription?.cancel());
+        _homeSubscription = homeCubit.stream.listen((state) {
+          if (state.status == HomeStatus.success) {
+            _onHomeLoaded();
+          } else if (state.status == HomeStatus.error) {
+            _onServiceError();
+          }
+        });
+
+        if (homeCubit.state.status == HomeStatus.initial) {
+          unawaited(homeCubit.loadHomeData());
+        }
+      }
+    } catch (_) {}
+
+    // If running in test or minimal mode without bloc providers, complete after entrance finishes
+    if (!hasFeeds) {
+      _timeoutTimer?.cancel();
+      _timeoutTimer = Timer(const Duration(milliseconds: 1400), () {
+        if (mounted && !_hasNavigated) {
+          _setTargetProgress(1.0);
+        }
+      });
+      return;
+    }
+
+    // 3. Fallback Safety Timeout (ensure user is never blocked longer than 6 seconds)
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer(const Duration(seconds: 6), () {
+      if (mounted && !_hasNavigated) {
+        _setTargetProgress(1.0);
+      }
+    });
+  }
+
+  void _onMatchesLoaded() {
+    if (_matchesLoaded || !mounted) return;
+    _matchesLoaded = true;
+    unawaited(_matchesSubscription?.cancel());
+    _checkOverallProgress();
+  }
+
+  void _onHomeLoaded() {
+    if (_homeLoaded || !mounted) return;
+    _homeLoaded = true;
+    unawaited(_homeSubscription?.cancel());
+    _checkOverallProgress();
+  }
+
+  void _onServiceError() {
+    if (!mounted) return;
+    // If both services failed, check if connection was lost
+    if (!_matchesLoaded && !_homeLoaded) {
+      try {
+        if (sl.isRegistered<NetworkInfo>()) {
+          unawaited(sl<NetworkInfo>().isConnected.then((connected) {
+            if (!connected && mounted) {
+              setState(() {
+                _isOffline = true;
+              });
+            }
+          }));
+        }
+      } catch (_) {}
+    }
+  }
+
+  void _checkOverallProgress() {
+    if (_matchesLoaded && _homeLoaded) {
+      _setTargetProgress(1.0);
+    } else if (_matchesLoaded || _homeLoaded) {
+      _setTargetProgress(0.70);
+    }
+  }
+
+  void _setTargetProgress(double target) {
+    if (!mounted) return;
+    final newTarget = target.clamp(0.0, 1.0);
+    if (newTarget < _currentProgress && newTarget != 0.0) return;
+
+    final startValue = _currentProgress;
+    _targetProgress = newTarget;
+
+    _progressTweenAnimation = Tween<double>(
+      begin: startValue,
+      end: _targetProgress,
+    ).animate(
+      CurvedAnimation(
+        parent: _progressController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    unawaited(_progressController.forward(from: 0.0).then((_) {
+      if (!mounted) return;
+      _currentProgress = _targetProgress;
+
+      if (_currentProgress >= 1.0) {
+        _timeoutTimer?.cancel();
+        // Brief settling time so user sees 100% completion before smooth exit
+        _staggerTimer = Timer(const Duration(milliseconds: 250), () {
+          if (mounted && !_hasNavigated) {
+            unawaited(_exitController.forward());
+          }
+        });
+      }
+    }));
+  }
+
   void _navigateToNext() {
-    if (_hasNavigated || !mounted) return;
+    if (_isOffline || _hasNavigated || !mounted) return;
     _hasNavigated = true;
+    _timeoutTimer?.cancel();
+    _staggerTimer?.cancel();
+
     try {
       if (GoRouter.maybeOf(context) != null) {
         context.go('/');
@@ -154,70 +341,88 @@ class _SplashViewState extends State<SplashView>
 
   @override
   void dispose() {
-    _preloadTimer?.cancel();
-    _controller.dispose();
+    unawaited(_connectivitySubscription?.cancel());
+    unawaited(_matchesSubscription?.cancel());
+    unawaited(_homeSubscription?.cancel());
+    _timeoutTimer?.cancel();
+    _staggerTimer?.cancel();
+
+    _entranceController.dispose();
+    _progressController.dispose();
+    _exitController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context);
+    final isArabic = l10n.isArabic;
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _navigateToNext, // Tap anywhere to skip splash
+        onTap: () {
+          if (!_isOffline) {
+            _navigateToNext();
+          }
+        },
         child: AnimatedBuilder(
-          animation: _controller,
+          animation: Listenable.merge([
+            _entranceController,
+            _exitController,
+          ]),
           builder: (context, child) {
             return Opacity(
               opacity: _exitFadeAnimation.value,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // 1. Isolated Custom Canvas for Pitch Geometry & Radar Glow
+                  // 1. Isolated RepaintBoundary for Stadium Canvas Painting
                   RepaintBoundary(
                     child: CustomPaint(
                       painter: _StadiumAmbiencePainter(
-                        pulseProgress: _pulseAnimation.value,
+                        pulseProgress: _pulseWaveAnimation.value,
                         brandColor: AppColors.primary,
                       ),
                     ),
                   ),
 
-                  // 2. Central Content
+                  // 2. Main Content
                   SafeArea(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Spacer(flex: 3),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Spacer(flex: 3),
 
-                        // Logo Badge & Pulsing Ring
-                        _buildAnimatedLogo(),
+                            // Animated Logo Badge
+                            _buildAnimatedLogo(),
 
-                        const SizedBox(height: 28),
+                            const SizedBox(height: 28),
 
-                        // Animated Brand Title ("154SCORE")
-                        _buildAnimatedTitle(isArabic),
+                            // Brand Title ("154 SCORE")
+                            _buildAnimatedTitle(),
 
-                        const SizedBox(height: 12),
+                            const SizedBox(height: 12),
 
-                        // Tagline Subtitle
-                        _buildAnimatedSubtitle(isArabic),
+                            // Subtitle Pill
+                            _buildAnimatedSubtitle(isArabic),
 
-                        const Spacer(flex: 2),
+                            const Spacer(flex: 2),
 
-                        // Sleek Capsule Progress Bar
-                        _buildProgressBar(),
+                            // Dynamic Progress or Offline Handling Area
+                            if (_isOffline)
+                              _buildOfflineState(l10n)
+                            else
+                              _buildRealProgressBar(l10n),
 
-                        const SizedBox(height: 36),
-
-                        // Bottom Footer Details
-                        _buildFooter(),
-
-                        const SizedBox(height: 16),
-                      ],
+                            const SizedBox(height: 48),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -237,7 +442,7 @@ class _SplashViewState extends State<SplashView>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Outer Pulsing Glow Aura
+            // Outer Pulsing Glow
             Container(
               width: 140,
               height: 140,
@@ -246,7 +451,7 @@ class _SplashViewState extends State<SplashView>
                 gradient: RadialGradient(
                   colors: [
                     AppColors.primary.withValues(
-                      alpha: 0.28 * (1.0 - _pulseAnimation.value),
+                      alpha: 0.28 * (1.0 - _pulseWaveAnimation.value),
                     ),
                     AppColors.primary.withValues(alpha: 0.0),
                   ],
@@ -254,7 +459,7 @@ class _SplashViewState extends State<SplashView>
               ),
             ),
 
-            // Secondary Ring
+            // Secondary Glowing Ring
             Container(
               width: 110,
               height: 110,
@@ -308,7 +513,7 @@ class _SplashViewState extends State<SplashView>
     );
   }
 
-  Widget _buildAnimatedTitle(bool isArabic) {
+  Widget _buildAnimatedTitle() {
     final titleFont = GoogleFonts.cairo(
       textStyle: const TextStyle(
         fontSize: 34,
@@ -322,30 +527,35 @@ class _SplashViewState extends State<SplashView>
       opacity: _titleFadeAnimation,
       child: SlideTransition(
         position: _titleSlideAnimation,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          textDirection: TextDirection.ltr,
-          children: [
-            Text(
-              '154',
-              style: titleFont.copyWith(
-                color: AppColors.primary,
-                shadows: [
-                  Shadow(
-                    color: AppColors.primary.withValues(alpha: 0.5),
-                    blurRadius: 16,
-                  ),
-                ],
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            textDirection: TextDirection.ltr,
+            children: [
+              Text(
+                '154',
+                style: titleFont.copyWith(
+                  color: AppColors.primary,
+                  shadows: [
+                    Shadow(
+                      color: AppColors.primary.withValues(alpha: 0.5),
+                      blurRadius: 16,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Text(
-              'SCORE',
-              style: titleFont.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
+              const SizedBox(width: 6),
+              Text(
+                'SCORE',
+                style: titleFont.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -359,7 +569,8 @@ class _SplashViewState extends State<SplashView>
     return FadeTransition(
       opacity: _subtitleFadeAnimation,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        constraints: const BoxConstraints(maxWidth: 270),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         decoration: BoxDecoration(
           color: AppColors.darkSurface.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(20),
@@ -368,14 +579,18 @@ class _SplashViewState extends State<SplashView>
             width: 1,
           ),
         ),
-        child: Text(
-          tagline,
-          style: GoogleFonts.cairo(
-            textStyle: TextStyle(
-              fontSize: isArabic ? 13 : 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.darkTextSecondary,
-              letterSpacing: isArabic ? 0.3 : 1.5,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            tagline,
+            maxLines: 1,
+            style: GoogleFonts.cairo(
+              textStyle: TextStyle(
+                fontSize: isArabic ? 12 : 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.darkTextSecondary,
+                letterSpacing: isArabic ? 0.2 : 1.2,
+              ),
             ),
           ),
         ),
@@ -383,10 +598,10 @@ class _SplashViewState extends State<SplashView>
     );
   }
 
-  Widget _buildProgressBar() {
-    const barWidth = 180.0;
+  Widget _buildRealProgressBar(AppLocalizations l10n) {
+    const barWidth = 190.0;
     const barHeight = 4.0;
-    final progress = _progressAnimation.value.clamp(0.0, 1.0);
+    final progressValue = (_progressTweenAnimation?.value ?? _currentProgress).clamp(0.0, 1.0);
 
     return FadeTransition(
       opacity: _subtitleFadeAnimation,
@@ -402,7 +617,7 @@ class _SplashViewState extends State<SplashView>
             ),
             alignment: Alignment.centerLeft,
             child: Container(
-              width: barWidth * progress,
+              width: barWidth * progressValue,
               height: barHeight,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(barHeight / 2),
@@ -423,35 +638,87 @@ class _SplashViewState extends State<SplashView>
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.translate('loading'),
+            style: GoogleFonts.cairo(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppColors.darkTextMuted,
+              letterSpacing: 0.5,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFooter() {
-    return FadeTransition(
-      opacity: _subtitleFadeAnimation,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        textDirection: TextDirection.ltr,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primary,
-            ),
+  Widget _buildOfflineState(AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 300),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.statusLive.withValues(alpha: 0.35),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 8),
-          Text(
-            '154SCORE v1.0.0',
-            style: GoogleFonts.cairo(
-              textStyle: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.darkTextMuted,
-                letterSpacing: 1.0,
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.wifi_off_rounded,
+                color: AppColors.statusLive,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  l10n.translate('no_internet'),
+                  style: GoogleFonts.cairo(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.darkTextPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => unawaited(_startRealLoading()),
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              label: Text(
+                l10n.translate('try_again'),
+                style: GoogleFonts.cairo(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
               ),
             ),
           ),

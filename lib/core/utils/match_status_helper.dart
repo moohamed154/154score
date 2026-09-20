@@ -109,6 +109,9 @@ class MatchStatusHelper {
         s.contains('استراحة') ||
         s.contains('بين الشوطين') ||
         s.contains('نهاية الشوط الأول') ||
+        s.contains('نهاية الشوط 1') ||
+        s.contains('نهاية الشوط الاول') ||
+        s == 'نهاية الشوط' ||
         s == 'half time' ||
         s == 'halftime' ||
         s.contains('half time') ||
@@ -118,7 +121,14 @@ class MatchStatusHelper {
 
     // 4. Finished
     if (s.contains('انتهت') ||
-        s.contains('نهاية') ||
+        (s.contains('نهاية') &&
+            !s.contains('شوط') &&
+            !s.contains('أول') &&
+            !s.contains('اول') &&
+            !s.contains('1')) ||
+        s.contains('نهاية المباراة') ||
+        s.contains('نهاية اللقاء') ||
+        s.contains('نهاية الوقت الأصلي واللقاء') ||
         s == 'ft' ||
         s == 'fin' ||
         s.contains('ended') ||

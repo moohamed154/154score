@@ -18,6 +18,7 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/utils/league_resolver.dart';
+import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/di/injection_container.dart';
@@ -248,37 +249,99 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         UrlHelper.resolveChampionshipLogo(effectiveLeagueId);
 
     // 7. Status & Time & Date
-    String? effectiveStatus = state.liveStatus ??
-        liveFromMatches?.status ??
-        fallbackMatch.status ??
-        state.overview?.status;
+    final bool isLiveFromFeed = (liveFromMatches != null &&
+        (ScoreHelper.isLiveStatus(liveFromMatches.status) ||
+         MatchStatusHelper.isLive(MatchStatusHelper.parseStatus(
+           liveFromMatches.status,
+           statusCode: liveFromMatches.statusCode,
+           period: liveFromMatches.period,
+           minute: liveFromMatches.minute,
+         )))) ||
+        (widget.initialMatch != null &&
+         (ScoreHelper.isLiveStatus(widget.initialMatch!.status) ||
+          MatchStatusHelper.isLive(MatchStatusHelper.parseStatus(
+            widget.initialMatch!.status,
+            statusCode: widget.initialMatch!.statusCode,
+            period: widget.initialMatch!.period,
+            minute: widget.initialMatch!.minute,
+          ))));
 
-    String? effectiveStatusCode = state.liveStatusCode ??
-        liveFromMatches?.statusCode ??
-        fallbackMatch.statusCode;
+    String? effectiveStatus;
+    String? effectiveStatusCode;
+
+    if (isLiveFromFeed) {
+      // Prioritize live values if the match is actively in-play
+      effectiveStatus = (ScoreHelper.isLiveStatus(state.liveStatus) ? state.liveStatus : null) ??
+          liveFromMatches?.status ??
+          widget.initialMatch?.status ??
+          state.overview?.status ??
+          state.liveStatus;
+
+      effectiveStatusCode = (state.liveStatusCode == 'LIVE' || state.liveStatusCode?.startsWith('IN_PLAY') == true
+              ? state.liveStatusCode
+              : null) ??
+          liveFromMatches?.statusCode ??
+          widget.initialMatch?.statusCode ??
+          state.liveStatusCode;
+    } else {
+      effectiveStatus = state.liveStatus ??
+          liveFromMatches?.status ??
+          fallbackMatch.status ??
+          state.overview?.status;
+
+      effectiveStatusCode = state.liveStatusCode ??
+          liveFromMatches?.statusCode ??
+          fallbackMatch.statusCode;
+    }
 
     final effectiveTime = fallbackMatch.time ?? state.overview?.time;
     final effectiveDate = fallbackMatch.date ?? state.overview?.date;
+    final effectiveMinute = state.liveMinute ?? liveFromMatches?.minute ?? fallbackMatch.minute;
+    final effectiveExtraTime = state.liveExtraTime ?? liveFromMatches?.extraTime ?? fallbackMatch.extraTime;
+    final effectivePeriod = state.livePeriod ?? liveFromMatches?.period ?? fallbackMatch.period;
 
     // Guard: Check if timeline events or past match date indicate match has completed
-    final hasFinishedEvent = state.events.any((e) =>
-        e.isPeriodMarker &&
-        (e.playerName.contains('نهاية') ||
-         e.playerName.toLowerCase().contains('full') ||
-         e.playerName.toLowerCase().contains('end') ||
-         e.playerName.toLowerCase().contains('ft')));
+    final hasFinishedEvent = state.events.any((e) {
+      if (!e.isPeriodMarker) return false;
+      final name = e.playerName.trim().toLowerCase();
+      // Exclude first half, half time, or start markers
+      if (name.contains('الأول') ||
+          name.contains('اول') ||
+          name.contains('1st') ||
+          name.contains('half time') ||
+          name.contains('halftime') ||
+          name.contains('ht') ||
+          name.contains('استراحة') ||
+          name.contains('بداية')) {
+        return false;
+      }
+      return name == 'نهاية المباراة' ||
+          name == 'نهاية اللقاء' ||
+          name.contains('نهاية المباراة') ||
+          name.contains('نهاية اللقاء') ||
+          name.contains('نهاية الوقت الأصلي واللقاء') ||
+          name.contains('نهاية الشوط الإضافي الثاني') ||
+          name == 'full time' ||
+          name == 'ft' ||
+          name.contains('full time') ||
+          name.contains('full-time') ||
+          name == 'match finished' ||
+          name.contains('match finished');
+    });
 
     final isPastMatch = effectiveDate != null &&
         DateTime.tryParse(effectiveDate)?.isBefore(
           DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
         ) == true;
 
-    if (hasFinishedEvent || (isPastMatch && (effectiveScore1 != null || state.events.isNotEmpty))) {
-      if (effectiveStatus == null ||
-          effectiveStatus.isEmpty ||
-          !ScoreHelper.isFinishedStatus(effectiveStatus)) {
-        effectiveStatus = 'انتهت';
-        effectiveStatusCode = 'FINISHED';
+    if (!isLiveFromFeed && !ScoreHelper.isLiveStatus(effectiveStatus)) {
+      if (hasFinishedEvent || (isPastMatch && (effectiveScore1 != null || state.events.isNotEmpty))) {
+        if (effectiveStatus == null ||
+            effectiveStatus.isEmpty ||
+            !ScoreHelper.isFinishedStatus(effectiveStatus)) {
+          effectiveStatus = 'انتهت';
+          effectiveStatusCode = 'FINISHED';
+        }
       }
     }
 
@@ -297,6 +360,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       statusCode: effectiveStatusCode,
       time: effectiveTime,
       date: effectiveDate,
+      minute: effectiveMinute,
+      extraTime: effectiveExtraTime,
+      period: effectivePeriod,
       leagueTitle: effectiveLeagueTitle,
       leagueId: effectiveLeagueId,
       leagueLogo: effectiveLeagueLogo,
@@ -524,9 +590,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                       liveScore2: activeMatch.score2,
                       liveStatus: activeMatch.status,
                       liveStatusCode: activeMatch.statusCode,
-                      liveMinute: state.liveMinute ?? liveFromMatches?.minute ?? activeMatch.minute,
-                      liveExtraTime: state.liveExtraTime ?? liveFromMatches?.extraTime ?? activeMatch.extraTime,
-                      livePeriod: state.livePeriod ?? liveFromMatches?.period ?? activeMatch.period,
+                      liveMinute: activeMatch.minute ?? state.liveMinute ?? liveFromMatches?.minute,
+                      liveExtraTime: activeMatch.extraTime ?? state.liveExtraTime ?? liveFromMatches?.extraTime,
+                      livePeriod: activeMatch.period ?? state.livePeriod ?? liveFromMatches?.period,
                       penaltyScore1: activeMatch.penaltyScore1,
                       penaltyScore2: activeMatch.penaltyScore2,
                     ),
