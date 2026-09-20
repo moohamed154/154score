@@ -15,6 +15,7 @@ import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/widgets/match_card.dart';
 import '../../../standings/presentation/widgets/standings_table.dart';
+import '../../../standings/presentation/widgets/tournament_stages_widget.dart';
 import '../bloc/league_bloc.dart';
 import '../bloc/league_event.dart';
 import '../bloc/league_state.dart';
@@ -42,6 +43,7 @@ class LeagueView extends StatefulWidget {
 class _LeagueViewState extends State<LeagueView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _standingsSubTab = 0;
 
   @override
   void initState() {
@@ -444,7 +446,8 @@ class _LeagueViewState extends State<LeagueView>
     bool isDark,
     bool isArabic,
   ) {
-    if (state.standings == null || state.standings!.rows.isEmpty) {
+    if (state.standings == null ||
+        (state.standings!.rows.isEmpty && !state.standings!.hasStages)) {
       return EmptyView(
         titleKey: 'no_matches_date',
         customMessage: isArabic
@@ -455,33 +458,123 @@ class _LeagueViewState extends State<LeagueView>
     }
 
     final standings = state.standings!;
+    final hasStages = standings.hasStages;
+    final hasBoth = standings.hasBothGroupsAndStages;
+    final isKnockoutOnly = standings.isKnockoutOnly;
     final hasGroups = standings.hasMultipleGroups;
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     return ListView(
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
       children: [
-        if (hasGroups) ...[
-          ...standings.groups!.entries.map((groupEntry) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: Text(
-                    groupEntry.key,
-                    style: AppTypography.getHeadingMedium(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(fontSize: 16),
-                  ),
+        if (hasBoth) ...[
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 10),
+            child: Container(
+              height: 42,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkCardElevated
+                    : AppColors.lightCardElevated,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                 ),
-                StandingsTable(rows: groupEntry.value),
-              ],
-            );
-          }),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _standingsSubTab = 0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _standingsSubTab == 0
+                              ? AppColors.primary
+                              : Colors.transparent,
+                          borderRadius:
+                              BorderRadius.circular(AppDimensions.radiusFull),
+                        ),
+                        child: Center(
+                          child: Text(
+                            isArabic ? 'الأدوار الإقصائية' : 'Knockout Stages',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: _standingsSubTab == 0
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: _standingsSubTab == 0
+                                  ? Colors.white
+                                  : (isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _standingsSubTab = 1),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _standingsSubTab == 1
+                              ? AppColors.primary
+                              : Colors.transparent,
+                          borderRadius:
+                              BorderRadius.circular(AppDimensions.radiusFull),
+                        ),
+                        child: Center(
+                          child: Text(
+                            isArabic ? 'المجموعات' : 'Groups',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: _standingsSubTab == 1
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: _standingsSubTab == 1
+                                  ? Colors.white
+                                  : (isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+
+        if ((hasBoth && _standingsSubTab == 0) || isKnockoutOnly) ...[
+          if (hasStages) TournamentStagesWidget(stages: standings.stages!),
         ] else ...[
-          StandingsTable(rows: standings.rows),
+          if (hasGroups) ...[
+            ...standings.groups!.entries.map((groupEntry) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Text(
+                      groupEntry.key,
+                      style: AppTypography.getHeadingMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontSize: 16),
+                    ),
+                  ),
+                  StandingsTable(rows: groupEntry.value),
+                ],
+              );
+            }),
+          ] else if (standings.rows.isNotEmpty) ...[
+            StandingsTable(rows: standings.rows),
+          ],
         ],
         if (standings.legends != null && standings.legends!.isNotEmpty)
           Padding(

@@ -196,24 +196,39 @@ class StandingsTable extends StatelessWidget {
           const Divider(height: 1),
 
           // Table Rows (All rows rendered with proper keys and tap handling)
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: rows.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final row = rows[index];
-              return _buildRow(
-                context,
-                row,
-                isDark,
-                isArabic,
-                cellWidth: cellWidth,
-                isSmall: isSmall,
-                showFullStats: showFullStats,
-              );
-            },
-          ),
+          () {
+            final seenPositions = <int>{};
+            bool hasDuplicatePositions = false;
+            for (final r in rows) {
+              if (r.position <= 0 || !seenPositions.add(r.position)) {
+                hasDuplicatePositions = true;
+                break;
+              }
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: rows.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final row = rows[index];
+                final displayPos = hasDuplicatePositions
+                    ? (index + 1)
+                    : (row.position > 0 ? row.position : (index + 1));
+                return _buildRow(
+                  context,
+                  row,
+                  isDark,
+                  isArabic,
+                  cellWidth: cellWidth,
+                  isSmall: isSmall,
+                  showFullStats: showFullStats,
+                  displayPosition: displayPos,
+                );
+              },
+            );
+          }(),
         ],
       ),
     );
@@ -258,6 +273,7 @@ class StandingsTable extends StatelessWidget {
     required double cellWidth,
     required bool isSmall,
     required bool showFullStats,
+    required int displayPosition,
   }) {
     final isHighlighted = _isTeamHighlighted(row.teamName);
 
@@ -328,7 +344,7 @@ class StandingsTable extends StatelessWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          row.position.toString(),
+                          displayPosition.toString(),
                           style:
                               AppTypography.getBodySmall(
                                 isDark: isDark,

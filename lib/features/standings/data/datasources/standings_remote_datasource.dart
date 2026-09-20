@@ -27,6 +27,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
 
     final rows = <StandingRowEntity>[];
     final groups = <String, List<StandingRowEntity>>{};
+    final stages = <TournamentStageEntity>[];
     final legends = <StandingLegendEntity>[];
     List<String>? rulesList;
     String leagueName = 'League Standings';
@@ -211,10 +212,8 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         }
       }
 
-      // 3. Third Source: data['groups'] list format
-      if (rows.isEmpty &&
-          data['groups'] is List &&
-          (data['groups'] as List).isNotEmpty) {
+      // 3. Third Source: data['groups'] list or map format
+      if (data['groups'] is List && (data['groups'] as List).isNotEmpty) {
         final groupList = data['groups'] as List;
         for (final g in groupList) {
           if (g is Map) {
@@ -230,13 +229,121 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
                   Map<String, dynamic>.from(it),
                   groupName: gTitle,
                 ).toEntity();
-                rows.add(row);
+                if (rows.isEmpty) rows.add(row);
                 gRows.add(row);
               }
             }
             if (gRows.isNotEmpty) {
               gRows.sort((a, b) => a.position.compareTo(b.position));
               groups[gTitle] = gRows;
+            }
+          }
+        }
+      } else if (data['groups'] is Map && (data['groups'] as Map).isNotEmpty) {
+        final groupsMap = data['groups'] as Map;
+        groupsMap.forEach((gTitle, gList) {
+          if (gList is List && gList.isNotEmpty) {
+            final gRows = <StandingRowEntity>[];
+            for (int i = 0; i < gList.length; i++) {
+              final it = gList[i];
+              if (it is Map) {
+                final row = StandingRowDto.fromJson(
+                  i + 1,
+                  Map<String, dynamic>.from(it),
+                  groupName: gTitle.toString(),
+                ).toEntity();
+                if (rows.isEmpty) rows.add(row);
+                gRows.add(row);
+              }
+            }
+            if (gRows.isNotEmpty) {
+              gRows.sort((a, b) => a.position.compareTo(b.position));
+              groups[gTitle.toString()] = gRows;
+            }
+          }
+        });
+      }
+
+      // 4. Parse Tournament Stages (Knockout brackets, rounds)
+      final rawStages = data['stages'] ?? raw['stages'];
+      if (rawStages is List && rawStages.isNotEmpty) {
+        for (final s in rawStages) {
+          if (s is Map) {
+            final stageName =
+                s['stage_name']?.toString() ?? s['name']?.toString() ?? '';
+            final stageId = s['stage_id']?.toString();
+            final round = s['round'] is int
+                ? s['round'] as int
+                : int.tryParse(s['round']?.toString() ?? '');
+            final teamsNumber = s['teams_number'] is int
+                ? s['teams_number'] as int
+                : int.tryParse(s['teams_number']?.toString() ?? '');
+            final matchesList = <StageMatchEntity>[];
+
+            if (s['matches'] is List) {
+              for (final m in s['matches']) {
+                if (m is Map) {
+                  final teamAMap = m['team_a'] is Map ? m['team_a'] as Map : {};
+                  final teamBMap = m['team_b'] is Map ? m['team_b'] as Map : {};
+
+                  final teamA = StageTeamEntity(
+                    id: teamAMap['id']?.toString(),
+                    name: teamAMap['name']?.toString() ?? '',
+                    logo: teamAMap['logo']?.toString(),
+                    score: teamAMap['score'] is int
+                        ? teamAMap['score'] as int
+                        : int.tryParse(teamAMap['score']?.toString() ?? ''),
+                    isWinner: teamAMap['is_winner'] == true ||
+                        teamAMap['winner'] == true,
+                    worldRanking: teamAMap['world_ranking'] is int
+                        ? teamAMap['world_ranking'] as int
+                        : int.tryParse(
+                            teamAMap['world_ranking']?.toString() ?? '',
+                          ),
+                  );
+
+                  final teamB = StageTeamEntity(
+                    id: teamBMap['id']?.toString(),
+                    name: teamBMap['name']?.toString() ?? '',
+                    logo: teamBMap['logo']?.toString(),
+                    score: teamBMap['score'] is int
+                        ? teamBMap['score'] as int
+                        : int.tryParse(teamBMap['score']?.toString() ?? ''),
+                    isWinner: teamBMap['is_winner'] == true ||
+                        teamBMap['winner'] == true,
+                    worldRanking: teamBMap['world_ranking'] is int
+                        ? teamBMap['world_ranking'] as int
+                        : int.tryParse(
+                            teamBMap['world_ranking']?.toString() ?? '',
+                          ),
+                  );
+
+                  matchesList.add(
+                    StageMatchEntity(
+                      matchId: m['match_id']?.toString(),
+                      position: m['position']?.toString(),
+                      teamGroup: m['team_group']?.toString(),
+                      teamA: teamA,
+                      teamB: teamB,
+                      winnerId: m['winner_id']?.toString(),
+                      matchDate: m['match_date']?.toString(),
+                      matchTime: m['match_time']?.toString(),
+                    ),
+                  );
+                }
+              }
+            }
+
+            if (stageName.isNotEmpty) {
+              stages.add(
+                TournamentStageEntity(
+                  stageName: stageName,
+                  stageId: stageId,
+                  round: round,
+                  teamsNumber: teamsNumber,
+                  matches: matchesList,
+                ),
+              );
             }
           }
         }
@@ -250,7 +357,8 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
       leagueId: leagueId,
       leagueTitle: leagueName,
       rows: rows,
-      groups: groups.length > 1 ? groups : null,
+      groups: groups.isNotEmpty ? groups : null,
+      stages: stages.isNotEmpty ? stages : null,
       legends: legends.isNotEmpty ? legends : null,
       rulesList: rulesList != null && rulesList.isNotEmpty ? rulesList : null,
     );
