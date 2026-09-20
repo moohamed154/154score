@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../core/di/injection_container.dart';
 import '../core/localization/app_localizations.dart';
@@ -60,19 +61,39 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         builder: (context, themeMode) {
           return BlocBuilder<LocaleCubit, Locale>(
             builder: (context, currentLocale) {
-              return MaterialApp.router(
-                title: '154 SCORE',
-                debugShowCheckedModeBanner: false,
-                routerConfig: AppRouter.router,
-                theme: AppTheme.lightTheme,
-                darkTheme: AppTheme.darkTheme,
-                themeMode: themeMode,
-                locale: currentLocale,
-                supportedLocales: AppLocalizations.supportedLocales,
-                localizationsDelegates: const [
-                  AppLocalizations.delegate,
-                  ...GlobalMaterialLocalizations.delegates,
-                ],
+              return SkeletonizerConfig(
+                data: SkeletonizerConfigData(
+                  effectResolver: (brightness) {
+                    final isDarkBrightness = themeMode == ThemeMode.dark ||
+                        (themeMode == ThemeMode.system &&
+                            brightness == Brightness.dark);
+                    return isDarkBrightness
+                        ? const ShimmerEffect(
+                            baseColor: Color(0xFF16202C),
+                            highlightColor: Color(0xFF26364A),
+                            duration: Duration(milliseconds: 1200),
+                          )
+                        : const ShimmerEffect(
+                            baseColor: Color(0xFFE2E8F0),
+                            highlightColor: Color(0xFFF1F5F9),
+                            duration: Duration(milliseconds: 1200),
+                          );
+                  },
+                ),
+                child: MaterialApp.router(
+                  title: '154 SCORE',
+                  debugShowCheckedModeBanner: false,
+                  routerConfig: AppRouter.router,
+                  theme: AppTheme.lightTheme,
+                  darkTheme: AppTheme.darkTheme,
+                  themeMode: themeMode,
+                  locale: currentLocale,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    ...GlobalMaterialLocalizations.delegates,
+                  ],
+                ),
               );
             },
           );

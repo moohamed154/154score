@@ -8,6 +8,12 @@ abstract class StandingsRemoteDataSource {
     String leagueId, {
     required String lang,
   });
+
+  LeagueStandingsEntity parseStandings(
+    dynamic response, {
+    String? defaultLeagueId,
+    String lang = 'en',
+  });
 }
 
 class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
@@ -24,6 +30,15 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
       ApiEndpoints.leagueStandings(leagueId),
       queryParameters: {'lang': lang},
     );
+    return parseStandings(response, defaultLeagueId: leagueId);
+  }
+
+  @override
+  LeagueStandingsEntity parseStandings(
+    dynamic response, {
+    String? defaultLeagueId,
+    String lang = 'en',
+  }) {
 
     final rows = <StandingRowEntity>[];
     final groups = <String, List<StandingRowEntity>>{};
@@ -354,7 +369,9 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
     rows.sort((a, b) => a.position.compareTo(b.position));
 
     return LeagueStandingsEntity(
-      leagueId: leagueId,
+      leagueId: (dataNode is Map && dataNode['league_id'] != null)
+          ? dataNode['league_id'].toString()
+          : (defaultLeagueId ?? ''),
       leagueTitle: leagueName,
       rows: rows,
       groups: groups.isNotEmpty ? groups : null,

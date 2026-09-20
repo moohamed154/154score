@@ -150,14 +150,10 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                 // League Favorite Star Button
                 BlocBuilder<FavoritesCubit, FavoritesState>(
                   builder: (context, favState) {
-                    final isFav =
-                        favState.favoriteCompetitions.contains(
-                          widget.league.leagueTitle,
-                        ) ||
-                        (widget.league.leagueId != null &&
-                            favState.favoriteCompetitions.contains(
-                              widget.league.leagueId,
-                            ));
+                    final isFav = favState.isFavoriteCompetition(
+                      id: widget.league.leagueId,
+                      name: widget.league.leagueTitle,
+                    );
 
                     return InkWell(
                       borderRadius: BorderRadius.circular(
@@ -165,7 +161,8 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                       ),
                       onTap: () {
                         context.read<FavoritesCubit>().toggleCompetition(
-                          widget.league.leagueTitle,
+                          id: widget.league.leagueId,
+                          name: widget.league.leagueTitle,
                         );
                         try {
                           context.read<MatchesBloc>().add(

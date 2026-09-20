@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/constants/api_endpoints.dart';
@@ -41,9 +41,25 @@ class MockLocalStorageService implements LocalStorageService {
   @override
   List<String> getFavoriteCompetitions() => [];
   @override
-  Future<bool> toggleFavoriteCompetition(String compName) async => true;
+  Future<bool> toggleFavoriteCompetition({
+    String? compName,
+    String? id,
+    String? name,
+    String? slug,
+  }) async => true;
   @override
-  bool isFavoriteCompetition(String compName) => false;
+  bool isFavoriteCompetition({
+    String? compName,
+    String? id,
+    String? name,
+    String? slug,
+  }) => false;
+  @override
+  Map<String, String> getFavoriteCompetitionTitles() => {};
+  @override
+  Future<bool> registerCompetitionTitles(Map<String, String> titles) async => true;
+  @override
+  String resolveCompetitionTitle(String compOrId) => compOrId;
   @override
   List<String> getFavoriteMatches() => [];
   @override

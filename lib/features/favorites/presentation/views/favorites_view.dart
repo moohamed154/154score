@@ -76,12 +76,16 @@ class FavoritesView extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: state.favoriteCompetitions.map((comp) {
+                    final displayTitle =
+                        state.competitionTitles[comp.trim()] ?? comp;
                     return Chip(
                       avatar: const Icon(Icons.emoji_events_outlined, size: 18),
-                      label: Text(comp),
+                      label: Text(displayTitle),
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
-                        context.read<FavoritesCubit>().toggleCompetition(comp);
+                        context
+                            .read<FavoritesCubit>()
+                            .toggleCompetition(name: comp);
                       },
                     );
                   }).toList(),

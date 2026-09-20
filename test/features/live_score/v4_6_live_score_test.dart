@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/errors/failures.dart';
 import 'package:score154/core/localization/app_localizations.dart';
@@ -45,9 +45,25 @@ class _MockStorageForLiveScore implements LocalStorageService {
   @override
   List<String> getFavoriteCompetitions() => [];
   @override
-  Future<bool> toggleFavoriteCompetition(String compName) async => true;
+  Future<bool> toggleFavoriteCompetition({
+    String? compName,
+    String? id,
+    String? name,
+    String? slug,
+  }) async => true;
   @override
-  bool isFavoriteCompetition(String compName) => false;
+  bool isFavoriteCompetition({
+    String? compName,
+    String? id,
+    String? name,
+    String? slug,
+  }) => false;
+  @override
+  Map<String, String> getFavoriteCompetitionTitles() => {};
+  @override
+  Future<bool> registerCompetitionTitles(Map<String, String> titles) async => true;
+  @override
+  String resolveCompetitionTitle(String compOrId) => compOrId;
   @override
   List<String> getFavoriteMatches() => [];
   @override

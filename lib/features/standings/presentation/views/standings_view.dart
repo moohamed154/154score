@@ -351,6 +351,21 @@ class _StandingsViewState extends State<StandingsView> {
                 }),
               ),
             );
+
+            final titlesMap = <String, String>{};
+            for (final l in [...fetchedFeatured, ...fetchedAll]) {
+              if (l.name.isNotEmpty) {
+                titlesMap[l.id] = l.name;
+                if (l.seasonId != null && l.seasonId!.isNotEmpty) {
+                  titlesMap[l.seasonId!] = l.name;
+                }
+              }
+            }
+            if (titlesMap.isNotEmpty) {
+              unawaited(
+                sl<LocalStorageService>().registerCompetitionTitles(titlesMap),
+              );
+            }
           } catch (_) {}
         }
 
@@ -394,15 +409,11 @@ class _StandingsViewState extends State<StandingsView> {
     ChampionshipInfo item,
     List<ChampionshipInfo> currentFavorites,
   ) {
-    final cubit = context.read<FavoritesCubit>();
-    final currentIds = currentFavorites.map((e) => e.id).toList();
-
-    if (currentIds.contains(item.id)) {
-      currentIds.remove(item.id);
-    } else {
-      currentIds.add(item.id);
-    }
-    cubit.setFavoriteCompetitions(currentIds);
+    context.read<FavoritesCubit>().toggleCompetition(
+      id: item.id,
+      name: item.name,
+      slug: item.slug,
+    );
   }
 
   void _onReorderFavorites(
@@ -411,13 +422,15 @@ class _StandingsViewState extends State<StandingsView> {
     int newIndex,
     List<ChampionshipInfo> currentFavorites,
   ) {
-    final list = currentFavorites.map((e) => e.id).toList();
+    final list = List<ChampionshipInfo>.from(currentFavorites);
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
     final moved = list.removeAt(oldIndex);
     list.insert(newIndex, moved);
-    context.read<FavoritesCubit>().setFavoriteCompetitions(list);
+    final identifiers =
+        list.map((e) => e.name.isNotEmpty ? e.name : e.id).toList();
+    context.read<FavoritesCubit>().setFavoriteCompetitions(identifiers);
   }
 
   @override
@@ -440,29 +453,31 @@ class _StandingsViewState extends State<StandingsView> {
         bottom: false,
         child: BlocBuilder<FavoritesCubit, FavoritesState>(
           builder: (context, favState) {
-            final hasCustom = storage.hasCustomFavoriteCompetitions();
-            final List<String> currentFavKeys;
-            if (!hasCustom &&
-                favState.favoriteCompetitions.isEmpty &&
-                _featuredLeagues.isNotEmpty) {
-              currentFavKeys = _featuredLeagues.map((e) => e.id).toList();
-            } else {
-              currentFavKeys = favState.favoriteCompetitions;
-            }
+            final currentFavKeys = favState.favoriteCompetitions.isNotEmpty
+                ? favState.favoriteCompetitions
+                : (storage.hasCustomFavoriteCompetitions()
+                    ? <String>[]
+                    : _featuredLeagues.map((e) => e.name).toList());
 
             // Build favorite cards in user order
             final List<ChampionshipInfo> favoriteCards = [];
             for (final key in currentFavKeys) {
               ChampionshipInfo? matched;
               for (final l in _allLeagues) {
-                if (l.id == key || l.name == key || l.slug == key) {
+                if (l.id == key ||
+                    l.name == key ||
+                    l.slug == key ||
+                    (l.seasonId != null && l.seasonId == key)) {
                   matched = l;
                   break;
                 }
               }
               if (matched == null) {
                 for (final l in _featuredLeagues) {
-                  if (l.id == key || l.name == key || l.slug == key) {
+                  if (l.id == key ||
+                      l.name == key ||
+                      l.slug == key ||
+                      (l.seasonId != null && l.seasonId == key)) {
                     matched = l;
                     break;
                   }
@@ -471,6 +486,18 @@ class _StandingsViewState extends State<StandingsView> {
               if (matched != null &&
                   !favoriteCards.any((c) => c.id == matched!.id)) {
                 favoriteCards.add(matched);
+              }
+            }
+
+            // Also ensure any championship that is favorite according to favState is added
+            for (final l in _allLeagues) {
+              if (favState.isFavoriteCompetition(
+                    id: l.id,
+                    name: l.name,
+                    slug: l.slug,
+                  ) &&
+                  !favoriteCards.any((c) => c.id == l.id)) {
+                favoriteCards.add(l);
               }
             }
 

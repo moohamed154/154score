@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:score154/core/utils/score_helper.dart';
@@ -865,12 +865,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           return true;
         })
         .map((league) {
-          final isLeagueFavorite = favCompetitions.any((comp) {
-            final cleanComp = comp.trim().toLowerCase();
-            return cleanComp == league.leagueTitle.trim().toLowerCase() ||
-                (league.leagueId != null &&
-                    cleanComp == league.leagueId!.trim().toLowerCase());
-          });
+          final isLeagueFavorite = localStorageService.isFavoriteCompetition(
+            id: league.leagueId,
+            name: league.leagueTitle,
+          );
 
           final matches = league.matches
               .map((match) {
@@ -891,18 +889,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
                 // Check if match belongs to a favorite league
                 final isMatchLeagueFavorite =
                     isLeagueFavorite ||
-                    (match.leagueTitle != null &&
-                        favCompetitions.any(
-                          (c) =>
-                              c.trim().toLowerCase() ==
-                              match.leagueTitle!.trim().toLowerCase(),
-                        )) ||
-                    (match.leagueId != null &&
-                        favCompetitions.any(
-                          (c) =>
-                              c.trim().toLowerCase() ==
-                              match.leagueId!.trim().toLowerCase(),
-                        ));
+                    localStorageService.isFavoriteCompetition(
+                      id: match.leagueId,
+                      name: match.leagueTitle,
+                    );
 
                 // Check if either team is marked as favorite
                 final isTeamFavorite = favTeams.any((team) {

@@ -54,83 +54,58 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
     final lang = localStorageService.getLanguage();
 
     try {
-      final profileFuture = repository.getLeagueProfile(
+      final result = await repository.getLeagueFullDetails(
         event.leagueId,
         lang: lang,
-      );
-      final standingsFuture = repository.getLeagueStandings(
-        event.leagueId,
-        lang: lang,
-      );
-      final scorersFuture = repository.getLeagueTopScorers(
-        event.leagueId,
-        lang: lang,
-      );
-      final assistsFuture = repository.getLeagueAssists(
-        event.leagueId,
-        lang: lang,
-      );
-      final matchesFuture = repository.getLeagueMatches(
-        event.leagueId,
-        lang: lang,
+        forceRefresh: event.isRefresh,
       );
 
-      final results = await Future.wait([
-        profileFuture,
-        standingsFuture,
-        scorersFuture,
-        assistsFuture,
-        matchesFuture,
-      ]);
+      result.fold(
+        onSuccess: (details) {
+          final effectiveTitle =
+              details.name.isNotEmpty && details.name != 'League'
+                  ? details.name
+                  : (details.standings?.leagueTitle.isNotEmpty == true &&
+                          details.standings?.leagueTitle != 'League Standings'
+                      ? details.standings!.leagueTitle
+                      : (state.leagueTitle ?? 'League'));
 
-      final profileRes = results[0] as dynamic;
-      final standingsRes = results[1] as dynamic;
-      final scorersRes = results[2] as dynamic;
-      final assistsRes = results[3] as dynamic;
-      final matchesRes = results[4] as dynamic;
-
-      final profileMap = profileRes?.dataOrNull as Map<String, dynamic>?;
-      final standings = standingsRes?.dataOrNull as dynamic;
-      final scorers = (scorersRes?.dataOrNull ?? []) as List<dynamic>;
-      final assists = (assistsRes?.dataOrNull ?? []) as List<dynamic>;
-      final matches = (matchesRes?.dataOrNull ?? []) as List<dynamic>;
-
-      final profileCountry = profileMap?['country']?.toString();
-      String? profileSeason;
-      if (profileMap?['current_season'] is Map) {
-        profileSeason =
-            profileMap!['current_season']['season_name']?.toString() ??
-            profileMap['current_season']['name']?.toString();
-      }
-      final profileLogo = profileMap?['logo']?.toString();
-      final profileName = profileMap?['name']?.toString();
-
-      final effectiveTitle =
-          profileName?.isNotEmpty == true
-              ? profileName!
-              : (standings?.leagueTitle.isNotEmpty == true &&
-                      standings?.leagueTitle != 'League Standings'
-                  ? standings!.leagueTitle
-                  : (state.leagueTitle ?? 'League'));
-
-      emit(
-        state.copyWith(
-          status: LeagueStatus.success,
-          leagueTitle: effectiveTitle,
-          leagueLogo: profileLogo ?? state.leagueLogo,
-          country: profileCountry ?? state.country,
-          season: profileSeason ?? state.season,
-          standings: standings,
-          topScorers: scorers.cast(),
-          topAssists: assists.cast(),
-          matches: matches.cast(),
-          errorMessage: null,
-        ),
+          emit(
+            state.copyWith(
+              status: LeagueStatus.success,
+              leagueTitle: effectiveTitle,
+              leagueLogo: details.logo ?? state.leagueLogo,
+              country: details.country ?? state.country,
+              season: details.season ?? state.season,
+              standings: details.standings,
+              topScorers: details.topScorers,
+              topAssists: details.topAssists,
+              matches: details.matches,
+              errorMessage: null,
+            ),
+          );
+        },
+        onFailure: (failure) {
+          if (state.matches.isEmpty && state.standings == null) {
+            emit(
+              state.copyWith(
+                status: LeagueStatus.error,
+                errorMessage: failure.message,
+              ),
+            );
+          } else {
+            emit(state.copyWith(status: LeagueStatus.success));
+          }
+        },
       );
     } catch (e) {
-      emit(
-        state.copyWith(status: LeagueStatus.error, errorMessage: e.toString()),
-      );
+      if (state.matches.isEmpty && state.standings == null) {
+        emit(
+          state.copyWith(status: LeagueStatus.error, errorMessage: e.toString()),
+        );
+      } else {
+        emit(state.copyWith(status: LeagueStatus.success));
+      }
     } finally {
       if (event.completer != null && !event.completer!.isCompleted) {
         event.completer!.complete();

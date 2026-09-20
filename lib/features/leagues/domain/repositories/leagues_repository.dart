@@ -1,6 +1,7 @@
 import '../../../../core/network/api_result.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../../../standings/domain/entities/standings_entity.dart';
+import '../entities/league_entity.dart';
 import '../entities/top_scorer_entity.dart';
 
 abstract class LeaguesRepository {
@@ -28,5 +29,11 @@ abstract class LeaguesRepository {
   Future<ApiResult<Map<String, dynamic>?>> getLeagueProfile(
     String leagueId, {
     required String lang,
+  });
+
+  Future<ApiResult<LeagueDetailsEntity>> getLeagueFullDetails(
+    String leagueId, {
+    required String lang,
+    bool forceRefresh = false,
   });
 }

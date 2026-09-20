@@ -92,9 +92,10 @@ class _LeagueViewState extends State<LeagueView>
               // League Hero Header
               BlocBuilder<FavoritesCubit, FavoritesState>(
                 builder: (context, favState) {
-                  final isFav =
-                      favState.favoriteCompetitions.contains(title) ||
-                      favState.favoriteCompetitions.contains(widget.leagueId);
+                  final isFav = favState.isFavoriteCompetition(
+                    id: widget.leagueId,
+                    name: title,
+                  );
 
                   return LeagueHeaderCard(
                     title: title,
@@ -103,7 +104,10 @@ class _LeagueViewState extends State<LeagueView>
                     season: state.season,
                     isFavorite: isFav,
                     onFavoriteTap: () {
-                      context.read<FavoritesCubit>().toggleCompetition(title);
+                      context.read<FavoritesCubit>().toggleCompetition(
+                        id: widget.leagueId,
+                        name: title,
+                      );
                     },
                   );
                 },
@@ -154,52 +158,9 @@ class _LeagueViewState extends State<LeagueView>
                       await completer.future.timeout(const Duration(seconds: 3));
                     } catch (_) {}
                   },
-                  child: state.status == LeagueStatus.loading
-                      ? Skeletonizer(
-                          enabled: true,
-                          child: ListView(
-                            padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-                            children: [
-                              SectionHeader(
-                                title: isArabic ? 'المباريات' : 'Matches',
-                              ),
-                              ...List.generate(
-                                3,
-                                (_) => const MatchCard(
-                                  match: MatchEntity(
-                                    id: 'skeleton',
-                                    team1: 'Arsenal FC',
-                                    team2: 'Chelsea FC',
-                                    score1: '2',
-                                    score2: '1',
-                                    status: 'Finished',
-                                    time: '20:00',
-                                    leagueTitle: 'Premier League',
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              SectionHeader(
-                                title: isArabic ? 'جدول الترتيب' : 'Standings',
-                              ),
-                              ...List.generate(
-                                4,
-                                (_) => Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 4,
-                                  ),
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : state.status == LeagueStatus.error
+                  child: state.status == LeagueStatus.error &&
+                          state.matches.isEmpty &&
+                          state.standings == null
                       ? ErrorView(
                           message: state.errorMessage,
                           onRetry: () => context.read<LeagueBloc>().add(
@@ -381,6 +342,10 @@ class _LeagueViewState extends State<LeagueView>
     bool isDark,
     bool isArabic,
   ) {
+    if (state.status == LeagueStatus.loading && state.matches.isEmpty) {
+      return _buildMatchesSkeleton(isDark, isArabic);
+    }
+
     if (state.matches.isEmpty) {
       return EmptyView(
         titleKey: 'no_matches_date',
@@ -446,6 +411,10 @@ class _LeagueViewState extends State<LeagueView>
     bool isDark,
     bool isArabic,
   ) {
+    if (state.status == LeagueStatus.loading && state.standings == null) {
+      return _buildStandingsSkeleton(isDark, isArabic);
+    }
+
     if (state.standings == null ||
         (state.standings!.rows.isEmpty && !state.standings!.hasStages)) {
       return EmptyView(
@@ -714,6 +683,10 @@ class _LeagueViewState extends State<LeagueView>
     bool isDark,
     bool isArabic,
   ) {
+    if (state.status == LeagueStatus.loading && state.topScorers.isEmpty) {
+      return _buildScorersSkeleton(isDark, isArabic);
+    }
+
     if (state.topScorers.isEmpty) {
       return EmptyView(
         titleKey: 'tab_overview',
@@ -741,6 +714,10 @@ class _LeagueViewState extends State<LeagueView>
     bool isDark,
     bool isArabic,
   ) {
+    if (state.status == LeagueStatus.loading && state.topAssists.isEmpty) {
+      return _buildScorersSkeleton(isDark, isArabic);
+    }
+
     if (state.topAssists.isEmpty) {
       return EmptyView(
         titleKey: 'tab_overview',
@@ -759,6 +736,271 @@ class _LeagueViewState extends State<LeagueView>
           isAssists: true,
         ),
       ],
+    );
+  }
+
+  Widget _buildMatchesSkeleton(bool isDark, bool isArabic) {
+    return Skeletonizer(
+      enabled: true,
+      child: ListView(
+        padding: const EdgeInsets.only(top: 8, bottom: AppDimensions.xxxl),
+        children: [
+          SectionHeader(
+            title: isArabic ? 'المباريات القادمة' : 'Upcoming Matches',
+          ),
+          ...List.generate(
+            4,
+            (_) => const MatchCard(
+              match: MatchEntity(
+                id: 'skeleton',
+                team1: 'Arsenal FC',
+                team2: 'Chelsea FC',
+                score1: '2',
+                score2: '1',
+                status: 'Finished',
+                time: '20:00',
+                leagueTitle: 'Championship',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStandingsSkeleton(bool isDark, bool isArabic) {
+    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final cardBorder = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final headerBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    return Skeletonizer(
+      enabled: true,
+      child: ListView(
+        padding: const EdgeInsets.only(top: 12, bottom: AppDimensions.xxxl),
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
+            child: Row(
+              children: List.generate(
+                3,
+                (i) => Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  width: 90,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: headerBg,
+                    borderRadius:
+                        BorderRadius.circular(AppDimensions.radiusFull),
+                    border: Border.all(color: cardBorder),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: hMargin),
+            child: Container(
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                border: Border.all(color: cardBorder),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: headerBg,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppDimensions.radiusMd),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 24, child: Text('#')),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(isArabic ? 'الفريق' : 'Team')),
+                        const SizedBox(width: 28, child: Center(child: Text('P'))),
+                        const SizedBox(width: 28, child: Center(child: Text('W'))),
+                        const SizedBox(width: 28, child: Center(child: Text('D'))),
+                        const SizedBox(width: 28, child: Center(child: Text('L'))),
+                        const SizedBox(
+                            width: 34, child: Center(child: Text('PTS'))),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1, thickness: 1),
+                  ...List.generate(
+                    8,
+                    (index) => Container(
+                      height: 46,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: index < 7
+                            ? Border(
+                                bottom:
+                                    BorderSide(color: cardBorder, width: 0.5))
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: headerBg,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('${index + 1}'),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: const BoxDecoration(
+                              color: Colors.white10,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              index % 3 == 0
+                                  ? 'Real Madrid CF'
+                                  : index % 3 == 1
+                                      ? 'Manchester City'
+                                      : 'Bayern Munich',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          const SizedBox(
+                              width: 28, child: Center(child: Text('10'))),
+                          const SizedBox(
+                              width: 28, child: Center(child: Text('7'))),
+                          const SizedBox(
+                              width: 28, child: Center(child: Text('2'))),
+                          const SizedBox(
+                              width: 28, child: Center(child: Text('1'))),
+                          const SizedBox(
+                            width: 34,
+                            child: Center(
+                              child: Text(
+                                '23',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScorersSkeleton(bool isDark, bool isArabic) {
+    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final cardBorder = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    return Skeletonizer(
+      enabled: true,
+      child: ListView(
+        padding: const EdgeInsets.only(top: 12, bottom: AppDimensions.xxxl),
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: hMargin),
+            child: Container(
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                border: Border.all(color: cardBorder),
+              ),
+              child: Column(
+                children: List.generate(
+                  8,
+                  (index) => Container(
+                    height: 54,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      border: index < 7
+                          ? Border(
+                              bottom:
+                                  BorderSide(color: cardBorder, width: 0.5))
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          '${index + 1}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 14),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white10,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kylian Mbappe',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Real Madrid',
+                                style: TextStyle(fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            '12',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

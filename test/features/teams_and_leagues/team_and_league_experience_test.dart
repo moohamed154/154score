@@ -1,10 +1,11 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/localization/app_localizations.dart';
 import 'package:score154/core/network/api_result.dart';
 import 'package:score154/core/storage/local_storage_service.dart';
 import 'package:score154/features/favorites/presentation/cubit/favorites_cubit.dart';
+import 'package:score154/features/leagues/domain/entities/league_entity.dart';
 import 'package:score154/features/leagues/domain/entities/top_scorer_entity.dart';
 import 'package:score154/features/leagues/domain/repositories/leagues_repository.dart';
 import 'package:score154/features/leagues/presentation/bloc/league_bloc.dart';
@@ -64,10 +65,29 @@ class MockLocalStorageService implements LocalStorageService {
   List<String> getFavoriteCompetitions() => [];
 
   @override
-  Future<bool> toggleFavoriteCompetition(String compName) async => true;
+  Future<bool> toggleFavoriteCompetition({
+    String? compName,
+    String? id,
+    String? name,
+    String? slug,
+  }) async => true;
 
   @override
-  bool isFavoriteCompetition(String compName) => false;
+  bool isFavoriteCompetition({
+    String? compName,
+    String? id,
+    String? name,
+    String? slug,
+  }) => false;
+
+  @override
+  Map<String, String> getFavoriteCompetitionTitles() => {};
+
+  @override
+  Future<bool> registerCompetitionTitles(Map<String, String> titles) async => true;
+
+  @override
+  String resolveCompetitionTitle(String compOrId) => compOrId;
 
   @override
   List<String> getFavoriteMatches() => [];
@@ -227,6 +247,28 @@ class MockLeaguesRepository implements LeaguesRepository {
     required String lang,
   }) async {
     return const ApiSuccess([]);
+  }
+
+  @override
+  Future<ApiResult<LeagueDetailsEntity>> getLeagueFullDetails(
+    String leagueId, {
+    required String lang,
+    bool forceRefresh = false,
+  }) async {
+    return ApiSuccess(
+      LeagueDetailsEntity(
+        id: leagueId,
+        name: 'الدوري الإسباني',
+        standings: const LeagueStandingsEntity(
+          leagueId: '937599',
+          leagueTitle: 'الدوري الإسباني الدرجة الأولى',
+          rows: [],
+        ),
+        topScorers: const [],
+        topAssists: const [],
+        matches: const [],
+      ),
+    );
   }
 }
 

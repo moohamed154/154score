@@ -12,6 +12,7 @@ class LeagueDetailsEntity extends Equatable {
   final String? season;
   final LeagueStandingsEntity? standings;
   final List<TopScorerEntity> topScorers;
+  final List<TopScorerEntity> topAssists;
   final List<MatchEntity> matches;
 
   const LeagueDetailsEntity({
@@ -22,6 +23,7 @@ class LeagueDetailsEntity extends Equatable {
     this.season,
     this.standings,
     this.topScorers = const [],
+    this.topAssists = const [],
     this.matches = const [],
   });
 
@@ -34,6 +36,7 @@ class LeagueDetailsEntity extends Equatable {
     season,
     standings,
     topScorers,
+    topAssists,
     matches,
   ];
 }
