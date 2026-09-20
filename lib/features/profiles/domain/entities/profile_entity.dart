@@ -34,6 +34,11 @@ class ProfileTeamEntity extends Equatable {
   final String? fullName;
   final String? logo;
   final int? worldRanking;
+  final String? role;
+  final String? from;
+  final String? to;
+  final String? duration;
+  final bool isCurrent;
 
   const ProfileTeamEntity({
     required this.id,
@@ -41,10 +46,26 @@ class ProfileTeamEntity extends Equatable {
     this.fullName,
     this.logo,
     this.worldRanking,
+    this.role,
+    this.from,
+    this.to,
+    this.duration,
+    this.isCurrent = false,
   });
 
   @override
-  List<Object?> get props => [id, name, fullName, logo, worldRanking];
+  List<Object?> get props => [
+        id,
+        name,
+        fullName,
+        logo,
+        worldRanking,
+        role,
+        from,
+        to,
+        duration,
+        isCurrent,
+      ];
 }
 
 class ProfileEntity extends Equatable {
@@ -65,6 +86,8 @@ class ProfileEntity extends Equatable {
   final String? pitchSurface;
   final String? city;
   final String? mapUrl;
+  final ProfileTeamEntity? currentTeam;
+  final List<ProfileTeamEntity> career;
   final List<ProfileSectionEntity> sections;
   final List<MatchEntity> upcomingMatches;
   final List<MatchEntity> recentMatches;
@@ -88,6 +111,8 @@ class ProfileEntity extends Equatable {
     this.pitchSurface,
     this.city,
     this.mapUrl,
+    this.currentTeam,
+    this.career = const [],
     required this.sections,
     this.upcomingMatches = const [],
     this.recentMatches = const [],
@@ -113,6 +138,8 @@ class ProfileEntity extends Equatable {
     pitchSurface,
     city,
     mapUrl,
+    currentTeam,
+    career,
     sections,
     upcomingMatches,
     recentMatches,

@@ -16,7 +16,7 @@ import '../../../matches/presentation/widgets/match_card.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profiles_repository.dart';
 
-enum ProfileType { stadium, referee, commentator, player }
+enum ProfileType { stadium, referee, commentator, player, coach }
 
 class GenericProfileView extends StatefulWidget {
   final String id;
@@ -86,6 +86,11 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           widget.slug,
           lang: lang,
         ),
+        ProfileType.coach => repo.getCoachProfile(
+          widget.id,
+          widget.slug,
+          lang: lang,
+        ),
       };
 
       if (!mounted) return;
@@ -124,6 +129,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
       ProfileType.referee => l10n.translate('info_referee'),
       ProfileType.commentator => l10n.translate('info_commentator'),
       ProfileType.player => isArabic ? 'لاعب' : 'Player',
+      ProfileType.coach => isArabic ? 'المدير الفني' : 'Head Coach',
     };
 
     return Scaffold(
@@ -215,7 +221,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
     final hasHighlights = _hasHighlights(p);
 
     // Exclude redundant sections ("معلومات البطاقة" and "معلومات أخرى") when their items
-    // are already prominently presented in the Hero, Voice Player, and Highlights Grid.
+    // are already prominently presented in the Hero, Voice Player, Highlights Grid, or Career card.
     final visibleSections = p.sections.map((sec) {
       final sLower = sec.section.toLowerCase();
       final isRedundantSection = sLower.contains('بطاقة') ||
@@ -223,7 +229,11 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           sLower.contains('أخرى') ||
           sLower.contains('more info') ||
           sLower.contains('معلومات المعلق') ||
-          sLower.contains('commentator information');
+          sLower.contains('commentator information') ||
+          sLower.contains('معلومات المدرب') ||
+          sLower.contains('coach information') ||
+          sLower.contains('المسيرة') ||
+          sLower.contains('career');
 
       if (hasHighlights && isRedundantSection) {
         return const ProfileSectionEntity(section: '', items: []);
@@ -240,6 +250,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           if (t.contains('الدولة') || t.contains('country') || t.contains('جنسية')) return false;
           if (t.contains('الميلاد') || t.contains('birth') || t.contains('عمر') || t.contains('age')) return false;
           if (t.contains('لغة') || t.contains('language')) return false;
+          if (t.contains('النادي') || t.contains('club') || t.contains('فريق')) return false;
+          if (t.contains('المنصب') || t.contains('role')) return false;
         }
         if (p.voiceUrl != null && (t.contains('صوت') || t.contains('voice') || t.contains('audio'))) {
           return false;
@@ -267,7 +279,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           const SizedBox(height: AppDimensions.md),
         ],
 
-        // Quick Highlights Grid (Channel, Country, Age, Language)
+        // Quick Highlights Grid (Channel, Country, Age, Language, Club)
         if (hasHighlights) ...[
           _buildHighlightsGrid(context, p, isDark, isArabic),
           const SizedBox(height: AppDimensions.md),
@@ -278,7 +290,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             !hasHighlights &&
             p.upcomingMatches.isEmpty &&
             p.recentMatches.isEmpty &&
-            p.residentTeams.isEmpty)
+            p.residentTeams.isEmpty &&
+            p.career.isEmpty)
           const EmptyView(
             titleKey: 'tab_info',
             customMessage: 'No further details available',
@@ -289,8 +302,13 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             return _buildSectionCard(context, sec, isDark, isArabic);
           }),
 
+        // Coach Managerial Career History
+        if (widget.type == ProfileType.coach && (p.career.isNotEmpty || p.residentTeams.isNotEmpty)) ...[
+          const SizedBox(height: AppDimensions.sm),
+          _buildCoachCareerCard(context, p, isDark, isArabic),
+        ]
         // Resident Teams / Clubs (for Stadiums)
-        if (p.residentTeams.isNotEmpty) ...[
+        else if (p.residentTeams.isNotEmpty) ...[
           const SizedBox(height: AppDimensions.sm),
           _buildResidentTeamsCard(context, p, isDark, isArabic),
         ],
@@ -423,6 +441,169 @@ class _GenericProfileViewState extends State<GenericProfileView> {
     );
   }
 
+  Widget _buildCoachCareerCard(
+    BuildContext context,
+    ProfileEntity p,
+    bool isDark,
+    bool isArabic,
+  ) {
+    final list = p.career.isNotEmpty ? p.career : p.residentTeams;
+    if (list.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppDimensions.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+            child: Row(
+              children: [
+                const Icon(Icons.history_edu_rounded, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  isArabic ? 'المسيرة التدريبية' : 'Managerial Career',
+                  style: AppTypography.getBodyLarge(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${list.length}',
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: list.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final team = list[index];
+              return InkWell(
+                onTap: team.id.isNotEmpty && team.id != '0'
+                    ? () => context.push(
+                          '/team/${team.id}?slug=${Uri.encodeComponent(team.name)}',
+                        )
+                    : null,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(
+                    children: [
+                      AppImage(
+                        imageUrl: team.logo,
+                        width: 36,
+                        height: 36,
+                        placeholderIcon: Icons.shield_outlined,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    team.fullName ?? team.name,
+                                    style: AppTypography.getBodyMedium(
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                    ).copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (team.isCurrent) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: Colors.green.withValues(alpha: 0.4),
+                                        width: 0.8,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      isArabic ? 'الحالي' : 'Current',
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              [
+                                team.role ?? (isArabic ? 'المدير الفني' : 'Head Coach'),
+                                if (team.duration != null && team.duration!.isNotEmpty)
+                                  team.duration!,
+                              ].join(' • '),
+                              style: AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMatchesSectionHeader(
     BuildContext context, {
     required String title,
@@ -479,6 +660,11 @@ class _GenericProfileViewState extends State<GenericProfileView> {
   }
 
   bool _hasHighlights(ProfileEntity p) {
+    if (widget.type == ProfileType.coach) {
+      return (p.country != null && p.country!.isNotEmpty) ||
+          (p.birthDate != null && p.birthDate!.isNotEmpty) ||
+          (p.currentTeam != null);
+    }
     int count = 0;
     if (p.channel != null && p.channel!.isNotEmpty) count++;
     if (p.country != null && p.country!.isNotEmpty) count++;
@@ -495,49 +681,94 @@ class _GenericProfileViewState extends State<GenericProfileView> {
   ) {
     final items = <_HighlightItem>[];
 
-    if (p.channel != null && p.channel!.isNotEmpty) {
-      items.add(
-        _HighlightItem(
-          label: isArabic ? 'القناة الناقلة' : 'Channel',
-          value: p.channel!,
-          icon: Icons.live_tv_rounded,
-          color: Colors.blueAccent,
-        ),
-      );
-    }
+    if (widget.type == ProfileType.coach) {
+      if (p.currentTeam != null) {
+        items.add(
+          _HighlightItem(
+            label: isArabic ? 'النادي الحالي' : 'Current Club',
+            value: p.currentTeam!.name,
+            icon: Icons.shield_outlined,
+            flagUrl: p.currentTeam!.logo,
+            color: AppColors.primary,
+          ),
+        );
+      }
+      if (p.country != null && p.country!.isNotEmpty) {
+        items.add(
+          _HighlightItem(
+            label: isArabic ? 'الدولة / الجنسية' : 'Country',
+            value: p.country!,
+            icon: Icons.public_rounded,
+            flagUrl: p.countryFlag,
+            color: Colors.blueAccent,
+          ),
+        );
+      }
+      if (p.birthDate != null && p.birthDate!.isNotEmpty) {
+        items.add(
+          _HighlightItem(
+            label: isArabic ? 'العمر والميلاد' : 'Birth & Age',
+            value: p.birthDate!,
+            icon: Icons.cake_outlined,
+            color: Colors.amber,
+          ),
+        );
+      }
+      if (p.role != null && p.role!.isNotEmpty) {
+        items.add(
+          _HighlightItem(
+            label: isArabic ? 'المنصب' : 'Role',
+            value: p.role!,
+            icon: Icons.sports_soccer_rounded,
+            color: Colors.tealAccent,
+          ),
+        );
+      }
+    } else {
+      if (p.channel != null && p.channel!.isNotEmpty) {
+        items.add(
+          _HighlightItem(
+            label: isArabic ? 'القناة الناقلة' : 'Channel',
+            value: p.channel!,
+            icon: Icons.live_tv_rounded,
+            color: Colors.blueAccent,
+          ),
+        );
+      }
 
-    if (p.country != null && p.country!.isNotEmpty) {
-      items.add(
-        _HighlightItem(
-          label: isArabic ? 'الدولة / الجنسية' : 'Country',
-          value: p.country!,
-          icon: Icons.public_rounded,
-          flagUrl: p.countryFlag,
-          color: AppColors.primary,
-        ),
-      );
-    }
+      if (p.country != null && p.country!.isNotEmpty) {
+        items.add(
+          _HighlightItem(
+            label: isArabic ? 'الدولة / الجنسية' : 'Country',
+            value: p.country!,
+            icon: Icons.public_rounded,
+            flagUrl: p.countryFlag,
+            color: AppColors.primary,
+          ),
+        );
+      }
 
-    if (p.birthDate != null && p.birthDate!.isNotEmpty) {
-      items.add(
-        _HighlightItem(
-          label: isArabic ? 'العمر والميلاد' : 'Birth & Age',
-          value: p.birthDate!,
-          icon: Icons.cake_outlined,
-          color: Colors.amber,
-        ),
-      );
-    }
+      if (p.birthDate != null && p.birthDate!.isNotEmpty) {
+        items.add(
+          _HighlightItem(
+            label: isArabic ? 'العمر والميلاد' : 'Birth & Age',
+            value: p.birthDate!,
+            icon: Icons.cake_outlined,
+            color: Colors.amber,
+          ),
+        );
+      }
 
-    if (p.commentaryLanguage != null && p.commentaryLanguage!.isNotEmpty) {
-      items.add(
-        _HighlightItem(
-          label: isArabic ? 'لغة التعليق' : 'Language',
-          value: p.commentaryLanguage!,
-          icon: Icons.translate_rounded,
-          color: Colors.purpleAccent,
-        ),
-      );
+      if (p.commentaryLanguage != null && p.commentaryLanguage!.isNotEmpty) {
+        items.add(
+          _HighlightItem(
+            label: isArabic ? 'لغة التعليق' : 'Language',
+            value: p.commentaryLanguage!,
+            icon: Icons.translate_rounded,
+            color: Colors.purpleAccent,
+          ),
+        );
+      }
     }
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -979,12 +1210,16 @@ class _GenericProfileViewState extends State<GenericProfileView> {
     final roleText = p.role ??
         (widget.type == ProfileType.referee
             ? (isArabic ? 'حكم كرة قدم' : 'Football Referee')
+            : widget.type == ProfileType.coach
+            ? (isArabic ? 'المدير الفني' : 'Head Coach')
             : widget.type == ProfileType.player
             ? (isArabic ? 'لاعب كرة قدم' : 'Football Player')
             : (isArabic ? 'معلق رياضي' : 'Sports Commentator'));
 
     final placeholderIcon = widget.type == ProfileType.referee
         ? Icons.sports_rounded
+        : widget.type == ProfileType.coach
+        ? Icons.sports_soccer_rounded
         : widget.type == ProfileType.player
         ? Icons.person_rounded
         : Icons.mic_rounded;
@@ -1085,6 +1320,16 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                 color: AppColors.primary,
                 isDark: isDark,
               ),
+
+              // Current Club Badge
+              if (p.currentTeam != null)
+                _buildBadge(
+                  flagUrl: p.currentTeam!.logo,
+                  icon: Icons.shield_outlined,
+                  label: p.currentTeam!.name,
+                  color: Colors.tealAccent,
+                  isDark: isDark,
+                ),
 
               // Channel Badge
               if (p.channel != null && p.channel!.isNotEmpty)

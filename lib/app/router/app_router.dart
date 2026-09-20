@@ -304,6 +304,34 @@ class AppRouter {
         },
       ),
 
+      // Coach Profile
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/coach/:id/:slug',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final slug = state.pathParameters['slug'] ?? '';
+          return GenericProfileView(
+            id: id,
+            slug: slug,
+            type: ProfileType.coach,
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/coach/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final slug = state.uri.queryParameters['slug'] ?? '';
+          return GenericProfileView(
+            id: id,
+            slug: slug,
+            type: ProfileType.coach,
+          );
+        },
+      ),
+
       // Player Profile
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

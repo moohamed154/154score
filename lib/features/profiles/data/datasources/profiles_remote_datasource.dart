@@ -343,6 +343,12 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
           final tFullName = (t['full_name'] ?? t['full_title'])?.toString();
           final tLogo = UrlHelper.normalizeImageUrl((t['logo'] ?? t['image'])?.toString());
           final tRank = t['world_ranking'] is num ? (t['world_ranking'] as num).toInt() : null;
+          final tRole = t['role']?.toString();
+          final tFrom = t['from']?.toString();
+          final tTo = t['to']?.toString();
+          final tDuration = t['duration']?.toString();
+          final tIsCurrent = t['is_current'] == true;
+
           if (tId.isNotEmpty || tName.isNotEmpty) {
             residentTeams.add(
               ProfileTeamEntity(
@@ -351,11 +357,88 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
                 fullName: tFullName,
                 logo: tLogo,
                 worldRanking: tRank,
+                role: tRole,
+                from: tFrom,
+                to: tTo,
+                duration: tDuration,
+                isCurrent: tIsCurrent,
               ),
             );
           }
         }
       }
+
+      // Parse Coach Career & Current Team
+      ProfileTeamEntity? currentTeam;
+      if (map['current_team'] is Map) {
+        final ct = Map<String, dynamic>.from(map['current_team'] as Map);
+        currentTeam = ProfileTeamEntity(
+          id: (ct['id'] ?? ct['team_id'] ?? '').toString(),
+          name: (ct['name'] ?? ct['team_name'] ?? '').toString(),
+          logo: UrlHelper.normalizeImageUrl((ct['logo'] ?? ct['team_logo'])?.toString()),
+          role: ct['role']?.toString(),
+          from: ct['from']?.toString(),
+          to: ct['to']?.toString(),
+          isCurrent: true,
+        );
+      }
+
+      final career = <ProfileTeamEntity>[];
+      final rawCareer = map['career'] as List? ?? (map['teams_c'] as List? ?? []);
+      for (final c in rawCareer) {
+        if (c is Map) {
+          final tMap = c['team'] is Map ? Map<String, dynamic>.from(c['team'] as Map) : c;
+          final cId = (c['team_id'] ?? c['id'] ?? tMap['row_id'] ?? tMap['id'] ?? '').toString();
+          final cName = (c['team_name'] ?? c['name'] ?? tMap['title'] ?? tMap['full_title'] ?? '').toString();
+          final cLogo = UrlHelper.normalizeImageUrl((c['team_logo'] ?? c['logo'] ?? tMap['image'])?.toString());
+          final cRole = (c['role'] ?? c['type'])?.toString();
+          final cFrom = c['from']?.toString();
+          final cTo = c['to']?.toString();
+          final cDuration = c['duration']?.toString();
+          final cIsCurrent = c['is_current'] == true || c['team_coach'] == 1 || c['team_coach'] == '1';
+
+          if (cId.isNotEmpty || cName.isNotEmpty) {
+            career.add(
+              ProfileTeamEntity(
+                id: cId,
+                name: cName,
+                logo: cLogo,
+                role: cRole,
+                from: cFrom,
+                to: cTo,
+                duration: cDuration,
+                isCurrent: cIsCurrent,
+              ),
+            );
+          }
+        }
+      }
+
+      return ProfileEntity(
+        id: id,
+        slug: slug,
+        name: name,
+        englishName: englishName,
+        image: image,
+        countryFlag: flag,
+        country: country,
+        channel: channel,
+        birthDate: birthDate,
+        commentaryLanguage: commentaryLanguage,
+        voiceUrl: voiceUrl,
+        role: role,
+        capacity: capacity,
+        builtDate: builtDate,
+        pitchSurface: pitchSurface,
+        city: city,
+        mapUrl: mapUrl,
+        currentTeam: currentTeam,
+        career: career.isNotEmpty ? career : residentTeams,
+        sections: sections,
+        upcomingMatches: upcomingMatches,
+        recentMatches: recentMatches,
+        residentTeams: residentTeams,
+      );
     }
 
     return ProfileEntity(

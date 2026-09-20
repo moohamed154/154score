@@ -1056,12 +1056,13 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
             borderRadius: BorderRadius.circular(12),
             onTap: () {
               final cleanName = coach.name?.trim() ?? '';
-              if (cleanName.isNotEmpty) {
-                final slug = Uri.encodeComponent(
-                  cleanName.replaceAll(RegExp(r'\s+'), '-'),
-                );
-                context.push('/player/0/$slug');
-              }
+              final slug = cleanName.isNotEmpty
+                  ? Uri.encodeComponent(cleanName.replaceAll(RegExp(r'\s+'), '-'))
+                  : 'coach';
+              final coachId = (coach.coachId != null && coach.coachId!.trim().isNotEmpty)
+                  ? coach.coachId!.trim()
+                  : '0';
+              context.push('/coach/$coachId/$slug');
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),

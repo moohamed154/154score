@@ -90,6 +90,10 @@ class ApiEndpoints {
       (slug != null && slug.isNotEmpty)
           ? '/api/commentator/$id/$slug'
           : '/api/commentator/$id';
+  static String coach(String id, [String? slug]) =>
+      (slug != null && slug.isNotEmpty)
+          ? '/api/coach/$id/$slug'
+          : '/api/coach/$id';
 
   // 7. Content & Search Operations
   static const String search = '/api/search';

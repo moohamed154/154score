@@ -197,4 +197,48 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
       );
     }
   }
+
+  @override
+  Future<ApiResult<ProfileEntity>> getCoachProfile(
+    String id,
+    String slug, {
+    required String lang,
+  }) async {
+    final cleanSlug = UrlHelper.safeDecodeComponent(slug);
+    final encodedSlug = Uri.encodeComponent(cleanSlug);
+    try {
+      final data = await _remoteDataSource.getProfile(
+        ApiEndpoints.coach(id, encodedSlug),
+        id,
+        cleanSlug,
+        lang: lang,
+      );
+      return ApiSuccess(data);
+    } catch (_) {
+      final name = UrlHelper.slugToName(slug);
+      return ApiSuccess(
+        ProfileEntity(
+          id: id,
+          slug: slug,
+          name: name,
+          role: lang == 'ar' ? 'المدير الفني' : 'Head Coach',
+          sections: [
+            ProfileSectionEntity(
+              section: lang == 'ar' ? 'معلومات المدرب' : 'Coach Information',
+              items: [
+                ProfileItemEntity(
+                  title: lang == 'ar' ? 'الاسم' : 'Name',
+                  content: name,
+                ),
+                ProfileItemEntity(
+                  title: lang == 'ar' ? 'المنصب' : 'Role',
+                  content: lang == 'ar' ? 'المدير الفني' : 'Head Coach',
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+  }
 }

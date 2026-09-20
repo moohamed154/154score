@@ -1529,8 +1529,16 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     LineupCoachEntity? coach;
     if (map['coach'] is Map) {
       final cMap = Map<String, dynamic>.from(map['coach'] as Map);
+      var cId = cMap['coach_id']?.toString() ?? cMap['id']?.toString();
+      if ((cId == null || cId.isEmpty || cId == '0') && cMap['link'] != null) {
+        final linkStr = cMap['link'].toString();
+        final match = RegExp(r'/coach/(\d+)').firstMatch(linkStr);
+        if (match != null) {
+          cId = match.group(1);
+        }
+      }
       coach = LineupCoachEntity(
-        coachId: cMap['coach_id']?.toString() ?? cMap['id']?.toString(),
+        coachId: cId,
         name: cMap['name']?.toString() ?? '',
         photo: UrlHelper.normalizeImageUrl(cMap['photo']?.toString()),
         link: cMap['link']?.toString(),

@@ -22,4 +22,9 @@ abstract class ProfilesRepository {
     String slug, {
     required String lang,
   });
+  Future<ApiResult<ProfileEntity>> getCoachProfile(
+    String id,
+    String slug, {
+    required String lang,
+  });
 }
