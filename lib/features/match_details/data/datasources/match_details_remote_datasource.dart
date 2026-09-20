@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/commentator_resolver.dart';
+import '../../../../core/utils/match_event_helper.dart';
 import '../../../../core/utils/match_minute_parser.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
@@ -271,8 +272,13 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         );
       }
 
+      final normalizedEvents = MatchEventHelper.normalizeEvents(
+        events,
+        hasExtraTime: MatchEventHelper.hasExtraTimeInHalfScores(halfScores),
+      );
+
       return MatchEventsPayload(
-        events: events,
+        events: normalizedEvents,
         videos: videos,
         championshipId: championshipId,
         halfScores: halfScores,

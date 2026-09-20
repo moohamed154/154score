@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/core/utils/match_event_helper.dart';
 import 'package:score154/core/utils/match_status_helper.dart';
 import 'package:score154/core/utils/score_helper.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 import 'package:score154/features/match_details/presentation/widgets/match_header_banner.dart';
+import 'package:score154/features/match_details/presentation/widgets/timeline_event_item.dart';
 import 'package:score154/features/matches/domain/entities/match_entity.dart';
 
 void main() {
@@ -151,6 +154,167 @@ void main() {
 
       // Ensure "انتهت" IS displayed for truly finished match
       expect(find.text('انتهت'), findsOneWidget);
+    });
+
+    test('MatchEventHelper normalizes minute 120 to 90 for 90-minute matches without extra time', () {
+      final rawEvents = [
+        const MatchEventEntity(
+          minute: '0',
+          playerName: 'بداية الشوط الأول',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+        const MatchEventEntity(
+          minute: '45',
+          playerName: 'نهاية الشوط الأول',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+        const MatchEventEntity(
+          minute: '45',
+          playerName: 'بداية الشوط الثاني',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+        const MatchEventEntity(
+          minute: '80',
+          playerName: 'محمد صلاح',
+          type: 'goal',
+          isHomeTeam: true,
+        ),
+        const MatchEventEntity(
+          minute: '90+4',
+          playerName: 'ليروي سانيه',
+          type: 'yellow_card',
+          isHomeTeam: true,
+        ),
+        const MatchEventEntity(
+          minute: '120',
+          playerName: 'نهاية المباراة',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+      ];
+
+      expect(MatchEventHelper.detectExtraTime(rawEvents), isFalse);
+
+      final normalized = MatchEventHelper.normalizeEvents(rawEvents);
+      final ftEvent = normalized.firstWhere((e) => e.playerName == 'نهاية المباراة');
+
+      expect(ftEvent.minute, equals('90'));
+
+      // Check sorting weight preserves end of match placement after 90+4
+      final merged = MatchEventHelper.mergeEvents(
+        existingEvents: normalized,
+        incomingEvents: [],
+      );
+      expect(merged.last.playerName, equals('نهاية المباراة'));
+      expect(merged.last.minute, equals('90'));
+    });
+
+    test('MatchEventHelper preserves minute 120 when match actually played extra time', () {
+      final extraTimeEvents = [
+        const MatchEventEntity(
+          minute: '0',
+          playerName: 'بداية الشوط الأول',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+        const MatchEventEntity(
+          minute: '90',
+          playerName: 'نهاية الوقت الأصلي',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+        const MatchEventEntity(
+          minute: '90',
+          playerName: 'بداية الشوط الإضافي الأول',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+        const MatchEventEntity(
+          minute: '105',
+          playerName: 'نهاية الشوط الإضافي الأول',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+        const MatchEventEntity(
+          minute: '112',
+          playerName: 'هدف في الوقت الإضافي',
+          type: 'goal',
+          isHomeTeam: false,
+        ),
+        const MatchEventEntity(
+          minute: '120',
+          playerName: 'نهاية المباراة',
+          type: 'start-end-match',
+          isPeriodMarker: true,
+        ),
+      ];
+
+      expect(MatchEventHelper.detectExtraTime(extraTimeEvents), isTrue);
+
+      final normalized = MatchEventHelper.normalizeEvents(extraTimeEvents);
+      final ftEvent = normalized.firstWhere((e) => e.playerName == 'نهاية المباراة');
+
+      expect(ftEvent.minute, equals('120'));
+    });
+
+    testWidgets('TimelineEventItem renders 90 for normalized full-time marker instead of 120', (tester) async {
+      const event90 = MatchEventEntity(
+        minute: '90',
+        playerName: 'نهاية المباراة',
+        type: 'start-end-match',
+        isPeriodMarker: true,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ar'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          home: const Scaffold(
+            body: TimelineEventItem(event: event90),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('نهاية المباراة'), findsOneWidget);
+      expect(find.text('(90\')'), findsOneWidget);
+      expect(find.text('(120\')'), findsNothing);
+    });
+
+    testWidgets('TimelineEventItem renders 120 when match had extra time', (tester) async {
+      const event120 = MatchEventEntity(
+        minute: '120',
+        playerName: 'نهاية المباراة',
+        type: 'start-end-match',
+        isPeriodMarker: true,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ar'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          home: const Scaffold(
+            body: TimelineEventItem(event: event120),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('نهاية المباراة'), findsOneWidget);
+      expect(find.text('(120\')'), findsOneWidget);
     });
   });
 }

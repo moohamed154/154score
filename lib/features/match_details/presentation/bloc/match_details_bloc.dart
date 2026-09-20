@@ -179,7 +179,13 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         }
       }
 
-      final resolvedEvents = eventsRes.isNotEmpty ? eventsRes : state.events;
+      final resolvedHalfScores =
+          eventsPayloadRes.halfScores ?? state.halfScores;
+      final rawEvents = eventsRes.isNotEmpty ? eventsRes : state.events;
+      final resolvedEvents = MatchEventHelper.normalizeEvents(
+        rawEvents,
+        hasExtraTime: MatchEventHelper.hasExtraTimeInHalfScores(resolvedHalfScores),
+      );
       final resolvedVideos = videosRes.isNotEmpty ? videosRes : state.videos;
       final resolvedStats = statsRes.isNotEmpty ? statsRes : state.stats;
       final resolvedDetails = detailsRes.isNotEmpty ? detailsRes : state.details;
@@ -191,8 +197,6 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           eventsPayloadRes.championshipId ??
           resolvedOverview?.championshipId ??
           state.championshipId;
-      final resolvedHalfScores =
-          eventsPayloadRes.halfScores ?? state.halfScores;
 
       String? calculatedScore1 = state.liveScore1;
       String? calculatedScore2 = state.liveScore2;

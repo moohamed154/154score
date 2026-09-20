@@ -2,6 +2,7 @@ import '../../features/matches/domain/entities/match_entity.dart';
 import '../../features/match_details/domain/entities/match_details_entity.dart';
 import '../../features/transfers/domain/entities/transfer_entity.dart';
 import '../websocket/websocket_event.dart';
+import 'match_event_helper.dart';
 import 'match_status_helper.dart';
 
 class RealtimeMergeResult<T> {
@@ -271,7 +272,10 @@ class RealtimeMergeEngine {
       return minA.compareTo(minB);
     });
 
-    return RealtimeMergeResult(data: merged, isUpdated: true);
+    return RealtimeMergeResult(
+      data: MatchEventHelper.normalizeEvents(merged),
+      isUpdated: true,
+    );
   }
 
   static String _generateEventKey(MatchEventEntity event) {
