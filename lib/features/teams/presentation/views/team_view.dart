@@ -195,6 +195,7 @@ class _TeamViewState extends State<TeamView>
                             )
                           : TabBarView(
                               controller: _tabController,
+                              physics: const NeverScrollableScrollPhysics(),
                               children: [
                                 _buildMatchesTab(context, state, isDark, isArabic),
                                 _buildNewsTab(context, state, isDark, isArabic),

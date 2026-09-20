@@ -329,14 +329,14 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('ar'),
+        const MaterialApp(
+          locale: Locale('ar'),
           supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: const [
+          localizationsDelegates: [
             AppLocalizations.delegate,
             ...GlobalMaterialLocalizations.delegates,
           ],
-          home: const Scaffold(
+          home: Scaffold(
             body: Center(
               child: PitchPlayerNode(player: starterSalah, isHome: true),
             ),
@@ -373,14 +373,14 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('ar'),
+        const MaterialApp(
+          locale: Locale('ar'),
           supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: const [
+          localizationsDelegates: [
             AppLocalizations.delegate,
             ...GlobalMaterialLocalizations.delegates,
           ],
-          home: const Scaffold(
+          home: Scaffold(
             body: Center(
               child: PitchPlayerNode(player: subSimsir, isHome: true),
             ),

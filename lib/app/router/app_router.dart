@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +32,17 @@ import '../../features/splash/presentation/views/splash_view.dart';
 import '../navigation/app_scaffold.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+Page<dynamic> _buildCupertinoPage({
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return CupertinoPage<void>(
+    key: state.pageKey,
+    name: state.name ?? state.matchedLocation,
+    child: child,
+  );
+}
 
 class AppRouter {
   AppRouter._();
@@ -96,7 +108,10 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/favorites',
-                builder: (context, state) => const FavoritesView(),
+                pageBuilder: (context, state) => _buildCupertinoPage(
+                  state: state,
+                  child: const FavoritesView(),
+                ),
               ),
             ],
           ),
@@ -106,7 +121,10 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/search',
-                builder: (context, state) => const GlobalSearchView(),
+                pageBuilder: (context, state) => _buildCupertinoPage(
+                  state: state,
+                  child: const GlobalSearchView(),
+                ),
               ),
             ],
           ),
@@ -116,7 +134,10 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/settings',
-                builder: (context, state) => const SettingsView(),
+                pageBuilder: (context, state) => _buildCupertinoPage(
+                  state: state,
+                  child: const SettingsView(),
+                ),
               ),
             ],
           ),
@@ -135,12 +156,15 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/match/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final match = state.extra as MatchEntity?;
-          return BlocProvider(
-            create: (_) => sl<MatchDetailsBloc>(param1: id),
-            child: MatchDetailsView(matchId: id, initialMatch: match),
+          return _buildCupertinoPage(
+            state: state,
+            child: BlocProvider(
+              create: (_) => sl<MatchDetailsBloc>(param1: id),
+              child: MatchDetailsView(matchId: id, initialMatch: match),
+            ),
           );
         },
       ),
@@ -149,7 +173,7 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/league/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           var id = state.pathParameters['id'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
           final tabParam = state.uri.queryParameters['tab'];
@@ -159,13 +183,16 @@ class AppRouter {
           if ((id == '0' || id.isEmpty) && title != null) {
             id = LeagueResolver.resolveId(title) ?? id;
           }
-          return BlocProvider(
-            create: (_) => sl<LeagueBloc>(param1: id, param2: extra),
-            child: LeagueView(
-              leagueId: id,
-              initialTitle: title,
-              initialLogo: extra?['logo']?.toString(),
-              initialTabIndex: initialTab,
+          return _buildCupertinoPage(
+            state: state,
+            child: BlocProvider(
+              create: (_) => sl<LeagueBloc>(param1: id, param2: extra),
+              child: LeagueView(
+                leagueId: id,
+                initialTitle: title,
+                initialLogo: extra?['logo']?.toString(),
+                initialTabIndex: initialTab,
+              ),
             ),
           );
         },
@@ -173,7 +200,7 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/league/:id/:slug',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           var id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
@@ -187,13 +214,16 @@ class AppRouter {
                 LeagueResolver.resolveId(slug) ??
                 id;
           }
-          return BlocProvider(
-            create: (_) => sl<LeagueBloc>(param1: id, param2: extra),
-            child: LeagueView(
-              leagueId: id,
-              initialTitle: title,
-              initialLogo: extra?['logo']?.toString(),
-              initialTabIndex: initialTab,
+          return _buildCupertinoPage(
+            state: state,
+            child: BlocProvider(
+              create: (_) => sl<LeagueBloc>(param1: id, param2: extra),
+              child: LeagueView(
+                leagueId: id,
+                initialTitle: title,
+                initialLogo: extra?['logo']?.toString(),
+                initialTabIndex: initialTab,
+              ),
             ),
           );
         },
@@ -203,16 +233,19 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/team/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
-          return BlocProvider(
-            create: (_) => sl<TeamBloc>(param1: id, param2: extra),
-            child: TeamView(
-              teamId: id,
-              initialName: extra?['name']?.toString(),
-              initialLogo: extra?['logo']?.toString(),
-              leagueId: extra?['leagueId']?.toString(),
+          return _buildCupertinoPage(
+            state: state,
+            child: BlocProvider(
+              create: (_) => sl<TeamBloc>(param1: id, param2: extra),
+              child: TeamView(
+                teamId: id,
+                initialName: extra?['name']?.toString(),
+                initialLogo: extra?['logo']?.toString(),
+                leagueId: extra?['leagueId']?.toString(),
+              ),
             ),
           );
         },
@@ -220,19 +253,22 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/team/:id/:slug',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
           final name = extra?['name']?.toString() ??
               (slug.isNotEmpty ? UrlHelper.slugToName(slug) : null);
-          return BlocProvider(
-            create: (_) => sl<TeamBloc>(param1: id, param2: extra),
-            child: TeamView(
-              teamId: id,
-              initialName: name,
-              initialLogo: extra?['logo']?.toString(),
-              leagueId: extra?['leagueId']?.toString(),
+          return _buildCupertinoPage(
+            state: state,
+            child: BlocProvider(
+              create: (_) => sl<TeamBloc>(param1: id, param2: extra),
+              child: TeamView(
+                teamId: id,
+                initialName: name,
+                initialLogo: extra?['logo']?.toString(),
+                leagueId: extra?['leagueId']?.toString(),
+              ),
             ),
           );
         },
@@ -242,9 +278,12 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/standings/:leagueId',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final leagueId = state.pathParameters['leagueId'];
-          return StandingsView(initialLeagueId: leagueId);
+          return _buildCupertinoPage(
+            state: state,
+            child: StandingsView(initialLeagueId: leagueId),
+          );
         },
       ),
 
@@ -252,10 +291,13 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/video/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final video = state.extra as VideoItemEntity?;
-          return VideoDetailsView(videoId: id, initialVideo: video);
+          return _buildCupertinoPage(
+            state: state,
+            child: VideoDetailsView(videoId: id, initialVideo: video),
+          );
         },
       ),
 
@@ -263,13 +305,16 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/stadium/:id/:slug',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
-          return GenericProfileView(
-            id: id,
-            slug: slug,
-            type: ProfileType.stadium,
+          return _buildCupertinoPage(
+            state: state,
+            child: GenericProfileView(
+              id: id,
+              slug: slug,
+              type: ProfileType.stadium,
+            ),
           );
         },
       ),
@@ -278,13 +323,16 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/referee/:id/:slug',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
-          return GenericProfileView(
-            id: id,
-            slug: slug,
-            type: ProfileType.referee,
+          return _buildCupertinoPage(
+            state: state,
+            child: GenericProfileView(
+              id: id,
+              slug: slug,
+              type: ProfileType.referee,
+            ),
           );
         },
       ),
@@ -293,13 +341,16 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/commentator/:id/:slug',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
-          return GenericProfileView(
-            id: id,
-            slug: slug,
-            type: ProfileType.commentator,
+          return _buildCupertinoPage(
+            state: state,
+            child: GenericProfileView(
+              id: id,
+              slug: slug,
+              type: ProfileType.commentator,
+            ),
           );
         },
       ),
@@ -308,26 +359,32 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/coach/:id/:slug',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
-          return GenericProfileView(
-            id: id,
-            slug: slug,
-            type: ProfileType.coach,
+          return _buildCupertinoPage(
+            state: state,
+            child: GenericProfileView(
+              id: id,
+              slug: slug,
+              type: ProfileType.coach,
+            ),
           );
         },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/coach/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.uri.queryParameters['slug'] ?? '';
-          return GenericProfileView(
-            id: id,
-            slug: slug,
-            type: ProfileType.coach,
+          return _buildCupertinoPage(
+            state: state,
+            child: GenericProfileView(
+              id: id,
+              slug: slug,
+              type: ProfileType.coach,
+            ),
           );
         },
       ),
@@ -336,23 +393,26 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/player/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.uri.queryParameters['slug'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
-          return BlocProvider(
-            create: (_) => sl<PlayerBloc>(
-              param1: id,
-              param2: {
-                'slug': slug,
-                if (extra != null) ...extra,
-              },
-            ),
-            child: PlayerView(
-              playerId: id,
-              initialSlug: slug,
-              initialName: extra?['name']?.toString(),
-              initialPhoto: extra?['photo']?.toString(),
+          return _buildCupertinoPage(
+            state: state,
+            child: BlocProvider(
+              create: (_) => sl<PlayerBloc>(
+                param1: id,
+                param2: {
+                  'slug': slug,
+                  if (extra != null) ...extra,
+                },
+              ),
+              child: PlayerView(
+                playerId: id,
+                initialSlug: slug,
+                initialName: extra?['name']?.toString(),
+                initialPhoto: extra?['photo']?.toString(),
+              ),
             ),
           );
         },
@@ -360,23 +420,26 @@ class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/player/:id/:slug',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
-          return BlocProvider(
-            create: (_) => sl<PlayerBloc>(
-              param1: id,
-              param2: {
-                'slug': slug,
-                if (extra != null) ...extra,
-              },
-            ),
-            child: PlayerView(
-              playerId: id,
-              initialSlug: slug,
-              initialName: extra?['name']?.toString(),
-              initialPhoto: extra?['photo']?.toString(),
+          return _buildCupertinoPage(
+            state: state,
+            child: BlocProvider(
+              create: (_) => sl<PlayerBloc>(
+                param1: id,
+                param2: {
+                  'slug': slug,
+                  if (extra != null) ...extra,
+                },
+              ),
+              child: PlayerView(
+                playerId: id,
+                initialSlug: slug,
+                initialName: extra?['name']?.toString(),
+                initialPhoto: extra?['photo']?.toString(),
+              ),
             ),
           );
         },

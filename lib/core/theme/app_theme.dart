@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -66,6 +67,13 @@ class AppTheme {
         ),
         unselectedLabelTextStyle: TextStyle(color: AppColors.darkTextMuted),
       ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 
@@ -128,6 +136,13 @@ class AppTheme {
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelTextStyle: TextStyle(color: AppColors.lightTextMuted),
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
       ),
     );
   }

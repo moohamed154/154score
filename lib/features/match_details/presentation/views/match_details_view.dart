@@ -643,6 +643,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                           )
                         : TabBarView(
                             controller: _tabController,
+                            physics: const NeverScrollableScrollPhysics(),
                             children: [
                               // 1. الأحداث (Events with Video chips, Highlights/All filter, Timeline & Stats Preview)
                               _buildEventsTab(

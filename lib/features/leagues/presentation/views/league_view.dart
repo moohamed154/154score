@@ -206,6 +206,7 @@ class _LeagueViewState extends State<LeagueView>
                         )
                       : TabBarView(
                           controller: _tabController,
+                          physics: const NeverScrollableScrollPhysics(),
                           children: [
                             _buildMatchesTab(context, state, isDark, isArabic),
                             _buildStandingsTab(
