@@ -1226,5 +1226,88 @@ void main() {
       final hasBootPainter = customPaints.any((cp) => cp.painter is FootballBootPainter);
       expect(hasBootPainter, isTrue);
     });
+
+    testWidgets('11. Handles lineup available for one team only (auto-selects, shows unavailable badge & empty pitch overlay with switch action)', (
+      tester,
+    ) async {
+      final bloc = MatchDetailsBloc(
+        repository: mockRepo,
+        webSocketService: mockWs,
+        localStorageService: mockStorage,
+        matchId: sampleMatchId,
+      );
+
+      // Home has NO lineup (like Lusail in the screenshot)
+      // Away has a full lineup (like Al-Markhiya)
+      const singleTeamLineup = MatchLineupEntity(
+        matchId: sampleMatchId,
+        lineupsAvailable: true,
+        formationType: 'probable',
+        formationTypeText: 'تشكيلة متوقعة',
+        home: TeamLineupEntity(
+          teamId: '10',
+          teamName: 'لوسيل',
+          formation: null,
+          startingXi: [],
+          substitutes: [],
+        ),
+        away: TeamLineupEntity(
+          teamId: '20',
+          teamName: 'المرخية',
+          formation: '4-3-3',
+          startingXi: [
+            LineupPlayerEntity(
+              playerId: '101',
+              name: 'علي حسن',
+              number: 10,
+              position: 'مهاجم',
+              positionCode: 'S',
+            ),
+          ],
+          substitutes: [],
+        ),
+      );
+
+      bloc.emit(
+        const MatchDetailsState(
+          matchId: sampleMatchId,
+          status: MatchDetailsStatus.success,
+          lineup: singleTeamLineup,
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildTestApp(
+          child: BlocProvider.value(
+            value: bloc,
+            child: const LineupTabView(matchId: sampleMatchId),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // 1. LineupTabView automatically selected Away team (المرخية) because Home (لوسيل) has no players
+      expect(find.text('علي حسن'), findsWidgets);
+
+      // 2. The team toggle shows 'غير معلنة' for لوسيل
+      expect(find.text('غير معلنة'), findsWidgets);
+
+      // 3. User manually selects the team with no lineup (لوسيل)
+      await tester.tap(find.text('لوسيل').first);
+      await tester.pumpAndSettle();
+
+      // 4. Tactical board shows the empty state overlay
+      expect(find.text('لم يتم الإعلان عن التشكيلة'), findsOneWidget);
+      expect(find.text('تشكيلة لوسيل غير متوفرة حالياً'), findsOneWidget);
+
+      // 5. Shows quick action button to switch to Al-Markhiya
+      expect(find.text('عرض تشكيلة المرخية'), findsWidgets);
+
+      // 6. Tapping the switch button switches back to Al-Markhiya
+      await tester.tap(find.text('عرض تشكيلة المرخية').first);
+      await tester.pumpAndSettle();
+      expect(find.text('علي حسن'), findsWidgets);
+    });
   });
 }

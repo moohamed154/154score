@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,6 +33,16 @@ class LineupTabView extends StatefulWidget {
 class _LineupTabViewState extends State<LineupTabView> {
   _LineupViewMode _viewMode = _LineupViewMode.pitch;
   int _selectedTeamIndex = 0; // 0 = Home, 1 = Away
+  String? _initializedMatchId;
+
+  @override
+  void didUpdateWidget(covariant LineupTabView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.matchId != widget.matchId) {
+      _initializedMatchId = null;
+      _selectedTeamIndex = 0;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +98,18 @@ class _LineupTabViewState extends State<LineupTabView> {
 
         final home = lineup.home!;
         final away = lineup.away!;
+
+        // Auto-select the team with lineup if only one team has data available
+        if (_initializedMatchId != widget.matchId) {
+          _initializedMatchId = widget.matchId;
+          final hasHome = home.startingXi.isNotEmpty;
+          final hasAway = away.startingXi.isNotEmpty;
+          if (!hasHome && hasAway) {
+            _selectedTeamIndex = 1;
+          } else {
+            _selectedTeamIndex = 0;
+          }
+        }
 
         // 4. Content State (Interactive Pitch or Squad List)
         return RefreshIndicator(

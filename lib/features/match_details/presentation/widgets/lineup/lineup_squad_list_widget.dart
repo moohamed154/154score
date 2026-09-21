@@ -54,6 +54,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     final currentTeam = _selectedTeamIndex == 0 ? widget.home : widget.away;
+    final otherTeam = _selectedTeamIndex == 0 ? widget.away : widget.home;
     final isHome = _selectedTeamIndex == 0;
 
     final subbedInPlayers =
@@ -86,6 +87,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                           : (widget.home.teamName ??
                               (isArabic ? 'صاحب الأرض' : 'Home')),
                       formation: widget.home.formation,
+                      hasLineup: widget.home.startingXi.isNotEmpty,
                       isSelected: _selectedTeamIndex == 0,
                       isDark: isDark,
                       isArabic: isArabic,
@@ -99,6 +101,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                           : (widget.away.teamName ??
                               (isArabic ? 'الضيف' : 'Away')),
                       formation: widget.away.formation,
+                      hasLineup: widget.away.startingXi.isNotEmpty,
                       isSelected: _selectedTeamIndex == 1,
                       isDark: isDark,
                       isArabic: isArabic,
@@ -116,6 +119,119 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 0. Empty Squad State (When neither starters nor substitutes are available for this team)
+              if (currentTeam.startingXi.isEmpty &&
+                  currentTeam.substitutes.isEmpty) ...[
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(vertical: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCardElevated
+                              : AppColors.lightCardElevated,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.group_off_rounded,
+                          size: 26,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        isArabic ? 'التشكيلة غير متوفرة' : 'Lineup Unavailable',
+                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        isArabic
+                            ? 'لم تصدر التشكيلة الرسمية أو دكة البدلاء لفريق ${currentTeam.displayName.isNotEmpty ? currentTeam.displayName : (isHome ? 'صاحب الأرض' : 'الضيف')} حتى الآن'
+                            : 'Official lineup and substitutes for ${currentTeam.displayName.isNotEmpty ? currentTeam.displayName : (isHome ? 'Home' : 'Away')} are not available yet',
+                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          fontSize: 12,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (otherTeam.startingXi.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _onSelectTeam(_selectedTeamIndex == 0 ? 1 : 0),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppColors.primary,
+                                  width: 1.2,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isArabic
+                                        ? Icons.arrow_back_rounded
+                                        : Icons.arrow_forward_rounded,
+                                    size: 15,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isArabic
+                                        ? 'عرض تشكيلة ${otherTeam.displayName.isNotEmpty ? otherTeam.displayName : (!isHome ? 'صاحب الأرض' : 'الضيف')}'
+                                        : 'View ${otherTeam.displayName.isNotEmpty ? otherTeam.displayName : (!isHome ? 'Home' : 'Away')} Lineup',
+                                    style: (isArabic
+                                        ? GoogleFonts.cairo
+                                        : GoogleFonts.inter)(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+
               // 1. Starting XI Section (Shown only in list view, hidden below pitch)
               if (widget.showStarters &&
                   currentTeam.startingXi.isNotEmpty) ...[
@@ -234,6 +350,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
   Widget _buildTeamTabItem({
     required String title,
     String? formation,
+    bool hasLineup = true,
     required bool isSelected,
     required bool isDark,
     required bool isArabic,
@@ -287,6 +404,23 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: isSelected ? Colors.black : Colors.white70,
+                  ),
+                ),
+              ),
+            ] else if (!hasLineup) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  isArabic ? 'غير معلنة' : 'Unavailable',
+                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                   ),
                 ),
               ),

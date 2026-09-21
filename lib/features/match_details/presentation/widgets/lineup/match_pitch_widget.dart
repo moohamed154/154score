@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:score154/core/constants/app_colors.dart';
@@ -123,6 +123,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                             key: ValueKey<int>(_currentIndex),
                             child: _buildSingleTeamPitch(
                               team: currentTeam,
+                              otherTeam: isHome ? widget.away : widget.home,
                               isHome: isHome,
                               isDark: isDark,
                               isArabic: isArabic,
@@ -216,10 +217,16 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         ? team.displayName
         : (team.teamName ?? (isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
 
+    final hasLineup = team.startingXi.isNotEmpty;
     const activeBorderColor = Color(0xFF00B4D8); // Cyan active border from Yalla Shoot screenshot
     final activeStatusColor = widget.isConfirmed
         ? const Color(0xFF10B981) // Emerald (Confirmed)
         : const Color(0xFFF59E0B); // Amber (Probable)
+    final dotColor = hasLineup
+        ? (isSelected ? activeStatusColor : Colors.grey.shade600)
+        : (isSelected
+            ? const Color(0xFFF59E0B).withValues(alpha: 0.8)
+            : Colors.grey.shade600);
 
     return GestureDetector(
       onTap: onTap,
@@ -258,7 +265,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
               width: 7.5,
               height: 7.5,
               decoration: BoxDecoration(
-                color: isSelected ? activeStatusColor : Colors.grey.shade600,
+                color: dotColor,
                 shape: BoxShape.circle,
               ),
             ),
@@ -280,7 +287,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
               ),
             ),
 
-            // Formation Pill
+            // Formation Pill or Unavailable Badge
             if (team.formation != null && team.formation!.isNotEmpty) ...[
               const SizedBox(width: 7),
               Container(
@@ -299,6 +306,31 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                     color: isSelected
                         ? activeStatusColor
                         : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                  ),
+                ),
+              ),
+            ] else if (!hasLineup) ...[
+              const SizedBox(width: 7),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.08))
+                      : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.black.withValues(alpha: 0.08),
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  isArabic ? 'غير معلنة' : 'Unavailable',
+                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                   ),
                 ),
               ),
@@ -370,6 +402,23 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                     ),
                   ),
                 ),
+              ] else if (team.startingXi.isEmpty) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    isArabic ? 'غير معلنة' : 'Unavailable',
+                    style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ),
               ],
             ],
           ),
@@ -408,10 +457,128 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
   /// Tactical board layout for a single team attacking UP (GK at bottom, Strikers at top).
   Widget _buildSingleTeamPitch({
     required TeamLineupEntity team,
+    required TeamLineupEntity otherTeam,
     required bool isHome,
     required bool isDark,
     required bool isArabic,
   }) {
+    // If this team has no starting XI announced, show an elegant empty state overlay
+    if (team.startingXi.isEmpty) {
+      final otherHasLineup = otherTeam.startingXi.isNotEmpty;
+      final teamName = team.displayName.isNotEmpty
+          ? team.displayName
+          : (team.teamName ?? (isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
+      final otherName = otherTeam.displayName.isNotEmpty
+          ? otherTeam.displayName
+          : (otherTeam.teamName ?? (!isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
+
+      return Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.80),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.18),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.group_off_rounded,
+                  size: 24,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                isArabic ? 'لم يتم الإعلان عن التشكيلة' : 'Lineup Not Announced',
+                style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 5),
+              Text(
+                isArabic
+                    ? 'تشكيلة $teamName غير متوفرة حالياً'
+                    : 'Lineup for $teamName is not available yet',
+                style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                  fontSize: 11.5,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (otherHasLineup) ...[
+                const SizedBox(height: 14),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _onSelectTeam(isHome ? 1 : 0),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.primary,
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isArabic ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            isArabic
+                                ? 'عرض تشكيلة $otherName'
+                                : 'View $otherName Lineup',
+                            style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
     final rows = _groupSingleTeamTacticalRows(team);
 
     return Padding(
