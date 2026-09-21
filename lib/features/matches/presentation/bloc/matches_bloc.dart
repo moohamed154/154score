@@ -60,6 +60,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
          ),
        ) {
     on<LoadMatchesEvent>(_onLoadMatches);
+    on<PreloadMatchesEvent>(_onPreloadMatches);
     on<ChangeFilterEvent>(_onChangeFilter);
     on<ApplyMatchesFilterEvent>(_onApplyMatchesFilter);
     on<ResetMatchesFilterEvent>(_onResetMatchesFilter);
@@ -228,6 +229,52 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       if (event.completer != null && !event.completer!.isCompleted) {
         event.completer!.complete();
       }
+    }
+  }
+
+  /// Silently pre-warms the cache for [event.dates] in the background.
+  /// Never emits a loading/error state — invisible to the UI.
+  Future<void> _onPreloadMatches(
+    PreloadMatchesEvent event,
+    Emitter<MatchesState> emit,
+  ) async {
+    final lang = localStorageService.getLanguage();
+    final offset = localStorageService.getTimezoneOffset();
+
+    for (final date in event.dates) {
+      final dateStr = DateFormatter.toApiDateString(date);
+
+      // Skip if already cached and fresh (< 60 s old)
+      final cachedTime = _cachedDateTimes[dateStr];
+      final isFresh = cachedTime != null &&
+          DateTime.now().difference(cachedTime) < const Duration(seconds: 60);
+      if (isFresh) continue;
+
+      try {
+        final result = await repository.getMatchesByDate(
+          date: dateStr,
+          lang: lang,
+          utcOffset: offset,
+        );
+        result.fold(
+          onSuccess: (leagues) {
+            final favMatches = localStorageService.getFavoriteMatches();
+            final populated = leagues.map((l) {
+              return l.copyWith(
+                matches: l.matches.map((m) {
+                  return m.copyWith(isFavorite: favMatches.contains(m.id));
+                }).toList(),
+              );
+            }).toList();
+            _cachedDateLeagues[dateStr] = populated;
+            _cachedDateTimes[dateStr] = DateTime.now();
+          },
+          onFailure: (_) {}, // Silently ignore — preload is best-effort
+        );
+      } catch (_) {}
+
+      // Small stagger so we don't hammer the API
+      await Future<void>.delayed(const Duration(milliseconds: 300));
     }
   }
 

@@ -142,3 +142,14 @@ class LiveMatchesSnapshotReceivedEvent extends MatchesEvent {
   @override
   List<Object?> get props => [liveMatches];
 }
+
+/// Silently pre-warms the in-memory cache for a list of dates.
+/// Does NOT emit any UI state — purely a background operation.
+class PreloadMatchesEvent extends MatchesEvent {
+  final List<DateTime> dates;
+
+  const PreloadMatchesEvent(this.dates);
+
+  @override
+  List<Object?> get props => [dates];
+}

@@ -38,6 +38,18 @@ class _HomeViewState extends State<HomeView> {
     if (matchesBloc.state.status == MatchesStatus.initial) {
       matchesBloc.add(LoadMatchesEvent(date: matchesBloc.state.selectedDate));
     }
+
+    // After today renders, silently pre-warm yesterday & tomorrow in background
+    Future<void>.delayed(const Duration(milliseconds: 800), () {
+      if (!mounted) return;
+      final now = DateTime.now();
+      context.read<MatchesBloc>().add(
+        PreloadMatchesEvent([
+          now.subtract(const Duration(days: 1)), // yesterday
+          now.add(const Duration(days: 1)),       // tomorrow
+        ]),
+      );
+    });
   }
 
   @override
