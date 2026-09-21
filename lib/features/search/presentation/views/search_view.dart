@@ -110,7 +110,6 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Material(
               color: isDark ? AppColors.darkCard : AppColors.lightCard,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),

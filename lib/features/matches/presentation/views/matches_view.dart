@@ -56,54 +56,60 @@ class _MatchesViewState extends State<MatchesView> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          BlocBuilder<MatchesBloc, MatchesState>(
-            buildWhen: (prev, curr) => prev.selectedDate != curr.selectedDate,
-            builder: (context, state) {
-              return DateNavigationButtons(
-                selectedDate: state.selectedDate,
-                onDateSelected: (date) {
-                  context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+          Row(
+            textDirection: TextDirection.ltr,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: 4),
+              BlocBuilder<MatchesBloc, MatchesState>(
+                buildWhen: (prev, curr) => prev.selectedDate != curr.selectedDate,
+                builder: (context, state) {
+                  return DateNavigationButtons(
+                    selectedDate: state.selectedDate,
+                    onDateSelected: (date) {
+                      context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+                    },
+                    isDark: Theme.of(context).brightness == Brightness.dark,
+                  );
                 },
-                isDark: Theme.of(context).brightness == Brightness.dark,
-              );
-            },
+              ),
+              IconButton(
+                icon: Icon(_isSearchVisible ? Icons.close : Icons.search),
+                onPressed: () {
+                  setState(() {
+                    _isSearchVisible = !_isSearchVisible;
+                    if (!_isSearchVisible) {
+                      _searchController.clear();
+                      context.read<MatchesBloc>().add(const SearchMatchesEvent(''));
+                    }
+                  });
+                },
+              ),
+              BlocBuilder<MatchesBloc, MatchesState>(
+                buildWhen: (prev, curr) =>
+                    prev.hasActiveFilter != curr.hasActiveFilter,
+                builder: (context, state) {
+                  return IconButton(
+                    icon: Badge(
+                      isLabelVisible: state.hasActiveFilter,
+                      backgroundColor: AppColors.primary,
+                      smallSize: 8,
+                      child: Icon(
+                        state.hasActiveFilter
+                            ? Icons.filter_alt_rounded
+                            : Icons.filter_alt_outlined,
+                        color: state.hasActiveFilter ? AppColors.primary : null,
+                      ),
+                    ),
+                    tooltip:
+                        AppLocalizations.of(context).translate('filter_title'),
+                    onPressed: () => MatchFilterBottomSheet.show(context),
+                  );
+                },
+              ),
+              const SizedBox(width: 4),
+            ],
           ),
-          const SizedBox(width: 4),
-          IconButton(
-            icon: Icon(_isSearchVisible ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                _isSearchVisible = !_isSearchVisible;
-                if (!_isSearchVisible) {
-                  _searchController.clear();
-                  context.read<MatchesBloc>().add(const SearchMatchesEvent(''));
-                }
-              });
-            },
-          ),
-          BlocBuilder<MatchesBloc, MatchesState>(
-            buildWhen: (prev, curr) =>
-                prev.hasActiveFilter != curr.hasActiveFilter,
-            builder: (context, state) {
-              return IconButton(
-                icon: Badge(
-                  isLabelVisible: state.hasActiveFilter,
-                  backgroundColor: AppColors.primary,
-                  smallSize: 8,
-                  child: Icon(
-                    state.hasActiveFilter
-                        ? Icons.filter_alt_rounded
-                        : Icons.filter_alt_outlined,
-                    color: state.hasActiveFilter ? AppColors.primary : null,
-                  ),
-                ),
-                tooltip:
-                    AppLocalizations.of(context).translate('filter_title'),
-                onPressed: () => MatchFilterBottomSheet.show(context),
-              );
-            },
-          ),
-          const SizedBox(width: 4),
         ],
       ),
       body: BlocListener<FavoritesCubit, FavoritesState>(

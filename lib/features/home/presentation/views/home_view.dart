@@ -95,42 +95,49 @@ class _HomeViewState extends State<HomeView> {
                               ),
                         ),
                         const Spacer(),
-                        // Date Navigation Buttons (<, 📅, >)
-                        DateNavigationButtons(
-                          selectedDate: matchesState.selectedDate,
-                          onDateSelected: (date) {
-                            context.read<MatchesBloc>().add(
-                              LoadMatchesEvent(date: date),
-                            );
-                          },
-                          isDark: isDark,
-                        ),
-                        const SizedBox(width: 4),
-                        // Search Icon
-                        IconButton(
-                          icon: const Icon(Icons.search_rounded),
-                          tooltip: l10n.translate('nav_search'),
-                          onPressed: () => context.push('/search'),
-                        ),
-                        // Filter Icon with active badge indicator
-                        IconButton(
-                          icon: Badge(
-                            isLabelVisible: matchesState.hasActiveFilter,
-                            backgroundColor: AppColors.primary,
-                            smallSize: 8,
-                            child: Icon(
-                              matchesState.hasActiveFilter
-                                  ? Icons.filter_alt_rounded
-                                  : Icons.filter_alt_outlined,
-                              color: matchesState.hasActiveFilter
-                                  ? AppColors.primary
-                                  : null,
+                        // Actions row ordered from left: Date Selector -> Search -> Filter
+                        Row(
+                          textDirection: TextDirection.ltr,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(width: 4),
+                            // Date Navigation Buttons (<, 📅, >)
+                            DateNavigationButtons(
+                              selectedDate: matchesState.selectedDate,
+                              onDateSelected: (date) {
+                                context.read<MatchesBloc>().add(
+                                  LoadMatchesEvent(date: date),
+                                );
+                              },
+                              isDark: isDark,
                             ),
-                          ),
-                          tooltip: l10n.translate('filter_title'),
-                          onPressed: () => MatchFilterBottomSheet.show(context),
+                            // Search Icon
+                            IconButton(
+                              icon: const Icon(Icons.search_rounded),
+                              tooltip: l10n.translate('nav_search'),
+                              onPressed: () => context.push('/search'),
+                            ),
+                            // Filter Icon with active badge indicator
+                            IconButton(
+                              icon: Badge(
+                                isLabelVisible: matchesState.hasActiveFilter,
+                                backgroundColor: AppColors.primary,
+                                smallSize: 8,
+                                child: Icon(
+                                  matchesState.hasActiveFilter
+                                      ? Icons.filter_alt_rounded
+                                      : Icons.filter_alt_outlined,
+                                  color: matchesState.hasActiveFilter
+                                      ? AppColors.primary
+                                      : null,
+                                ),
+                              ),
+                              tooltip: l10n.translate('filter_title'),
+                              onPressed: () => MatchFilterBottomSheet.show(context),
+                            ),
+                            const SizedBox(width: 4),
+                          ],
                         ),
-                        const SizedBox(width: 4),
                       ],
                     ),
                   ),
