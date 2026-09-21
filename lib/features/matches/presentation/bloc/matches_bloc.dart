@@ -26,6 +26,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   final Set<String> _joinedLiveMatchRooms = <String>{};
   int _currentPollIntervalSeconds = 30;
   final Map<String, List<LeagueGroupEntity>> _cachedDateLeagues = {};
+  final Map<String, DateTime> _cachedDateTimes = {};
 
   static MatchFilterType _parseSavedFilter(String? val) {
     if (val == null) return MatchFilterType.all;
@@ -125,6 +126,17 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           errorMessage: null,
         ),
       );
+
+      final cachedTime = _cachedDateTimes[dateStr];
+      final isFresh = cachedTime != null &&
+          DateTime.now().difference(cachedTime) < const Duration(seconds: 20);
+
+      if (isFresh) {
+        if (event.completer != null && !event.completer!.isCompleted) {
+          event.completer!.complete();
+        }
+        return;
+      }
     } else if (!event.isRefresh) {
       emit(
         state.copyWith(status: MatchesStatus.loading, selectedDate: event.date),
@@ -134,19 +146,12 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     try {
       final lang = localStorageService.getLanguage();
       final offset = localStorageService.getTimezoneOffset();
-      final isToday = DateFormatter.isToday(event.date);
 
-      final matchesFuture = repository.getMatchesByDate(
+      final result = await repository.getMatchesByDate(
         date: dateStr,
         lang: lang,
         utcOffset: offset,
       );
-      final liveFuture = isToday
-          ? repository.getLiveMatchesFlat(lang: lang, utcOffset: offset)
-          : null;
-
-      final result = await matchesFuture;
-      final liveResult = liveFuture != null ? await liveFuture : null;
 
       try {
         webSocketService.recordRestFallback(
@@ -158,18 +163,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
       result.fold(
         onSuccess: (leagues) {
-          var populatedLeagues = leagues;
-          if (liveResult != null) {
-            liveResult.fold(
-              onSuccess: (liveList) {
-                populatedLeagues = _overlayLiveMatches(leagues, liveList);
-              },
-              onFailure: (_) {},
-            );
-          }
-
           final favMatches = localStorageService.getFavoriteMatches();
-          final populatedWithFavs = populatedLeagues.map((l) {
+          final populatedWithFavs = leagues.map((l) {
             return l.copyWith(
               matches: l.matches.map((m) {
                 return m.copyWith(isFavorite: favMatches.contains(m.id));
@@ -179,6 +174,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
           // Update in-memory date cache
           _cachedDateLeagues[dateStr] = populatedWithFavs;
+          _cachedDateTimes[dateStr] = DateTime.now();
 
           final reconciledLeagues =
               RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(

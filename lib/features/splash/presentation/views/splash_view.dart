@@ -9,7 +9,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/network_info.dart';
-import '../../../home/presentation/cubit/home_cubit.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
@@ -49,11 +48,9 @@ class _SplashViewState extends State<SplashView>
   bool _isOffline = false;
   bool _hasNavigated = false;
   bool _matchesLoaded = false;
-  bool _homeLoaded = false;
 
   StreamSubscription<bool>? _connectivitySubscription;
   StreamSubscription<MatchesState>? _matchesSubscription;
-  StreamSubscription<HomeState>? _homeSubscription;
   Timer? _timeoutTimer;
   Timer? _staggerTimer;
 
@@ -139,13 +136,12 @@ class _SplashViewState extends State<SplashView>
 
   /// Starts the real loading sequence:
   /// 1. Verifies internet connectivity.
-  /// 2. Dispatches and listens to real data loads (MatchesBloc & HomeCubit).
+  /// 2. Dispatches and listens to MatchesBloc preload.
   /// 3. Advances progress bar based on real completion events.
   Future<void> _startRealLoading() async {
     setState(() {
       _isOffline = false;
       _matchesLoaded = false;
-      _homeLoaded = false;
     });
 
     _setTargetProgress(0.15);
@@ -179,10 +175,9 @@ class _SplashViewState extends State<SplashView>
     // Network is verified
     _setTargetProgress(0.35);
 
-    // 2. Dispatch and Monitor Preload Operations
+    // 2. Dispatch and Monitor Preload Operations (MatchesBloc only)
     bool hasFeeds = false;
 
-    // A. MatchesBloc Preload
     if (!mounted) return;
     try {
       final matchesBloc = context.read<MatchesBloc>();
@@ -202,30 +197,6 @@ class _SplashViewState extends State<SplashView>
 
         if (matchesBloc.state.status == MatchesStatus.initial) {
           matchesBloc.add(LoadMatchesEvent(date: matchesBloc.state.selectedDate));
-        }
-      }
-    } catch (_) {}
-
-    // B. HomeCubit Preload
-    if (!mounted) return;
-    try {
-      final homeCubit = context.read<HomeCubit>();
-      hasFeeds = true;
-
-      if (homeCubit.state.status == HomeStatus.success) {
-        _onHomeLoaded();
-      } else {
-        unawaited(_homeSubscription?.cancel());
-        _homeSubscription = homeCubit.stream.listen((state) {
-          if (state.status == HomeStatus.success) {
-            _onHomeLoaded();
-          } else if (state.status == HomeStatus.error) {
-            _onServiceError();
-          }
-        });
-
-        if (homeCubit.state.status == HomeStatus.initial) {
-          unawaited(homeCubit.loadHomeData());
         }
       }
     } catch (_) {}
@@ -257,17 +228,9 @@ class _SplashViewState extends State<SplashView>
     _checkOverallProgress();
   }
 
-  void _onHomeLoaded() {
-    if (_homeLoaded || !mounted) return;
-    _homeLoaded = true;
-    unawaited(_homeSubscription?.cancel());
-    _checkOverallProgress();
-  }
-
   void _onServiceError() {
     if (!mounted) return;
-    // If both services failed, check if connection was lost
-    if (!_matchesLoaded && !_homeLoaded) {
+    if (!_matchesLoaded) {
       try {
         if (sl.isRegistered<NetworkInfo>()) {
           unawaited(sl<NetworkInfo>().isConnected.then((connected) {
@@ -283,10 +246,8 @@ class _SplashViewState extends State<SplashView>
   }
 
   void _checkOverallProgress() {
-    if (_matchesLoaded && _homeLoaded) {
+    if (_matchesLoaded) {
       _setTargetProgress(1.0);
-    } else if (_matchesLoaded || _homeLoaded) {
-      _setTargetProgress(0.70);
     }
   }
 
@@ -343,7 +304,6 @@ class _SplashViewState extends State<SplashView>
   void dispose() {
     unawaited(_connectivitySubscription?.cancel());
     unawaited(_matchesSubscription?.cancel());
-    unawaited(_homeSubscription?.cancel());
     _timeoutTimer?.cancel();
     _staggerTimer?.cancel();
 

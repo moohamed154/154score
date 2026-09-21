@@ -94,15 +94,24 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
     final offset = localStorageService.getTimezoneOffset();
 
     try {
-      Future<ApiResult<MatchEventsPayload>>? eventsFuture;
+      Future<ApiResult<MatchEventsPayload>> eventsFuture;
       try {
         eventsFuture = repository.getEventsPayload(cleanTarget, lang: lang);
       } catch (_) {
-        eventsFuture = null;
+        eventsFuture = repository.getEvents(cleanTarget, lang: lang).then(
+          (res) => ApiSuccess(MatchEventsPayload(events: res.dataOrNull ?? const [])),
+        );
       }
+      eventsFuture = eventsFuture.catchError((_) async {
+        try {
+          final fb = await repository.getEvents(cleanTarget, lang: lang);
+          return ApiSuccess(MatchEventsPayload(events: fb.dataOrNull ?? const []));
+        } catch (_) {
+          return const ApiSuccess(MatchEventsPayload());
+        }
+      });
 
-      final statsFuture = repository.getStats(cleanTarget, lang: lang);
-      Future<ApiResult<MatchDetailsPayload>>? detailsFuture;
+      Future<ApiResult<MatchDetailsPayload>> detailsFuture;
       try {
         detailsFuture = repository.getDetailsPayload(
           cleanTarget,
@@ -110,75 +119,46 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           utcOffset: offset,
         );
       } catch (_) {
-        detailsFuture = null;
+        detailsFuture = repository.getDetails(
+          cleanTarget,
+          lang: lang,
+          utcOffset: offset,
+        ).then(
+          (res) => ApiSuccess(MatchDetailsPayload(sections: res.dataOrNull ?? const [])),
+        );
       }
-
-      final newsFuture = repository.getNews(cleanTarget, lang: lang);
-      Future<ApiResult<MatchLineupEntity?>>? lineupsFuture;
-      try {
-        lineupsFuture = repository.getLineups(cleanTarget, lang: lang);
-      } catch (_) {
-        lineupsFuture = null;
-      }
-
-      MatchEventsPayload? eventsPayloadRes;
-      if (eventsFuture != null) {
+      detailsFuture = detailsFuture.catchError((_) async {
         try {
-          eventsPayloadRes = (await eventsFuture).dataOrNull;
+          final fb = await repository.getDetails(cleanTarget, lang: lang, utcOffset: offset);
+          return ApiSuccess(MatchDetailsPayload(sections: fb.dataOrNull ?? const []));
         } catch (_) {
-          eventsPayloadRes = null;
+          return const ApiSuccess(MatchDetailsPayload());
         }
-      }
+      });
 
-      if (eventsPayloadRes == null) {
-        try {
-          final fallbackEvents = (await repository.getEvents(
-            cleanTarget,
-            lang: lang,
-          )).dataOrNull ?? [];
-          eventsPayloadRes = MatchEventsPayload(events: fallbackEvents);
-        } catch (_) {
-          eventsPayloadRes = const MatchEventsPayload();
-        }
-      }
+      final statsFuture = repository
+          .getStats(cleanTarget, lang: lang)
+          .catchError((_) => const ApiSuccess<List<MatchStatItemEntity>>([]));
+      final newsFuture = repository
+          .getNews(cleanTarget, lang: lang)
+          .catchError((_) => const ApiSuccess<List<MatchNewsItemEntity>>([]));
+      final lineupsFuture = repository
+          .getLineups(cleanTarget, lang: lang)
+          .catchError((_) => const ApiSuccess<MatchLineupEntity?>(null));
+
+      // 1. Await primary core data (events & details/overview) for immediate screen render
+      final primaryResults = await Future.wait([eventsFuture, detailsFuture]);
+      final eventsPayloadRes =
+          (primaryResults[0] as ApiResult<MatchEventsPayload>).dataOrNull ??
+          const MatchEventsPayload();
+      final detailsPayload =
+          (primaryResults[1] as ApiResult<MatchDetailsPayload>).dataOrNull ??
+          const MatchDetailsPayload();
 
       final eventsRes = eventsPayloadRes.events;
       final videosRes = eventsPayloadRes.videos;
-      final statsRes = (await statsFuture).dataOrNull ?? [];
-
-      MatchDetailsPayload? detailsPayload;
-      if (detailsFuture != null) {
-        try {
-          detailsPayload = (await detailsFuture).dataOrNull;
-        } catch (_) {
-          detailsPayload = null;
-        }
-      }
-
-      if (detailsPayload == null) {
-        try {
-          final fallbackSections = (await repository.getDetails(
-            cleanTarget,
-            lang: lang,
-            utcOffset: offset,
-          )).dataOrNull ?? [];
-          detailsPayload = MatchDetailsPayload(sections: fallbackSections);
-        } catch (_) {
-          detailsPayload = const MatchDetailsPayload();
-        }
-      }
-
       final detailsRes = detailsPayload.sections;
       final overviewRes = detailsPayload.overview;
-      final newsRes = (await newsFuture).dataOrNull ?? [];
-      MatchLineupEntity? lineupsRes;
-      if (lineupsFuture != null) {
-        try {
-          lineupsRes = (await lineupsFuture).dataOrNull;
-        } catch (_) {
-          lineupsRes = null;
-        }
-      }
 
       final resolvedHalfScores =
           eventsPayloadRes.halfScores ?? state.halfScores;
@@ -188,12 +168,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         hasExtraTime: MatchEventHelper.hasExtraTimeInHalfScores(resolvedHalfScores),
       );
       final resolvedVideos = videosRes.isNotEmpty ? videosRes : state.videos;
-      final resolvedStats = statsRes.isNotEmpty ? statsRes : state.stats;
       final resolvedDetails = detailsRes.isNotEmpty ? detailsRes : state.details;
       final resolvedOverview = overviewRes ?? state.overview;
-      final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
-      final rawLineup = lineupsRes ?? state.lineup;
-      final resolvedLineup = _enrichLineupWithEvents(rawLineup, resolvedEvents);
       final resolvedChampionshipId =
           eventsPayloadRes.championshipId ??
           resolvedOverview?.championshipId ??
@@ -229,7 +205,6 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final hasFinishedEvent = resolvedEvents.any((e) {
         if (!e.isPeriodMarker) return false;
         final name = e.playerName.trim().toLowerCase();
-        // Exclude first half, half time, or start markers
         if (name.contains('الأول') ||
             name.contains('اول') ||
             name.contains('1st') ||
@@ -278,17 +253,15 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         }
       }
 
+      // Staged Emission 1: Show screen, score hero banner, and Events tab immediately!
       emit(
         state.copyWith(
           status: MatchDetailsStatus.success,
           matchId: cleanTarget,
           events: resolvedEvents,
           videos: resolvedVideos,
-          stats: resolvedStats,
           details: resolvedDetails,
           overview: resolvedOverview,
-          news: resolvedNews,
-          lineup: resolvedLineup,
           championshipId: resolvedChampionshipId,
           halfScores: resolvedHalfScores,
           liveScore1: calculatedScore1,
@@ -299,11 +272,37 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         ),
       );
 
-      // If initial load yielded empty events and stats, schedule a fast background re-check
-      // to capture freshly warmed SWR cache from upstream without manual pull-to-refresh
-      if (!event.isRefresh && resolvedEvents.isEmpty && resolvedStats.isEmpty) {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
+
+      // 2. Await secondary data (stats, lineups, news) and update state seamlessly
+      final secondaryResults = await Future.wait([statsFuture, lineupsFuture, newsFuture]);
+      if (isClosed) return;
+
+      final statsRes =
+          (secondaryResults[0] as ApiResult<List<MatchStatItemEntity>>).dataOrNull ?? [];
+      final lineupsRes =
+          (secondaryResults[1] as ApiResult<MatchLineupEntity?>).dataOrNull;
+      final newsRes =
+          (secondaryResults[2] as ApiResult<List<MatchNewsItemEntity>>).dataOrNull ?? [];
+
+      final resolvedStats = statsRes.isNotEmpty ? statsRes : state.stats;
+      final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
+      final rawLineup = lineupsRes ?? state.lineup;
+      final resolvedLineup = _enrichLineupWithEvents(rawLineup, state.events);
+
+      emit(
+        state.copyWith(
+          stats: resolvedStats,
+          news: resolvedNews,
+          lineup: resolvedLineup,
+        ),
+      );
+
+      if (!event.isRefresh && isCurrentlyLive && resolvedEvents.isEmpty && resolvedStats.isEmpty) {
         _debounceRefreshTimer?.cancel();
-        _debounceRefreshTimer = Timer(const Duration(milliseconds: 1600), () {
+        _debounceRefreshTimer = Timer(const Duration(milliseconds: 2000), () {
           if (!isClosed) {
             add(LoadMatchDetailsEvent(cleanTarget, isRefresh: true));
           }

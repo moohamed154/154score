@@ -57,13 +57,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     required String lang,
   }) async {
     final cleanId = _cleanMatchId(matchId);
-    var payload = await _fetchEventsPayload(cleanId, lang: lang);
-    if (payload.events.isEmpty && payload.videos.isEmpty) {
-      // Backend SWR may be revalidating on cold cache; wait briefly and retry once
-      await Future.delayed(const Duration(milliseconds: 750));
-      payload = await _fetchEventsPayload(cleanId, lang: lang);
-    }
-    return payload;
+    return await _fetchEventsPayload(cleanId, lang: lang);
   }
 
   @override
@@ -367,13 +361,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     required String lang,
   }) async {
     final cleanId = _cleanMatchId(matchId);
-    var stats = await _fetchStats(cleanId, lang: lang);
-    if (stats.isEmpty) {
-      // Backend SWR may be revalidating on cold cache; wait briefly and retry once
-      await Future.delayed(const Duration(milliseconds: 750));
-      stats = await _fetchStats(cleanId, lang: lang);
-    }
-    return stats;
+    return await _fetchStats(cleanId, lang: lang);
   }
 
   Future<List<MatchStatItemEntity>> _fetchStats(

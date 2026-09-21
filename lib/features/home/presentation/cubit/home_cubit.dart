@@ -61,6 +61,9 @@ class HomeCubit extends Cubit<HomeState> {
   final TransfersRepository _transfersRepository;
   final LocalStorageService _localStorageService;
 
+  DateTime? _lastLoadedTime;
+  static const _homeDataTtl = Duration(minutes: 5);
+
   HomeCubit({
     required this._videosRepository,
     required this._transfersRepository,
@@ -70,6 +73,13 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> loadHomeData({bool isRefresh = false}) async {
     final hasExistingData =
         state.recentVideos.isNotEmpty || state.recentTransfers.isNotEmpty;
+
+    if (!isRefresh &&
+        hasExistingData &&
+        _lastLoadedTime != null &&
+        DateTime.now().difference(_lastLoadedTime!) < _homeDataTtl) {
+      return;
+    }
 
     if (!isRefresh && !hasExistingData) {
       emit(state.copyWith(status: HomeStatus.loading));
@@ -85,6 +95,8 @@ class HomeCubit extends Cubit<HomeState> {
 
       final videosRes = results[0].dataOrNull as List<VideoItemEntity>? ?? [];
       final transfersRes = results[1].dataOrNull as List<TransferEntity>? ?? [];
+
+      _lastLoadedTime = DateTime.now();
 
       emit(
         state.copyWith(

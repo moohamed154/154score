@@ -212,6 +212,9 @@ class MatchesRepositoryImpl implements MatchesRepository {
     }
   }
 
+  final Map<String, ({List<LeagueGroupDto> dtos, DateTime timestamp})>
+      _dateMatchesCache = {};
+
   @override
   Future<ApiResult<List<LeagueGroupEntity>>> getMatchesByDate({
     required String date,
@@ -221,9 +224,21 @@ class MatchesRepositoryImpl implements MatchesRepository {
     String? leagueId,
     String? sort,
   }) async {
-    try {
-      final isToday = date == DateFormatter.toApiDateString(DateTime.now());
+    final isToday = date == DateFormatter.toApiDateString(DateTime.now());
+    final cacheKey = '$date-$lang-${utcOffset ?? 0}-$status-$leagueId-$sort';
+    final ttl = isToday ? const Duration(seconds: 20) : const Duration(minutes: 5);
 
+    final cached = _dateMatchesCache[cacheKey];
+    final favoriteMatches = _localStorageService.getFavoriteMatches();
+
+    if (cached != null && DateTime.now().difference(cached.timestamp) < ttl) {
+      final entities = cached.dtos
+          .map((dto) => dto.toEntity(favoriteMatches: favoriteMatches))
+          .toList();
+      return ApiSuccess(entities);
+    }
+
+    try {
       final matchesFuture = _remoteDataSource.getMatchesByDate(
         date: date,
         lang: lang,
@@ -253,19 +268,37 @@ class MatchesRepositoryImpl implements MatchesRepository {
         dtos = _reconcileWithLiveMatches(dtos, liveDtos);
       }
 
-      final favoriteMatches = _localStorageService.getFavoriteMatches();
+      _dateMatchesCache[cacheKey] = (dtos: dtos, timestamp: DateTime.now());
+
       final entities = dtos
           .map((dto) => dto.toEntity(favoriteMatches: favoriteMatches))
           .toList();
 
       return ApiSuccess(entities);
     } on NetworkException catch (e) {
+      if (cached != null) {
+        final entities = cached.dtos
+            .map((dto) => dto.toEntity(favoriteMatches: favoriteMatches))
+            .toList();
+        return ApiSuccess(entities);
+      }
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
+      if (cached != null) {
+        final entities = cached.dtos
+            .map((dto) => dto.toEntity(favoriteMatches: favoriteMatches))
+            .toList();
+        return ApiSuccess(entities);
+      }
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
+      if (cached != null) {
+        final entities = cached.dtos
+            .map((dto) => dto.toEntity(favoriteMatches: favoriteMatches))
+            .toList();
+        return ApiSuccess(entities);
+      }
       return ApiFailure(ServerFailure('Failed to load matches for date $date: $e'));
     }
-
   }
 }

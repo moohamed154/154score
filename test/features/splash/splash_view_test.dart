@@ -171,12 +171,11 @@ void main() {
       // First frame post-callback dispatches real load
       await tester.pump(const Duration(milliseconds: 100));
 
-      verify(() => mockHome.loadHomeData()).called(1);
+      verifyNever(() => mockHome.loadHomeData());
       verify(() => mockMatches.add(any(that: isA<LoadMatchesEvent>()))).called(1);
 
-      // Emit real success events from both services
+      // Emit real success event from matches
       matchesController.add(initialMatchesState.copyWith(status: MatchesStatus.success));
-      homeController.add(const HomeState(status: HomeStatus.success));
 
       // Advance animation for progress bar to reach 100% and exit
       await tester.pump(const Duration(milliseconds: 400));

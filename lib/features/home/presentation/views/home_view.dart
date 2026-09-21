@@ -21,10 +21,7 @@ import '../../../matches/presentation/widgets/horizontal_date_selector.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
 import '../../../matches/presentation/widgets/match_filter_bottom_sheet.dart';
-import '../../../transfers/presentation/widgets/transfer_card.dart';
-import '../../../videos/presentation/widgets/video_card.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
-import '../cubit/home_cubit.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -37,10 +34,6 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    final homeCubit = context.read<HomeCubit>();
-    if (homeCubit.state.status == HomeStatus.initial) {
-      homeCubit.loadHomeData();
-    }
     final matchesBloc = context.read<MatchesBloc>();
     if (matchesBloc.state.status == MatchesStatus.initial) {
       matchesBloc.add(LoadMatchesEvent(date: matchesBloc.state.selectedDate));
@@ -157,76 +150,54 @@ class _HomeViewState extends State<HomeView> {
 
       body: BlocBuilder<MatchesBloc, MatchesState>(
         builder: (context, matchesState) {
-          return BlocBuilder<HomeCubit, HomeState>(
-            builder: (context, homeState) {
-              final isHomeLoading =
-                  (matchesState.status == MatchesStatus.loading ||
-                      matchesState.status == MatchesStatus.initial) &&
-                  matchesState.allLeagues.isEmpty;
+          final isHomeLoading =
+              (matchesState.status == MatchesStatus.loading ||
+                  matchesState.status == MatchesStatus.initial) &&
+              matchesState.allLeagues.isEmpty;
 
-              return RefreshIndicator(
-                color: AppColors.primary,
-                onRefresh: () async {
-                  final matchesCompleter = Completer<void>();
-                  context.read<MatchesBloc>().add(
-                    LoadMatchesEvent(
-                      date: matchesState.selectedDate,
-                      isRefresh: true,
-                      completer: matchesCompleter,
-                    ),
-                  );
-                  final homeFuture = context.read<HomeCubit>().loadHomeData(
-                    isRefresh: true,
-                  );
-
-                  try {
-                    await Future.wait([homeFuture, matchesCompleter.future])
-                        .timeout(const Duration(seconds: 3));
-                  } catch (_) {}
-                },
-                child: ListView(
-                  padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-                  children: [
-                    const SizedBox(height: 12),
-
-                    if (isHomeLoading)
-                      _buildMatchesSkeleton(context, isDark, isArabic)
-                    else ...[
-                      // 1. LIVE NOW Section (if any live matches)
-                      _buildLiveNowSection(
-                        context,
-                        matchesState,
-                        isDark,
-                        isArabic,
-                      ),
-
-                      // 2. Matches for Selected Date
-                      _buildMatchesSection(
-                        context,
-                        matchesState,
-                        isDark,
-                        isArabic,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // 3. Featured Highlights & Videos
-                      _buildVideosSection(context, homeState, isDark, isArabic),
-
-                      const SizedBox(height: 16),
-
-                      // 4. Latest Transfer News
-                      _buildTransfersSection(
-                        context,
-                        homeState,
-                        isDark,
-                        isArabic,
-                      ),
-                    ],
-                  ],
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              final matchesCompleter = Completer<void>();
+              context.read<MatchesBloc>().add(
+                LoadMatchesEvent(
+                  date: matchesState.selectedDate,
+                  isRefresh: true,
+                  completer: matchesCompleter,
                 ),
               );
+
+              try {
+                await matchesCompleter.future
+                    .timeout(const Duration(seconds: 3));
+              } catch (_) {}
             },
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+              children: [
+                const SizedBox(height: 12),
+
+                if (isHomeLoading)
+                  _buildMatchesSkeleton(context, isDark, isArabic)
+                else ...[
+                  // 1. LIVE NOW Section (if any live matches)
+                  _buildLiveNowSection(
+                    context,
+                    matchesState,
+                    isDark,
+                    isArabic,
+                  ),
+
+                  // 2. Matches for Selected Date
+                  _buildMatchesSection(
+                    context,
+                    matchesState,
+                    isDark,
+                    isArabic,
+                  ),
+                ],
+              ],
+            ),
           );
         },
       ),
@@ -458,69 +429,6 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildVideosSection(
-    BuildContext context,
-    HomeState state,
-    bool isDark,
-    bool isArabic,
-  ) {
-    final l10n = AppLocalizations.of(context);
-
-    if (state.recentVideos.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(
-          title: l10n.translate('latest_videos'),
-          actionText: l10n.translate('view_all'),
-          onActionTap: () => context.go('/videos'),
-        ),
-        SizedBox(
-          height: 180,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
-            itemCount: state.recentVideos.take(8).length,
-            itemBuilder: (context, index) {
-              return VideoCard(
-                video: state.recentVideos[index],
-                isHorizontal: true,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTransfersSection(
-    BuildContext context,
-    HomeState state,
-    bool isDark,
-    bool isArabic,
-  ) {
-    final l10n = AppLocalizations.of(context);
-
-    if (state.recentTransfers.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(
-          title: l10n.translate('latest_transfers'),
-          actionText: l10n.translate('view_all'),
-          onActionTap: () => context.go('/transfers'),
-        ),
-        ...state.recentTransfers.take(3).map((t) => TransferCard(transfer: t)),
       ],
     );
   }

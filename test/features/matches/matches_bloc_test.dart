@@ -1,4 +1,4 @@
-﻿import 'package:bloc_test/bloc_test.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/network/api_result.dart';
@@ -36,6 +36,14 @@ void main() {
     when(() => mockStorage.getFavoriteTeams()).thenReturn([]);
     when(() => mockStorage.getMatchesFilter()).thenReturn(null);
     when(() => mockStorage.getMatchesSortOrder()).thenReturn(null);
+    when(
+      () => mockStorage.isFavoriteCompetition(
+        compName: any(named: 'compName'),
+        id: any(named: 'id'),
+        name: any(named: 'name'),
+        slug: any(named: 'slug'),
+      ),
+    ).thenReturn(false);
     when(() => mockStorage.setMatchesFilter(any())).thenAnswer((_) async => true);
     when(() => mockStorage.setMatchesSortOrder(any())).thenAnswer((_) async => true);
   });
