@@ -200,11 +200,11 @@ class _HomeViewState extends State<HomeView> {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
               children: [
-                // Today's date label
+                // Selected date label (updates when swiping days)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                   child: Text(
-                    _formatTodayDate(isArabic),
+                    _formatDate(matchesState.selectedDate, isArabic),
                     style: AppTypography.getBodySmall(
                       isDark: isDark,
                       isArabic: isArabic,
@@ -244,8 +244,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  String _formatTodayDate(bool isArabic) {
-    final now = DateTime.now();
+  String _formatDate(DateTime date, bool isArabic) {
     const englishDays = [
       'Monday', 'Tuesday', 'Wednesday', 'Thursday',
       'Friday', 'Saturday', 'Sunday',
@@ -254,11 +253,11 @@ class _HomeViewState extends State<HomeView> {
       'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس',
       'الجمعة', 'السبت', 'الأحد',
     ];
-    final dayIndex = now.weekday - 1; // weekday: 1=Monday … 7=Sunday
+    final dayIndex = date.weekday - 1; // weekday: 1=Monday … 7=Sunday
     final dayName = isArabic ? arabicDays[dayIndex] : englishDays[dayIndex];
-    final dd = now.day.toString().padLeft(2, '0');
-    final mm = now.month.toString().padLeft(2, '0');
-    final yyyy = now.year.toString();
+    final dd = date.day.toString().padLeft(2, '0');
+    final mm = date.month.toString().padLeft(2, '0');
+    final yyyy = date.year.toString();
     return '$dayName, $dd/$mm/$yyyy';
   }
 
