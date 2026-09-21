@@ -21,6 +21,7 @@ import '../../../matches/presentation/widgets/date_navigation_buttons.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
 import '../../../matches/presentation/widgets/match_filter_bottom_sheet.dart';
+import '../../../matches/presentation/widgets/swipe_date_detector.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 
 class HomeView extends StatefulWidget {
@@ -174,25 +175,30 @@ class _HomeViewState extends State<HomeView> {
                   matchesState.status == MatchesStatus.initial) &&
               matchesState.allLeagues.isEmpty;
 
-          return RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: () async {
-              final matchesCompleter = Completer<void>();
-              context.read<MatchesBloc>().add(
-                LoadMatchesEvent(
-                  date: matchesState.selectedDate,
-                  isRefresh: true,
-                  completer: matchesCompleter,
-                ),
-              );
-
-              try {
-                await matchesCompleter.future
-                    .timeout(const Duration(seconds: 3));
-              } catch (_) {}
+          return SwipeDateDetector(
+            currentDate: matchesState.selectedDate,
+            onDateChanged: (date) {
+              context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
             },
-            child: ListView(
-              padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async {
+                final matchesCompleter = Completer<void>();
+                context.read<MatchesBloc>().add(
+                  LoadMatchesEvent(
+                    date: matchesState.selectedDate,
+                    isRefresh: true,
+                    completer: matchesCompleter,
+                  ),
+                );
+
+                try {
+                  await matchesCompleter.future
+                      .timeout(const Duration(seconds: 3));
+                } catch (_) {}
+              },
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
               children: [
                 // Today's date label
                 Padding(
@@ -230,6 +236,7 @@ class _HomeViewState extends State<HomeView> {
                   ),
                 ],
               ],
+            ),
             ),
           );
         },

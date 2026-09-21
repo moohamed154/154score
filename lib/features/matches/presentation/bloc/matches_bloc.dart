@@ -140,7 +140,12 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       }
     } else if (!event.isRefresh) {
       emit(
-        state.copyWith(status: MatchesStatus.loading, selectedDate: event.date),
+        state.copyWith(
+          status: MatchesStatus.loading,
+          selectedDate: event.date,
+          allLeagues: [],       // clear stale data → skeleton shows
+          filteredLeagues: [],
+        ),
       );
     }
 

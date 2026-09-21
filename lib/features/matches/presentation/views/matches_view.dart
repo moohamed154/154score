@@ -20,6 +20,7 @@ import '../widgets/horizontal_date_selector.dart';
 import '../widgets/league_section_widget.dart';
 import '../widgets/match_filter_bottom_sheet.dart';
 import '../widgets/match_filters_bar.dart';
+import '../widgets/swipe_date_detector.dart';
 
 class MatchesView extends StatefulWidget {
   const MatchesView({super.key});
@@ -124,8 +125,13 @@ class _MatchesViewState extends State<MatchesView> {
         },
         child: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, state) {
-          return Column(
-            children: [
+          return SwipeDateDetector(
+            currentDate: state.selectedDate,
+            onDateChanged: (date) {
+              context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+            },
+            child: Column(
+              children: [
               // 1. Date Selector Strip
               HorizontalDateSelector(
                 selectedDate: state.selectedDate,
@@ -196,6 +202,7 @@ class _MatchesViewState extends State<MatchesView> {
                 ),
               ),
             ],
+            ),
           );
         },
       ),
