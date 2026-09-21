@@ -15,6 +15,7 @@ import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../bloc/matches_bloc.dart';
 import '../bloc/matches_event.dart';
 import '../bloc/matches_state.dart';
+import '../widgets/date_navigation_buttons.dart';
 import '../widgets/horizontal_date_selector.dart';
 import '../widgets/league_section_widget.dart';
 import '../widgets/match_filter_bottom_sheet.dart';
@@ -55,6 +56,19 @@ class _MatchesViewState extends State<MatchesView> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          BlocBuilder<MatchesBloc, MatchesState>(
+            buildWhen: (prev, curr) => prev.selectedDate != curr.selectedDate,
+            builder: (context, state) {
+              return DateNavigationButtons(
+                selectedDate: state.selectedDate,
+                onDateSelected: (date) {
+                  context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+                },
+                isDark: Theme.of(context).brightness == Brightness.dark,
+              );
+            },
+          ),
+          const SizedBox(width: 4),
           IconButton(
             icon: Icon(_isSearchVisible ? Icons.close : Icons.search),
             onPressed: () {

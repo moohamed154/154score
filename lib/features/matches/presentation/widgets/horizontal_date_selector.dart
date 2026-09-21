@@ -10,11 +10,13 @@ import '../../../../core/theme/app_theme.dart';
 class HorizontalDateSelector extends StatefulWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateSelected;
+  final bool showNavigationButtons;
 
   const HorizontalDateSelector({
     super.key,
     required this.selectedDate,
     required this.onDateSelected,
+    this.showNavigationButtons = false,
   });
 
   @override
@@ -204,90 +206,91 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                   ),
                 ),
 
-                const SizedBox(width: 4),
+                if (widget.showNavigationButtons) ...[
+                  const SizedBox(width: 4),
 
-                // Previous Day Arrow
-                _buildArrowButton(
-                  context: context,
-                  isDark: isDark,
-                  icon: Icons.chevron_left_rounded,
-                  onTap: () {
-                    final prev = widget.selectedDate.subtract(const Duration(days: 1));
-                    widget.onDateSelected(prev);
-                  },
-                ),
-
-
-                const SizedBox(width: 2),
-
-                // Calendar Picker Icon Button
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: widget.selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                        builder: (context, child) {
-                          return Theme(
-                            data: isDark
-                                ? AppTheme.darkTheme
-                                : AppTheme.lightTheme,
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (picked != null) {
-                        widget.onDateSelected(picked);
-                      }
+                  // Previous Day Arrow
+                  _buildArrowButton(
+                    context: context,
+                    isDark: isDark,
+                    icon: Icons.chevron_left_rounded,
+                    onTap: () {
+                      final prev = widget.selectedDate.subtract(const Duration(days: 1));
+                      widget.onDateSelected(prev);
                     },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: !isSelectedInStandardRange
-                            ? AppColors.primary
-                            : (isDark
-                                  ? AppColors.darkCard
-                                  : AppColors.lightCard),
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusMd,
-                        ),
-                        border: Border.all(
+                  ),
+
+                  const SizedBox(width: 2),
+
+                  // Calendar Picker Icon Button
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: widget.selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                          builder: (context, child) {
+                            return Theme(
+                              data: isDark
+                                  ? AppTheme.darkTheme
+                                  : AppTheme.lightTheme,
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) {
+                          widget.onDateSelected(picked);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
                           color: !isSelectedInStandardRange
-                              ? Colors.transparent
+                              ? AppColors.primary
                               : (isDark
-                                    ? AppColors.darkBorder
-                                    : AppColors.lightBorder),
+                                    ? AppColors.darkCard
+                                    : AppColors.lightCard),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusMd,
+                          ),
+                          border: Border.all(
+                            color: !isSelectedInStandardRange
+                                ? Colors.transparent
+                                : (isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.lightBorder),
+                          ),
                         ),
-                      ),
-                      child: Icon(
-                        Icons.calendar_month_rounded,
-                        color: !isSelectedInStandardRange
-                            ? Colors.black
-                            : (isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary),
-                        size: 20,
+                        child: Icon(
+                          Icons.calendar_month_rounded,
+                          color: !isSelectedInStandardRange
+                              ? Colors.black
+                              : (isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary),
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                const SizedBox(width: 2),
+                  const SizedBox(width: 2),
 
-                // Next Day Arrow
-                _buildArrowButton(
-                  context: context,
-                  isDark: isDark,
-                  icon: Icons.chevron_right_rounded,
-                  onTap: () {
-                    final next = widget.selectedDate.add(const Duration(days: 1));
-                    widget.onDateSelected(next);
-                  },
-                ),
+                  // Next Day Arrow
+                  _buildArrowButton(
+                    context: context,
+                    isDark: isDark,
+                    icon: Icons.chevron_right_rounded,
+                    onTap: () {
+                      final next = widget.selectedDate.add(const Duration(days: 1));
+                      widget.onDateSelected(next);
+                    },
+                  ),
+                ],
 
               ],
             ),

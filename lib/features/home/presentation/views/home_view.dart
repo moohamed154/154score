@@ -17,6 +17,7 @@ import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
+import '../../../matches/presentation/widgets/date_navigation_buttons.dart';
 import '../../../matches/presentation/widgets/horizontal_date_selector.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
@@ -94,6 +95,17 @@ class _HomeViewState extends State<HomeView> {
                               ),
                         ),
                         const Spacer(),
+                        // Date Navigation Buttons (<, 📅, >)
+                        DateNavigationButtons(
+                          selectedDate: matchesState.selectedDate,
+                          onDateSelected: (date) {
+                            context.read<MatchesBloc>().add(
+                              LoadMatchesEvent(date: date),
+                            );
+                          },
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 4),
                         // Search Icon
                         IconButton(
                           icon: const Icon(Icons.search_rounded),
