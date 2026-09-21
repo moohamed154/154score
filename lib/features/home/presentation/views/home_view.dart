@@ -18,7 +18,6 @@ import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../matches/presentation/widgets/date_navigation_buttons.dart';
-import '../../../matches/presentation/widgets/horizontal_date_selector.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/live_match_card.dart';
 import '../../../matches/presentation/widgets/match_filter_bottom_sheet.dart';
@@ -51,7 +50,7 @@ class _HomeViewState extends State<HomeView> {
 
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight + 68 + topPadding),
+        preferredSize: Size.fromHeight(kToolbarHeight + topPadding),
         child: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, matchesState) {
             return Material(
@@ -69,7 +68,7 @@ class _HomeViewState extends State<HomeView> {
                     child: Row(
                       children: [
                         const SizedBox(width: 16),
-                        // Logo + Title
+                        // Logo + Title + Date
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
@@ -85,14 +84,13 @@ class _HomeViewState extends State<HomeView> {
                         const SizedBox(width: 10),
                         Text(
                           '154Score',
-                          style:
-                              AppTypography.getHeadingLarge(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                              ),
+                          style: AppTypography.getHeadingLarge(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                         const Spacer(),
                         // Actions row ordered from left: Date Selector -> Search -> Filter
@@ -142,16 +140,6 @@ class _HomeViewState extends State<HomeView> {
                     ),
                   ),
 
-                  // Date strip — inline, no background, no border
-                  HorizontalDateSelector(
-                    selectedDate: matchesState.selectedDate,
-                    onDateSelected: (date) {
-                      context.read<MatchesBloc>().add(
-                        LoadMatchesEvent(date: date),
-                      );
-                    },
-                  ),
-
                   // Bottom divider
                   Divider(
                     height: 1,
@@ -194,7 +182,21 @@ class _HomeViewState extends State<HomeView> {
             child: ListView(
               padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
               children: [
-                const SizedBox(height: 12),
+                // Today's date label
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Text(
+                    _formatTodayDate(isArabic),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ),
 
                 if (isHomeLoading)
                   _buildMatchesSkeleton(context, isDark, isArabic)
@@ -221,6 +223,24 @@ class _HomeViewState extends State<HomeView> {
         },
       ),
     );
+  }
+
+  String _formatTodayDate(bool isArabic) {
+    final now = DateTime.now();
+    const englishDays = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday',
+    ];
+    const arabicDays = [
+      'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس',
+      'الجمعة', 'السبت', 'الأحد',
+    ];
+    final dayIndex = now.weekday - 1; // weekday: 1=Monday … 7=Sunday
+    final dayName = isArabic ? arabicDays[dayIndex] : englishDays[dayIndex];
+    final dd = now.day.toString().padLeft(2, '0');
+    final mm = now.month.toString().padLeft(2, '0');
+    final yyyy = now.year.toString();
+    return '$dayName, $dd/$mm/$yyyy';
   }
 
   Widget _buildLiveNowSection(
