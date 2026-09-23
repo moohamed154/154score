@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,9 +9,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/network_info.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
+import '../../../settings/presentation/cubit/settings_cubits.dart';
 
 /// A custom, high-performance animated splash screen for 154 SCORE.
 /// Features:
@@ -315,11 +317,31 @@ class _SplashViewState extends State<SplashView>
 
   @override
   Widget build(BuildContext context) {
+    ThemeMode themeMode;
+    try {
+      themeMode = context.watch<ThemeCubit>().state;
+    } catch (_) {
+      final saved = sl.isRegistered<LocalStorageService>()
+          ? sl<LocalStorageService>().getThemeMode()
+          : 'system';
+      themeMode = switch (saved) {
+        'dark' => ThemeMode.dark,
+        'light' => ThemeMode.light,
+        _ => ThemeMode.system,
+      };
+    }
+
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            (Theme.of(context).brightness == Brightness.dark ||
+                MediaQuery.maybePlatformBrightnessOf(context) == Brightness.dark));
+
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
 
     return Scaffold(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
@@ -344,6 +366,7 @@ class _SplashViewState extends State<SplashView>
                       painter: _StadiumAmbiencePainter(
                         pulseProgress: _pulseWaveAnimation.value,
                         brandColor: AppColors.primary,
+                        isDark: isDark,
                       ),
                     ),
                   ),
@@ -359,25 +382,25 @@ class _SplashViewState extends State<SplashView>
                             const Spacer(flex: 3),
 
                             // Animated Logo Badge
-                            _buildAnimatedLogo(),
+                            _buildAnimatedLogo(isDark),
 
                             const SizedBox(height: 28),
 
                             // Brand Title ("154 SCORE")
-                            _buildAnimatedTitle(),
+                            _buildAnimatedTitle(isDark),
 
                             const SizedBox(height: 12),
 
                             // Subtitle Pill
-                            _buildAnimatedSubtitle(isArabic),
+                            _buildAnimatedSubtitle(isArabic, isDark),
 
                             const Spacer(flex: 2),
 
                             // Dynamic Progress or Offline Handling Area
                             if (_isOffline)
-                              _buildOfflineState(l10n)
+                              _buildOfflineState(l10n, isDark)
                             else
-                              _buildRealProgressBar(l10n),
+                              _buildRealProgressBar(l10n, isDark),
 
                             const SizedBox(height: 48),
                           ],
@@ -394,7 +417,7 @@ class _SplashViewState extends State<SplashView>
     );
   }
 
-  Widget _buildAnimatedLogo() {
+  Widget _buildAnimatedLogo(bool isDark) {
     return FadeTransition(
       opacity: _logoFadeAnimation,
       child: ScaleTransition(
@@ -411,7 +434,8 @@ class _SplashViewState extends State<SplashView>
                 gradient: RadialGradient(
                   colors: [
                     AppColors.primary.withValues(
-                      alpha: 0.28 * (1.0 - _pulseWaveAnimation.value),
+                      alpha: (isDark ? 0.28 : 0.20) *
+                          (1.0 - _pulseWaveAnimation.value),
                     ),
                     AppColors.primary.withValues(alpha: 0.0),
                   ],
@@ -426,7 +450,8 @@ class _SplashViewState extends State<SplashView>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.25),
+                  color: AppColors.primary
+                      .withValues(alpha: isDark ? 0.25 : 0.20),
                   width: 1.5,
                 ),
               ),
@@ -438,23 +463,24 @@ class _SplashViewState extends State<SplashView>
               height: 88,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF1E2836),
-                    Color(0xFF0D1117),
-                  ],
+                  colors: isDark
+                      ? const [Color(0xFF1E2836), Color(0xFF0D1117)]
+                      : const [Colors.white, Color(0xFFEDF2F7)],
                 ),
                 border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.8),
+                  color: AppColors.primary
+                      .withValues(alpha: isDark ? 0.8 : 0.9),
                   width: 2.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.35),
+                    color: AppColors.primary
+                        .withValues(alpha: isDark ? 0.35 : 0.20),
                     blurRadius: 24,
-                    spreadRadius: 2,
+                    spreadRadius: isDark ? 2 : 1,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -473,7 +499,7 @@ class _SplashViewState extends State<SplashView>
     );
   }
 
-  Widget _buildAnimatedTitle() {
+  Widget _buildAnimatedTitle(bool isDark) {
     final titleFont = GoogleFonts.cairo(
       textStyle: const TextStyle(
         fontSize: 34,
@@ -500,7 +526,8 @@ class _SplashViewState extends State<SplashView>
                   color: AppColors.primary,
                   shadows: [
                     Shadow(
-                      color: AppColors.primary.withValues(alpha: 0.5),
+                      color: AppColors.primary
+                          .withValues(alpha: isDark ? 0.5 : 0.25),
                       blurRadius: 16,
                     ),
                   ],
@@ -510,7 +537,7 @@ class _SplashViewState extends State<SplashView>
               Text(
                 'SCORE',
                 style: titleFont.copyWith(
-                  color: Colors.white,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -521,7 +548,7 @@ class _SplashViewState extends State<SplashView>
     );
   }
 
-  Widget _buildAnimatedSubtitle(bool isArabic) {
+  Widget _buildAnimatedSubtitle(bool isArabic, bool isDark) {
     final tagline = isArabic
         ? 'نتائج مباشرة • تغطية حية لحظة بلحظة'
         : 'LIVE MATCHES • SCORES & STATS';
@@ -532,12 +559,23 @@ class _SplashViewState extends State<SplashView>
         constraints: const BoxConstraints(maxWidth: 270),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.darkSurface.withValues(alpha: 0.6),
+          color: (isDark ? AppColors.darkSurface : Colors.white)
+              .withValues(alpha: isDark ? 0.6 : 0.85),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.darkBorder.withValues(alpha: 0.5),
+            color: (isDark ? AppColors.darkBorder : AppColors.lightBorder)
+                .withValues(alpha: isDark ? 0.5 : 0.8),
             width: 1,
           ),
+          boxShadow: isDark
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -548,7 +586,9 @@ class _SplashViewState extends State<SplashView>
               textStyle: TextStyle(
                 fontSize: isArabic ? 12 : 11,
                 fontWeight: FontWeight.w600,
-                color: AppColors.darkTextSecondary,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
                 letterSpacing: isArabic ? 0.2 : 1.2,
               ),
             ),
@@ -558,7 +598,7 @@ class _SplashViewState extends State<SplashView>
     );
   }
 
-  Widget _buildRealProgressBar(AppLocalizations l10n) {
+  Widget _buildRealProgressBar(AppLocalizations l10n, bool isDark) {
     const barWidth = 190.0;
     const barHeight = 4.0;
     final progressValue = (_progressTweenAnimation?.value ?? _currentProgress).clamp(0.0, 1.0);
@@ -572,7 +612,8 @@ class _SplashViewState extends State<SplashView>
             width: barWidth,
             height: barHeight,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: (isDark ? Colors.white : Colors.black)
+                  .withValues(alpha: isDark ? 0.08 : 0.06),
               borderRadius: BorderRadius.circular(barHeight / 2),
             ),
             alignment: Alignment.centerLeft,
@@ -590,7 +631,8 @@ class _SplashViewState extends State<SplashView>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.6),
+                    color: AppColors.primary
+                        .withValues(alpha: isDark ? 0.6 : 0.35),
                     blurRadius: 8,
                     offset: const Offset(0, 1),
                   ),
@@ -604,7 +646,8 @@ class _SplashViewState extends State<SplashView>
             style: GoogleFonts.cairo(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: AppColors.darkTextMuted,
+              color:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               letterSpacing: 0.5,
             ),
           ),
@@ -613,13 +656,14 @@ class _SplashViewState extends State<SplashView>
     );
   }
 
-  Widget _buildOfflineState(AppLocalizations l10n) {
+  Widget _buildOfflineState(AppLocalizations l10n, bool isDark) {
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(maxWidth: 300),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface.withValues(alpha: 0.85),
+        color: (isDark ? AppColors.darkSurface : Colors.white)
+            .withValues(alpha: isDark ? 0.85 : 0.95),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.statusLive.withValues(alpha: 0.35),
@@ -627,7 +671,7 @@ class _SplashViewState extends State<SplashView>
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -651,7 +695,9 @@ class _SplashViewState extends State<SplashView>
                   style: GoogleFonts.cairo(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.darkTextPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -692,10 +738,12 @@ class _SplashViewState extends State<SplashView>
 class _StadiumAmbiencePainter extends CustomPainter {
   final double pulseProgress;
   final Color brandColor;
+  final bool isDark;
 
   _StadiumAmbiencePainter({
     required this.pulseProgress,
     required this.brandColor,
+    this.isDark = true,
   });
 
   @override
@@ -706,8 +754,8 @@ class _StadiumAmbiencePainter extends CustomPainter {
     final glowPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          brandColor.withValues(alpha: 0.12),
-          brandColor.withValues(alpha: 0.04),
+          brandColor.withValues(alpha: isDark ? 0.12 : 0.07),
+          brandColor.withValues(alpha: isDark ? 0.04 : 0.02),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -717,7 +765,7 @@ class _StadiumAmbiencePainter extends CustomPainter {
 
     // 2. Football Center Pitch Lines (Subtle Tactical Geometry)
     final pitchLinePaint = Paint()
-      ..color = brandColor.withValues(alpha: 0.06)
+      ..color = brandColor.withValues(alpha: isDark ? 0.06 : 0.08)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -734,14 +782,14 @@ class _StadiumAmbiencePainter extends CustomPainter {
 
     // Pitch center spot
     final spotPaint = Paint()
-      ..color = brandColor.withValues(alpha: 0.18)
+      ..color = brandColor.withValues(alpha: isDark ? 0.18 : 0.22)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, 3.0, spotPaint);
 
     // 3. Expanding Sonar/Radar Ring Wave
     if (pulseProgress > 0.0) {
       final waveRadius = 70.0 + (pulseProgress * 140.0);
-      final waveOpacity = (1.0 - pulseProgress) * 0.35;
+      final waveOpacity = (1.0 - pulseProgress) * (isDark ? 0.35 : 0.22);
 
       final wavePaint = Paint()
         ..color = brandColor.withValues(alpha: math.max(0.0, waveOpacity))
@@ -755,6 +803,7 @@ class _StadiumAmbiencePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _StadiumAmbiencePainter oldDelegate) {
     return oldDelegate.pulseProgress != pulseProgress ||
-        oldDelegate.brandColor != brandColor;
+        oldDelegate.brandColor != brandColor ||
+        oldDelegate.isDark != isDark;
   }
 }

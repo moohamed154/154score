@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +11,7 @@ import 'package:score154/features/home/presentation/cubit/home_cubit.dart';
 import 'package:score154/features/matches/presentation/bloc/matches_bloc.dart';
 import 'package:score154/features/matches/presentation/bloc/matches_event.dart';
 import 'package:score154/features/matches/presentation/bloc/matches_state.dart';
+import 'package:score154/core/constants/app_colors.dart';
 import 'package:score154/features/splash/presentation/views/splash_view.dart';
 
 class MockHomeCubit extends Mock implements HomeCubit {}
@@ -319,6 +319,44 @@ void main() {
       expect(pos154.dx, lessThan(posScore.dx));
 
       await tester.pump(const Duration(milliseconds: 200));
+    });
+
+    testWidgets('adapts background and text colors to Light and Dark themes', (tester) async {
+      // 1. Light Theme
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          home: Theme(
+            data: ThemeData(brightness: Brightness.light),
+            child: const SplashView(key: ValueKey('light')),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final scaffoldLight = tester.widget<Scaffold>(find.byType(Scaffold));
+      expect(scaffoldLight.backgroundColor, equals(AppColors.lightBackground));
+
+      // 2. Dark Theme
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          home: Theme(
+            data: ThemeData(brightness: Brightness.dark),
+            child: const SplashView(key: ValueKey('dark')),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final scaffoldDark = tester.widget<Scaffold>(find.byType(Scaffold));
+      expect(scaffoldDark.backgroundColor, equals(AppColors.darkBackground));
     });
   });
 }
