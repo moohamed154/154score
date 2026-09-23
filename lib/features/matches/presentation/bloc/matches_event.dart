@@ -134,6 +134,14 @@ class ChangeTimezoneEvent extends MatchesEvent {
   List<Object?> get props => [offset];
 }
 
+class ChangeTimeFormatEvent extends MatchesEvent {
+  final String format;
+  const ChangeTimeFormatEvent(this.format);
+
+  @override
+  List<Object?> get props => [format];
+}
+
 class LiveMatchesSnapshotReceivedEvent extends MatchesEvent {
   final List<MatchEntity> liveMatches;
 

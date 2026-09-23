@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:score154/core/widgets/live_match_clock.dart';
 
@@ -110,6 +110,7 @@ class LiveMatchCard extends StatelessWidget {
                       date: match.date,
                       score1: match.score1,
                       score2: match.score2,
+                      timestamp: match.timestamp,
                       showLiveDot: true,
                     ),
                   ],

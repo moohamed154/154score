@@ -25,6 +25,7 @@ class MatchStatusHelper {
     String? date,
     String? score1,
     String? score2,
+    int? timestamp,
     DateTime? now,
   }) {
     final code = (statusCode ?? '').trim().toUpperCase();
@@ -80,6 +81,27 @@ class MatchStatusHelper {
         p == '2nd') {
       return MatchPhase.live;
     }
+
+    final hasLiveIndicator = (minute != null &&
+            minute.isNotEmpty &&
+            minute != 'null') ||
+        (extraTime != null &&
+            extraTime.isNotEmpty &&
+            extraTime != 'null' &&
+            extraTime != '+00:00' &&
+            extraTime != '00:00');
+
+    final isExplicitUpcoming = code == 'UPCOMING' ||
+        code == 'NOT_STARTED' ||
+        code == 'SCHEDULED' ||
+        p == 'upcoming' ||
+        p == 'not_started' ||
+        p == 'scheduled' ||
+        s.contains('لم تبدأ') ||
+        s.contains('not started') ||
+        s.contains('قادمة') ||
+        s.contains('upcoming') ||
+        s == 'ns';
 
     // 1. Penalties
     if (s.contains('ترجيح') ||
@@ -154,6 +176,21 @@ class MatchStatusHelper {
       return MatchPhase.cancelled;
     }
 
+    // 5.1 Timestamp check: The gold standard for time truth
+    // If timestamp is in the future in UTC, match is strictly UPCOMING!
+    if (timestamp != null && timestamp > 0) {
+      final nowUtcSec = (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/ 1000;
+      final diffSeconds = nowUtcSec - timestamp;
+      if (diffSeconds < 0) {
+        return MatchPhase.upcoming;
+      }
+    }
+
+    // 5.2 If explicitly marked upcoming and no live indicator is present, it's upcoming
+    if (isExplicitUpcoming && !hasLiveIndicator) {
+      return MatchPhase.upcoming;
+    }
+
     final currentTime = now ?? DateTime.now();
     final todayStr = DateFormatter.toApiDateString(currentTime);
     final today = DateTime(currentTime.year, currentTime.month, currentTime.day);
@@ -167,30 +204,13 @@ class MatchStatusHelper {
     final isFutureDate = matchDate != null &&
         DateTime(matchDate.year, matchDate.month, matchDate.day).isAfter(today);
 
-    // 5.1 Historical match guard: A match on a past date can NEVER be live or upcoming
+    // 5.3 Historical match guard: A match on a past date can NEVER be live or upcoming
     if (isPastDate) {
-      if (code == 'POSTPONED' ||
-          s.contains('تأجل') ||
-          s.contains('مؤجلة') ||
-          s.contains('postponed') ||
-          s.contains('delayed')) {
-        return MatchPhase.postponed;
-      }
-      if (code == 'CANCELLED' ||
-          code == 'ABANDONED' ||
-          s.contains('ألغيت') ||
-          s.contains('ملغاة') ||
-          s.contains('cancelled') ||
-          s.contains('canceled')) {
-        return MatchPhase.cancelled;
-      }
       return MatchPhase.finished;
     }
 
-    // 5.2 Future match guard
+    // 5.4 Future match guard
     if (isFutureDate) {
-      if (code == 'POSTPONED' || s.contains('تأجل')) return MatchPhase.postponed;
-      if (code == 'CANCELLED' || s.contains('ألغيت')) return MatchPhase.cancelled;
       return MatchPhase.upcoming;
     }
 
@@ -207,16 +227,10 @@ class MatchStatusHelper {
         s.contains('1st half') ||
         s.contains('2nd half') ||
         s.contains("'") ||
-        (minute != null && minute.isNotEmpty && minute != 'null') ||
-        (extraTime != null &&
-            extraTime.isNotEmpty &&
-            extraTime != 'null' &&
-            extraTime != '+00:00' &&
-            extraTime != '00:00')) {
+        hasLiveIndicator) {
       return MatchPhase.live;
     }
 
-    // 7. Time-based in-play detection: If the match is scheduled for today and kickoff has arrived
     final isToday = date != null && date.trim().isNotEmpty && date.trim() == todayStr;
 
     final hasActiveScores = (score1 != null &&
@@ -227,7 +241,19 @@ class MatchStatusHelper {
         score2 != '-' &&
         (score1 != '0' || score2 != '0'));
 
-    if (isToday && time != null && time.isNotEmpty && time != '-') {
+    // 7. Timestamp-based or Time-based in-play detection
+    if (timestamp != null && timestamp > 0) {
+      final nowUtcSec = (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/ 1000;
+      final diff = nowUtcSec - timestamp;
+      if (diff >= 0 && diff <= 135 * 60) {
+        if (diff > 45 * 60 && diff <= 60 * 60) {
+          return MatchPhase.halfTime;
+        }
+        return MatchPhase.live;
+      } else if (diff > 135 * 60 && hasActiveScores) {
+        return MatchPhase.finished;
+      }
+    } else if (isToday && !isExplicitUpcoming && time != null && time.isNotEmpty && time != '-') {
       final startMins = parseTimeToMinutes(time);
       if (startMins != null) {
         final currentMins = currentTime.hour * 60 + currentTime.minute;
@@ -257,12 +283,7 @@ class MatchStatusHelper {
     }
 
     // 9. Upcoming
-    if (s.contains('لم تبدأ') ||
-        s.contains('قادمة') ||
-        s.contains('upcoming') ||
-        s.contains('not started') ||
-        s == 'ns' ||
-        (time != null && time.isNotEmpty && !s.contains('انتهت'))) {
+    if (isExplicitUpcoming || (time != null && time.isNotEmpty && !s.contains('انتهت'))) {
       return MatchPhase.upcoming;
     }
 
@@ -276,6 +297,23 @@ class MatchStatusHelper {
     }
 
     return MatchPhase.unknown;
+  }
+
+  /// Convenience helper to parse phase directly from any object with match properties.
+  static MatchPhase parseMatch(dynamic match, {DateTime? now}) {
+    return parseStatus(
+      match.status,
+      statusCode: match.statusCode,
+      period: match.period,
+      minute: match.minute,
+      extraTime: match.extraTime,
+      time: match.time,
+      date: match.date,
+      score1: match.score1,
+      score2: match.score2,
+      timestamp: match.timestamp,
+      now: now,
+    );
   }
 
   static bool isLive(MatchPhase phase) {
@@ -410,20 +448,29 @@ class MatchStatusHelper {
     required String? time,
     String? status,
     String? period,
+    int? timestamp,
     DateTime? now,
   }) {
-    final startMins = parseTimeToMinutes(time);
-    if (startMins == null) return (minute: 0, extraMinute: 0);
+    int elapsed;
+    if (timestamp != null && timestamp > 0) {
+      final nowSec = (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/ 1000;
+      elapsed = (nowSec - timestamp) ~/ 60;
+    } else {
+      final startMins = parseTimeToMinutes(time);
+      if (startMins == null) return (minute: 0, extraMinute: 0);
 
-    final current = now ?? DateTime.now();
-    final currentMins = current.hour * 60 + current.minute;
-    var elapsed = currentMins - startMins;
+      final current = now ?? DateTime.now();
+      final currentMins = current.hour * 60 + current.minute;
+      elapsed = currentMins - startMins;
 
-    // Handle midnight wrap-around (e.g. kick-off 23:30, current 00:15 -> 45 mins elapsed)
-    if (elapsed < -720) {
-      elapsed += 1440;
-    } else if (elapsed < 0) {
-      return (minute: 1, extraMinute: 0);
+      // Handle midnight wrap-around (e.g. kick-off 23:30, current 00:15 -> 45 mins elapsed)
+      if (elapsed < -720) {
+        elapsed += 1440;
+      }
+    }
+
+    if (elapsed < 0) {
+      return (minute: 0, extraMinute: 0);
     }
 
     final s = (status ?? '').toLowerCase();
@@ -478,20 +525,29 @@ class MatchStatusHelper {
     required String? time,
     String? status,
     String? period,
+    int? timestamp,
     DateTime? now,
   }) {
-    final startMins = parseTimeToMinutes(time);
-    if (startMins == null) return null;
+    int elapsed;
+    if (timestamp != null && timestamp > 0) {
+      final nowSec = (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/ 1000;
+      elapsed = (nowSec - timestamp) ~/ 60;
+    } else {
+      final startMins = parseTimeToMinutes(time);
+      if (startMins == null) return null;
 
-    final current = now ?? DateTime.now();
-    final currentMins = current.hour * 60 + current.minute;
-    var elapsed = currentMins - startMins;
+      final current = now ?? DateTime.now();
+      final currentMins = current.hour * 60 + current.minute;
+      elapsed = currentMins - startMins;
 
-    // Handle midnight wrap-around (e.g. kick-off 23:30, current 00:15 -> 45 mins elapsed)
-    if (elapsed < -720) {
-      elapsed += 1440;
-    } else if (elapsed < 0) {
-      return 1;
+      // Handle midnight wrap-around (e.g. kick-off 23:30, current 00:15 -> 45 mins elapsed)
+      if (elapsed < -720) {
+        elapsed += 1440;
+      }
+    }
+
+    if (elapsed < 0) {
+      return 0;
     }
 
     final s = (status ?? '').toLowerCase();

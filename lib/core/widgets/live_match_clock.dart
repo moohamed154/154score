@@ -18,6 +18,7 @@ class LiveMatchClock extends StatefulWidget {
   final String? date;
   final String? score1;
   final String? score2;
+  final int? timestamp;
   final bool showLiveDot;
   final TextStyle? textStyle;
 
@@ -34,6 +35,7 @@ class LiveMatchClock extends StatefulWidget {
     this.date,
     this.score1,
     this.score2,
+    this.timestamp,
     this.showLiveDot = true,
     this.textStyle,
   });
@@ -90,7 +92,8 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         oldWidget.period != widget.period ||
         oldWidget.date != widget.date ||
         oldWidget.score1 != widget.score1 ||
-        oldWidget.score2 != widget.score2) {
+        oldWidget.score2 != widget.score2 ||
+        oldWidget.timestamp != widget.timestamp) {
       _syncClock();
       _startTimerIfNeeded();
     }
@@ -105,6 +108,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       date: widget.date,
       score1: widget.score1,
       score2: widget.score2,
+      timestamp: widget.timestamp,
     );
 
     int? minuteNum;
@@ -214,6 +218,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         time: widget.time,
         status: widget.status,
         period: widget.period,
+        timestamp: widget.timestamp,
       );
 
       if (_currentMinute == 0 && estimated.minute > 0) {

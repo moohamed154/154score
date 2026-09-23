@@ -19,6 +19,7 @@ class CircularLiveClock extends StatefulWidget {
   final String? date;
   final String? score1;
   final String? score2;
+  final int? timestamp;
   final double size;
   final Color arcColor;
   final Color notchColor;
@@ -37,6 +38,7 @@ class CircularLiveClock extends StatefulWidget {
     this.date,
     this.score1,
     this.score2,
+    this.timestamp,
     this.size = 56.0,
     this.arcColor = const Color(0xFF2EE5A7),
     this.notchColor = const Color(0xFFFFD200),
@@ -80,7 +82,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         oldWidget.period != widget.period ||
         oldWidget.date != widget.date ||
         oldWidget.score1 != widget.score1 ||
-        oldWidget.score2 != widget.score2) {
+        oldWidget.score2 != widget.score2 ||
+        oldWidget.timestamp != widget.timestamp) {
       _syncClock();
       _startTimerIfNeeded();
     }
@@ -103,6 +106,7 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       date: widget.date,
       score1: widget.score1,
       score2: widget.score2,
+      timestamp: widget.timestamp,
     );
 
     int minNum = 0;
@@ -142,6 +146,7 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         time: widget.time,
         status: widget.status,
         period: widget.period,
+        timestamp: widget.timestamp,
       );
       minNum = est.minute;
       if (est.extraMinute > 0) {
@@ -247,6 +252,7 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
           time: widget.time,
           status: widget.status,
           period: widget.period,
+          timestamp: widget.timestamp,
         );
         if (est.extraMinute > 0) {
           computedElapsedExtraSec = est.extraMinute * 60;

@@ -17,6 +17,7 @@ class MatchesState extends Equatable {
   final String searchQuery;
   final String? errorMessage;
   final int liveMatchesCount;
+  final String timeFormat;
 
   const MatchesState({
     this.status = MatchesStatus.initial,
@@ -30,6 +31,7 @@ class MatchesState extends Equatable {
     this.searchQuery = '',
     this.errorMessage,
     this.liveMatchesCount = 0,
+    this.timeFormat = '24h',
   });
 
   bool get hasActiveFilter =>
@@ -81,6 +83,7 @@ class MatchesState extends Equatable {
     String? searchQuery,
     String? errorMessage,
     int? liveMatchesCount,
+    String? timeFormat,
   }) {
     return MatchesState(
       status: status ?? this.status,
@@ -98,6 +101,7 @@ class MatchesState extends Equatable {
       searchQuery: searchQuery ?? this.searchQuery,
       errorMessage: errorMessage ?? this.errorMessage,
       liveMatchesCount: liveMatchesCount ?? this.liveMatchesCount,
+      timeFormat: timeFormat ?? this.timeFormat,
     );
   }
 
@@ -114,5 +118,6 @@ class MatchesState extends Equatable {
     searchQuery,
     errorMessage,
     liveMatchesCount,
+    timeFormat,
   ];
 }

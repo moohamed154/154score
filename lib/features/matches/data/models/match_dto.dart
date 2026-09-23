@@ -29,6 +29,7 @@ class MatchDto {
   final String? leagueLogo;
   final String? leagueId;
   final String? date;
+  final int? timestamp;
 
   const MatchDto({
     this.id,
@@ -58,6 +59,7 @@ class MatchDto {
     this.leagueLogo,
     this.leagueId,
     this.date,
+    this.timestamp,
   });
 
   factory MatchDto.fromJson(
@@ -264,6 +266,13 @@ class MatchDto {
       currentLogo: UrlHelper.normalizeImageUrl(rawLLogo),
     );
 
+    int? ts;
+    if (json['timestamp'] != null) {
+      ts = int.tryParse(json['timestamp'].toString());
+    } else if (json['match_timestamp'] != null) {
+      ts = int.tryParse(json['match_timestamp'].toString());
+    }
+
     return MatchDto(
       id: effectiveId,
       team1: t1,
@@ -294,6 +303,7 @@ class MatchDto {
       leagueLogo: lLogo,
       leagueId: lId,
       date: date ?? json['date']?.toString(),
+      timestamp: ts,
     );
   }
 
@@ -326,6 +336,7 @@ class MatchDto {
       leagueLogo: leagueLogo,
       leagueId: leagueId,
       date: date,
+      timestamp: timestamp,
       isFavorite: isFavorite,
     );
   }
@@ -358,6 +369,7 @@ class MatchDto {
     String? leagueLogo,
     String? leagueId,
     String? date,
+    int? timestamp,
   }) {
     return MatchDto(
       id: id ?? this.id,
@@ -387,6 +399,7 @@ class MatchDto {
       leagueLogo: leagueLogo ?? this.leagueLogo,
       leagueId: leagueId ?? this.leagueId,
       date: date ?? this.date,
+      timestamp: timestamp ?? this.timestamp,
     );
   }
 }

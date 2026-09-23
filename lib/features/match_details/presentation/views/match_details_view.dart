@@ -251,20 +251,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     // 7. Status & Time & Date
     final bool isLiveFromFeed = (liveFromMatches != null &&
         (ScoreHelper.isLiveStatus(liveFromMatches.status) ||
-         MatchStatusHelper.isLive(MatchStatusHelper.parseStatus(
-           liveFromMatches.status,
-           statusCode: liveFromMatches.statusCode,
-           period: liveFromMatches.period,
-           minute: liveFromMatches.minute,
-         )))) ||
+         MatchStatusHelper.isLive(MatchStatusHelper.parseMatch(liveFromMatches)))) ||
         (widget.initialMatch != null &&
          (ScoreHelper.isLiveStatus(widget.initialMatch!.status) ||
-          MatchStatusHelper.isLive(MatchStatusHelper.parseStatus(
-            widget.initialMatch!.status,
-            statusCode: widget.initialMatch!.statusCode,
-            period: widget.initialMatch!.period,
-            minute: widget.initialMatch!.minute,
-          ))));
+          MatchStatusHelper.isLive(MatchStatusHelper.parseMatch(widget.initialMatch!))));
 
     String? effectiveStatus;
     String? effectiveStatusCode;

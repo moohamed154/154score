@@ -304,8 +304,9 @@ class _MatchesViewState extends State<MatchesView> {
       itemBuilder: (context, index) {
         final league = state.filteredLeagues[index];
         return LeagueSectionWidget(
-          key: ValueKey(league.leagueTitle),
+          key: ValueKey('${league.leagueTitle}_${state.timeFormat}'),
           league: league,
+          timeFormat: state.timeFormat,
           isTimeSorted: state.sortOrder == MatchesSortOrder.time,
           onFavoriteMatchTap: (matchId) {
             context.read<MatchesBloc>().add(ToggleMatchFavoriteEvent(matchId));

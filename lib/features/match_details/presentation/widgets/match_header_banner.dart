@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
@@ -69,6 +72,7 @@ class MatchHeaderBanner extends StatelessWidget {
       date: match.date,
       score1: s1,
       score2: s2,
+      timestamp: match.timestamp,
     );
     final isLive =
         MatchStatusHelper.isLive(phase) || ScoreHelper.isLiveStatus(effectiveStatus);
@@ -253,6 +257,7 @@ class MatchHeaderBanner extends StatelessWidget {
                       date: match.date,
                       score1: s1,
                       score2: s2,
+                      timestamp: match.timestamp,
                       size: isSmall ? 48 : 56,
                     ),
                     if (hasPenalties) ...[
@@ -421,9 +426,14 @@ class MatchHeaderBanner extends StatelessWidget {
       );
     } else if (isUpcoming) {
       // Upcoming state: e.g. "09:00 PM"
+      final timeFormat = sl<LocalStorageService>().getTimeFormat();
       final timeStr =
           (match.time != null && match.time!.isNotEmpty && match.time != '-')
-              ? match.time!
+              ? DateFormatter.formatDisplayTime(
+                  match.time!,
+                  timeFormat: timeFormat,
+                  isArabic: isArabic,
+                )
               : 'VS';
       content = Text(
         timeStr,

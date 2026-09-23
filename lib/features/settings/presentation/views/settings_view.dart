@@ -160,6 +160,9 @@ class _SettingsViewState extends State<SettingsView> {
                       if (val != null) {
                         storage.setTimeFormat(val);
                         setState(() {});
+                        try {
+                          context.read<MatchesBloc>().add(ChangeTimeFormatEvent(val));
+                        } catch (_) {}
                       }
                     },
                   ),

@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/app_image.dart';
@@ -16,12 +19,14 @@ class MatchCard extends StatelessWidget {
   final MatchEntity match;
   final VoidCallback? onFavoriteTap;
   final bool showLeague;
+  final String? timeFormat;
 
   const MatchCard({
     super.key,
     required this.match,
     this.onFavoriteTap,
     this.showLeague = false,
+    this.timeFormat,
   });
 
   @override
@@ -42,6 +47,7 @@ class MatchCard extends StatelessWidget {
       date: match.date,
       score1: match.score1,
       score2: match.score2,
+      timestamp: match.timestamp,
     );
     final isLive = MatchStatusHelper.isLive(phase);
     final isUpcoming = MatchStatusHelper.isUpcoming(phase);
@@ -259,6 +265,7 @@ class MatchCard extends StatelessWidget {
               date: match.date,
               score1: match.score1,
               score2: match.score2,
+              timestamp: match.timestamp,
               size: isSmall ? 48 : 56,
             ),
             if (hasPenalties) ...[
@@ -495,9 +502,14 @@ class MatchCard extends StatelessWidget {
       );
     } else if (isUpcoming) {
       // Upcoming state: e.g. "09:00 PM"
+      final activeFormat = timeFormat ?? sl<LocalStorageService>().getTimeFormat();
       final timeStr =
           (match.time != null && match.time!.isNotEmpty && match.time != '-')
-              ? match.time!
+              ? DateFormatter.formatDisplayTime(
+                  match.time!,
+                  timeFormat: activeFormat,
+                  isArabic: isArabic,
+                )
               : 'VS';
       content = Text(
         timeStr,

@@ -111,10 +111,10 @@ class RealtimeMergeEngine {
         // Sort matches within league: Live -> Upcoming -> Finished
         updatedMatches.sort((a, b) {
           final pA = MatchStatusHelper.getPriority(
-            MatchStatusHelper.parseStatus(a.status, time: a.time),
+            MatchStatusHelper.parseMatch(a),
           );
           final pB = MatchStatusHelper.getPriority(
-            MatchStatusHelper.parseStatus(b.status, time: b.time),
+            MatchStatusHelper.parseMatch(b),
           );
           return pA.compareTo(pB);
         });
@@ -131,12 +131,12 @@ class RealtimeMergeEngine {
     updatedLeagues.sort((a, b) {
       final aHasLive = a.matches.any(
         (m) => MatchStatusHelper.isLive(
-          MatchStatusHelper.parseStatus(m.status, time: m.time),
+          MatchStatusHelper.parseMatch(m),
         ),
       );
       final bHasLive = b.matches.any(
         (m) => MatchStatusHelper.isLive(
-          MatchStatusHelper.parseStatus(m.status, time: m.time),
+          MatchStatusHelper.parseMatch(m),
         ),
       );
       if (aHasLive && !bHasLive) return -1;
@@ -169,16 +169,8 @@ class RealtimeMergeEngine {
         if (currentMatch == null) return restMatch;
 
         // Compare match progress/score to ensure NEWER DATA ALWAYS WINS
-        final restPhase = MatchStatusHelper.parseStatus(
-          restMatch.status,
-          minute: restMatch.minute,
-          time: restMatch.time,
-        );
-        final currPhase = MatchStatusHelper.parseStatus(
-          currentMatch.status,
-          minute: currentMatch.minute,
-          time: currentMatch.time,
-        );
+        final restPhase = MatchStatusHelper.parseMatch(restMatch);
+        final currPhase = MatchStatusHelper.parseMatch(currentMatch);
 
         final currIsLive = MatchStatusHelper.isLive(currPhase);
         final restIsUpcoming = MatchStatusHelper.isUpcoming(restPhase);

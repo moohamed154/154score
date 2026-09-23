@@ -20,12 +20,14 @@ class LeagueSectionWidget extends StatefulWidget {
   final LeagueGroupEntity league;
   final Function(String matchId)? onFavoriteMatchTap;
   final bool isTimeSorted;
+  final String? timeFormat;
 
   const LeagueSectionWidget({
     super.key,
     required this.league,
     this.onFavoriteMatchTap,
     this.isTimeSorted = false,
+    this.timeFormat,
   });
 
   @override
@@ -42,15 +44,7 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
     final isArabic = l10n.isArabic;
 
     final liveMatches = widget.league.matches.where((m) {
-      final phase = MatchStatusHelper.parseStatus(
-        m.status,
-        minute: m.minute,
-        extraTime: m.extraTime,
-        time: m.time,
-        date: m.date,
-        score1: m.score1,
-        score2: m.score2,
-      );
+      final phase = MatchStatusHelper.parseMatch(m);
       return MatchStatusHelper.isLive(phase);
     }).length;
 
@@ -65,9 +59,10 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
         children: [
           for (final match in widget.league.matches)
             MatchCard(
-              key: ValueKey(match.id),
+              key: ValueKey('${match.id}_${widget.timeFormat ?? ""}'),
               match: match,
               showLeague: true,
+              timeFormat: widget.timeFormat,
               onFavoriteTap: widget.onFavoriteMatchTap != null
                   ? () => widget.onFavoriteMatchTap!(match.id)
                   : null,
@@ -283,9 +278,10 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
               itemBuilder: (context, index) {
                 final match = widget.league.matches[index];
                 return MatchCard(
-                  key: ValueKey(match.id),
+                  key: ValueKey('${match.id}_${widget.timeFormat ?? ""}'),
                   match: match,
                   showLeague: isTimeSlot,
+                  timeFormat: widget.timeFormat,
                   onFavoriteTap: widget.onFavoriteMatchTap != null
                       ? () => widget.onFavoriteMatchTap!(match.id)
                       : null,
