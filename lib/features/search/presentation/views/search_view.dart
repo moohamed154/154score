@@ -8,6 +8,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
@@ -38,15 +39,55 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
   final TextEditingController _searchController = TextEditingController();
   int _selectedCategoryIndex = 0; // 0: All, 1: Championships, 2: Teams, 3: Players
 
-  static const List<(String, String, String)> _popularCompetitions = [
-    ('6811', 'Premier League', 'الدوري الإنجليزي الممتاز'),
-    ('1933', 'LaLiga', 'الدوري الإسباني - لا ليغا'),
-    ('3734', 'Serie A', 'الدوري الإيطالي'),
-    ('2606', 'Bundesliga', 'الدوري الألماني'),
-    ('2847', 'Ligue 1', 'الدوري الفرنسي'),
-    ('12048', 'UEFA Champions League', 'دوري أبطال أوروبا'),
-    ('3894', 'Egyptian League', 'الدوري المصري الممتاز'),
-    ('4750', 'Saudi Pro League', 'دوري روشن السعودي للمحترفين'),
+  static const List<(String, String, String, String)> _popularCompetitions = [
+    (
+      '6811',
+      'Premier League',
+      'الدوري الإنجليزي الممتاز',
+      'https://imgs.ysscores.com/championship/128/3411694791422.png',
+    ),
+    (
+      '1933',
+      'LaLiga',
+      'الدوري الإسباني - لا ليغا',
+      'https://imgs.ysscores.com/championship/128/8641690196626.png',
+    ),
+    (
+      '3734',
+      'Serie A',
+      'الدوري الإيطالي',
+      'https://imgs.ysscores.com/championship/128/6281692568873.png',
+    ),
+    (
+      '2606',
+      'Bundesliga',
+      'الدوري الألماني',
+      'https://imgs.ysscores.com/championship/128/6171690288722.png',
+    ),
+    (
+      '2847',
+      'Ligue 1',
+      'الدوري الفرنسي',
+      'https://imgs.ysscores.com/championship/128/9551719862665.png',
+    ),
+    (
+      '12048',
+      'UEFA Champions League',
+      'دوري أبطال أوروبا',
+      'https://imgs.ysscores.com/championship/128/5171696546919.png',
+    ),
+    (
+      '3894',
+      'Egyptian League',
+      'الدوري المصري الممتاز',
+      'https://imgs.ysscores.com/championship/128/451723403406.png',
+    ),
+    (
+      '4750',
+      'Saudi Pro League',
+      'دوري روشن السعودي للمحترفين',
+      'https://imgs.ysscores.com/championship/128/5111703719091.png',
+    ),
   ];
 
   @override
@@ -449,6 +490,10 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
     if (isTeam) fallbackIcon = Icons.shield_outlined;
     if (isPlayer) fallbackIcon = Icons.person_rounded;
 
+    final effectiveLogo = isChampionship
+        ? (UrlHelper.resolveChampionshipLogo(item.id, currentLogo: item.logo) ?? item.logo)
+        : item.logo;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
@@ -481,7 +526,7 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: AppImage(
-                    imageUrl: item.logo,
+                    imageUrl: effectiveLogo,
                     width: 44,
                     height: 44,
                     borderRadius: isPlayer ? 22 : AppDimensions.radiusSm,
@@ -634,6 +679,7 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
         const SizedBox(height: 12),
         ..._popularCompetitions.map((comp) {
           final title = isArabic ? comp.$3 : comp.$2;
+          final logoUrl = comp.$4;
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Material(
@@ -646,9 +692,29 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                 ),
               ),
               child: ListTile(
-                leading: const Icon(
-                  Icons.emoji_events_outlined,
-                  color: AppColors.primary,
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCardElevated
+                        : AppColors.lightCardElevated,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                    border: Border.all(
+                      color: isDark
+                          ? AppColors.darkBorder.withValues(alpha: 0.5)
+                          : AppColors.lightBorder.withValues(alpha: 0.7),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: AppImage(
+                    imageUrl: logoUrl,
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.contain,
+                    placeholderIcon: Icons.emoji_events_outlined,
+                  ),
                 ),
                 title: Text(
                   title,
@@ -668,7 +734,7 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                 onTap: () {
                   context.push(
                     '/league/${comp.$1}',
-                    extra: {'title': title},
+                    extra: {'title': title, 'logo': logoUrl},
                   );
                 },
               ),

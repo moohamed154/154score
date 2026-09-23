@@ -169,13 +169,13 @@ class UrlHelper {
         'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
       '2606' || '938769' || '286' =>
         'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
-      '1985' || '937873' =>
+      '1985' || '937873' || '2847' =>
         'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
-      '7167' || '941825' =>
-        'https://imgs.ysscores.com/championship/128/2121751062605.png', // Saudi Pro League
+      '7167' || '941825' || '4750' =>
+        'https://imgs.ysscores.com/championship/128/5111703719091.png', // Saudi Pro League
       '88013' || '59771441' =>
         'https://imgs.ysscores.com/championship/128/5481703687014.png', // Supercopa
-      '943009' =>
+      '943009' || '3894' =>
         'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
       '40224' || '916145' =>
         'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League

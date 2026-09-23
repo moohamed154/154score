@@ -9,11 +9,13 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/url_helper.dart';
+import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../leagues/presentation/bloc/league_bloc.dart';
@@ -533,42 +535,24 @@ class _StandingsViewState extends State<StandingsView> {
 
             return Column(
               children: [
-                // 1. Top Brand Bar with 154SCORE Brand Green
+                // 1. Top Brand Bar (identical to Home screen style)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.sports_soccer_rounded,
-                              color: primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '154SCORE',
-                              style: TextStyle(
-                                fontFamily: 'Montserrat',
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                                letterSpacing: 1.2,
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary,
-                              ),
-                            ),
-                          ],
+                      AppBrandLogo(
+                        size: 32,
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '154Score',
+                        style: AppTypography.getHeadingLarge(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ],
