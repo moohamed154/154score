@@ -54,6 +54,8 @@ import '../../features/players/presentation/bloc/player_bloc.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/favorites/presentation/cubit/favorites_cubit.dart';
 import '../../features/settings/presentation/cubit/settings_cubits.dart';
+import '../../features/search/data/repositories/search_repository.dart';
+import '../../features/search/presentation/cubit/search_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -129,6 +131,9 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton<PlayerRepository>(
     () => PlayerRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<SearchRepository>(
+    () => SearchRepository(sl()),
   );
 
   // 4. ViewModels / Blocs / Cubits
@@ -206,6 +211,8 @@ Future<void> initDependencies() async {
   );
 
   sl.registerFactory<FavoritesCubit>(() => FavoritesCubit(sl()));
+
+  sl.registerFactory<SearchCubit>(() => SearchCubit(sl()));
 
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit(sl()));
 
