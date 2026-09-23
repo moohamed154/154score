@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/widgets/app_brand_logo.dart';
 import '../../features/matches/presentation/bloc/matches_bloc.dart';
 import '../../features/matches/presentation/bloc/matches_state.dart';
 
@@ -216,17 +217,9 @@ class AppScaffold extends StatelessWidget {
           // Branding
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.sports_soccer_rounded,
-                  color: Colors.black,
-                  size: 22,
-                ),
+              AppBrandLogo(
+                size: 34,
+                isDark: isDark,
               ),
               const SizedBox(width: 10),
               Text(

@@ -459,10 +459,10 @@ class _SplashViewState extends State<SplashView>
 
             // Central Premium Emblem
             Container(
-              width: 88,
-              height: 88,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(26),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -485,11 +485,12 @@ class _SplashViewState extends State<SplashView>
                   ),
                 ],
               ),
-              child: const Center(
-                child: Icon(
-                  Icons.sports_soccer_rounded,
-                  size: 46,
-                  color: AppColors.primary,
+              padding: const EdgeInsets.all(14),
+              child: Center(
+                child: Image.asset(
+                  'assets/icons/app_icon.png',
+                  fit: BoxFit.contain,
+                  semanticLabel: '154Score Logo',
                 ),
               ),
             ),

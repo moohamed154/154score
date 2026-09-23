@@ -10,6 +10,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -82,17 +83,9 @@ class _HomeViewState extends State<HomeView> {
                       children: [
                         const SizedBox(width: 16),
                         // Logo + Title + Date
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.sports_soccer_rounded,
-                            color: Colors.black,
-                            size: 20,
-                          ),
+                        AppBrandLogo(
+                          size: 32,
+                          isDark: isDark,
                         ),
                         const SizedBox(width: 10),
                         Text(

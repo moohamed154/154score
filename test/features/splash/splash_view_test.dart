@@ -56,9 +56,9 @@ void main() {
       );
       await tester.pump();
 
-      // Verify immediate presence of scaffold, icon, 154, SCORE
+      // Verify immediate presence of scaffold, app_icon.png Image, 154, SCORE
       expect(find.byType(SplashView), findsOneWidget);
-      expect(find.byIcon(Icons.sports_soccer_rounded), findsOneWidget);
+      expect(find.byType(Image), findsOneWidget);
       expect(find.text('154'), findsOneWidget);
       expect(find.text('SCORE'), findsOneWidget);
 
