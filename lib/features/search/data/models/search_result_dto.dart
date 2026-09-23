@@ -84,12 +84,17 @@ class SearchResultDto {
   }
 
   static SearchResultEntity _mapPlayer(Map<String, dynamic> m) {
+    var logo = (m['logo'] ?? m['photo'] ?? m['image'])?.toString();
+    if (logo != null && logo.contains('/players/')) {
+      logo = logo.replaceAll('/players/', '/player/');
+    }
+
     return SearchResultEntity(
       id: m['id']?.toString() ?? '',
       type: 'player',
       title: m['title']?.toString() ?? '',
       fullTitle: m['full_title']?.toString(),
-      logo: m['logo']?.toString(),
+      logo: logo,
       position: m['position']?.toString(),
     );
   }

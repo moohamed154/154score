@@ -28,6 +28,11 @@ class UrlHelper {
       );
     }
 
+    // Fix broken /players/ CDN path to canonical /player/
+    if (trimmed.contains('/players/')) {
+      trimmed = trimmed.replaceAll('/players/', '/player/');
+    }
+
     if (trimmed.startsWith('//')) {
       return 'https:$trimmed';
     }
