@@ -707,7 +707,7 @@ class _StandingsViewState extends State<StandingsView> {
                     ),
                     child: Row(
                       children: [
-                        AppBrandLogo(size: 32, isDark: isDark),
+                        AppBrandLogo(size: 40, isDark: isDark),
                         const SizedBox(width: 10),
                         Text(
                           '154Score',

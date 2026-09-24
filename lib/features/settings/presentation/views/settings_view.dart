@@ -213,14 +213,15 @@ class _SettingsViewState extends State<SettingsView> {
                         subtitleText,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                        ),
+                        style:
+                            AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -339,8 +340,8 @@ class _SettingsViewState extends State<SettingsView> {
               children: [
                 Row(
                   children: [
-                    AppBrandLogo(size: 40, isDark: isDark),
-                    const SizedBox(width: 12),
+                    AppBrandLogo(size: 48, isDark: isDark),
+                    const SizedBox(width: 14),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -352,7 +353,7 @@ class _SettingsViewState extends State<SettingsView> {
                           ).copyWith(fontWeight: FontWeight.w700),
                         ),
                         Text(
-                          'Powered by 154score API & WebSocket',
+                          'Powered by 154Dev',
                           style: AppTypography.getBodySmall(
                             isDark: isDark,
                             isArabic: isArabic,

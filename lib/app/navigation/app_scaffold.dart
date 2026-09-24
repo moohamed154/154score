@@ -287,8 +287,8 @@ class AppScaffold extends StatelessWidget {
           // Branding
           Row(
             children: [
-              AppBrandLogo(size: 34, isDark: isDark),
-              const SizedBox(width: 10),
+              AppBrandLogo(size: 44, isDark: isDark),
+              const SizedBox(width: 12),
               Text(
                 '154Score',
                 style: AppTypography.getHeadingLarge(

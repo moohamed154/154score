@@ -432,8 +432,8 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
           children: [
             // Outer Pulsing Glow
             Container(
-              width: 140,
-              height: 140,
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -451,8 +451,8 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
             // Secondary Glowing Ring
             Container(
-              width: 110,
-              height: 110,
+              width: 156,
+              height: 156,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -466,10 +466,10 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
             // Central Premium Emblem
             Container(
-              width: 96,
-              height: 96,
+              width: 132,
+              height: 132,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(26),
+                borderRadius: BorderRadius.circular(32),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -481,20 +481,20 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                   color: AppColors.primary.withValues(
                     alpha: isDark ? 0.8 : 0.9,
                   ),
-                  width: 2.0,
+                  width: 2.5,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.primary.withValues(
                       alpha: isDark ? 0.35 : 0.20,
                     ),
-                    blurRadius: 24,
-                    spreadRadius: isDark ? 2 : 1,
-                    offset: const Offset(0, 4),
+                    blurRadius: 32,
+                    spreadRadius: isDark ? 3 : 2,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               child: Center(
                 child: Image.asset(
                   'assets/icons/app_icon.png',

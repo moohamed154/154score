@@ -13,7 +13,7 @@ class AppBrandLogo extends StatelessWidget {
 
   const AppBrandLogo({
     super.key,
-    this.size = 32.0,
+    this.size = 40.0,
     this.isDark,
     this.withBackground = true,
     this.borderRadius,
@@ -25,7 +25,7 @@ class AppBrandLogo extends StatelessWidget {
     final effectiveIsDark =
         isDark ?? (Theme.of(context).brightness == Brightness.dark);
     final effectiveRadius = borderRadius ?? BorderRadius.circular(size * 0.26);
-    final effectivePadding = padding ?? EdgeInsets.all(size * 0.10);
+    final effectivePadding = padding ?? EdgeInsets.all(size * 0.08);
 
     final imageWidget = Image.asset(
       'assets/icons/app_icon.png',
