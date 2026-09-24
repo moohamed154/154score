@@ -1,11 +1,11 @@
 {
-    "name": "ysscores",
-    "short_name": "ysscores",
+    "name": "154 SCORE",
+    "short_name": "154 SCORE",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "154Score - Production Ready Real-Time Football Application",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
