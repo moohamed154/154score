@@ -213,4 +213,6 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit(sl()));
 
   sl.registerLazySingleton<LocaleCubit>(() => LocaleCubit(sl(), sl()));
+
+  sl.registerLazySingleton<TimezoneCubit>(() => TimezoneCubit(sl()));
 }

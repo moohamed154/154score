@@ -20,7 +20,10 @@ abstract class LocalStorageService {
 
   // Timezone Offset
   int getTimezoneOffset();
-  Future<bool> setTimezoneOffset(int offset);
+  Future<bool> setTimezoneOffset(int offset, {bool isAuto = false});
+  bool isTimezoneAuto() => true;
+  Future<bool> setTimezoneAuto(bool isAuto) async => true;
+  int getDeviceTimezoneOffset() => DateTime.now().timeZoneOffset.inHours;
 
   // Favorites
   List<String> getFavoriteTeams();
@@ -74,6 +77,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyTimeFormat = 'app_time_format';
   static const String _keyTimezoneOffset = 'app_timezone_offset';
+  static const String _keyTimezoneAuto = 'app_timezone_auto';
   static const String _keyFavoriteTeams = 'app_favorite_teams';
   static const String _keyFavoriteCompetitions = 'app_favorite_competitions';
   static const String _keyFavoriteCompetitionTitles =
@@ -194,13 +198,36 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
-  int getTimezoneOffset() {
-    return _prefs.getInt(_keyTimezoneOffset) ?? 0;
+  int getDeviceTimezoneOffset() {
+    return DateTime.now().timeZoneOffset.inHours;
   }
 
   @override
-  Future<bool> setTimezoneOffset(int offset) {
+  bool isTimezoneAuto() {
+    return _prefs.getBool(_keyTimezoneAuto) ?? (_prefs.getInt(_keyTimezoneOffset) == null);
+  }
+
+  @override
+  int getTimezoneOffset() {
+    if (isTimezoneAuto()) {
+      return getDeviceTimezoneOffset();
+    }
+    return _prefs.getInt(_keyTimezoneOffset) ?? getDeviceTimezoneOffset();
+  }
+
+  @override
+  Future<bool> setTimezoneOffset(int offset, {bool isAuto = false}) async {
+    await _prefs.setBool(_keyTimezoneAuto, isAuto);
     return _prefs.setInt(_keyTimezoneOffset, offset);
+  }
+
+  @override
+  Future<bool> setTimezoneAuto(bool isAuto) async {
+    await _prefs.setBool(_keyTimezoneAuto, isAuto);
+    if (isAuto) {
+      return _prefs.setInt(_keyTimezoneOffset, getDeviceTimezoneOffset());
+    }
+    return true;
   }
 
   @override

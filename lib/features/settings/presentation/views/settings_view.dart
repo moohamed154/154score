@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -190,37 +191,74 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                 ),
                 const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.public_rounded),
-                  title: Text(l10n.translate('timezone_offset')),
-                  trailing: DropdownButton<int>(
-                    value: storage.getTimezoneOffset(),
-                    underline: const SizedBox(),
-                    items: const [
-                      DropdownMenuItem(value: 0, child: Text('UTC +0')),
-                      DropdownMenuItem(value: 1, child: Text('UTC +1')),
-                      DropdownMenuItem(
-                        value: 2,
-                        child: Text('UTC +2 (Cairo/Jerusalem)'),
+                BlocBuilder<TimezoneCubit, TimezoneState>(
+                  builder: (context, tzState) {
+                    final info = tzState.isAuto
+                        ? tzState.deviceOffsetInfo
+                        : tzState.currentOffsetInfo;
+                    final subtitleText = tzState.isAuto
+                        ? '${l10n.translate('timezone_auto')} (${info.formattedOffset})'
+                        : info.title(isArabic);
+
+                    return ListTile(
+                      leading: const Icon(Icons.public_rounded),
+                      title: Text(l10n.translate('timezone_offset')),
+                      subtitle: Text(
+                        subtitleText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
                       ),
-                      DropdownMenuItem(
-                        value: 3,
-                        child: Text('UTC +3 (Riyadh/Kuwait/Doha)'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusSm,
+                              ),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              info.formattedOffset,
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            isArabic
+                                ? Icons.arrow_back_ios_new_rounded
+                                : Icons.arrow_forward_ios_rounded,
+                            size: 16,
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                          ),
+                        ],
                       ),
-                      DropdownMenuItem(value: 4, child: Text('UTC +4 (Dubai)')),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        storage.setTimezoneOffset(val);
-                        setState(() {});
-                        try {
-                          context.read<MatchesBloc>().add(
-                            ChangeTimezoneEvent(val),
-                          );
-                        } catch (_) {}
-                      }
-                    },
-                  ),
+                      onTap: () {
+                        context.push('/settings/timezone');
+                      },
+                    );
+                  },
                 ),
               ],
             ),

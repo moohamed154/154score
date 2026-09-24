@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/websocket/websocket_service.dart';
+import '../../domain/models/utc_offset_info.dart';
 
 // Theme Cubit
 class ThemeCubit extends Cubit<ThemeMode> {
@@ -140,5 +141,67 @@ class LocaleCubit extends Cubit<LocaleState> {
   Future<void> close() {
     _indicatorDebounceTimer?.cancel();
     return super.close();
+  }
+}
+
+// Timezone State
+class TimezoneState extends Equatable {
+  final int offset;
+  final bool isAuto;
+  final int deviceOffset;
+
+  const TimezoneState({
+    required this.offset,
+    required this.isAuto,
+    required this.deviceOffset,
+  });
+
+  UtcOffsetInfo get currentOffsetInfo => UtcOffsetInfo.findByOffset(offset);
+  UtcOffsetInfo get deviceOffsetInfo => UtcOffsetInfo.findByOffset(deviceOffset);
+
+  TimezoneState copyWith({
+    int? offset,
+    bool? isAuto,
+    int? deviceOffset,
+  }) {
+    return TimezoneState(
+      offset: offset ?? this.offset,
+      isAuto: isAuto ?? this.isAuto,
+      deviceOffset: deviceOffset ?? this.deviceOffset,
+    );
+  }
+
+  @override
+  List<Object?> get props => [offset, isAuto, deviceOffset];
+}
+
+// Timezone Cubit
+class TimezoneCubit extends Cubit<TimezoneState> {
+  final LocalStorageService _storage;
+
+  TimezoneCubit(this._storage)
+    : super(
+        TimezoneState(
+          offset: _storage.getTimezoneOffset(),
+          isAuto: _storage.isTimezoneAuto(),
+          deviceOffset: _storage.getDeviceTimezoneOffset(),
+        ),
+      );
+
+  Future<void> setTimezoneOffset(int offset) async {
+    await _storage.setTimezoneOffset(offset, isAuto: false);
+    emit(state.copyWith(offset: offset, isAuto: false));
+  }
+
+  Future<void> setAutoTimezone() async {
+    final devOffset = _storage.getDeviceTimezoneOffset();
+    await _storage.setTimezoneAuto(true);
+    emit(
+      state.copyWith(
+        offset: devOffset,
+        isAuto: true,
+        deviceOffset: devOffset,
+      ),
+    );
   }
 }

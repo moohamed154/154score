@@ -56,6 +56,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<TransfersBloc>(create: (_) => sl<TransfersBloc>()),
         BlocProvider<VideosBloc>(create: (_) => sl<VideosBloc>()),
         BlocProvider<FavoritesCubit>(create: (_) => sl<FavoritesCubit>()),
+        BlocProvider<TimezoneCubit>(create: (_) => sl<TimezoneCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {

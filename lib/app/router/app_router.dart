@@ -20,6 +20,7 @@ import '../../features/players/presentation/views/player_view.dart';
 import '../../features/profiles/presentation/views/generic_profile_view.dart';
 import '../../features/search/presentation/views/search_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
+import '../../features/settings/presentation/views/timezone_selection_view.dart';
 import '../../features/standings/presentation/views/standings_view.dart';
 import '../../features/teams/presentation/bloc/team_bloc.dart';
 import '../../features/teams/presentation/views/team_view.dart';
@@ -138,6 +139,16 @@ class AppRouter {
                   state: state,
                   child: const SettingsView(),
                 ),
+                routes: [
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: 'timezone',
+                    pageBuilder: (context, state) => _buildCupertinoPage(
+                      state: state,
+                      child: const TimezoneSelectionView(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
