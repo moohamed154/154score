@@ -131,7 +131,7 @@ class ChampionshipInfo {
   };
 }
 
-const List<ChampionshipInfo> kDefaultFallbackChampionships = [
+const List<ChampionshipInfo> kDefaultFallbackChampionshipsAr = [
   ChampionshipInfo(
     id: '12048',
     seasonId: '943230',
@@ -215,6 +215,99 @@ const List<ChampionshipInfo> kDefaultFallbackChampionships = [
   ),
 ];
 
+const List<ChampionshipInfo> kDefaultFallbackChampionshipsEn = [
+  ChampionshipInfo(
+    id: '12048',
+    seasonId: '943230',
+    name: 'UEFA Champions League',
+    slug: 'UEFA-Champions-League',
+    logo: 'https://imgs.ysscores.com/championship/128/5171696546919.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 4,
+  ),
+  ChampionshipInfo(
+    id: '6811',
+    seasonId: '937599',
+    name: 'Premier League',
+    slug: 'Premier-League',
+    logo: 'https://imgs.ysscores.com/championship/128/3411694791422.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 1,
+  ),
+  ChampionshipInfo(
+    id: '88013',
+    seasonId: '59771441',
+    name: 'Supercopa de España',
+    slug: 'Supercopa-de-España',
+    logo: 'https://imgs.ysscores.com/championship/128/5481703687014.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 2,
+    hasStandings: false,
+  ),
+  ChampionshipInfo(
+    id: '1933',
+    seasonId: '938652',
+    name: 'LaLiga',
+    slug: 'LaLiga',
+    logo: 'https://imgs.ysscores.com/championship/128/8641690196626.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 1,
+  ),
+  ChampionshipInfo(
+    id: '3734',
+    seasonId: '936357',
+    name: 'Serie A',
+    slug: 'Serie-A',
+    logo: 'https://imgs.ysscores.com/championship/128/6281692568873.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 1,
+  ),
+  ChampionshipInfo(
+    id: '2606',
+    seasonId: '938769',
+    name: 'Bundesliga',
+    slug: 'Bundesliga',
+    logo: 'https://imgs.ysscores.com/championship/128/6171690288722.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 1,
+  ),
+  ChampionshipInfo(
+    id: '1985',
+    seasonId: '937873',
+    name: 'Ligue 1',
+    slug: 'Ligue-1',
+    logo: 'https://imgs.ysscores.com/championship/128/9551719862665.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 1,
+  ),
+  ChampionshipInfo(
+    id: '7167',
+    seasonId: '941825',
+    name: 'Saudi Pro League',
+    slug: 'Saudi-Pro-League',
+    logo: 'https://imgs.ysscores.com/championship/128/5111703719091.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 1,
+  ),
+];
+
+List<ChampionshipInfo> getDefaultFallbackChampionships(String lang) {
+  return lang == 'en'
+      ? kDefaultFallbackChampionshipsEn
+      : kDefaultFallbackChampionshipsAr;
+}
+
+const List<ChampionshipInfo> kDefaultFallbackChampionships =
+    kDefaultFallbackChampionshipsAr;
+
 class StandingsView extends StatefulWidget {
   final String? initialLeagueId;
 
@@ -239,27 +332,27 @@ class _StandingsViewState extends State<StandingsView> {
     super.initState();
 
     final storage = sl<LocalStorageService>();
+    final currentLang = storage.getLanguage();
 
     // 1. Startup: Load cached championships if available
-    _loadCachedRankings(storage.getLanguage());
+    final hasCache = _loadCachedRankings(currentLang);
 
-    // 2. Fallback if no cache found yet
-    if (_allLeagues.isEmpty) {
-      _featuredLeagues = List<ChampionshipInfo>.from(
-        kDefaultFallbackChampionships,
-      );
-      _allLeagues = List<ChampionshipInfo>.from(kDefaultFallbackChampionships);
+    // 2. Fallback if no cache found yet for current language
+    if (!hasCache && _allLeagues.isEmpty) {
+      final fallbacks = getDefaultFallbackChampionships(currentLang);
+      _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
+      _allLeagues = List<ChampionshipInfo>.from(fallbacks);
     }
 
     _searchController.addListener(_onSearchChanged);
 
     // 3. Guaranteed fresh network fetch on first open
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchRankings();
+      _fetchRankings(lang: currentLang);
     });
   }
 
-  void _loadCachedRankings(String lang) {
+  bool _loadCachedRankings(String lang) {
     final storage = sl<LocalStorageService>();
     final cachedData = storage.getCachedRankings(lang: lang);
     if (cachedData != null && cachedData.isNotEmpty) {
@@ -288,21 +381,25 @@ class _StandingsViewState extends State<StandingsView> {
           }
 
           if (cachedAll.isNotEmpty || cachedFeatured.isNotEmpty) {
+            final targetFeatured = cachedFeatured;
+            final targetAll = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
             if (mounted) {
               setState(() {
-                _featuredLeagues = cachedFeatured;
-                _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
+                _featuredLeagues = targetFeatured;
+                _allLeagues = targetAll;
                 _isLoading = false;
               });
             } else {
-              _featuredLeagues = cachedFeatured;
-              _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
+              _featuredLeagues = targetFeatured;
+              _allLeagues = targetAll;
               _isLoading = false;
             }
+            return true;
           }
         }
       } catch (_) {}
     }
+    return false;
   }
 
   void _onSearchChanged() {
@@ -314,10 +411,10 @@ class _StandingsViewState extends State<StandingsView> {
     });
   }
 
-  Future<void> _fetchRankings({String search = ''}) async {
+  Future<void> _fetchRankings({String search = '', String? lang}) async {
+    final effectiveLang = lang ?? sl<LocalStorageService>().getLanguage();
     try {
-      final lang = sl<LocalStorageService>().getLanguage();
-      final queryParams = <String, dynamic>{'lang': lang};
+      final queryParams = <String, dynamic>{'lang': effectiveLang};
       if (search.isNotEmpty) {
         queryParams['search'] = search;
       }
@@ -327,6 +424,12 @@ class _StandingsViewState extends State<StandingsView> {
         ApiEndpoints.rank,
         queryParameters: queryParams,
       );
+
+      // Race condition check: make sure user didn't switch language while request was in-flight
+      final currentLang = sl<LocalStorageService>().getLanguage();
+      if (currentLang != effectiveLang) {
+        return;
+      }
 
       Map<String, dynamic>? resMap;
       if (response is Map) {
@@ -359,7 +462,7 @@ class _StandingsViewState extends State<StandingsView> {
           }
         }
 
-        // Cache the remote data
+        // Cache the remote data per language
         if (search.isEmpty &&
             (fetchedAll.isNotEmpty || fetchedFeatured.isNotEmpty)) {
           try {
@@ -369,7 +472,7 @@ class _StandingsViewState extends State<StandingsView> {
                   'featured': fetchedFeatured.map((e) => e.toJson()).toList(),
                   'leagues': fetchedAll.map((e) => e.toJson()).toList(),
                 }),
-                lang: lang,
+                lang: effectiveLang,
               ),
             );
 
@@ -377,6 +480,7 @@ class _StandingsViewState extends State<StandingsView> {
             for (final l in [...fetchedFeatured, ...fetchedAll]) {
               if (l.name.isNotEmpty) {
                 titlesMap[l.id] = l.name;
+                titlesMap[l.name.trim().toLowerCase()] = l.id;
                 if (l.seasonId != null && l.seasonId!.isNotEmpty) {
                   titlesMap[l.seasonId!] = l.name;
                 }
@@ -450,7 +554,7 @@ class _StandingsViewState extends State<StandingsView> {
     final moved = list.removeAt(oldIndex);
     list.insert(newIndex, moved);
     final identifiers = list
-        .map((e) => e.name.isNotEmpty ? e.name : e.id)
+        .map((e) => e.id.isNotEmpty ? e.id : e.name)
         .toList();
     context.read<FavoritesCubit>().setFavoriteCompetitions(identifiers);
   }
@@ -472,8 +576,16 @@ class _StandingsViewState extends State<StandingsView> {
     return BlocListener<LocaleCubit, LocaleState>(
       listenWhen: (prev, curr) => prev.locale != curr.locale,
       listener: (context, localeState) {
-        _loadCachedRankings(localeState.locale.languageCode);
-        _fetchRankings();
+        final targetLang = localeState.locale.languageCode;
+        final hasCache = _loadCachedRankings(targetLang);
+        if (!hasCache) {
+          final fallbacks = getDefaultFallbackChampionships(targetLang);
+          setState(() {
+            _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
+            _allLeagues = List<ChampionshipInfo>.from(fallbacks);
+          });
+        }
+        _fetchRankings(lang: targetLang);
       },
       child: Scaffold(
         backgroundColor: bg,
@@ -487,15 +599,26 @@ class _StandingsViewState extends State<StandingsView> {
                         ? <String>[]
                         : _featuredLeagues.map((e) => e.name).toList());
 
-              // Build favorite cards in user order
+              // Build favorite cards in user order with robust cross-language resolution
               final List<ChampionshipInfo> favoriteCards = [];
               for (final key in currentFavKeys) {
+                final cleanKey = key.trim().toLowerCase();
+                final resolvedId =
+                    favState.competitionTitles[key.trim()] ??
+                    favState.competitionTitles[cleanKey] ??
+                    LocalStorageServiceImpl.defaultNameToId[cleanKey];
+
                 ChampionshipInfo? matched;
                 for (final l in _allLeagues) {
                   if (l.id == key ||
-                      l.name == key ||
-                      l.slug == key ||
-                      (l.seasonId != null && l.seasonId == key)) {
+                      (resolvedId != null && l.id == resolvedId) ||
+                      (l.seasonId != null &&
+                          (l.seasonId == key ||
+                              (resolvedId != null &&
+                                  l.seasonId == resolvedId))) ||
+                      l.name.trim().toLowerCase() == cleanKey ||
+                      (l.slug != null &&
+                          l.slug!.trim().toLowerCase() == cleanKey)) {
                     matched = l;
                     break;
                   }
@@ -503,9 +626,14 @@ class _StandingsViewState extends State<StandingsView> {
                 if (matched == null) {
                   for (final l in _featuredLeagues) {
                     if (l.id == key ||
-                        l.name == key ||
-                        l.slug == key ||
-                        (l.seasonId != null && l.seasonId == key)) {
+                        (resolvedId != null && l.id == resolvedId) ||
+                        (l.seasonId != null &&
+                            (l.seasonId == key ||
+                                (resolvedId != null &&
+                                    l.seasonId == resolvedId))) ||
+                        l.name.trim().toLowerCase() == cleanKey ||
+                        (l.slug != null &&
+                            l.slug!.trim().toLowerCase() == cleanKey)) {
                       matched = l;
                       break;
                     }

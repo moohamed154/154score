@@ -116,6 +116,48 @@ class LocalStorageServiceImpl implements LocalStorageService {
     '943487': 'دوري أبطال أفريقيا',
     '911131': 'دوري أبطال أفريقيا',
     '98026338': 'كأس الخليج تحت 17 سنة',
+    '937603': 'الدوري الأوروبي',
+    '77059': 'كأس القارات للأندية',
+  };
+
+  static const Map<String, String> defaultNameToId = {
+    // Arabic names
+    'دوري أبطال أوروبا': '12048',
+    'الدوري الإنجليزي الممتاز': '6811',
+    'الدوري الإنجليزي': '6811',
+    'البريميرليج': '6811',
+    'كأس السوبر الإسباني': '88013',
+    'الدوري الإسباني': '1933',
+    'لا ليغا': '1933',
+    'الدوري الإيطالي': '3734',
+    'الدوري الألماني': '2606',
+    'الدوري الفرنسي': '1985',
+    'الدوري السعودي للمحترفين': '7167',
+    'دوري روشن السعودي': '7167',
+    'كأس العالم': '894789',
+    'دوري أبطال أفريقيا': '943487',
+    'كأس الخليج تحت 17 سنة': '98026338',
+    'الدوري الأوروبي': '937603',
+    'كأس القارات للأندية': '77059',
+    // English names
+    'uefa champions league': '12048',
+    'champions league': '12048',
+    'premier league': '6811',
+    'supercopa de españa': '88013',
+    'supercopa de espana': '88013',
+    'laliga': '1933',
+    'la liga': '1933',
+    'serie a': '3734',
+    'bundesliga': '2606',
+    'ligue 1': '1985',
+    'saudi pro league': '7167',
+    'fifa world cup': '894789',
+    'caf champions league': '943487',
+    'gulf cup u17': '98026338',
+    'uefa europa league': '937603',
+    'europa league': '937603',
+    'fifa intercontinental cup': '77059',
+    'intercontinental cup': '77059',
   };
 
   @override
@@ -223,6 +265,12 @@ class LocalStorageServiceImpl implements LocalStorageService {
   Future<bool> registerCompetitionTitles(Map<String, String> titles) async {
     final current = getFavoriteCompetitionTitles();
     current.addAll(titles);
+    // Also store reverse mapping title.toLowerCase() -> id so looking up any name finds the id
+    titles.forEach((id, name) {
+      if (name.trim().isNotEmpty) {
+        current[name.trim().toLowerCase()] = id;
+      }
+    });
     return _prefs.setString(_keyFavoriteCompetitionTitles, jsonEncode(current));
   }
 
@@ -266,12 +314,28 @@ class LocalStorageServiceImpl implements LocalStorageService {
       addTarget(titles[name.trim()]);
     }
 
+    for (final candidate in [compName, name, slug]) {
+      if (candidate != null && candidate.trim().isNotEmpty) {
+        final clean = candidate.trim().toLowerCase();
+        final resolvedId = defaultNameToId[clean] ?? titles[clean];
+        if (resolvedId != null) addTarget(resolvedId);
+      }
+    }
+
     for (final fav in list) {
       final cleanFav = fav.trim().toLowerCase();
       if (targets.contains(cleanFav)) return true;
       if (titles.containsKey(fav.trim())) {
         final mapped = titles[fav.trim()]!.trim().toLowerCase();
         if (targets.contains(mapped)) return true;
+      }
+      if (titles.containsKey(cleanFav)) {
+        final mapped = titles[cleanFav]!.trim().toLowerCase();
+        if (targets.contains(mapped)) return true;
+      }
+      final resolvedId = defaultNameToId[cleanFav];
+      if (resolvedId != null && targets.contains(resolvedId.toLowerCase())) {
+        return true;
       }
     }
     return false;
@@ -367,8 +431,13 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   String? getCachedRankings({String? lang}) {
     final effectiveLang = lang ?? getLanguage();
-    return _prefs.getString('${_keyCachedRankings}_$effectiveLang') ??
-        _prefs.getString(_keyCachedRankings);
+    final keyed = _prefs.getString('${_keyCachedRankings}_$effectiveLang');
+    if (keyed != null) return keyed;
+    // Only fall back to unkeyed legacy cache for Arabic to avoid bleeding Arabic data into English
+    if (effectiveLang == 'ar') {
+      return _prefs.getString(_keyCachedRankings);
+    }
+    return null;
   }
 
   @override

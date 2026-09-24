@@ -51,12 +51,30 @@ class FavoritesState extends Equatable {
       addTarget(competitionTitles[name.trim()]);
     }
 
+    for (final candidate in [id, name, slug]) {
+      if (candidate != null && candidate.trim().isNotEmpty) {
+        final clean = candidate.trim().toLowerCase();
+        final resolvedId =
+            LocalStorageServiceImpl.defaultNameToId[clean] ??
+            competitionTitles[clean];
+        if (resolvedId != null) addTarget(resolvedId);
+      }
+    }
+
     for (final fav in favoriteCompetitions) {
       final cleanFav = fav.trim().toLowerCase();
       if (targets.contains(cleanFav)) return true;
       if (competitionTitles.containsKey(fav.trim())) {
         final mapped = competitionTitles[fav.trim()]!.trim().toLowerCase();
         if (targets.contains(mapped)) return true;
+      }
+      if (competitionTitles.containsKey(cleanFav)) {
+        final mapped = competitionTitles[cleanFav]!.trim().toLowerCase();
+        if (targets.contains(mapped)) return true;
+      }
+      final resolvedId = LocalStorageServiceImpl.defaultNameToId[cleanFav];
+      if (resolvedId != null && targets.contains(resolvedId.toLowerCase())) {
+        return true;
       }
     }
     return false;

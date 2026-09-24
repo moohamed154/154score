@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../domain/entities/standings_entity.dart';
 import '../../domain/repositories/standings_repository.dart';
@@ -124,6 +128,30 @@ class StandingsBloc extends Bloc<StandingsEvent, StandingsState> {
   ) async {
     final targetLang = event.languageCode;
     try {
+      // 1. Prefetch rankings directory for targetLang in background so cache is warm for StandingsView
+      try {
+        if (GetIt.instance.isRegistered<ApiClient>()) {
+          final apiClient = GetIt.instance<ApiClient>();
+          final dynamic response = await apiClient.get(
+            ApiEndpoints.rank,
+            queryParameters: {'lang': targetLang},
+          );
+          if (response is Map && response['data'] is Map) {
+            final data = Map<String, dynamic>.from(response['data'] as Map);
+            final featuredRaw =
+                data['favorites'] as List? ?? (data['featured'] as List? ?? []);
+            final leaguesRaw =
+                data['all'] as List? ?? (data['leagues'] as List? ?? []);
+            if (featuredRaw.isNotEmpty || leaguesRaw.isNotEmpty) {
+              await localStorageService.setCachedRankings(
+                jsonEncode({'featured': featuredRaw, 'leagues': leaguesRaw}),
+                lang: targetLang,
+              );
+            }
+          }
+        }
+      } catch (_) {}
+
       final result = await repository.getStandings(
         state.selectedLeagueId,
         lang: targetLang,

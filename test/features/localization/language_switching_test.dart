@@ -8,14 +8,19 @@ import 'package:score154/core/network/api_result.dart';
 import 'package:score154/core/storage/local_storage_service.dart';
 import 'package:score154/core/websocket/websocket_event.dart';
 import 'package:score154/core/websocket/websocket_service.dart';
+import 'package:score154/features/favorites/presentation/cubit/favorites_cubit.dart';
 import 'package:score154/features/matches/domain/entities/match_entity.dart';
 import 'package:score154/features/matches/domain/repositories/matches_repository.dart';
 import 'package:score154/features/matches/presentation/bloc/matches_bloc.dart';
 import 'package:score154/features/matches/presentation/bloc/matches_event.dart';
 import 'package:score154/features/matches/presentation/bloc/matches_state.dart';
 import 'package:score154/features/settings/presentation/cubit/settings_cubits.dart';
+import 'package:score154/features/standings/presentation/views/standings_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+
+class MockSharedPreferences extends Mock implements SharedPreferences {}
 
 class MockWebSocketService extends Mock implements WebSocketService {}
 
@@ -23,6 +28,7 @@ class MockMatchesRepository extends Mock implements MatchesRepository {}
 
 void main() {
   late MockLocalStorageService mockStorage;
+  late MockSharedPreferences mockPrefs;
   late MockWebSocketService mockWebSocketService;
   late MockMatchesRepository mockRepository;
 
@@ -385,5 +391,47 @@ void main() {
         await bloc.close();
       },
     );
+  });
+
+  group('Standings Page Localization & Cross-Language Resolution Tests', () {
+    test('getCachedRankings never bleeds Arabic cache into English', () {
+      mockPrefs = MockSharedPreferences();
+      final storage = LocalStorageServiceImpl(mockPrefs);
+      // Even if legacy unkeyed cache has Arabic, requesting English must return null when no en cache exists
+      when(() => mockPrefs.getString('app_cached_rankings_en')).thenReturn(null);
+      when(() => mockPrefs.getString('app_cached_rankings')).thenReturn('{"leagues": [{"name": "الدوري الإنجليزي"}]}');
+      when(() => mockPrefs.getString('app_language')).thenReturn('en');
+
+      final cached = storage.getCachedRankings(lang: 'en');
+      expect(cached, isNull);
+    });
+
+    test('Favorites cross-lingual resolution matches Arabic saved favorites to English championship', () {
+      const state = FavoritesState(
+        favoriteCompetitions: ['دوري أبطال أوروبا', 'الدوري الإنجليزي الممتاز'],
+        competitionTitles: {
+          '12048': 'UEFA Champions League',
+          '6811': 'Premier League',
+        },
+      );
+
+      // Matches by ID
+      expect(state.isFavoriteCompetition(id: '12048', name: 'UEFA Champions League'), isTrue);
+      expect(state.isFavoriteCompetition(id: '6811', name: 'Premier League'), isTrue);
+
+      // Matches by English name via defaultNameToId
+      expect(state.isFavoriteCompetition(name: 'UEFA Champions League'), isTrue);
+      expect(state.isFavoriteCompetition(name: 'Premier League'), isTrue);
+    });
+
+    test('getDefaultFallbackChampionships returns localized titles for en and ar', () {
+      final enFallbacks = getDefaultFallbackChampionships('en');
+      final arFallbacks = getDefaultFallbackChampionships('ar');
+
+      expect(enFallbacks.first.name, 'UEFA Champions League');
+      expect(arFallbacks.first.name, 'دوري أبطال أوروبا');
+      expect(enFallbacks[1].name, 'Premier League');
+      expect(arFallbacks[1].name, 'الدوري الإنجليزي الممتاز');
+    });
   });
 }
