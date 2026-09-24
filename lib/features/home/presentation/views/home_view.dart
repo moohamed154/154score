@@ -191,29 +191,18 @@ class _HomeViewState extends State<HomeView> {
                 } catch (_) {}
               },
               child: ListView(
-                padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+                padding: const EdgeInsets.only(
+                  top: 12,
+                  bottom: AppDimensions.xxxl,
+                ),
                 children: [
-                  // Selected date label (updates when swiping days)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: Text(
-                      _formatDate(matchesState.selectedDate, isArabic),
-                      style:
-                          AppTypography.getBodyLarge(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                    ),
-                  ),
-
                   if (isHomeLoading)
-                    _buildMatchesSkeleton(context, isDark, isArabic)
+                    _buildMatchesSkeleton(
+                      context,
+                      isDark,
+                      isArabic,
+                      matchesState.selectedDate,
+                    )
                   else ...[
                     // 1. LIVE NOW Section (if any live matches)
                     _buildLiveNowSection(
@@ -334,7 +323,12 @@ class _HomeViewState extends State<HomeView> {
     if ((state.status == MatchesStatus.loading ||
             state.status == MatchesStatus.initial) &&
         displayLeagues.isEmpty) {
-      return _buildMatchesSkeleton(context, isDark, isArabic);
+      return _buildMatchesSkeleton(
+        context,
+        isDark,
+        isArabic,
+        state.selectedDate,
+      );
     }
 
     if (state.status == MatchesStatus.error && displayLeagues.isEmpty) {
@@ -371,7 +365,17 @@ class _HomeViewState extends State<HomeView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: l10n.translate('nav_matches'),
+          title: _formatDate(state.selectedDate, isArabic),
+          titleStyle: AppTypography.getBodyLarge(
+            isDark: isDark,
+            isArabic: isArabic,
+          ).copyWith(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
           actionText: l10n.translate('view_all'),
           onActionTap: () => context.go('/matches'),
         ),
@@ -398,15 +402,31 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildMatchesSkeleton(
     BuildContext context,
     bool isDark,
-    bool isArabic,
-  ) {
+    bool isArabic, [
+    DateTime? selectedDate,
+  ]) {
     final l10n = AppLocalizations.of(context);
+    final title = selectedDate != null
+        ? _formatDate(selectedDate, isArabic)
+        : l10n.translate('nav_matches');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: l10n.translate('nav_matches'),
+          title: title,
+          titleStyle: selectedDate != null
+              ? AppTypography.getBodyLarge(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                )
+              : null,
           actionText: l10n.translate('view_all'),
           onActionTap: () => context.go('/matches'),
         ),

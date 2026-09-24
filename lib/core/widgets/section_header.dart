@@ -10,6 +10,7 @@ class SectionHeader extends StatelessWidget {
   final String? actionText;
   final VoidCallback? onActionTap;
   final Widget? leading;
+  final TextStyle? titleStyle;
 
   const SectionHeader({
     super.key,
@@ -17,6 +18,7 @@ class SectionHeader extends StatelessWidget {
     this.actionText,
     this.onActionTap,
     this.leading,
+    this.titleStyle,
   });
 
   @override
@@ -44,10 +46,11 @@ class SectionHeader extends StatelessWidget {
                 Flexible(
                   child: Text(
                     title,
-                    style: AppTypography.getHeadingMedium(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ),
+                    style: titleStyle ??
+                        AppTypography.getHeadingMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
