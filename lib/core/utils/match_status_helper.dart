@@ -188,8 +188,17 @@ class MatchStatusHelper {
       }
     }
 
-    // 5.2 If explicitly marked upcoming and no live indicator is present, it's upcoming
-    if (isExplicitUpcoming && !hasLiveIndicator) {
+    final hasActiveScores =
+        (score1 != null &&
+        score2 != null &&
+        score1.isNotEmpty &&
+        score2.isNotEmpty &&
+        score1 != '-' &&
+        score2 != '-' &&
+        (score1 != '0' || score2 != '0'));
+
+    // 5.2 If explicitly marked upcoming and no live indicator or active scores, it's upcoming
+    if (isExplicitUpcoming && !hasLiveIndicator && !hasActiveScores) {
       return MatchPhase.upcoming;
     }
 
@@ -244,16 +253,7 @@ class MatchStatusHelper {
     }
 
     final isToday =
-        date != null && date.trim().isNotEmpty && date.trim() == todayStr;
-
-    final hasActiveScores =
-        (score1 != null &&
-        score2 != null &&
-        score1.isNotEmpty &&
-        score2.isNotEmpty &&
-        score1 != '-' &&
-        score2 != '-' &&
-        (score1 != '0' || score2 != '0'));
+        date == null || date.trim().isEmpty || date.trim() == todayStr;
 
     // 7. Timestamp-based or Time-based in-play detection
     if (timestamp != null && timestamp > 0) {
@@ -298,7 +298,7 @@ class MatchStatusHelper {
     }
 
     // If date is not today, but match has non-zero scores and no upcoming indicator, it is finished
-    if (!isToday && date != null && date.trim().isNotEmpty && hasActiveScores) {
+    if (!isToday && hasActiveScores) {
       return MatchPhase.finished;
     }
 

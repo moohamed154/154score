@@ -189,7 +189,7 @@ class TimezoneCubit extends Cubit<TimezoneState> {
       );
 
   Future<void> setTimezoneOffset(int offset) async {
-    await _storage.setTimezoneOffset(offset, isAuto: false);
+    await _storage.setTimezoneOffset(offset);
     emit(state.copyWith(offset: offset, isAuto: false));
   }
 

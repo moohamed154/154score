@@ -53,6 +53,15 @@ class MockLocalStorageService implements LocalStorageService {
   Future<bool> setTimezoneOffset(int offset) async => true;
 
   @override
+  bool isTimezoneAuto() => true;
+
+  @override
+  Future<bool> setTimezoneAuto(bool isAuto) async => true;
+
+  @override
+  int getDeviceTimezoneOffset() => 3;
+
+  @override
   List<String> getFavoriteTeams() => [];
 
   @override
@@ -493,9 +502,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('ريال مدريد'), findsWidgets);
-      expect(find.text('نظرة عامة'), findsOneWidget);
-      expect(find.text('المباريات القادمة'), findsOneWidget);
-      expect(find.text('النتائج السابقة'), findsOneWidget);
+      expect(find.text('المباريات'), findsOneWidget);
+      expect(find.text('الترتيب'), findsOneWidget);
+      expect(find.text('اللاعبين'), findsOneWidget);
     });
 
     testWidgets('5. LeagueView renders tabs, standings, and top scorers', (

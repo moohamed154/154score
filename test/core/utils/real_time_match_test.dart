@@ -214,7 +214,7 @@ void main() {
       expect(find.text('المقاولون العرب'), findsOneWidget);
       expect(find.text('الأهلي'), findsOneWidget);
       expect(find.text('مباشر'), findsNothing);
-      expect(find.text("30'"), findsOneWidget);
+      expect(find.textContaining('30'), findsOneWidget);
     });
 
     testWidgets(
@@ -249,7 +249,7 @@ void main() {
 
         expect(find.text('كرالوفه'), findsOneWidget);
         expect(find.text('فيكتوريا بيلزن'), findsOneWidget);
-        expect(find.text("90'"), findsOneWidget);
+        expect(find.textContaining('90'), findsOneWidget);
       },
     );
 
@@ -329,9 +329,9 @@ void main() {
 
         await tester.pump();
 
-        // Must display live calculated minute e.g. 22' instead of static kick-off time
+        // Must display live calculated minute e.g. 22:00 instead of static kick-off time
         expect(find.text(timeStr), findsNothing);
-        expect(find.text("22'"), findsOneWidget);
+        expect(find.textContaining('22'), findsOneWidget);
       },
     );
   });

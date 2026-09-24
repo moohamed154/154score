@@ -27,6 +27,22 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
     super.dispose();
   }
 
+  void _selectOffset(int offset) {
+    context.read<TimezoneCubit>().setTimezoneOffset(offset);
+    try {
+      context.read<MatchesBloc>().add(ChangeTimezoneEvent(offset));
+    } catch (_) {}
+    Navigator.of(context).pop();
+  }
+
+  void _selectAuto(int deviceOffset) {
+    context.read<TimezoneCubit>().setAutoTimezone();
+    try {
+      context.read<MatchesBloc>().add(ChangeTimezoneEvent(deviceOffset));
+    } catch (_) {}
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -50,21 +66,26 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(l10n.translate('timezone_offset')),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () => Navigator.of(context).pop(),
+            title: Text(
+              l10n.translate('timezone_offset'),
+              style: AppTypography.getHeadingMedium(
+                isDark: isDark,
+                isArabic: isArabic,
+              ),
             ),
           ),
-          body: Column(
+          body: ListView(
+            padding: const EdgeInsets.all(AppDimensions.lg),
             children: [
-              // Search input box
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppDimensions.lg,
-                  AppDimensions.md,
-                  AppDimensions.lg,
-                  AppDimensions.sm,
+              // Search Input matching SearchView & TransfersView style
+              Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
                 ),
                 child: TextField(
                   controller: _searchController,
@@ -75,10 +96,33 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
                   },
                   decoration: InputDecoration(
                     hintText: l10n.translate('search_timezone'),
-                    prefixIcon: const Icon(Icons.search_rounded, size: 22),
+                    hintStyle: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.sm,
+                      vertical: 10,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                      size: 20,
+                    ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 20),
+                            icon: const Icon(Icons.clear_rounded, size: 18),
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
                             onPressed: () {
                               _searchController.clear();
                               setState(() {
@@ -87,118 +131,112 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
                             },
                           )
                         : null,
-                    filled: true,
-                    fillColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                      borderSide: BorderSide(
-                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                      borderSide: BorderSide(
-                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                      borderSide: const BorderSide(
-                        color: AppColors.primary,
-                        width: 1.5,
-                      ),
-                    ),
                   ),
                 ),
               ),
 
-              // Offset list with Auto/Device detected card at top
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.lg,
-                    vertical: AppDimensions.sm,
-                  ),
-                  children: [
-                    // Auto Device Card
-                    if (showAutoCard) ...[
-                      _buildSectionHeader(
-                        l10n.translate('timezone_auto'),
-                        isDark,
-                        isArabic,
-                      ),
-                      _buildAutoDeviceTile(
-                        context: context,
+              const SizedBox(height: 20),
+
+              // Section 1: Auto (Device Timezone)
+              if (showAutoCard) ...[
+                _buildSectionHeader(
+                  l10n.translate('timezone_auto'),
+                  isDark,
+                  isArabic,
+                ),
+                _buildCard(
+                  isDark: isDark,
+                  child: ListTile(
+                    leading: const Icon(Icons.phonelink_setup_rounded),
+                    title: Text(
+                      l10n.translate('device_detected_timezone'),
+                      style: AppTypography.getBodyMedium(
                         isDark: isDark,
                         isArabic: isArabic,
-                        isAutoSelected: timezoneState.isAuto,
-                        deviceOffsetInfo: deviceOffsetInfo,
-                        l10n: l10n,
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-
-                    // Header for All UTC Offsets
-                    _buildSectionHeader(
-                      l10n.translate('all_timezones'),
-                      isDark,
-                      isArabic,
+                      ).copyWith(fontWeight: FontWeight.w600),
                     ),
+                    subtitle: Text(
+                      '${deviceOffsetInfo.formattedOffset} (${deviceOffsetInfo.title(isArabic)})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                    trailing: _buildRadio(timezoneState.isAuto, isDark),
+                    onTap: () => _selectAuto(deviceOffset),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
 
-                    if (filteredOffsets.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Center(
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.search_off_rounded,
-                                size: 48,
-                                color: isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                l10n.translate('no_timezones_found'),
-                                style: AppTypography.getBodyMedium(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextMuted
-                                      : AppColors.lightTextMuted,
-                                ),
-                              ),
-                            ],
+              // Section 2: All UTC Timezones in single grouped Card
+              _buildSectionHeader(
+                l10n.translate('all_timezones'),
+                isDark,
+                isArabic,
+              ),
+
+              if (filteredOffsets.isEmpty)
+                _buildCard(
+                  isDark: isDark,
+                  padding: const EdgeInsets.all(32),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 40,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.translate('no_timezones_found'),
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
                           ),
                         ),
-                      )
-                    else
-                      ...filteredOffsets.map((offsetInfo) {
-                        final isSelected = !timezoneState.isAuto &&
-                            timezoneState.offset == offsetInfo.offset;
-                        final isDevice = offsetInfo.offset == deviceOffset;
-
-                        return _buildOffsetTile(
+                      ],
+                    ),
+                  ),
+                )
+              else
+                _buildCard(
+                  isDark: isDark,
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < filteredOffsets.length; i++) ...[
+                        _buildOffsetTile(
                           context: context,
                           isDark: isDark,
                           isArabic: isArabic,
-                          offsetInfo: offsetInfo,
-                          isSelected: isSelected,
-                          isDevice: isDevice,
+                          offsetInfo: filteredOffsets[i],
+                          isSelected: !timezoneState.isAuto &&
+                              timezoneState.offset == filteredOffsets[i].offset,
+                          isDevice: filteredOffsets[i].offset == deviceOffset,
                           l10n: l10n,
-                        );
-                      }),
-
-                    const SizedBox(height: 24),
-                  ],
+                          onTap: () => _selectOffset(filteredOffsets[i].offset),
+                        ),
+                        if (i < filteredOffsets.length - 1)
+                          const Divider(height: 1),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
+
+              const SizedBox(height: 32),
             ],
           ),
         );
@@ -221,13 +259,10 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
     );
   }
 
-  Widget _buildAutoDeviceTile({
-    required BuildContext context,
+  Widget _buildCard({
     required bool isDark,
-    required bool isArabic,
-    required bool isAutoSelected,
-    required UtcOffsetInfo deviceOffsetInfo,
-    required AppLocalizations l10n,
+    required Widget child,
+    EdgeInsetsGeometry? padding,
   }) {
     return Material(
       color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -235,117 +270,38 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         side: BorderSide(
-          color: isAutoSelected
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: padding != null ? Padding(padding: padding, child: child) : child,
+    );
+  }
+
+  Widget _buildRadio(bool isSelected, bool isDark) {
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isSelected
               ? AppColors.primary
-              : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-          width: isAutoSelected ? 1.5 : 1.0,
+              : (isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+          width: 2,
         ),
       ),
-      child: InkWell(
-        onTap: () {
-          final cubit = context.read<TimezoneCubit>();
-          cubit.setAutoTimezone();
-          try {
-            context.read<MatchesBloc>().add(
-                  ChangeTimezoneEvent(deviceOffsetInfo.offset),
-                );
-          } catch (_) {}
-          Navigator.of(context).pop();
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: isAutoSelected
-                      ? AppColors.primary.withValues(alpha: 0.15)
-                      : (isDark
-                          ? AppColors.darkSurface
-                          : AppColors.lightBackground),
+      child: isSelected
+          ? Center(
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.phonelink_setup_rounded,
-                  color: isAutoSelected
-                      ? AppColors.primary
-                      : (isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary),
-                  size: 22,
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          l10n.translate('device_detected_timezone'),
-                          style: AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            deviceOffsetInfo.formattedOffset,
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${deviceOffsetInfo.title(isArabic)} (${deviceOffsetInfo.citiesText(isArabic)})',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Icon(
-                isAutoSelected
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                color: isAutoSelected
-                    ? AppColors.primary
-                    : (isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted),
-                size: 24,
-              ),
-            ],
-          ),
-        ),
-      ),
+            )
+          : null,
     );
   }
 
@@ -357,150 +313,85 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
     required bool isSelected,
     required bool isDevice,
     required AppLocalizations l10n,
+    required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          side: BorderSide(
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : (isDark ? AppColors.darkSurface : AppColors.lightCardElevated),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+          border: Border.all(
             color: isSelected
-                ? AppColors.primary
+                ? AppColors.primary.withValues(alpha: 0.35)
                 : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-            width: isSelected ? 1.5 : 1.0,
           ),
         ),
-        child: InkWell(
-          onTap: () {
-            final cubit = context.read<TimezoneCubit>();
-            cubit.setTimezoneOffset(offsetInfo.offset);
-            try {
-              context.read<MatchesBloc>().add(
-                    ChangeTimezoneEvent(offsetInfo.offset),
-                  );
-            } catch (_) {}
-            Navigator.of(context).pop();
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                // UTC Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.18)
-                        : (isDark
-                            ? AppColors.darkSurface
-                            : AppColors.lightCardElevated),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.4)
-                          : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                    ),
-                  ),
-                  child: Text(
-                    offsetInfo.formattedOffset,
-                    style: TextStyle(
-                      color: isSelected
-                          ? AppColors.primary
-                          : (isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Title and Representative Cities
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              offsetInfo.title(isArabic),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.getBodyMedium(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          if (isDevice) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.accent.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                l10n.translate('device_tag'),
-                                style: const TextStyle(
-                                  color: AppColors.accent,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        offsetInfo.citiesText(isArabic),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // Radio / Check
-                Icon(
-                  isSelected
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: isSelected
-                      ? AppColors.primary
-                      : (isDark
-                          ? AppColors.darkTextMuted
-                          : AppColors.lightTextMuted),
-                  size: 22,
-                ),
-              ],
-            ),
+        child: Text(
+          offsetInfo.formattedOffset,
+          style: TextStyle(
+            color: isSelected
+                ? AppColors.primary
+                : (isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
           ),
         ),
       ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              offsetInfo.title(isArabic),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.getBodyMedium(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+          if (isDevice) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                l10n.translate('device_tag'),
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      subtitle: Text(
+        offsetInfo.citiesText(isArabic),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTypography.getBodySmall(
+          isDark: isDark,
+          isArabic: isArabic,
+        ).copyWith(
+          color: isDark
+              ? AppColors.darkTextSecondary
+              : AppColors.lightTextSecondary,
+        ),
+      ),
+      trailing: _buildRadio(isSelected, isDark),
+      onTap: onTap,
     );
   }
 }

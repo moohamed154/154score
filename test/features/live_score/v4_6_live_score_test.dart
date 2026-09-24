@@ -37,6 +37,12 @@ class _MockStorageForLiveScore implements LocalStorageService {
   @override
   Future<bool> setTimezoneOffset(int offset) async => true;
   @override
+  bool isTimezoneAuto() => true;
+  @override
+  Future<bool> setTimezoneAuto(bool isAuto) async => true;
+  @override
+  int getDeviceTimezoneOffset() => 3;
+  @override
   List<String> getFavoriteTeams() => [];
   @override
   Future<bool> toggleFavoriteTeam(String teamName) async => true;

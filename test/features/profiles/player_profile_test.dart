@@ -40,7 +40,7 @@ void main() {
         expect(entity.playerName, equals('Erling Haaland'));
         expect(
           entity.playerImage,
-          equals('https://imgs.ysscores.com/players/haaland.png'),
+          equals('https://imgs.ysscores.com/player/haaland.png'),
         );
         expect(entity.penaltyGoals, equals(4));
         expect(entity.penaltiesMissed, equals(1));

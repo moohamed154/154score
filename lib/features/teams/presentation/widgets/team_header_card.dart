@@ -121,18 +121,20 @@ class TeamHeaderCard extends StatelessWidget {
                                     color: AppColors.primary,
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    leagueName,
-                                    style:
-                                        AppTypography.getBodySmall(
-                                          isDark: isDark,
-                                          isArabic: isArabic,
-                                        ).copyWith(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  Flexible(
+                                    child: Text(
+                                      leagueName,
+                                      style:
+                                          AppTypography.getBodySmall(
+                                            isDark: isDark,
+                                            isArabic: isArabic,
+                                          ).copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -172,19 +174,23 @@ class TeamHeaderCard extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                 ],
-                                Text(
-                                  profile!.country!,
-                                  style:
-                                      AppTypography.getBodySmall(
-                                        isDark: isDark,
-                                        isArabic: isArabic,
-                                      ).copyWith(
-                                        fontSize: 11,
-                                        color: isDark
-                                            ? AppColors.darkTextMuted
-                                            : AppColors.lightTextMuted,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                Flexible(
+                                  child: Text(
+                                    profile!.country!,
+                                    style:
+                                        AppTypography.getBodySmall(
+                                          isDark: isDark,
+                                          isArabic: isArabic,
+                                        ).copyWith(
+                                          fontSize: 11,
+                                          color: isDark
+                                              ? AppColors.darkTextMuted
+                                              : AppColors.lightTextMuted,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),

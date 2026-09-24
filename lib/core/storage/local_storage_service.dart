@@ -20,7 +20,7 @@ abstract class LocalStorageService {
 
   // Timezone Offset
   int getTimezoneOffset();
-  Future<bool> setTimezoneOffset(int offset, {bool isAuto = false});
+  Future<bool> setTimezoneOffset(int offset);
   bool isTimezoneAuto() => true;
   Future<bool> setTimezoneAuto(bool isAuto) async => true;
   int getDeviceTimezoneOffset() => DateTime.now().timeZoneOffset.inHours;
@@ -216,8 +216,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
-  Future<bool> setTimezoneOffset(int offset, {bool isAuto = false}) async {
-    await _prefs.setBool(_keyTimezoneAuto, isAuto);
+  Future<bool> setTimezoneOffset(int offset) async {
+    await _prefs.setBool(_keyTimezoneAuto, false);
     return _prefs.setInt(_keyTimezoneOffset, offset);
   }
 

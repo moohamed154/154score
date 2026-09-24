@@ -507,9 +507,14 @@ class MatchCard extends StatelessWidget {
         ],
       );
     } else if (isUpcoming) {
-      // Upcoming state: e.g. "09:00 PM"
-      final activeFormat =
-          timeFormat ?? sl<LocalStorageService>().getTimeFormat();
+      String activeFormat = timeFormat ?? '12h';
+      if (timeFormat == null) {
+        try {
+          if (sl.isRegistered<LocalStorageService>()) {
+            activeFormat = sl<LocalStorageService>().getTimeFormat();
+          }
+        } catch (_) {}
+      }
       final timeStr =
           (match.time != null && match.time!.isNotEmpty && match.time != '-')
           ? DateFormatter.formatDisplayTime(

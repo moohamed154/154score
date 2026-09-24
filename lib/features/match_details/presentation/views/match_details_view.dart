@@ -556,8 +556,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+        leading: BackButton(
           onPressed: () {
             if (context.canPop()) {
               context.pop();

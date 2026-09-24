@@ -34,7 +34,13 @@ class _SettingsViewState extends State<SettingsView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.translate('settings_title')),
+        title: Text(
+          l10n.translate('settings_title'),
+          style: AppTypography.getHeadingMedium(
+            isDark: isDark,
+            isArabic: isArabic,
+          ),
+        ),
         automaticallyImplyLeading: false,
       ),
       body: ListView(
