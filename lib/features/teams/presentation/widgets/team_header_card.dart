@@ -123,13 +123,14 @@ class TeamHeaderCard extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Text(
                                     leagueName,
-                                    style: AppTypography.getBodySmall(
-                                      isDark: isDark,
-                                      isArabic: isArabic,
-                                    ).copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    style:
+                                        AppTypography.getBodySmall(
+                                          isDark: isDark,
+                                          isArabic: isArabic,
+                                        ).copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -137,25 +138,31 @@ class TeamHeaderCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                        if (profile?.country != null && profile!.country!.isNotEmpty)
+                        if (profile?.country != null &&
+                            profile!.country!.isNotEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+                              color: isDark
+                                  ? AppColors.darkCardElevated
+                                  : AppColors.lightCardElevated,
                               borderRadius: BorderRadius.circular(
                                 AppDimensions.radiusSm,
                               ),
                               border: Border.all(
-                                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.lightBorder,
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (profile?.countryFlag != null && profile!.countryFlag!.isNotEmpty) ...[
+                                if (profile?.countryFlag != null &&
+                                    profile!.countryFlag!.isNotEmpty) ...[
                                   AppImage(
                                     imageUrl: profile!.countryFlag,
                                     width: 14,
@@ -167,14 +174,17 @@ class TeamHeaderCard extends StatelessWidget {
                                 ],
                                 Text(
                                   profile!.country!,
-                                  style: AppTypography.getBodySmall(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    fontSize: 11,
-                                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style:
+                                      AppTypography.getBodySmall(
+                                        isDark: isDark,
+                                        isArabic: isArabic,
+                                      ).copyWith(
+                                        fontSize: 11,
+                                        color: isDark
+                                            ? AppColors.darkTextMuted
+                                            : AppColors.lightTextMuted,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                 ),
                               ],
                             ),

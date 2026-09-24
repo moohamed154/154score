@@ -35,8 +35,10 @@ class SwipeDateDetector extends StatelessWidget {
         final goForward = isRtl ? velocity > 0 : velocity < 0;
 
         final next = goForward
-            ? currentDate.add(const Duration(days: 1))      // swipe left  → next
-            : currentDate.subtract(const Duration(days: 1)); // swipe right → prev
+            ? currentDate.add(const Duration(days: 1)) // swipe left  → next
+            : currentDate.subtract(
+                const Duration(days: 1),
+              ); // swipe right → prev
 
         onDateChanged(next);
       },

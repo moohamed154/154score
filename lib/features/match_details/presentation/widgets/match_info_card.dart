@@ -207,19 +207,22 @@ class MatchInfoCard extends StatelessWidget {
         ? item.entityId!
         : '0';
 
-    final isCommentator = item.entityType?.toLowerCase() == 'commentator' ||
+    final isCommentator =
+        item.entityType?.toLowerCase() == 'commentator' ||
         item.title.toLowerCase().contains('commentator') ||
         item.title.contains('معلق');
 
     if (isCommentator && (id == '0' || id.isEmpty)) {
-      final resolvedId = CommentatorResolver.resolveId(item.content) ??
+      final resolvedId =
+          CommentatorResolver.resolveId(item.content) ??
           CommentatorResolver.resolveId(item.slug);
       if (resolvedId != null) {
         id = resolvedId;
       }
     }
 
-    final isChampionship = item.entityType?.toLowerCase() == 'championship' ||
+    final isChampionship =
+        item.entityType?.toLowerCase() == 'championship' ||
         item.title.toLowerCase().contains('championship') ||
         item.title.toLowerCase().contains('league') ||
         item.title.contains('بطولة') ||
@@ -227,7 +230,8 @@ class MatchInfoCard extends StatelessWidget {
         item.title.contains('كأس');
 
     if (isChampionship && (id == '0' || id.isEmpty)) {
-      final resolvedId = LeagueResolver.resolveId(item.content) ??
+      final resolvedId =
+          LeagueResolver.resolveId(item.content) ??
           LeagueResolver.resolveId(item.slug);
       if (resolvedId != null) {
         id = resolvedId;
@@ -296,13 +300,17 @@ class MatchInfoCard extends StatelessWidget {
         lower.contains('broadcast')) {
       return Icons.live_tv_rounded;
     }
-    if (lower.contains('مواجهات') || lower.contains('h2h') || lower.contains('head-to-head')) {
+    if (lower.contains('مواجهات') ||
+        lower.contains('h2h') ||
+        lower.contains('head-to-head')) {
       return Icons.history_rounded;
     }
     if (lower.contains('آخر المباريات') || lower.contains('form')) {
       return Icons.trending_up_rounded;
     }
-    if (lower.contains('إحصائيات') || lower.contains('statistics') || lower.contains('stats')) {
+    if (lower.contains('إحصائيات') ||
+        lower.contains('statistics') ||
+        lower.contains('stats')) {
       return Icons.bar_chart_rounded;
     }
     return Icons.info_outline_rounded;
@@ -354,7 +362,9 @@ class MatchInfoCard extends StatelessWidget {
     if (lower.contains('إجمالي') || lower.contains('aggregate')) {
       return Icons.layers_outlined;
     }
-    if (lower.contains('ترجيح') || lower.contains('penalty') || lower.contains('penalties')) {
+    if (lower.contains('ترجيح') ||
+        lower.contains('penalty') ||
+        lower.contains('penalties')) {
       return Icons.sports_soccer_rounded;
     }
     if (lower.contains('استحواذ') || lower.contains('possession')) {
@@ -363,7 +373,9 @@ class MatchInfoCard extends StatelessWidget {
     if (lower.contains('تسديد') || lower.contains('shot')) {
       return Icons.gps_fixed_rounded;
     }
-    if (lower.contains('خطأ') || lower.contains('أخطاء') || lower.contains('foul')) {
+    if (lower.contains('خطأ') ||
+        lower.contains('أخطاء') ||
+        lower.contains('foul')) {
       return Icons.pan_tool_outlined;
     }
     if (lower.contains('تسلل') || lower.contains('offside')) {
@@ -375,7 +387,9 @@ class MatchInfoCard extends StatelessWidget {
     if (lower.contains('تعادل') || lower.contains('draw')) {
       return Icons.remove_circle_outline_rounded;
     }
-    if (lower.contains('خسارة') || lower.contains('lose') || lower.contains('loss')) {
+    if (lower.contains('خسارة') ||
+        lower.contains('lose') ||
+        lower.contains('loss')) {
       return Icons.highlight_off_rounded;
     }
     return Icons.info_outline_rounded;

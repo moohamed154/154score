@@ -7,6 +7,13 @@ import '../datasources/videos_remote_datasource.dart';
 
 class VideosRepositoryImpl implements VideosRepository {
   final VideosRemoteDataSource _remoteDataSource;
+  final Map<String, ({List<VideoItemEntity> videos, DateTime timestamp})>
+  _videosCache = {};
+  final Map<
+    String,
+    ({List<VideoCategoryEntity> categories, DateTime timestamp})
+  >
+  _categoriesCache = {};
 
   VideosRepositoryImpl(this._remoteDataSource);
 
@@ -15,17 +22,29 @@ class VideosRepositoryImpl implements VideosRepository {
     required String champId,
     required String lang,
   }) async {
+    final key = '$champId-$lang';
+    final cached = _videosCache[key];
+    if (cached != null &&
+        DateTime.now().difference(cached.timestamp) <
+            const Duration(minutes: 5)) {
+      return ApiSuccess(cached.videos);
+    }
+
     try {
       final (videos, _) = await _remoteDataSource.getVideosAndCategories(
         champId: champId,
         lang: lang,
       );
+      _videosCache[key] = (videos: videos, timestamp: DateTime.now());
       return ApiSuccess(videos);
     } on NetworkException catch (e) {
+      if (cached != null) return ApiSuccess(cached.videos);
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
+      if (cached != null) return ApiSuccess(cached.videos);
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
+      if (cached != null) return ApiSuccess(cached.videos);
       return ApiFailure(ServerFailure('Failed to load videos: $e'));
     }
   }
@@ -34,17 +53,31 @@ class VideosRepositoryImpl implements VideosRepository {
   Future<ApiResult<List<VideoCategoryEntity>>> getCategories({
     required String lang,
   }) async {
+    final cached = _categoriesCache[lang];
+    if (cached != null &&
+        DateTime.now().difference(cached.timestamp) <
+            const Duration(minutes: 10)) {
+      return ApiSuccess(cached.categories);
+    }
+
     try {
       final (_, categories) = await _remoteDataSource.getVideosAndCategories(
         champId: 'all',
         lang: lang,
       );
+      _categoriesCache[lang] = (
+        categories: categories,
+        timestamp: DateTime.now(),
+      );
       return ApiSuccess(categories);
     } on NetworkException catch (e) {
+      if (cached != null) return ApiSuccess(cached.categories);
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
+      if (cached != null) return ApiSuccess(cached.categories);
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
+      if (cached != null) return ApiSuccess(cached.categories);
       return ApiFailure(ServerFailure('Failed to load categories: $e'));
     }
   }

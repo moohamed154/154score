@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/storage/local_storage_service.dart';
 import '../../domain/repositories/player_repository.dart';
 import 'player_event.dart';
@@ -17,14 +18,14 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     String? initialName,
     String? initialPhoto,
     String? initialSlug,
-  })  : _currentSlug = initialSlug,
-        super(
-          PlayerState(
-            playerId: initialId ?? '',
-            playerName: initialName,
-            playerPhoto: initialPhoto,
-          ),
-        ) {
+  }) : _currentSlug = initialSlug,
+       super(
+         PlayerState(
+           playerId: initialId ?? '',
+           playerName: initialName,
+           playerPhoto: initialPhoto,
+         ),
+       ) {
     on<LoadPlayerProfileEvent>(_onLoadPlayerProfile);
     on<ChangePlayerTabEvent>(_onChangePlayerTab);
     on<RefreshPlayerProfileEvent>(_onRefreshPlayerProfile);
@@ -69,7 +70,9 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
           state.copyWith(
             status: PlayerStatus.success,
             profile: profile,
-            playerName: profile.name.isNotEmpty ? profile.name : state.playerName,
+            playerName: profile.name.isNotEmpty
+                ? profile.name
+                : state.playerName,
             playerPhoto: profile.photo ?? state.playerPhoto,
           ),
         );
@@ -111,7 +114,9 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
           state.copyWith(
             status: PlayerStatus.success,
             profile: profile,
-            playerName: profile.name.isNotEmpty ? profile.name : state.playerName,
+            playerName: profile.name.isNotEmpty
+                ? profile.name
+                : state.playerName,
             playerPhoto: profile.photo ?? state.playerPhoto,
           ),
         );

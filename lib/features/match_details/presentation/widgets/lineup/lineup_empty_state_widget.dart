@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -12,10 +12,7 @@ import 'package:score154/features/match_details/presentation/bloc/match_details_
 class LineupEmptyStateWidget extends StatelessWidget {
   final String matchId;
 
-  const LineupEmptyStateWidget({
-    super.key,
-    required this.matchId,
-  });
+  const LineupEmptyStateWidget({super.key, required this.matchId});
 
   @override
   Widget build(BuildContext context) {
@@ -25,21 +22,24 @@ class LineupEmptyStateWidget extends StatelessWidget {
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
     // Resolve titles with robust fallbacks to prevent raw translation keys
-    final title = (l10n.lineupUnavailableTitle.isNotEmpty &&
+    final title =
+        (l10n.lineupUnavailableTitle.isNotEmpty &&
             l10n.lineupUnavailableTitle != 'lineup_unavailable_title')
         ? l10n.lineupUnavailableTitle
         : (isArabic
-            ? 'لم يتم الإعلان عن التشكيلة بعد'
-            : 'Lineups Not Available Yet');
+              ? 'لم يتم الإعلان عن التشكيلة بعد'
+              : 'Lineups Not Available Yet');
 
-    final desc = (l10n.lineupUnavailableDesc.isNotEmpty &&
+    final desc =
+        (l10n.lineupUnavailableDesc.isNotEmpty &&
             l10n.lineupUnavailableDesc != 'lineup_unavailable_desc')
         ? l10n.lineupUnavailableDesc
         : (isArabic
-            ? 'عادة ما يتم الكشف عن التشكيل الرسمي قبل ساعة واحدة من صافرة البداية.'
-            : 'Official starting lineups are usually announced 1 hour before kickoff.');
+              ? 'عادة ما يتم الكشف عن التشكيل الرسمي قبل ساعة واحدة من صافرة البداية.'
+              : 'Official starting lineups are usually announced 1 hour before kickoff.');
 
-    final refreshLabel = (l10n.refreshLineup.isNotEmpty &&
+    final refreshLabel =
+        (l10n.refreshLineup.isNotEmpty &&
             l10n.refreshLineup != 'refresh_lineup')
         ? l10n.refreshLineup
         : (isArabic ? 'تحديث التشكيلة' : 'Check for Updates');
@@ -120,7 +120,9 @@ class LineupEmptyStateWidget extends StatelessWidget {
             style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -136,7 +138,9 @@ class LineupEmptyStateWidget extends StatelessWidget {
                 fontSize: 13.5,
                 height: 1.6,
                 fontWeight: FontWeight.w500,
-                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
               ),
               textAlign: TextAlign.center,
             ),
@@ -148,8 +152,8 @@ class LineupEmptyStateWidget extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () {
               context.read<MatchDetailsBloc>().add(
-                    LoadMatchDetailsEvent(matchId, isRefresh: true),
-                  );
+                LoadMatchDetailsEvent(matchId, isRefresh: true),
+              );
             },
             icon: const Icon(Icons.refresh_rounded, size: 18),
             label: Text(

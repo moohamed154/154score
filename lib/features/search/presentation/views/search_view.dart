@@ -37,7 +37,8 @@ class _GlobalSearchContent extends StatefulWidget {
 
 class _GlobalSearchContentState extends State<_GlobalSearchContent> {
   final TextEditingController _searchController = TextEditingController();
-  int _selectedCategoryIndex = 0; // 0: All, 1: Championships, 2: Teams, 3: Players
+  int _selectedCategoryIndex =
+      0; // 0: All, 1: Championships, 2: Teams, 3: Players
 
   static const List<(String, String, String, String)> _popularCompetitions = [
     (
@@ -98,9 +99,9 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
 
   void _onSearchChanged(String value, bool isArabic) {
     context.read<SearchCubit>().onQueryChanged(
-          value,
-          lang: isArabic ? 'ar' : 'en',
-        );
+      value,
+      lang: isArabic ? 'ar' : 'en',
+    );
   }
 
   void _clearSearch() {
@@ -143,7 +144,9 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                 ),
                 prefixIcon: Icon(
                   Icons.search_rounded,
-                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
                   size: 22,
                 ),
                 suffixIcon: _searchController.text.isNotEmpty
@@ -265,13 +268,14 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                     cat.$2,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected
                           ? Colors.white
                           : (isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary),
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary),
                     ),
                   ),
                   if (count > 0) ...[
@@ -285,10 +289,11 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                         color: isSelected
                             ? Colors.white.withValues(alpha: 0.25)
                             : (isDark
-                                ? AppColors.darkSurface
-                                : AppColors.lightSurface),
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusFull),
+                                  ? AppColors.darkSurface
+                                  : AppColors.lightSurface),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusFull,
+                        ),
                       ),
                       child: Text(
                         '$count',
@@ -298,8 +303,8 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                           color: isSelected
                               ? Colors.white
                               : (isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted),
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted),
                         ),
                       ),
                     ),
@@ -308,7 +313,9 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
               ),
               selected: isSelected,
               selectedColor: AppColors.primary,
-              backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+              backgroundColor: isDark
+                  ? AppColors.darkCard
+                  : AppColors.lightCard,
               side: BorderSide(
                 color: isSelected
                     ? AppColors.primary
@@ -369,7 +376,8 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
             if (results.championships.isNotEmpty) ...[
               _buildSectionHeader(
                 context,
-                title: AppLocalizations.of(context).translate('search_championships'),
+                title: AppLocalizations.of(context)
+                    .translate('search_championships'),
                 count: results.championships.length,
                 isDark: isDark,
                 isArabic: isArabic,
@@ -418,10 +426,7 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
     required bool isArabic,
   }) {
     if (items.isEmpty) {
-      return EmptyView(
-        titleKey: emptyTitle,
-        icon: Icons.search_off_rounded,
-      );
+      return EmptyView(titleKey: emptyTitle, icon: Icons.search_off_rounded);
     }
 
     return ListView.builder(
@@ -491,7 +496,8 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
     if (isPlayer) fallbackIcon = Icons.person_rounded;
 
     final effectiveLogo = isChampionship
-        ? (UrlHelper.resolveChampionshipLogo(item.id, currentLogo: item.logo) ?? item.logo)
+        ? (UrlHelper.resolveChampionshipLogo(item.id, currentLogo: item.logo) ??
+              item.logo)
         : item.logo;
 
     return Padding(
@@ -569,7 +575,8 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                           ),
                         ),
                       ],
-                      if (item.position != null && item.position!.isNotEmpty) ...[
+                      if (item.position != null &&
+                          item.position!.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -578,8 +585,9 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius:
-                                BorderRadius.circular(AppDimensions.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusSm,
+                            ),
                           ),
                           child: Text(
                             item.position!,
@@ -632,28 +640,19 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
       case 'championship':
         context.push(
           '/league/${item.id}',
-          extra: {
-            'title': item.title,
-            'logo': item.logo,
-          },
+          extra: {'title': item.title, 'logo': item.logo},
         );
         break;
       case 'team':
         context.push(
           '/team/${item.id}',
-          extra: {
-            'name': item.title,
-            'logo': item.logo,
-          },
+          extra: {'name': item.title, 'logo': item.logo},
         );
         break;
       case 'player':
         context.push(
           '/player/${item.id}',
-          extra: {
-            'name': item.title,
-            'photo': item.logo,
-          },
+          extra: {'name': item.title, 'photo': item.logo},
         );
         break;
     }

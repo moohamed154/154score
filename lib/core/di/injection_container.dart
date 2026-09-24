@@ -129,12 +129,8 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ProfilesRepository>(
     () => ProfilesRepositoryImpl(sl()),
   );
-  sl.registerLazySingleton<PlayerRepository>(
-    () => PlayerRepositoryImpl(sl()),
-  );
-  sl.registerLazySingleton<SearchRepository>(
-    () => SearchRepository(sl()),
-  );
+  sl.registerLazySingleton<PlayerRepository>(() => PlayerRepositoryImpl(sl()));
+  sl.registerLazySingleton<SearchRepository>(() => SearchRepository(sl()));
 
   // 4. ViewModels / Blocs / Cubits
   sl.registerFactory<MatchesBloc>(

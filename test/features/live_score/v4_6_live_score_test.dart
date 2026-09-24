@@ -61,7 +61,8 @@ class _MockStorageForLiveScore implements LocalStorageService {
   @override
   Map<String, String> getFavoriteCompetitionTitles() => {};
   @override
-  Future<bool> registerCompetitionTitles(Map<String, String> titles) async => true;
+  Future<bool> registerCompetitionTitles(Map<String, String> titles) async =>
+      true;
   @override
   String resolveCompetitionTitle(String compOrId) => compOrId;
   @override
@@ -73,9 +74,9 @@ class _MockStorageForLiveScore implements LocalStorageService {
   @override
   Future<bool> setFavoriteCompetitions(List<String> list) async => true;
   @override
-  String? getCachedRankings() => null;
+  String? getCachedRankings({String? lang}) => null;
   @override
-  Future<bool> setCachedRankings(String json) async => true;
+  Future<bool> setCachedRankings(String json, {String? lang}) async => true;
   @override
   bool isReorderTipDismissed() => true;
   @override

@@ -61,20 +61,14 @@ class _MatchesViewState extends State<MatchesView> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppBrandLogo(
-              size: 32,
-              isDark: isDark,
-            ),
+            AppBrandLogo(size: 32, isDark: isDark),
             const SizedBox(width: 10),
             Text(
               '154Score',
               style: AppTypography.getHeadingLarge(
                 isDark: isDark,
                 isArabic: isArabic,
-              ).copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
-              ),
+              ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
             ),
           ],
         ),
@@ -85,12 +79,15 @@ class _MatchesViewState extends State<MatchesView> {
             children: [
               const SizedBox(width: 4),
               BlocBuilder<MatchesBloc, MatchesState>(
-                buildWhen: (prev, curr) => prev.selectedDate != curr.selectedDate,
+                buildWhen: (prev, curr) =>
+                    prev.selectedDate != curr.selectedDate,
                 builder: (context, state) {
                   return DateNavigationButtons(
                     selectedDate: state.selectedDate,
                     onDateSelected: (date) {
-                      context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+                      context.read<MatchesBloc>().add(
+                        LoadMatchesEvent(date: date),
+                      );
                     },
                     isDark: Theme.of(context).brightness == Brightness.dark,
                   );
@@ -103,7 +100,9 @@ class _MatchesViewState extends State<MatchesView> {
                     _isSearchVisible = !_isSearchVisible;
                     if (!_isSearchVisible) {
                       _searchController.clear();
-                      context.read<MatchesBloc>().add(const SearchMatchesEvent(''));
+                      context.read<MatchesBloc>().add(
+                        const SearchMatchesEvent(''),
+                      );
                     }
                   });
                 },
@@ -124,8 +123,8 @@ class _MatchesViewState extends State<MatchesView> {
                         color: state.hasActiveFilter ? AppColors.primary : null,
                       ),
                     ),
-                    tooltip:
-                        AppLocalizations.of(context).translate('filter_title'),
+                    tooltip: AppLocalizations.of(context)
+                        .translate('filter_title'),
                     onPressed: () => MatchFilterBottomSheet.show(context),
                   );
                 },
@@ -147,96 +146,101 @@ class _MatchesViewState extends State<MatchesView> {
         },
         child: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, state) {
-          return SwipeDateDetector(
-            currentDate: state.selectedDate,
-            onDateChanged: (date) {
-              context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
-            },
-            child: Column(
-              children: [
-              // 1. Date Selector Strip
-              HorizontalDateSelector(
-                selectedDate: state.selectedDate,
-                onDateSelected: (date) {
-                  context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
-                },
-              ),
-
-              // Search Box if visible
-              if (_isSearchVisible)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.md,
-                    vertical: AppDimensions.xs,
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)
-                          .translate('search_hint'),
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusMd,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
-                    ),
-                    onChanged: (query) {
+            return SwipeDateDetector(
+              currentDate: state.selectedDate,
+              onDateChanged: (date) {
+                context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+              },
+              child: Column(
+                children: [
+                  // 1. Date Selector Strip
+                  HorizontalDateSelector(
+                    selectedDate: state.selectedDate,
+                    onDateSelected: (date) {
                       context.read<MatchesBloc>().add(
-                        SearchMatchesEvent(query),
+                        LoadMatchesEvent(date: date),
                       );
                     },
                   ),
-                ),
 
-              // 2. Filter Tabs (Live, Finished, Upcoming, All)
-              MatchFiltersBar(
-                activeFilter: state.activeFilter,
-                liveCount: state.liveMatchesCount,
-                onFilterSelected: (filter) {
-                  context.read<MatchesBloc>().add(ChangeFilterEvent(filter));
-                },
-              ),
-
-              // 3. Main Matches Content
-              Expanded(
-                child: RefreshIndicator(
-                  color: AppColors.primary,
-                  onRefresh: () async {
-                    final completer = Completer<void>();
-                    context.read<MatchesBloc>().add(
-                      LoadMatchesEvent(
-                        date: state.selectedDate,
-                        isRefresh: true,
-                        completer: completer,
+                  // Search Box if visible
+                  if (_isSearchVisible)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.md,
+                        vertical: AppDimensions.xs,
                       ),
-                    );
-                    try {
-                      await completer.future.timeout(
-                        const Duration(seconds: 3),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)
+                              .translate('search_hint'),
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusMd,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                        ),
+                        onChanged: (query) {
+                          context.read<MatchesBloc>().add(
+                            SearchMatchesEvent(query),
+                          );
+                        },
+                      ),
+                    ),
+
+                  // 2. Filter Tabs (Live, Finished, Upcoming, All)
+                  MatchFiltersBar(
+                    activeFilter: state.activeFilter,
+                    liveCount: state.liveMatchesCount,
+                    onFilterSelected: (filter) {
+                      context.read<MatchesBloc>().add(
+                        ChangeFilterEvent(filter),
                       );
-                    } catch (_) {}
-                  },
-                  child: _buildBody(context, state),
-                ),
+                    },
+                  ),
+
+                  // 3. Main Matches Content
+                  Expanded(
+                    child: RefreshIndicator(
+                      color: AppColors.primary,
+                      onRefresh: () async {
+                        final completer = Completer<void>();
+                        context.read<MatchesBloc>().add(
+                          LoadMatchesEvent(
+                            date: state.selectedDate,
+                            isRefresh: true,
+                            completer: completer,
+                          ),
+                        );
+                        try {
+                          await completer.future.timeout(
+                            const Duration(seconds: 3),
+                          );
+                        } catch (_) {}
+                      },
+                      child: _buildBody(context, state),
+                    ),
+                  ),
+                ],
               ),
-            ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildBody(BuildContext context, MatchesState state) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = AppLocalizations.of(context).isArabic;
 
-    if (state.status == MatchesStatus.loading && state.filteredLeagues.isEmpty) {
+    if (state.status == MatchesStatus.loading &&
+        state.filteredLeagues.isEmpty) {
       return Skeletonizer(
         enabled: true,
         effect: ShimmerEffect(

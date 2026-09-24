@@ -17,7 +17,9 @@ class ScoreHelper {
   static bool isFinishedStatus(String? status) {
     if (status == null) return false;
     final lower = status.toLowerCase();
-    if (lower.contains('مباشر') || lower.contains('live') || lower.contains('شوط')) {
+    if (lower.contains('مباشر') ||
+        lower.contains('live') ||
+        lower.contains('شوط')) {
       return false;
     }
     if ((lower.contains('penalties') || lower.contains('ترجيح')) &&

@@ -46,7 +46,9 @@ class PlayerHeroHeader extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       AppColors.primary.withValues(alpha: isDark ? 0.35 : 0.25),
-                      isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                      isDark
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFFE2E8F0),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -93,11 +95,10 @@ class PlayerHeroHeader extends StatelessWidget {
                       height: 92,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                        border: Border.all(
-                          color: AppColors.primary,
-                          width: 3,
-                        ),
+                        color: isDark
+                            ? AppColors.darkCard
+                            : AppColors.lightCard,
+                        border: Border.all(color: AppColors.primary, width: 3),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.primary.withValues(alpha: 0.35),
@@ -177,15 +178,16 @@ class PlayerHeroHeader extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     profile.nameEn!,
-                    style: AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: false,
-                    ).copyWith(
-                      color: isDark
-                          ? AppColors.darkTextMuted
-                          : AppColors.lightTextMuted,
-                      letterSpacing: 0.3,
-                    ),
+                    style:
+                        AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: false,
+                        ).copyWith(
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                          letterSpacing: 0.3,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                 ],

@@ -13,8 +13,8 @@ class ApiClient {
   final LocalStorageService? _localStorageService;
 
   ApiClient({Dio? dio, LocalStorageService? localStorageService})
-      : _localStorageService = localStorageService,
-        _dio = dio ?? _createDefaultDio(localStorageService) {
+    : _localStorageService = localStorageService,
+      _dio = dio ?? _createDefaultDio(localStorageService) {
     if (!_dio.interceptors.any((i) => i is DebugConsoleInterceptor)) {
       _dio.interceptors.insert(0, DebugConsoleInterceptor());
     }
@@ -47,19 +47,22 @@ class ApiClient {
           } else {
             try {
               if (GetIt.instance.isRegistered<LocalStorageService>()) {
-                offset = GetIt.instance<LocalStorageService>().getTimezoneOffset();
+                offset = GetIt.instance<LocalStorageService>()
+                    .getTimezoneOffset();
               }
             } catch (_) {}
           }
 
           // 1. If options.queryParameters already has 'utc-offset', ensure it's a String
           if (options.queryParameters.containsKey('utc-offset')) {
-            options.queryParameters['utc-offset'] =
-                options.queryParameters['utc-offset'].toString();
+            options.queryParameters['utc-offset'] = options
+                .queryParameters['utc-offset']
+                .toString();
           } else {
             // 2. Automatically inject utc-offset as String for any match-related endpoint
             final path = options.path;
-            final isMatchEndpoint = path.startsWith('/api/matches') ||
+            final isMatchEndpoint =
+                path.startsWith('/api/matches') ||
                 path.startsWith(ApiEndpoints.matches);
             if (isMatchEndpoint) {
               options.queryParameters['utc-offset'] = offset.toString();

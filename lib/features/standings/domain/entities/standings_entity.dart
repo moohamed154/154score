@@ -160,9 +160,19 @@ class LeagueStandingsEntity extends Equatable {
 
   bool get hasMultipleGroups => groups != null && groups!.length > 1;
   bool get hasStages => stages != null && stages!.isNotEmpty;
-  bool get isKnockoutOnly => hasStages && rows.isEmpty && (groups == null || groups!.isEmpty);
-  bool get hasBothGroupsAndStages => hasStages && (hasMultipleGroups || rows.isNotEmpty);
+  bool get isKnockoutOnly =>
+      hasStages && rows.isEmpty && (groups == null || groups!.isEmpty);
+  bool get hasBothGroupsAndStages =>
+      hasStages && (hasMultipleGroups || rows.isNotEmpty);
 
   @override
-  List<Object?> get props => [leagueId, leagueTitle, rows, groups, stages, legends, rulesList];
+  List<Object?> get props => [
+    leagueId,
+    leagueTitle,
+    rows,
+    groups,
+    stages,
+    legends,
+    rulesList,
+  ];
 }

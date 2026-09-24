@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/constants/api_endpoints.dart';
 import 'package:score154/core/network/api_client.dart';
 import 'package:score154/core/websocket/websocket_event.dart';
@@ -20,7 +20,10 @@ void main() {
     test('1. Verify ApiEndpoints structure', () {
       expect(ApiEndpoints.matches, '/api/matches');
       expect(ApiEndpoints.matchesLive, '/api/matches/live');
-      expect(ApiEndpoints.matchesByDate('2026-08-29'), '/api/matches/date/2026-08-29');
+      expect(
+        ApiEndpoints.matchesByDate('2026-08-29'),
+        '/api/matches/date/2026-08-29',
+      );
     });
 
     test('2. Live Remote DataSource: GET /api/matches (default)', () async {
@@ -69,14 +72,17 @@ void main() {
           {
             'league_id': '938652',
             'league_title': 'الدوري الإسباني',
-            'league_logo': 'https://imgs.ysscores.com/championship/48/8641690196626.png',
+            'league_logo':
+                'https://imgs.ysscores.com/championship/48/8641690196626.png',
             'matches': [
               {
                 'match_id': '5868040',
                 'team_1': 'إشبيلية',
                 'team_2': 'أتلتيكو مدريد',
-                'team_1_logo': 'https://imgs.ysscores.com/teams/64/6931690196743.png',
-                'team_2_logo': 'https://imgs.ysscores.com/teams/64/1431719588699.png',
+                'team_1_logo':
+                    'https://imgs.ysscores.com/teams/64/6931690196743.png',
+                'team_2_logo':
+                    'https://imgs.ysscores.com/teams/64/1431719588699.png',
                 'score_1': '0',
                 'score_2': '4',
                 'score': {'home': 0, 'away': 4},

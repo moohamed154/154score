@@ -65,7 +65,9 @@ class DebugNetworkRecord {
 
   /// Short summary for listing in console or UI.
   String get summaryLine {
-    final status = statusCode != null ? '$statusCode' : (isError ? 'ERR' : '???');
+    final status = statusCode != null
+        ? '$statusCode'
+        : (isError ? 'ERR' : '???');
     final timeMs = duration != null ? '${duration!.inMilliseconds}ms' : '';
     return '[$method] [$status] ${timeMs.isNotEmpty ? '($timeMs) ' : ''}$url';
   }
@@ -102,7 +104,8 @@ class DebugConsole {
   static int _idCounter = 0;
 
   /// Returns an unmodifiable list of recent records (newest first).
-  static List<DebugNetworkRecord> get history => List.unmodifiable(_history.reversed);
+  static List<DebugNetworkRecord> get history =>
+      List.unmodifiable(_history.reversed);
 
   /// Active route or page name.
   static String? currentPage;
@@ -121,7 +124,10 @@ class DebugConsole {
   }
 
   /// Records and optionally prints an incoming response.
-  static DebugNetworkRecord logResponse(Response response, {Duration? duration}) {
+  static DebugNetworkRecord logResponse(
+    Response response, {
+    Duration? duration,
+  }) {
     final record = DebugNetworkRecord(
       id: 'req_${++_idCounter}_${DateTime.now().millisecondsSinceEpoch}',
       method: response.requestOptions.method.toUpperCase(),
@@ -181,15 +187,22 @@ class DebugConsole {
   ///
   /// Uses chunking, developer.log, and debugPrintSynchronously to ensure
   /// zero line drops on Android logcat and no truncation in IDE consoles.
-  static void printRecord(DebugNetworkRecord record, {String tag = 'DebugConsole'}) {
+  static void printRecord(
+    DebugNetworkRecord record, {
+    String tag = 'DebugConsole',
+  }) {
     final buf = StringBuffer();
     final statusText = record.statusCode != null
         ? '${record.statusCode} ${record.statusMessage ?? ''}'.trim()
         : (record.isError ? 'ERROR' : 'UNKNOWN');
-    final durationText = record.duration != null ? ' (${record.duration!.inMilliseconds} ms)' : '';
+    final durationText = record.duration != null
+        ? ' (${record.duration!.inMilliseconds} ms)'
+        : '';
     final pageText = currentPage != null ? ' [Page: $currentPage]' : '';
 
-    buf.writeln('┌─────────────────────────────────────────────────────────────────────────────');
+    buf.writeln(
+      '┌─────────────────────────────────────────────────────────────────────────────',
+    );
     if (record.isError) {
       buf.writeln('│ 🔴 [PAGE ERROR]$pageText [$statusText]$durationText');
     } else {
@@ -212,7 +225,9 @@ class DebugConsole {
     for (final line in formattedBody.split('\n')) {
       buf.writeln('│ $line');
     }
-    buf.writeln('└─────────────────────────────────────────────────────────────────────────────');
+    buf.writeln(
+      '└─────────────────────────────────────────────────────────────────────────────',
+    );
 
     _safePrint(buf.toString(), name: tag);
   }
@@ -277,7 +292,9 @@ class DebugConsole {
         debugPrintSynchronously(line);
       } else {
         for (int i = 0; i < line.length; i += maxChunkSize) {
-          final end = (i + maxChunkSize < line.length) ? i + maxChunkSize : line.length;
+          final end = (i + maxChunkSize < line.length)
+              ? i + maxChunkSize
+              : line.length;
           debugPrintSynchronously(line.substring(i, end));
         }
       }
@@ -311,7 +328,9 @@ class DebugConsoleRouteObserver extends NavigatorObserver {
 
   void _onRouteChanged(String action, Route<dynamic> route) {
     final name = route.settings.name ?? route.settings.arguments?.toString();
-    final description = name != null && name.isNotEmpty ? name : route.toString();
+    final description = name != null && name.isNotEmpty
+        ? name
+        : route.toString();
     DebugConsole.logPageNavigation(action, description);
   }
 }
@@ -326,13 +345,19 @@ class DebugConsoleInterceptor extends Interceptor {
 
     if (DebugConsole.enabled && DebugConsole.autoPrintRequests) {
       final buf = StringBuffer()
-        ..writeln('┌─────────────────────────────────────────────────────────────────────────────')
-        ..writeln('│ 🌐 [API REQUEST] ${options.method.toUpperCase()} ${options.uri}')
+        ..writeln(
+          '┌─────────────────────────────────────────────────────────────────────────────',
+        )
+        ..writeln(
+          '│ 🌐 [API REQUEST] ${options.method.toUpperCase()} ${options.uri}',
+        )
         ..writeln('│ Headers: ${options.headers}');
       if (options.data != null) {
         buf.writeln('│ Body: ${options.data}');
       }
-      buf.writeln('└─────────────────────────────────────────────────────────────────────────────');
+      buf.writeln(
+        '└─────────────────────────────────────────────────────────────────────────────',
+      );
       debugPrint(buf.toString());
     }
 
@@ -344,7 +369,9 @@ class DebugConsoleInterceptor extends Interceptor {
     Duration? duration;
     final startTime = response.requestOptions.extra[_startTimeKey] as int?;
     if (startTime != null) {
-      duration = Duration(milliseconds: DateTime.now().millisecondsSinceEpoch - startTime);
+      duration = Duration(
+        milliseconds: DateTime.now().millisecondsSinceEpoch - startTime,
+      );
     }
 
     DebugConsole.logResponse(response, duration: duration);
@@ -356,7 +383,9 @@ class DebugConsoleInterceptor extends Interceptor {
     Duration? duration;
     final startTime = err.requestOptions.extra[_startTimeKey] as int?;
     if (startTime != null) {
-      duration = Duration(milliseconds: DateTime.now().millisecondsSinceEpoch - startTime);
+      duration = Duration(
+        milliseconds: DateTime.now().millisecondsSinceEpoch - startTime,
+      );
     }
 
     DebugConsole.logError(err, duration: duration);

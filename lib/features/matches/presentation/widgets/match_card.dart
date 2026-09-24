@@ -173,8 +173,12 @@ class MatchCard extends StatelessWidget {
                         color: match.isFavorite
                             ? AppColors.yellowCard
                             : (isDark
-                                ? AppColors.darkTextMuted.withValues(alpha: 0.4)
-                                : AppColors.lightTextMuted.withValues(alpha: 0.4)),
+                                  ? AppColors.darkTextMuted.withValues(
+                                      alpha: 0.4,
+                                    )
+                                  : AppColors.lightTextMuted.withValues(
+                                      alpha: 0.4,
+                                    )),
                       ),
                     ),
                   ),
@@ -217,16 +221,17 @@ class MatchCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 match.team1,
-                style: AppTypography.getBodyMedium(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: isSmall ? 12 : 13,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                ),
+                style:
+                    AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: isSmall ? 12 : 13,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -310,16 +315,17 @@ class MatchCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 match.team2,
-                style: AppTypography.getBodyMedium(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: isSmall ? 12 : 13,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                ),
+                style:
+                    AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: isSmall ? 12 : 13,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -356,16 +362,17 @@ class MatchCard extends StatelessWidget {
               Flexible(
                 child: Text(
                   match.team1,
-                  style: AppTypography.getBodyMedium(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: isSmall ? 12 : 14,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
+                  style:
+                      AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmall ? 12 : 14,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
@@ -419,16 +426,17 @@ class MatchCard extends StatelessWidget {
               Flexible(
                 child: Text(
                   match.team2,
-                  style: AppTypography.getBodyMedium(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: isSmall ? 12 : 14,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
+                  style:
+                      AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmall ? 12 : 14,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.start,
@@ -454,9 +462,7 @@ class MatchCard extends StatelessWidget {
     required String score2Str,
     required bool hasPenalties,
   }) {
-    final pillBg = isDark
-        ? const Color(0xFF1B2232)
-        : const Color(0xFFEDF2F7);
+    final pillBg = isDark ? const Color(0xFF1B2232) : const Color(0xFFEDF2F7);
 
     Widget content;
 
@@ -502,15 +508,16 @@ class MatchCard extends StatelessWidget {
       );
     } else if (isUpcoming) {
       // Upcoming state: e.g. "09:00 PM"
-      final activeFormat = timeFormat ?? sl<LocalStorageService>().getTimeFormat();
+      final activeFormat =
+          timeFormat ?? sl<LocalStorageService>().getTimeFormat();
       final timeStr =
           (match.time != null && match.time!.isNotEmpty && match.time != '-')
-              ? DateFormatter.formatDisplayTime(
-                  match.time!,
-                  timeFormat: activeFormat,
-                  isArabic: isArabic,
-                )
-              : 'VS';
+          ? DateFormatter.formatDisplayTime(
+              match.time!,
+              timeFormat: activeFormat,
+              isArabic: isArabic,
+            )
+          : 'VS';
       content = Text(
         timeStr,
         style: TextStyle(
@@ -529,9 +536,7 @@ class MatchCard extends StatelessWidget {
         style: TextStyle(
           fontSize: isSmall ? 11 : 12,
           fontWeight: FontWeight.w600,
-          color: isDark
-              ? AppColors.darkTextMuted
-              : AppColors.lightTextMuted,
+          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
         ),
       );
     }

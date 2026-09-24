@@ -155,10 +155,13 @@ class _LeagueViewState extends State<LeagueView>
                       ),
                     );
                     try {
-                      await completer.future.timeout(const Duration(seconds: 3));
+                      await completer.future.timeout(
+                        const Duration(seconds: 3),
+                      );
                     } catch (_) {}
                   },
-                  child: state.status == LeagueStatus.error &&
+                  child:
+                      state.status == LeagueStatus.error &&
                           state.matches.isEmpty &&
                           state.standings == null
                       ? ErrorView(
@@ -239,8 +242,8 @@ class _LeagueViewState extends State<LeagueView>
     int parseTimeMinutes(String? timeStr) {
       if (timeStr == null || timeStr.isEmpty || timeStr == '-') return 0;
       final clean = timeStr.trim();
-      final match =
-          RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?').firstMatch(clean);
+      final match = RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?')
+          .firstMatch(clean);
       if (match == null) return 0;
       var h = int.tryParse(match.group(1) ?? '0') ?? 0;
       final m = int.tryParse(match.group(2) ?? '0') ?? 0;
@@ -261,8 +264,8 @@ class _LeagueViewState extends State<LeagueView>
         days: (DateTime.now().weekday == DateTime.sunday)
             ? 7
             : (DateTime.now().weekday == DateTime.monday
-                ? 1
-                : DateTime.now().weekday % 7),
+                  ? 1
+                  : DateTime.now().weekday % 7),
       ),
     );
     int finishedCountInCurrentDay = 0;
@@ -270,8 +273,8 @@ class _LeagueViewState extends State<LeagueView>
 
     for (final match in matches) {
       final status = match.status;
-      final isFinished = status?.contains('انتهت') == true ||
-          status?.contains('FT') == true;
+      final isFinished =
+          status?.contains('انتهت') == true || status?.contains('FT') == true;
 
       if (match.date != null && match.date!.isNotEmpty) {
         grouped.putIfAbsent(match.date!, () => <MatchEntity>[]).add(match);
@@ -285,10 +288,10 @@ class _LeagueViewState extends State<LeagueView>
           final daysToAdd = (currentUpcomingDate.weekday == DateTime.friday)
               ? 1
               : (currentUpcomingDate.weekday == DateTime.saturday)
-                  ? 1
-                  : (currentUpcomingDate.weekday == DateTime.sunday)
-                      ? 5
-                      : (DateTime.friday - currentUpcomingDate.weekday + 7) % 7;
+              ? 1
+              : (currentUpcomingDate.weekday == DateTime.sunday)
+              ? 5
+              : (DateTime.friday - currentUpcomingDate.weekday + 7) % 7;
           currentUpcomingDate = currentUpcomingDate.add(
             Duration(days: daysToAdd > 0 ? daysToAdd : 1),
           );
@@ -309,20 +312,16 @@ class _LeagueViewState extends State<LeagueView>
         if (finishedCountInCurrentDay >= currentDayCapacity) {
           finishedCountInCurrentDay = 0;
           if (currentPastDate.weekday == DateTime.sunday) {
-            currentPastDate =
-                currentPastDate.subtract(const Duration(days: 1));
+            currentPastDate = currentPastDate.subtract(const Duration(days: 1));
             currentDayCapacity = 5;
           } else if (currentPastDate.weekday == DateTime.saturday) {
-            currentPastDate =
-                currentPastDate.subtract(const Duration(days: 6));
+            currentPastDate = currentPastDate.subtract(const Duration(days: 6));
             currentDayCapacity = 3;
           } else if (currentPastDate.weekday == DateTime.friday) {
-            currentPastDate =
-                currentPastDate.subtract(const Duration(days: 5));
+            currentPastDate = currentPastDate.subtract(const Duration(days: 5));
             currentDayCapacity = 4;
           } else {
-            currentPastDate =
-                currentPastDate.subtract(const Duration(days: 1));
+            currentPastDate = currentPastDate.subtract(const Duration(days: 1));
             currentDayCapacity = 4;
           }
         }
@@ -382,15 +381,16 @@ class _LeagueViewState extends State<LeagueView>
                   const SizedBox(width: 8),
                   Text(
                     headerText,
-                    style: AppTypography.getBodyMedium(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
+                    style:
+                        AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
                   ),
                 ],
               ),
@@ -461,8 +461,9 @@ class _LeagueViewState extends State<LeagueView>
                           color: _standingsSubTab == 0
                               ? AppColors.primary
                               : Colors.transparent,
-                          borderRadius:
-                              BorderRadius.circular(AppDimensions.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusFull,
+                          ),
                         ),
                         child: Center(
                           child: Text(
@@ -475,8 +476,8 @@ class _LeagueViewState extends State<LeagueView>
                               color: _standingsSubTab == 0
                                   ? Colors.white
                                   : (isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary),
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary),
                             ),
                           ),
                         ),
@@ -491,8 +492,9 @@ class _LeagueViewState extends State<LeagueView>
                           color: _standingsSubTab == 1
                               ? AppColors.primary
                               : Colors.transparent,
-                          borderRadius:
-                              BorderRadius.circular(AppDimensions.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusFull,
+                          ),
                         ),
                         child: Center(
                           child: Text(
@@ -505,8 +507,8 @@ class _LeagueViewState extends State<LeagueView>
                               color: _standingsSubTab == 1
                                   ? Colors.white
                                   : (isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary),
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary),
                             ),
                           ),
                         ),
@@ -592,10 +594,7 @@ class _LeagueViewState extends State<LeagueView>
           ),
         if (standings.rulesList != null && standings.rulesList!.isNotEmpty)
           Container(
-            margin: EdgeInsets.symmetric(
-              horizontal: hMargin,
-              vertical: 8,
-            ),
+            margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 8),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -617,15 +616,16 @@ class _LeagueViewState extends State<LeagueView>
                     const SizedBox(width: 8),
                     Text(
                       isArabic ? 'معايير كسر التعادل' : 'Tiebreaker Rules',
-                      style: AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                      ),
+                      style:
+                          AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
                     ),
                   ],
                 ),
@@ -654,16 +654,19 @@ class _LeagueViewState extends State<LeagueView>
                         Expanded(
                           child: Text(
                             rule,
-                            style: AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontSize: isPreamble ? 12 : 11.5,
-                              fontWeight: isPreamble ? FontWeight.w600 : FontWeight.w400,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
+                            style:
+                                AppTypography.getBodySmall(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  fontSize: isPreamble ? 12 : 11.5,
+                                  fontWeight: isPreamble
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                ),
                           ),
                         ),
                       ],
@@ -699,12 +702,7 @@ class _LeagueViewState extends State<LeagueView>
 
     return ListView(
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-      children: [
-        TopScorersTable(
-          scorers: state.topScorers,
-          isAssists: false,
-        ),
-      ],
+      children: [TopScorersTable(scorers: state.topScorers, isAssists: false)],
     );
   }
 
@@ -730,12 +728,7 @@ class _LeagueViewState extends State<LeagueView>
 
     return ListView(
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-      children: [
-        TopScorersTable(
-          scorers: state.topAssists,
-          isAssists: true,
-        ),
-      ],
+      children: [TopScorersTable(scorers: state.topAssists, isAssists: true)],
     );
   }
 
@@ -790,8 +783,9 @@ class _LeagueViewState extends State<LeagueView>
                   height: 34,
                   decoration: BoxDecoration(
                     color: headerBg,
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.radiusFull),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusFull,
+                    ),
                     border: Border.all(color: cardBorder),
                   ),
                 ),
@@ -823,12 +817,26 @@ class _LeagueViewState extends State<LeagueView>
                         const SizedBox(width: 24, child: Text('#')),
                         const SizedBox(width: 8),
                         Expanded(child: Text(isArabic ? 'الفريق' : 'Team')),
-                        const SizedBox(width: 28, child: Center(child: Text('P'))),
-                        const SizedBox(width: 28, child: Center(child: Text('W'))),
-                        const SizedBox(width: 28, child: Center(child: Text('D'))),
-                        const SizedBox(width: 28, child: Center(child: Text('L'))),
                         const SizedBox(
-                            width: 34, child: Center(child: Text('PTS'))),
+                          width: 28,
+                          child: Center(child: Text('P')),
+                        ),
+                        const SizedBox(
+                          width: 28,
+                          child: Center(child: Text('W')),
+                        ),
+                        const SizedBox(
+                          width: 28,
+                          child: Center(child: Text('D')),
+                        ),
+                        const SizedBox(
+                          width: 28,
+                          child: Center(child: Text('L')),
+                        ),
+                        const SizedBox(
+                          width: 34,
+                          child: Center(child: Text('PTS')),
+                        ),
                       ],
                     ),
                   ),
@@ -841,8 +849,11 @@ class _LeagueViewState extends State<LeagueView>
                       decoration: BoxDecoration(
                         border: index < 7
                             ? Border(
-                                bottom:
-                                    BorderSide(color: cardBorder, width: 0.5))
+                                bottom: BorderSide(
+                                  color: cardBorder,
+                                  width: 0.5,
+                                ),
+                              )
                             : null,
                       ),
                       child: Row(
@@ -872,20 +883,29 @@ class _LeagueViewState extends State<LeagueView>
                               index % 3 == 0
                                   ? 'Real Madrid CF'
                                   : index % 3 == 1
-                                      ? 'Manchester City'
-                                      : 'Bayern Munich',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600),
+                                  ? 'Manchester City'
+                                  : 'Bayern Munich',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                           const SizedBox(
-                              width: 28, child: Center(child: Text('10'))),
+                            width: 28,
+                            child: Center(child: Text('10')),
+                          ),
                           const SizedBox(
-                              width: 28, child: Center(child: Text('7'))),
+                            width: 28,
+                            child: Center(child: Text('7')),
+                          ),
                           const SizedBox(
-                              width: 28, child: Center(child: Text('2'))),
+                            width: 28,
+                            child: Center(child: Text('2')),
+                          ),
                           const SizedBox(
-                              width: 28, child: Center(child: Text('1'))),
+                            width: 28,
+                            child: Center(child: Text('1')),
+                          ),
                           const SizedBox(
                             width: 34,
                             child: Center(
@@ -935,8 +955,8 @@ class _LeagueViewState extends State<LeagueView>
                     decoration: BoxDecoration(
                       border: index < 7
                           ? Border(
-                              bottom:
-                                  BorderSide(color: cardBorder, width: 0.5))
+                              bottom: BorderSide(color: cardBorder, width: 0.5),
+                            )
                           : null,
                     ),
                     child: Row(

@@ -39,7 +39,6 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
     String? defaultLeagueId,
     String lang = 'en',
   }) {
-
     final rows = <StandingRowEntity>[];
     final groups = <String, List<StandingRowEntity>>{};
     final stages = <TournamentStageEntity>[];
@@ -75,12 +74,15 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         for (final c in colorsData) {
           if (c is Map) {
             final color = c['color']?.toString();
-            final desc = c['description']?.toString() ??
+            final desc =
+                c['description']?.toString() ??
                 c['league_to']?.toString() ??
                 c['name']?.toString() ??
                 '';
             if (color != null && color.isNotEmpty && desc.isNotEmpty) {
-              legends.add(StandingLegendEntity(colorHex: color, description: desc));
+              legends.add(
+                StandingLegendEntity(colorHex: color, description: desc),
+              );
             }
           }
         }
@@ -93,7 +95,8 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
       }
 
       // Parse rules_list / tiebreaker rules
-      final rulesData = data['rules_list'] ?? raw['rules_list'] ?? data['tiebreak_rules'];
+      final rulesData =
+          data['rules_list'] ?? raw['rules_list'] ?? data['tiebreak_rules'];
       if (rulesData is List && rulesData.isNotEmpty) {
         rulesList = rulesData
             .map((e) => e?.toString() ?? '')
@@ -107,12 +110,14 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         final tableList = data['table'] as List;
 
         // Check if items have meaningful team data (not just color stubs)
-        final hasTeamData = tableList.any((item) =>
-            item is Map &&
-            (item['team_name'] != null ||
-             item['team_id'] != null ||
-             item['team'] != null ||
-             item['name'] != null));
+        final hasTeamData = tableList.any(
+          (item) =>
+              item is Map &&
+              (item['team_name'] != null ||
+                  item['team_id'] != null ||
+                  item['team'] != null ||
+                  item['name'] != null),
+        );
 
         if (hasTeamData) {
           for (int i = 0; i < tableList.length; i++) {
@@ -133,8 +138,9 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
 
       // 2. Secondary Source: raw['list_match']
       //    Check if raw['list_match'] provides data or more complete rows than data['table']
-      final rawMatch =
-          (raw['list_match'] is List) ? (raw['list_match'] as List) : null;
+      final rawMatch = (raw['list_match'] is List)
+          ? (raw['list_match'] as List)
+          : null;
       if (rawMatch != null && rawMatch.isNotEmpty) {
         final rawRows = <StandingRowEntity>[];
         final rawGroups = <String, List<StandingRowEntity>>{};
@@ -154,12 +160,11 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
           for (int gIdx = 0; gIdx < rawMatch.length; gIdx++) {
             final groupItem = rawMatch[gIdx];
             final groupLetter = String.fromCharCode(65 + gIdx);
-            final defaultGroupName =
-                hasMultiGroups
-                    ? (lang == 'ar'
-                        ? 'المجموعة $groupLetter'
-                        : 'Group $groupLetter')
-                    : null;
+            final defaultGroupName = hasMultiGroups
+                ? (lang == 'ar'
+                      ? 'المجموعة $groupLetter'
+                      : 'Group $groupLetter')
+                : null;
 
             final groupRows = <StandingRowEntity>[];
 
@@ -168,12 +173,11 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
                 final pos =
                     int.tryParse(key.toString()) ?? (groupRows.length + 1);
                 if (val is Map) {
-                  final row =
-                      StandingRowDto.fromJson(
-                        pos,
-                        Map<String, dynamic>.from(val),
-                        groupName: defaultGroupName,
-                      ).toEntity();
+                  final row = StandingRowDto.fromJson(
+                    pos,
+                    Map<String, dynamic>.from(val),
+                    groupName: defaultGroupName,
+                  ).toEntity();
                   rawRows.add(row);
                   groupRows.add(row);
                 }
@@ -182,12 +186,11 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
               for (int i = 0; i < groupItem.length; i++) {
                 final val = groupItem[i];
                 if (val is Map) {
-                  final row =
-                      StandingRowDto.fromJson(
-                        i + 1,
-                        Map<String, dynamic>.from(val),
-                        groupName: defaultGroupName,
-                      ).toEntity();
+                  final row = StandingRowDto.fromJson(
+                    i + 1,
+                    Map<String, dynamic>.from(val),
+                    groupName: defaultGroupName,
+                  ).toEntity();
                   rawRows.add(row);
                   groupRows.add(row);
                 }
@@ -206,11 +209,10 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
           for (int i = 0; i < rawMatch.length; i++) {
             final val = rawMatch[i];
             if (val is Map) {
-              final row =
-                  StandingRowDto.fromJson(
-                    i + 1,
-                    Map<String, dynamic>.from(val),
-                  ).toEntity();
+              final row = StandingRowDto.fromJson(
+                i + 1,
+                Map<String, dynamic>.from(val),
+              ).toEntity();
               rawRows.add(row);
               if (row.groupName != null && row.groupName!.isNotEmpty) {
                 rawGroups.putIfAbsent(row.groupName!, () => []).add(row);
@@ -308,7 +310,8 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
                     score: teamAMap['score'] is int
                         ? teamAMap['score'] as int
                         : int.tryParse(teamAMap['score']?.toString() ?? ''),
-                    isWinner: teamAMap['is_winner'] == true ||
+                    isWinner:
+                        teamAMap['is_winner'] == true ||
                         teamAMap['winner'] == true,
                     worldRanking: teamAMap['world_ranking'] is int
                         ? teamAMap['world_ranking'] as int
@@ -324,7 +327,8 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
                     score: teamBMap['score'] is int
                         ? teamBMap['score'] as int
                         : int.tryParse(teamBMap['score']?.toString() ?? ''),
-                    isWinner: teamBMap['is_winner'] == true ||
+                    isWinner:
+                        teamBMap['is_winner'] == true ||
                         teamBMap['winner'] == true,
                     worldRanking: teamBMap['world_ranking'] is int
                         ? teamBMap['world_ranking'] as int

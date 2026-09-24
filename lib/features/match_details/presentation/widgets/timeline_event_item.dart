@@ -65,16 +65,17 @@ class TimelineEventItem extends StatelessWidget {
             Flexible(
               child: Text(
                 _getPeriodLabel(event, l10n, isArabic),
-                style: AppTypography.getBodySmall(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                ),
+                style:
+                    AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -262,42 +263,52 @@ class TimelineEventItem extends StatelessWidget {
                         onTap: () => _navigateToPlayer(context, mainPlayerName),
                         child: Text(
                           mainPlayerName,
-                          style: AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 12 : 14,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
+                          style:
+                              AppTypography.getBodyMedium(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: isSmall ? 12 : 14,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
                           textAlign: isHome ? TextAlign.end : TextAlign.start,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
-                    _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark),
+                    _buildPlayerAvatar(
+                      event.playerPhoto,
+                      event.playerNumber,
+                      isDark,
+                    ),
                   ]
                 : [
-                    _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark),
+                    _buildPlayerAvatar(
+                      event.playerPhoto,
+                      event.playerNumber,
+                      isDark,
+                    ),
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
                         onTap: () => _navigateToPlayer(context, mainPlayerName),
                         child: Text(
                           mainPlayerName,
-                          style: AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 12 : 14,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
+                          style:
+                              AppTypography.getBodyMedium(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: isSmall ? 12 : 14,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
                           textAlign: isHome ? TextAlign.end : TextAlign.start,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -325,7 +336,8 @@ class TimelineEventItem extends StatelessWidget {
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
-                        onTap: () => _navigateToPlayer(context, subPlayerOutName),
+                        onTap: () =>
+                            _navigateToPlayer(context, subPlayerOutName),
                         child: Text(
                           subPlayerOutName,
                           style: TextStyle(
@@ -368,7 +380,8 @@ class TimelineEventItem extends StatelessWidget {
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
-                        onTap: () => _navigateToPlayer(context, subPlayerOutName),
+                        onTap: () =>
+                            _navigateToPlayer(context, subPlayerOutName),
                         child: Text(
                           subPlayerOutName,
                           style: TextStyle(
@@ -407,7 +420,11 @@ class TimelineEventItem extends StatelessWidget {
     }
 
     // Standard events (Goal, Card, Penalty, VAR, etc.): Single player avatar beside the text column
-    final playerAvatar = _buildPlayerAvatar(event.playerPhoto, event.playerNumber, isDark);
+    final playerAvatar = _buildPlayerAvatar(
+      event.playerPhoto,
+      event.playerNumber,
+      isDark,
+    );
 
     final textWidget = Column(
       crossAxisAlignment: isHome
@@ -438,16 +455,17 @@ class TimelineEventItem extends StatelessWidget {
                       onTap: () => _navigateToPlayer(context, mainPlayerName),
                       child: Text(
                         mainPlayerName,
-                        style: AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: isSmall ? 12 : 14,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
+                        style:
+                            AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: isSmall ? 12 : 14,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
                         textAlign: isHome ? TextAlign.end : TextAlign.start,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -462,16 +480,17 @@ class TimelineEventItem extends StatelessWidget {
                       onTap: () => _navigateToPlayer(context, mainPlayerName),
                       child: Text(
                         mainPlayerName,
-                        style: AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: isSmall ? 12 : 14,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
+                        style:
+                            AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: isSmall ? 12 : 14,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
                         textAlign: isHome ? TextAlign.end : TextAlign.start,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -498,15 +517,16 @@ class TimelineEventItem extends StatelessWidget {
             onTap: () => _navigateToPlayer(context, event.secondaryPlayerName),
             child: Text(
               event.secondaryPlayerName!,
-              style: AppTypography.getBodySmall(
-                isDark: isDark,
-                isArabic: isArabic,
-              ).copyWith(
-                fontSize: isSmall ? 10 : 11,
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
-              ),
+              style:
+                  AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontSize: isSmall ? 10 : 11,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                  ),
               textAlign: isHome ? TextAlign.end : TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -712,16 +732,22 @@ class TimelineEventItem extends StatelessWidget {
       return isArabic ? 'نهاية المباراة' : 'Full Time';
     }
     if (name.contains('بداية الشوط الإضافي الأول')) {
-      return isArabic ? 'بداية الشوط الإضافي الأول' : 'Extra Time 1st Half Start';
+      return isArabic
+          ? 'بداية الشوط الإضافي الأول'
+          : 'Extra Time 1st Half Start';
     }
     if (name.contains('نهاية الشوط الإضافي الأول')) {
       return isArabic ? 'نهاية الشوط الإضافي الأول' : 'Extra Time 1st Half End';
     }
     if (name.contains('بداية الشوط الإضافي الثاني')) {
-      return isArabic ? 'بداية الشوط الإضافي الثاني' : 'Extra Time 2nd Half Start';
+      return isArabic
+          ? 'بداية الشوط الإضافي الثاني'
+          : 'Extra Time 2nd Half Start';
     }
     if (name.contains('نهاية الشوط الإضافي الثاني')) {
-      return isArabic ? 'نهاية الشوط الإضافي الثاني' : 'Extra Time 2nd Half End';
+      return isArabic
+          ? 'نهاية الشوط الإضافي الثاني'
+          : 'Extra Time 2nd Half End';
     }
     if (name.contains('ركلات الترجيح')) {
       return isArabic ? 'ركلات الترجيح' : 'Penalty Shootout';

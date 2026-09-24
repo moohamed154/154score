@@ -18,6 +18,7 @@ class MatchesState extends Equatable {
   final String? errorMessage;
   final int liveMatchesCount;
   final String timeFormat;
+  final bool isLanguageRefreshing;
 
   const MatchesState({
     this.status = MatchesStatus.initial,
@@ -32,6 +33,7 @@ class MatchesState extends Equatable {
     this.errorMessage,
     this.liveMatchesCount = 0,
     this.timeFormat = '24h',
+    this.isLanguageRefreshing = false,
   });
 
   bool get hasActiveFilter =>
@@ -84,6 +86,7 @@ class MatchesState extends Equatable {
     String? errorMessage,
     int? liveMatchesCount,
     String? timeFormat,
+    bool? isLanguageRefreshing,
   }) {
     return MatchesState(
       status: status ?? this.status,
@@ -102,6 +105,7 @@ class MatchesState extends Equatable {
       errorMessage: errorMessage ?? this.errorMessage,
       liveMatchesCount: liveMatchesCount ?? this.liveMatchesCount,
       timeFormat: timeFormat ?? this.timeFormat,
+      isLanguageRefreshing: isLanguageRefreshing ?? this.isLanguageRefreshing,
     );
   }
 
@@ -119,5 +123,6 @@ class MatchesState extends Equatable {
     errorMessage,
     liveMatchesCount,
     timeFormat,
+    isLanguageRefreshing,
   ];
 }

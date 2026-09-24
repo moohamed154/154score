@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -113,6 +115,43 @@ class HomeCubit extends Cubit<HomeState> {
         emit(
           state.copyWith(status: HomeStatus.error, errorMessage: e.toString()),
         );
+      }
+    }
+  }
+
+  Future<void> changeLanguage(
+    String targetLang, {
+    Completer<void>? completer,
+  }) async {
+    try {
+      final results = await Future.wait([
+        _videosRepository.getVideos(champId: 'all', lang: targetLang),
+        _transfersRepository.getTransfers(lang: targetLang),
+      ]).timeout(const Duration(milliseconds: 3500));
+
+      final currentLang = _localStorageService.getLanguage();
+      if (currentLang != targetLang) return;
+
+      final videosRes = results[0].dataOrNull as List<VideoItemEntity>? ?? [];
+      final transfersRes = results[1].dataOrNull as List<TransferEntity>? ?? [];
+
+      _lastLoadedTime = DateTime.now();
+
+      emit(
+        state.copyWith(
+          status: HomeStatus.success,
+          recentVideos: videosRes.isNotEmpty ? videosRes : state.recentVideos,
+          recentTransfers: transfersRes.isNotEmpty
+              ? transfersRes
+              : state.recentTransfers,
+          errorMessage: null,
+        ),
+      );
+    } catch (_) {
+      // Keep existing visible data
+    } finally {
+      if (completer != null && !completer.isCompleted) {
+        completer.complete();
       }
     }
   }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/utils/match_status_helper.dart';
 import 'package:score154/core/utils/realtime_merge_engine.dart';
@@ -13,30 +13,54 @@ void main() {
   group('MatchStatusHelper - Phases & Status Codes', () {
     test('Correctly maps half-time break and extra-time break', () {
       expect(
-        MatchStatusHelper.parseStatus('استراحة', statusCode: 'HALFTIME', period: 'halftime'),
+        MatchStatusHelper.parseStatus(
+          'استراحة',
+          statusCode: 'HALFTIME',
+          period: 'halftime',
+        ),
         equals(MatchPhase.halfTime),
       );
       expect(
-        MatchStatusHelper.parseStatus('استراحة', statusCode: 'BREAK', period: 'break'),
+        MatchStatusHelper.parseStatus(
+          'استراحة',
+          statusCode: 'BREAK',
+          period: 'break',
+        ),
         equals(MatchPhase.halfTime),
       );
       expect(
-        MatchStatusHelper.parseStatus('استراحة إضافي', statusCode: 'HALFTIME', period: 'extra_break'),
+        MatchStatusHelper.parseStatus(
+          'استراحة إضافي',
+          statusCode: 'HALFTIME',
+          period: 'extra_break',
+        ),
         equals(MatchPhase.halfTime),
       );
     });
 
     test('Correctly maps 1st Extra, 2nd Extra, and Penalties', () {
       expect(
-        MatchStatusHelper.parseStatus('الإضافي الأول', statusCode: 'EXTRA_TIME', period: '1st_extra'),
+        MatchStatusHelper.parseStatus(
+          'الإضافي الأول',
+          statusCode: 'EXTRA_TIME',
+          period: '1st_extra',
+        ),
         equals(MatchPhase.extraTime),
       );
       expect(
-        MatchStatusHelper.parseStatus('الإضافي الثاني', statusCode: 'EXTRA_TIME', period: '2nd_extra'),
+        MatchStatusHelper.parseStatus(
+          'الإضافي الثاني',
+          statusCode: 'EXTRA_TIME',
+          period: '2nd_extra',
+        ),
         equals(MatchPhase.extraTime),
       );
       expect(
-        MatchStatusHelper.parseStatus('ركلات الترجيح', statusCode: 'PENALTIES', period: 'penalties'),
+        MatchStatusHelper.parseStatus(
+          'ركلات الترجيح',
+          statusCode: 'PENALTIES',
+          period: 'penalties',
+        ),
         equals(MatchPhase.penalties),
       );
     });
@@ -126,7 +150,9 @@ void main() {
   });
 
   group('MatchCard & LiveMatchCard - UI Penalty Rendering', () {
-    testWidgets('MatchCard displays penalty shootout widget underneath score', (tester) async {
+    testWidgets('MatchCard displays penalty shootout widget underneath score', (
+      tester,
+    ) async {
       const penaltyMatch = MatchEntity(
         id: '100',
         team1: 'Real Madrid',
@@ -141,9 +167,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: MatchCard(match: penaltyMatch),
-          ),
+          home: Scaffold(body: MatchCard(match: penaltyMatch)),
         ),
       );
 
@@ -154,7 +178,9 @@ void main() {
       expect(find.textContaining('4 - 5'), findsOneWidget);
     });
 
-    testWidgets('LiveMatchCard displays penalty shootout score container', (tester) async {
+    testWidgets('LiveMatchCard displays penalty shootout score container', (
+      tester,
+    ) async {
       const penaltyMatch = MatchEntity(
         id: '200',
         team1: 'Arsenal',
@@ -169,9 +195,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: LiveMatchCard(match: penaltyMatch),
-          ),
+          home: Scaffold(body: LiveMatchCard(match: penaltyMatch)),
         ),
       );
 

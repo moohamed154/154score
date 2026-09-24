@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -38,19 +38,15 @@ void main() {
     when(() => mockWebSocketService.connect()).thenReturn(null);
     when(() => mockWebSocketService.joinMatchRoom(any())).thenReturn(null);
     when(() => mockWebSocketService.leaveMatchRoom(any())).thenReturn(null);
-    when(
-      () => mockWebSocketService.matchUpdatesStream(any()),
-    ).thenAnswer((_) => matchDetailController.stream);
-    when(
-      () => mockWebSocketService.updatesStream,
-    ).thenAnswer((_) => liveMatchController.stream);
+    when(() => mockWebSocketService.matchUpdatesStream(any()))
+        .thenAnswer((_) => matchDetailController.stream);
+    when(() => mockWebSocketService.updatesStream)
+        .thenAnswer((_) => liveMatchController.stream);
 
-    when(
-      () => mockRepository.getEvents(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
-    when(
-      () => mockRepository.getStats(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
+    when(() => mockRepository.getEvents(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
+    when(() => mockRepository.getStats(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
     when(
       () => mockRepository.getDetails(
         any(),
@@ -58,12 +54,10 @@ void main() {
         utcOffset: any(named: 'utcOffset'),
       ),
     ).thenAnswer((_) async => const ApiSuccess([]));
-    when(
-      () => mockRepository.getNews(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess([]));
-    when(
-      () => mockRepository.getLineups(any(), lang: any(named: 'lang')),
-    ).thenAnswer((_) async => const ApiSuccess(null));
+    when(() => mockRepository.getNews(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess([]));
+    when(() => mockRepository.getLineups(any(), lang: any(named: 'lang')))
+        .thenAnswer((_) async => const ApiSuccess(null));
   });
 
   tearDown(() {
@@ -72,106 +66,97 @@ void main() {
   });
 
   group('MatchDetails WebSocket Real-Time Propagation Tests', () {
-    test(
-      'MatchDetailRealtimeUpdate.fromJson preserves match_id when event has own id',
-      () {
-        final payload = {
-          'id': 99999, // Event ID
-          'match_id': 1080351, // Match ID
-          'score_1': '2',
-          'score_2': '1',
-          'minute': '90',
-          'extra_time': '6',
-          'period': '2',
-          'status': 'live',
-        };
+    test('MatchDetailRealtimeUpdate.fromJson preserves match_id when event has own id', () {
+      final payload = {
+        'id': 99999, // Event ID
+        'match_id': 1080351, // Match ID
+        'score_1': '2',
+        'score_2': '1',
+        'minute': '90',
+        'extra_time': '6',
+        'period': '2',
+        'status': 'live',
+      };
 
-        final update = MatchDetailRealtimeUpdate.fromJson(
-          payload,
-          fallbackMatchId: '1080351',
-        );
+      final update = MatchDetailRealtimeUpdate.fromJson(
+        payload,
+        fallbackMatchId: '1080351',
+      );
 
-        expect(update.matchId, '1080351');
-        expect(update.score1, '2');
-        expect(update.score2, '1');
-        expect(update.minute, '90');
-        expect(update.extraTime, '6');
-        expect(update.period, '2');
-        expect(update.status, 'live');
-      },
-    );
+      expect(update.matchId, '1080351');
+      expect(update.score1, '2');
+      expect(update.score2, '1');
+      expect(update.minute, '90');
+      expect(update.extraTime, '6');
+      expect(update.period, '2');
+      expect(update.status, 'live');
+    });
 
-    test(
-      'MatchDetailsBloc emits liveMinute, liveExtraTime, livePeriod from general LiveMatchUpdate',
-      () async {
-        final bloc = MatchDetailsBloc(
-          repository: mockRepository,
-          webSocketService: mockWebSocketService,
-          localStorageService: mockLocalStorageService,
-          matchId: '1080351',
-        );
+    test('MatchDetailsBloc emits liveMinute, liveExtraTime, livePeriod from general LiveMatchUpdate', () async {
+      final bloc = MatchDetailsBloc(
+        repository: mockRepository,
+        webSocketService: mockWebSocketService,
+        localStorageService: mockLocalStorageService,
+        matchId: '1080351',
+      );
 
-        const liveUpdate = LiveMatchUpdate(
-          matchId: '1080351',
-          score1: '3',
-          score2: '1',
-          minute: '90',
-          extraTime: '6',
-          period: '2',
-          status: 'live',
-        );
+      const liveUpdate = LiveMatchUpdate(
+        matchId: '1080351',
+        score1: '3',
+        score2: '1',
+        minute: '90',
+        extraTime: '6',
+        period: '2',
+        status: 'live',
+      );
 
-        bloc.add(const LiveMatchDetailUpdateEvent(liveUpdate));
-        await pumpEventQueue();
+      bloc.add(const LiveMatchDetailUpdateEvent(liveUpdate));
+      await pumpEventQueue();
 
-        expect(bloc.state.liveScore1, '3');
-        expect(bloc.state.liveScore2, '1');
-        expect(bloc.state.liveMinute, '90');
-        expect(bloc.state.liveExtraTime, '6');
-        expect(bloc.state.livePeriod, '2');
-        expect(bloc.state.liveStatus, 'live');
+      expect(bloc.state.liveScore1, '3');
+      expect(bloc.state.liveScore2, '1');
+      expect(bloc.state.liveMinute, '90');
+      expect(bloc.state.liveExtraTime, '6');
+      expect(bloc.state.livePeriod, '2');
+      expect(bloc.state.liveStatus, 'live');
 
-        await bloc.close();
-      },
-    );
+      await bloc.close();
+    });
 
-    test(
-      'MatchDetailsBloc emits liveMinute, liveExtraTime, livePeriod from match:{id} room socket update',
-      () async {
-        final bloc = MatchDetailsBloc(
-          repository: mockRepository,
-          webSocketService: mockWebSocketService,
-          localStorageService: mockLocalStorageService,
-          matchId: '1080351',
-        );
+    test('MatchDetailsBloc emits liveMinute, liveExtraTime, livePeriod from match:{id} room socket update', () async {
+      final bloc = MatchDetailsBloc(
+        repository: mockRepository,
+        webSocketService: mockWebSocketService,
+        localStorageService: mockLocalStorageService,
+        matchId: '1080351',
+      );
 
-        const roomUpdate = MatchDetailRealtimeUpdate(
-          matchId: '1080351',
-          score1: '2',
-          score2: '2',
-          minute: '90',
-          extraTime: '5',
-          period: '2',
-          status: 'live',
-          eventType: 'goal',
-          eventPlayer: 'Player X',
-          isHomeTeam: false,
-        );
+      const roomUpdate = MatchDetailRealtimeUpdate(
+        matchId: '1080351',
+        score1: '2',
+        score2: '2',
+        minute: '90',
+        extraTime: '5',
+        period: '2',
+        status: 'live',
+        eventType: 'goal',
+        eventPlayer: 'Player X',
+        isHomeTeam: false,
+      );
 
-        bloc.add(const MatchDetailSocketUpdateEvent(roomUpdate));
-        await pumpEventQueue();
+      bloc.add(const MatchDetailSocketUpdateEvent(roomUpdate));
+      await pumpEventQueue();
 
-        expect(bloc.state.liveScore1, '2');
-        expect(bloc.state.liveScore2, '2');
-        expect(bloc.state.liveMinute, '90');
-        expect(bloc.state.liveExtraTime, '5');
-        expect(bloc.state.livePeriod, '2');
-        expect(bloc.state.liveStatus, 'live');
-        expect(bloc.state.events.isNotEmpty, isTrue);
+      expect(bloc.state.liveScore1, '2');
+      expect(bloc.state.liveScore2, '2');
+      expect(bloc.state.liveMinute, '90');
+      expect(bloc.state.liveExtraTime, '5');
+      expect(bloc.state.livePeriod, '2');
+      expect(bloc.state.liveStatus, 'live');
+      expect(bloc.state.events.isNotEmpty, isTrue);
 
-        await bloc.close();
-      },
-    );
+      await bloc.close();
+    });
 
     test(
       'MatchDetailsBloc correctly matches room when ID has match: prefix',
@@ -204,37 +189,34 @@ void main() {
       },
     );
 
-    test(
-      'MatchDetailsBloc emits livePenaltyScore1 and livePenaltyScore2 from LiveMatchUpdate and room update',
-      () async {
-        final bloc = MatchDetailsBloc(
-          repository: mockRepository,
-          webSocketService: mockWebSocketService,
-          localStorageService: mockLocalStorageService,
-          matchId: '1080351',
-        );
+    test('MatchDetailsBloc emits livePenaltyScore1 and livePenaltyScore2 from LiveMatchUpdate and room update', () async {
+      final bloc = MatchDetailsBloc(
+        repository: mockRepository,
+        webSocketService: mockWebSocketService,
+        localStorageService: mockLocalStorageService,
+        matchId: '1080351',
+      );
 
-        const liveUpdate = LiveMatchUpdate(
-          matchId: '1080351',
-          score1: '1',
-          score2: '1',
-          penaltyScore1: '4',
-          penaltyScore2: '5',
-          minute: '120',
-          period: 'penalties',
-          status: 'ركلات الترجيح',
-          statusCode: 'PENALTIES',
-        );
+      const liveUpdate = LiveMatchUpdate(
+        matchId: '1080351',
+        score1: '1',
+        score2: '1',
+        penaltyScore1: '4',
+        penaltyScore2: '5',
+        minute: '120',
+        period: 'penalties',
+        status: 'ركلات الترجيح',
+        statusCode: 'PENALTIES',
+      );
 
-        liveMatchController.add(liveUpdate);
-        await pumpEventQueue();
+      liveMatchController.add(liveUpdate);
+      await pumpEventQueue();
 
-        expect(bloc.state.livePenaltyScore1, '4');
-        expect(bloc.state.livePenaltyScore2, '5');
-        expect(bloc.state.liveStatusCode, 'PENALTIES');
+      expect(bloc.state.livePenaltyScore1, '4');
+      expect(bloc.state.livePenaltyScore2, '5');
+      expect(bloc.state.liveStatusCode, 'PENALTIES');
 
-        await bloc.close();
-      },
-    );
+      await bloc.close();
+    });
   });
 }

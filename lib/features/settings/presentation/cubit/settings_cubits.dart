@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:equatable/equatable.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -30,17 +33,112 @@ class ThemeCubit extends Cubit<ThemeMode> {
   }
 }
 
+// Locale State
+class LocaleState extends Equatable {
+  final Locale locale;
+  final bool isRefreshing;
+  final bool showIndicator;
+  final int requestToken;
+  final String? errorMessage;
+
+  const LocaleState({
+    required this.locale,
+    this.isRefreshing = false,
+    this.showIndicator = false,
+    this.requestToken = 0,
+    this.errorMessage,
+  });
+
+  LocaleState copyWith({
+    Locale? locale,
+    bool? isRefreshing,
+    bool? showIndicator,
+    int? requestToken,
+    String? errorMessage,
+  }) {
+    return LocaleState(
+      locale: locale ?? this.locale,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      showIndicator: showIndicator ?? this.showIndicator,
+      requestToken: requestToken ?? this.requestToken,
+      errorMessage: errorMessage,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    locale,
+    isRefreshing,
+    showIndicator,
+    requestToken,
+    errorMessage,
+  ];
+}
+
 // Locale Cubit
-class LocaleCubit extends Cubit<Locale> {
+class LocaleCubit extends Cubit<LocaleState> {
   final LocalStorageService _storage;
   final WebSocketService _webSocketService;
+  Timer? _indicatorDebounceTimer;
+  int _currentToken = 0;
 
   LocaleCubit(this._storage, this._webSocketService)
-    : super(Locale(_storage.getLanguage()));
+    : super(LocaleState(locale: Locale(_storage.getLanguage())));
 
-  Future<void> setLocale(Locale locale) async {
-    await _storage.setLanguage(locale.languageCode);
-    _webSocketService.switchLanguageChannel(locale.languageCode);
-    emit(locale);
+  /// Switches locale immediately (0ms), switches WebSocket channels,
+  /// persists language to storage asynchronously, and begins background refresh coordination.
+  void setLocale(Locale newLocale) {
+    if (state.locale == newLocale && !state.isRefreshing) return;
+
+    _currentToken++;
+    final token = _currentToken;
+    final langCode = newLocale.languageCode;
+
+    // 1. Persist asynchronously in background (do NOT await before emitting)
+    unawaited(_storage.setLanguage(langCode));
+
+    // 2. Switch WebSocket channel seamlessly on existing connection
+    _webSocketService.switchLanguageChannel(langCode);
+
+    // 3. Cancel any existing indicator timer
+    _indicatorDebounceTimer?.cancel();
+
+    // 4. Emit new locale immediately (instant UI / RTL/LTR / static string update)
+    emit(
+      state.copyWith(
+        locale: newLocale,
+        isRefreshing: true,
+        showIndicator: false,
+        requestToken: token,
+        errorMessage: null,
+      ),
+    );
+
+    // 5. Start 300ms threshold timer: only show subtle indicator if refresh takes > 300ms
+    _indicatorDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (state.requestToken == token && state.isRefreshing) {
+        emit(state.copyWith(showIndicator: true));
+      }
+    });
+  }
+
+  /// Called when background data refreshes finish across the application.
+  void notifyRefreshCompleted({int? token, String? error}) {
+    if (token != null && token != _currentToken) return;
+
+    _indicatorDebounceTimer?.cancel();
+    emit(
+      state.copyWith(
+        isRefreshing: false,
+        showIndicator: false,
+        errorMessage: error,
+      ),
+    );
+  }
+
+  @override
+  Future<void> close() {
+    _indicatorDebounceTimer?.cancel();
+    return super.close();
   }
 }

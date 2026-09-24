@@ -51,11 +51,8 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
 
   void _applyFilters() {
     context.read<MatchesBloc>().add(
-          ApplyMatchesFilterEvent(
-            filter: _tempFilter,
-            sortOrder: _tempSortOrder,
-          ),
-        );
+      ApplyMatchesFilterEvent(filter: _tempFilter, sortOrder: _tempSortOrder),
+    );
     Navigator.of(context).pop();
   }
 
@@ -68,13 +65,12 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
 
     return BlocBuilder<MatchesBloc, MatchesState>(
       builder: (context, state) {
-        final hasAnyFilters = _tempFilter != MatchFilterType.all ||
+        final hasAnyFilters =
+            _tempFilter != MatchFilterType.all ||
             _tempSortOrder != MatchesSortOrder.importance;
 
         return Container(
-          constraints: BoxConstraints(
-            maxHeight: mediaQuery.size.height * 0.88,
-          ),
+          constraints: BoxConstraints(maxHeight: mediaQuery.size.height * 0.88),
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: const BorderRadius.vertical(
@@ -211,10 +207,14 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                   bottom: mediaQuery.padding.bottom + 12,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
                   border: Border(
                     top: BorderSide(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
                       width: 0.8,
                     ),
                   ),
@@ -229,8 +229,9 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                       foregroundColor: Colors.black,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
                       ),
                     ),
                     child: Text(
@@ -238,10 +239,7 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                       style: AppTypography.getButton(
                         isDark: false,
                         isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
+                      ).copyWith(fontWeight: FontWeight.w700, fontSize: 16),
                     ),
                   ),
                 ),
@@ -266,7 +264,9 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
         Icon(
           icon,
           size: 18,
-          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          color: isDark
+              ? AppColors.darkTextSecondary
+              : AppColors.lightTextSecondary,
         ),
         const SizedBox(width: 8),
         Text(
@@ -274,15 +274,9 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
           style: AppTypography.getBodyMedium(
             isDark: isDark,
             isArabic: isArabic,
-          ).copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.2,
-          ),
+          ).copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.2),
         ),
-        if (trailing != null) ...[
-          const Spacer(),
-          trailing,
-        ],
+        if (trailing != null) ...[const Spacer(), trailing],
       ],
     );
   }
@@ -295,11 +289,31 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
   ) {
     final l10n = AppLocalizations.of(context);
     final statuses = [
-      (MatchFilterType.all, l10n.translate('filter_all'), Icons.grid_view_rounded),
-      (MatchFilterType.live, l10n.translate('filter_live'), Icons.fiber_manual_record_rounded),
-      (MatchFilterType.upcoming, l10n.translate('filter_upcoming'), Icons.schedule_rounded),
-      (MatchFilterType.finished, l10n.translate('filter_finished'), Icons.check_circle_outline_rounded),
-      (MatchFilterType.favorites, l10n.translate('filter_favorites'), Icons.star_rounded),
+      (
+        MatchFilterType.all,
+        l10n.translate('filter_all'),
+        Icons.grid_view_rounded,
+      ),
+      (
+        MatchFilterType.live,
+        l10n.translate('filter_live'),
+        Icons.fiber_manual_record_rounded,
+      ),
+      (
+        MatchFilterType.upcoming,
+        l10n.translate('filter_upcoming'),
+        Icons.schedule_rounded,
+      ),
+      (
+        MatchFilterType.finished,
+        l10n.translate('filter_finished'),
+        Icons.check_circle_outline_rounded,
+      ),
+      (
+        MatchFilterType.favorites,
+        l10n.translate('filter_favorites'),
+        Icons.star_rounded,
+      ),
     ];
 
     return Wrap(
@@ -337,10 +351,10 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                 color: isSelected
                     ? (isLive ? Colors.white : Colors.black)
                     : (isLive
-                        ? AppColors.liveRed
-                        : (isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary)),
+                          ? AppColors.liveRed
+                          : (isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary)),
               ),
               const SizedBox(width: 6),
               Text(
@@ -350,14 +364,17 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                   color: isSelected
                       ? (isLive ? Colors.white : Colors.black)
                       : (isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary),
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary),
                 ),
               ),
               if (isLive && liveCount > 0) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected ? Colors.black26 : AppColors.liveRed,
                     borderRadius: BorderRadius.circular(10),
@@ -412,8 +429,8 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
             child: Material(
               color: isSelected
                   ? (isDark
-                      ? AppColors.primary.withValues(alpha: 0.18)
-                      : AppColors.primary.withValues(alpha: 0.12))
+                        ? AppColors.primary.withValues(alpha: 0.18)
+                        : AppColors.primary.withValues(alpha: 0.12))
                   : (isDark ? AppColors.darkCard : AppColors.lightCard),
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               child: InkWell(
@@ -431,8 +448,8 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                       color: isSelected
                           ? AppColors.primary
                           : (isDark
-                              ? AppColors.darkBorder
-                              : AppColors.lightBorder),
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder),
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
@@ -445,21 +462,22 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                         color: isSelected
                             ? AppColors.primary
                             : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary),
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         opt.$2,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: isSelected
                               ? (isDark ? Colors.white : Colors.black)
                               : (isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary),
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary),
                         ),
                       ),
                     ],

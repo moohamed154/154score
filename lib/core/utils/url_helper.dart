@@ -21,7 +21,8 @@ class UrlHelper {
     }
 
     // Fix broken stadium 820/800 CDN paths to canonical 600
-    if (trimmed.contains('/stadium/820/') || trimmed.contains('/stadium/800/')) {
+    if (trimmed.contains('/stadium/820/') ||
+        trimmed.contains('/stadium/800/')) {
       trimmed = trimmed.replaceAll(
         RegExp(r'/stadium/(820|800)/'),
         '/stadium/600/',
@@ -54,7 +55,10 @@ class UrlHelper {
         trimmed.endsWith('.jpg') ||
         trimmed.endsWith('.jpeg') ||
         trimmed.endsWith('.webp')) {
-      if (RegExp(r'^\d+\.(png|jpg|jpeg|webp)$', caseSensitive: false).hasMatch(trimmed)) {
+      if (RegExp(
+        r'^\d+\.(png|jpg|jpeg|webp)$',
+        caseSensitive: false,
+      ).hasMatch(trimmed)) {
         return 'https://imgs.ysscores.com/teams/150/$trimmed';
       } else if (trimmed.startsWith('teams/') ||
           trimmed.startsWith('player/') ||
@@ -82,7 +86,10 @@ class UrlHelper {
     }
 
     // Bare numeric image filename (e.g. "1461724761244.jpg")
-    if (RegExp(r'^\d+\.(png|jpg|jpeg|webp)$', caseSensitive: false).hasMatch(trimmed)) {
+    if (RegExp(
+      r'^\d+\.(png|jpg|jpeg|webp)$',
+      caseSensitive: false,
+    ).hasMatch(trimmed)) {
       return 'https://imgs.ysscores.com/stadium/$size/$trimmed';
     }
 
@@ -103,7 +110,10 @@ class UrlHelper {
     }
 
     // Bare numeric filename (e.g. "751690196981.png")
-    if (RegExp(r'^\d+\.(png|jpg|jpeg|webp)$', caseSensitive: false).hasMatch(trimmed)) {
+    if (RegExp(
+      r'^\d+\.(png|jpg|jpeg|webp)$',
+      caseSensitive: false,
+    ).hasMatch(trimmed)) {
       return 'https://imgs.ysscores.com/player/$size/$trimmed';
     }
 
@@ -154,31 +164,24 @@ class UrlHelper {
   }
 
   /// Resolves canonical championship logo for known competitions if current logo is missing or broken.
-  static String? resolveChampionshipLogo(String? leagueId, {String? currentLogo}) {
+  static String? resolveChampionshipLogo(
+    String? leagueId, {
+    String? currentLogo,
+  }) {
     if (currentLogo != null && isValidImageUrl(currentLogo)) {
       return currentLogo;
     }
     return switch (leagueId) {
-      '12048' || '943230' || '288' || '904988' =>
-        'https://imgs.ysscores.com/championship/128/5171696546919.png', // UEFA Champions League
-      '6811' || '937599' || '284' =>
-        'https://imgs.ysscores.com/championship/128/3411694791422.png', // Premier League
-      '1933' || '938652' || '285' =>
-        'https://imgs.ysscores.com/championship/128/8641690196626.png', // LaLiga
-      '3734' || '936357' || '287' =>
-        'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
-      '2606' || '938769' || '286' =>
-        'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
-      '1985' || '937873' || '2847' =>
-        'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
-      '7167' || '941825' || '4750' =>
-        'https://imgs.ysscores.com/championship/128/5111703719091.png', // Saudi Pro League
-      '88013' || '59771441' =>
-        'https://imgs.ysscores.com/championship/128/5481703687014.png', // Supercopa
-      '943009' || '3894' =>
-        'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
-      '40224' || '916145' =>
-        'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
+      '12048' || '943230' || '288' || '904988' => 'https://imgs.ysscores.com/championship/128/5171696546919.png', // UEFA Champions League
+      '6811' || '937599' || '284' => 'https://imgs.ysscores.com/championship/128/3411694791422.png', // Premier League
+      '1933' || '938652' || '285' => 'https://imgs.ysscores.com/championship/128/8641690196626.png', // LaLiga
+      '3734' || '936357' || '287' => 'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
+      '2606' || '938769' || '286' => 'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
+      '1985' || '937873' || '2847' => 'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
+      '7167' || '941825' || '4750' => 'https://imgs.ysscores.com/championship/128/5111703719091.png', // Saudi Pro League
+      '88013' || '59771441' => 'https://imgs.ysscores.com/championship/128/5481703687014.png', // Supercopa
+      '943009' || '3894' => 'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
+      '40224' || '916145' => 'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
       _ => null,
     };
   }
@@ -188,7 +191,10 @@ class UrlHelper {
     if (teamId == null) return null;
     final clean = teamId.trim();
     if (clean.isEmpty || clean == 'null' || clean == '0') return null;
-    if (clean.endsWith('.png') || clean.endsWith('.jpg') || clean.endsWith('.jpeg') || clean.endsWith('.webp')) {
+    if (clean.endsWith('.png') ||
+        clean.endsWith('.jpg') ||
+        clean.endsWith('.jpeg') ||
+        clean.endsWith('.webp')) {
       return 'https://imgs.ysscores.com/teams/$size/$clean';
     }
     return 'https://imgs.ysscores.com/teams/$size/$clean.png';
@@ -297,10 +303,7 @@ class UrlHelper {
         mode: LaunchMode.externalApplication,
       );
       if (!launched) {
-        launched = await launchUrl(
-          uri,
-          mode: LaunchMode.platformDefault,
-        );
+        launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
       }
       if (!launched && context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -313,10 +316,7 @@ class UrlHelper {
       return launched;
     } catch (_) {
       try {
-        final launched = await launchUrl(
-          uri,
-          mode: LaunchMode.platformDefault,
-        );
+        final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
         if (launched) return true;
       } catch (_) {}
       if (context != null && context.mounted) {

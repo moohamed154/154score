@@ -8,8 +8,8 @@ class SearchResultEntity extends Equatable {
   final String title;
   final String? fullTitle;
   final String? logo;
-  final String? position;   // for players
-  final String? country;    // for teams
+  final String? position; // for players
+  final String? country; // for teams
   final String? countryCode;
 
   const SearchResultEntity({

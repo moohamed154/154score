@@ -59,12 +59,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
-          return BlocBuilder<LocaleCubit, Locale>(
-            builder: (context, currentLocale) {
+          return BlocBuilder<LocaleCubit, LocaleState>(
+            buildWhen: (prev, curr) => prev.locale != curr.locale,
+            builder: (context, localeState) {
               return SkeletonizerConfig(
                 data: SkeletonizerConfigData(
                   effectResolver: (brightness) {
-                    final isDarkBrightness = themeMode == ThemeMode.dark ||
+                    final isDarkBrightness =
+                        themeMode == ThemeMode.dark ||
                         (themeMode == ThemeMode.system &&
                             brightness == Brightness.dark);
                     return isDarkBrightness
@@ -87,7 +89,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                   theme: AppTheme.lightTheme,
                   darkTheme: AppTheme.darkTheme,
                   themeMode: themeMode,
-                  locale: currentLocale,
+                  locale: localeState.locale,
                   supportedLocales: AppLocalizations.supportedLocales,
                   localizationsDelegates: const [
                     AppLocalizations.delegate,

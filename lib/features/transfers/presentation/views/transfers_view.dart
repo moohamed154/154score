@@ -53,20 +53,14 @@ class _TransfersViewState extends State<TransfersView> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppBrandLogo(
-              size: 32,
-              isDark: isDark,
-            ),
+            AppBrandLogo(size: 32, isDark: isDark),
             const SizedBox(width: 10),
             Text(
               '154Score',
               style: AppTypography.getHeadingLarge(
                 isDark: isDark,
                 isArabic: isArabic,
-              ).copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
-              ),
+              ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
             ),
           ],
         ),
@@ -139,7 +133,9 @@ class _TransfersViewState extends State<TransfersView> {
                       LoadTransfersEvent(isRefresh: true, completer: completer),
                     );
                     try {
-                      await completer.future.timeout(const Duration(seconds: 3));
+                      await completer.future.timeout(
+                        const Duration(seconds: 3),
+                      );
                     } catch (_) {}
                   },
                   child: _buildBody(context, state),

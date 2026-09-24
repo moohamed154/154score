@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../matches/domain/entities/match_entity.dart';
 
 class ProfileItemEntity extends Equatable {
@@ -55,17 +56,17 @@ class ProfileTeamEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        fullName,
-        logo,
-        worldRanking,
-        role,
-        from,
-        to,
-        duration,
-        isCurrent,
-      ];
+    id,
+    name,
+    fullName,
+    logo,
+    worldRanking,
+    role,
+    from,
+    to,
+    duration,
+    isCurrent,
+  ];
 }
 
 class ProfileEntity extends Equatable {

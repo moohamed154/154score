@@ -195,10 +195,17 @@ class LiveMatchCard extends StatelessWidget {
                       Container(
                         width: double.infinity,
                         alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E2638) : const Color(0xFFEDF2F7),
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+                          color: isDark
+                              ? const Color(0xFF1E2638)
+                              : const Color(0xFFEDF2F7),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusXs,
+                          ),
                         ),
                         child: Text(
                           isArabic
@@ -207,7 +214,9 @@ class LiveMatchCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
                           ),
                         ),
                       ),

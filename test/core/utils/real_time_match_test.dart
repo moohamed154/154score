@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/localization/app_localizations.dart';
@@ -109,39 +109,50 @@ void main() {
       expect(label, "80'");
     });
 
-    test('estimateMatchMinutes returns minute and extraMinute for stoppage time', () {
-      const kickOff = '20:00';
-      // 1st half stoppage (48 mins in -> minute: 45, extra: 3)
-      final now1st = DateTime(2026, 9, 9, 20, 48);
-      final est1st = MatchStatusHelper.estimateMatchMinutes(
-        time: kickOff,
-        status: 'الشوط الأول',
-        period: '1st_half',
-        now: now1st,
-      );
-      expect(est1st.minute, 45);
-      expect(est1st.extraMinute, 3);
+    test(
+      'estimateMatchMinutes returns minute and extraMinute for stoppage time',
+      () {
+        const kickOff = '20:00';
+        // 1st half stoppage (48 mins in -> minute: 45, extra: 3)
+        final now1st = DateTime(2026, 9, 9, 20, 48);
+        final est1st = MatchStatusHelper.estimateMatchMinutes(
+          time: kickOff,
+          status: 'الشوط الأول',
+          period: '1st_half',
+          now: now1st,
+        );
+        expect(est1st.minute, 45);
+        expect(est1st.extraMinute, 3);
 
-      // 2nd half stoppage (108 mins in -> 48 mins into 2nd half -> minute: 90, extra: 3)
-      final now2nd = DateTime(2026, 9, 9, 21, 48);
-      final est2nd = MatchStatusHelper.estimateMatchMinutes(
-        time: kickOff,
-        status: 'الشوط الثاني',
-        period: '2nd_half',
-        now: now2nd,
-      );
-      expect(est2nd.minute, 90);
-      expect(est2nd.extraMinute, 3);
-    });
+        // 2nd half stoppage (108 mins in -> 48 mins into 2nd half -> minute: 90, extra: 3)
+        final now2nd = DateTime(2026, 9, 9, 21, 48);
+        final est2nd = MatchStatusHelper.estimateMatchMinutes(
+          time: kickOff,
+          status: 'الشوط الثاني',
+          period: '2nd_half',
+          now: now2nd,
+        );
+        expect(est2nd.minute, 90);
+        expect(est2nd.extraMinute, 3);
+      },
+    );
 
     test('formatExtraTime correctly formats extra time strings', () {
-      expect(MatchStatusHelper.formatExtraTime('02:00 / 5', minute: 90), '02:00  / 5');
-      expect(MatchStatusHelper.formatExtraTime('5', minute: 90, elapsedSeconds: 120), '02:00  / 5');
-      expect(MatchStatusHelper.formatExtraTime('+00:00 / 5', minute: 90), '00:00  / 5');
+      expect(
+        MatchStatusHelper.formatExtraTime('02:00 / 5', minute: 90),
+        '02:00  / 5',
+      );
+      expect(
+        MatchStatusHelper.formatExtraTime('5', minute: 90, elapsedSeconds: 120),
+        '02:00  / 5',
+      );
+      expect(
+        MatchStatusHelper.formatExtraTime('+00:00 / 5', minute: 90),
+        '00:00  / 5',
+      );
       expect(MatchStatusHelper.formatExtraTime('0', minute: 90), isNull);
       expect(MatchStatusHelper.formatExtraTime('+00:00', minute: 90), isNull);
     });
-
 
     test('getDisplayLabel uses estimated real time when minute is null', () {
       final phase = MatchStatusHelper.parseStatus('الشوط الثاني');
@@ -206,81 +217,83 @@ void main() {
       expect(find.text("30'"), findsOneWidget);
     });
 
-    testWidgets('MatchCard displays 90 in circular live clock for stoppage time', (
-      tester,
-    ) async {
-      const match = MatchEntity(
-        id: '124',
-        team1: 'كرالوفه',
-        team2: 'فيكتوريا بيلزن',
-        score1: '0',
-        score2: '0',
-        status: 'الشوط الثاني',
-        statusCode: 'LIVE',
-        period: '2nd_half',
-        minute: '90',
-        extraTime: '02:00 / 5',
-      );
+    testWidgets(
+      'MatchCard displays 90 in circular live clock for stoppage time',
+      (tester) async {
+        const match = MatchEntity(
+          id: '124',
+          team1: 'كرالوفه',
+          team2: 'فيكتوريا بيلزن',
+          score1: '0',
+          score2: '0',
+          status: 'الشوط الثاني',
+          statusCode: 'LIVE',
+          period: '2nd_half',
+          minute: '90',
+          extraTime: '02:00 / 5',
+        );
 
-      await tester.pumpWidget(
-        const MaterialApp(
-          localizationsDelegates: [
-            AppLocalizations.delegate,
-            ...GlobalMaterialLocalizations.delegates,
-          ],
-          supportedLocales: [Locale('ar')],
-          locale: Locale('ar'),
-          home: Scaffold(body: MatchCard(match: match)),
-        ),
-      );
+        await tester.pumpWidget(
+          const MaterialApp(
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            supportedLocales: [Locale('ar')],
+            locale: Locale('ar'),
+            home: Scaffold(body: MatchCard(match: match)),
+          ),
+        );
 
-      await tester.pump();
+        await tester.pump();
 
-      expect(find.text('كرالوفه'), findsOneWidget);
-      expect(find.text('فيكتوريا بيلزن'), findsOneWidget);
-      expect(find.text("90'"), findsOneWidget);
-    });
+        expect(find.text('كرالوفه'), findsOneWidget);
+        expect(find.text('فيكتوريا بيلزن'), findsOneWidget);
+        expect(find.text("90'"), findsOneWidget);
+      },
+    );
 
-    testWidgets('MatchCard displays calculated 1st half extra time in circular live clock', (
-      tester,
-    ) async {
-      // Started 48 minutes ago in 1st half
-      final now = DateTime.now();
-      final fortyEightMinsAgo = now.subtract(const Duration(minutes: 48));
-      final timeStr =
-          '${fortyEightMinsAgo.hour.toString().padLeft(2, '0')}:${fortyEightMinsAgo.minute.toString().padLeft(2, '0')}';
+    testWidgets(
+      'MatchCard displays calculated 1st half extra time in circular live clock',
+      (tester) async {
+        // Started 48 minutes ago in 1st half
+        final now = DateTime.now();
+        final fortyEightMinsAgo = now.subtract(const Duration(minutes: 48));
+        final timeStr =
+            '${fortyEightMinsAgo.hour.toString().padLeft(2, '0')}:${fortyEightMinsAgo.minute.toString().padLeft(2, '0')}';
 
-      final match = MatchEntity(
-        id: '125',
-        team1: 'المقاولون العرب',
-        team2: 'الأهلي',
-        score1: '1',
-        score2: '1',
-        time: timeStr,
-        status: 'الشوط الأول',
-        statusCode: 'LIVE',
-        period: '1st_half',
-        minute: null,
-      );
+        final match = MatchEntity(
+          id: '125',
+          team1: 'المقاولون العرب',
+          team2: 'الأهلي',
+          score1: '1',
+          score2: '1',
+          time: timeStr,
+          status: 'الشوط الأول',
+          statusCode: 'LIVE',
+          period: '1st_half',
+          minute: null,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            ...GlobalMaterialLocalizations.delegates,
-          ],
-          supportedLocales: const [Locale('ar')],
-          locale: const Locale('ar'),
-          home: Scaffold(body: MatchCard(match: match)),
-        ),
-      );
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            supportedLocales: const [Locale('ar')],
+            locale: const Locale('ar'),
+            home: Scaffold(body: MatchCard(match: match)),
+          ),
+        );
 
-      await tester.pump();
+        await tester.pump();
 
-      expect(find.text('المقاولون العرب'), findsOneWidget);
-      expect(find.text('الأهلي'), findsOneWidget);
-      expect(find.textContaining('45'), findsOneWidget);
-    });
+        expect(find.text('المقاولون العرب'), findsOneWidget);
+        expect(find.text('الأهلي'), findsOneWidget);
+        expect(find.textContaining('45'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'MatchCard displays live minute when status is لم تبدأ but kickoff has arrived',
@@ -323,8 +336,6 @@ void main() {
     );
   });
 
-
-
   group('MatchesRepositoryImpl Live Reconciliation Test', () {
     late MockMatchesRemoteDataSource mockRemoteDataSource;
     late MockLocalStorageService mockLocalStorage;
@@ -333,7 +344,10 @@ void main() {
     setUp(() {
       mockRemoteDataSource = MockMatchesRemoteDataSource();
       mockLocalStorage = MockLocalStorageService();
-      repository = MatchesRepositoryImpl(mockRemoteDataSource, mockLocalStorage);
+      repository = MatchesRepositoryImpl(
+        mockRemoteDataSource,
+        mockLocalStorage,
+      );
       when(() => mockLocalStorage.getFavoriteMatches()).thenReturn([]);
     });
 
@@ -402,10 +416,7 @@ void main() {
         ),
       ).thenAnswer((_) async => liveMatches);
 
-      final res = await repository.getMatchesByDate(
-        date: todayStr,
-        lang: 'ar',
-      );
+      final res = await repository.getMatchesByDate(date: todayStr, lang: 'ar');
 
       expect(res.isSuccess, isTrue);
       final leagues = res.dataOrNull!;

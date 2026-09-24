@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/player_profile_entity.dart';
 
 enum PlayerStatus { initial, loading, success, error }
@@ -44,12 +45,12 @@ class PlayerState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        playerId,
-        playerName,
-        playerPhoto,
-        profile,
-        selectedTab,
-        errorMessage,
-      ];
+    status,
+    playerId,
+    playerName,
+    playerPhoto,
+    profile,
+    selectedTab,
+    errorMessage,
+  ];
 }

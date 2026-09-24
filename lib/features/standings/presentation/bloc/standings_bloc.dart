@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -19,6 +21,16 @@ class LoadStandingsEvent extends StandingsEvent {
 
   @override
   List<Object?> get props => [leagueId];
+}
+
+class ChangeStandingsLanguageEvent extends StandingsEvent {
+  final String languageCode;
+  final Completer<void>? completer;
+
+  const ChangeStandingsLanguageEvent(this.languageCode, {this.completer});
+
+  @override
+  List<Object?> get props => [languageCode];
 }
 
 enum StandingsStatus { initial, loading, success, empty, error }
@@ -66,6 +78,7 @@ class StandingsBloc extends Bloc<StandingsEvent, StandingsState> {
   StandingsBloc({required this.repository, required this.localStorageService})
     : super(const StandingsState()) {
     on<LoadStandingsEvent>(_onLoadStandings);
+    on<ChangeStandingsLanguageEvent>(_onChangeStandingsLanguage);
   }
 
   Future<void> _onLoadStandings(
@@ -103,5 +116,44 @@ class StandingsBloc extends Bloc<StandingsEvent, StandingsState> {
         );
       },
     );
+  }
+
+  Future<void> _onChangeStandingsLanguage(
+    ChangeStandingsLanguageEvent event,
+    Emitter<StandingsState> emit,
+  ) async {
+    final targetLang = event.languageCode;
+    try {
+      final result = await repository.getStandings(
+        state.selectedLeagueId,
+        lang: targetLang,
+      );
+
+      final currentLang = localStorageService.getLanguage();
+      if (currentLang != targetLang) return;
+
+      result.fold(
+        onSuccess: (data) {
+          emit(
+            state.copyWith(
+              status: data.rows.isEmpty
+                  ? StandingsStatus.empty
+                  : StandingsStatus.success,
+              standings: data,
+              errorMessage: null,
+            ),
+          );
+        },
+        onFailure: (failure) {
+          // Keep existing visible standings
+        },
+      );
+    } catch (_) {
+      // Keep existing visible standings
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
+    }
   }
 }

@@ -267,7 +267,9 @@ class LeagueResolver {
     if (normInput.contains('يمن')) {
       return '30130539';
     }
-    if (normInput.contains('روسي') || normInput.contains('russian') || normInput.contains('russia')) {
+    if (normInput.contains('روسي') ||
+        normInput.contains('russian') ||
+        normInput.contains('russia')) {
       return '938370';
     }
     if (normInput.contains('كاراباو') ||

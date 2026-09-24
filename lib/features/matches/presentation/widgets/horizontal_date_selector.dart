@@ -51,7 +51,6 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
       height: 68,
       child: Center(
         child: ConstrainedBox(
-
           constraints: const BoxConstraints(maxWidth: 600),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
@@ -215,7 +214,9 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                     isDark: isDark,
                     icon: Icons.chevron_left_rounded,
                     onTap: () {
-                      final prev = widget.selectedDate.subtract(const Duration(days: 1));
+                      final prev = widget.selectedDate.subtract(
+                        const Duration(days: 1),
+                      );
                       widget.onDateSelected(prev);
                     },
                   ),
@@ -226,7 +227,9 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: context,
@@ -286,12 +289,13 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                     isDark: isDark,
                     icon: Icons.chevron_right_rounded,
                     onTap: () {
-                      final next = widget.selectedDate.add(const Duration(days: 1));
+                      final next = widget.selectedDate.add(
+                        const Duration(days: 1),
+                      );
                       widget.onDateSelected(next);
                     },
                   ),
                 ],
-
               ],
             ),
           ),
@@ -323,11 +327,12 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
           child: Icon(
             icon,
             size: 18,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
           ),
         ),
       ),
     );
   }
 }
-

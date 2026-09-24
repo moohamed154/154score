@@ -59,15 +59,15 @@ class PlayerLeagueEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        seasonId,
-        name,
-        logo,
-        logoLight,
-        type,
-        ranking,
-        followed,
-      ];
+    id,
+    seasonId,
+    name,
+    logo,
+    logoLight,
+    type,
+    ranking,
+    followed,
+  ];
 }
 
 class PlayerStatisticEntity extends Equatable {
@@ -101,19 +101,19 @@ class PlayerStatisticEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        league,
-        appearances,
-        goals,
-        assists,
-        scorePenalty,
-        missPenalty,
-        cancelGoal,
-        ownGoal,
-        yellowCards,
-        redCards,
-        cleanSheets,
-        manOfMatch,
-      ];
+    league,
+    appearances,
+    goals,
+    assists,
+    scorePenalty,
+    missPenalty,
+    cancelGoal,
+    ownGoal,
+    yellowCards,
+    redCards,
+    cleanSheets,
+    manOfMatch,
+  ];
 }
 
 class PlayerTransferEntity extends Equatable {
@@ -141,16 +141,16 @@ class PlayerTransferEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        team,
-        type,
-        fee,
-        rawFee,
-        important,
-        active,
-        dateFrom,
-        dateTo,
-        season,
-      ];
+    team,
+    type,
+    fee,
+    rawFee,
+    important,
+    active,
+    dateFrom,
+    dateTo,
+    season,
+  ];
 }
 
 class PlayerProfileEntity extends Equatable {
@@ -212,31 +212,31 @@ class PlayerProfileEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        nameAr,
-        nameEn,
-        photo,
-        cover,
-        team,
-        country,
-        clubNumber,
-        interNumber,
-        height,
-        weight,
-        birthDay,
-        age,
-        position,
-        positionName,
-        foot,
-        footName,
-        city,
-        retired,
-        died,
-        playerStatus,
-        statistics,
-        transfers,
-        metadata,
-        url,
-      ];
+    id,
+    name,
+    nameAr,
+    nameEn,
+    photo,
+    cover,
+    team,
+    country,
+    clubNumber,
+    interNumber,
+    height,
+    weight,
+    birthDay,
+    age,
+    position,
+    positionName,
+    foot,
+    footName,
+    city,
+    retired,
+    died,
+    playerStatus,
+    statistics,
+    transfers,
+    metadata,
+    url,
+  ];
 }

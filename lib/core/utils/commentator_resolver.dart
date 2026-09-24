@@ -546,7 +546,8 @@ class CommentatorResolver {
     final lowerSlug = trimmed.toLowerCase().replaceAll('-', ' ');
     for (final entry in _idToSlug.entries) {
       final slugClean = entry.value.toLowerCase().replaceAll('-', ' ');
-      if (slugClean.isNotEmpty && (lowerSlug.contains(slugClean) || slugClean.contains(lowerSlug))) {
+      if (slugClean.isNotEmpty &&
+          (lowerSlug.contains(slugClean) || slugClean.contains(lowerSlug))) {
         if (slugClean.length >= 5) {
           return entry.key;
         }

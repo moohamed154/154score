@@ -240,8 +240,7 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
               l['league_title']?.toString() ??
               l['title']?.toString() ??
               l['name']?.toString();
-          final lLogo =
-              l['league_logo']?.toString() ?? l['logo']?.toString();
+          final lLogo = l['league_logo']?.toString() ?? l['logo']?.toString();
           final lMatches = l['matches'] as List? ?? [];
 
           for (final m in lMatches) {
@@ -319,13 +318,15 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
       logo = profileMap['logo']?.toString();
       country = profileMap['country']?.toString();
       if (profileMap['current_season'] is Map) {
-        season = profileMap['current_season']['season_name']?.toString() ??
+        season =
+            profileMap['current_season']['season_name']?.toString() ??
             profileMap['current_season']['name']?.toString();
       }
 
       // Parse standings from profile if present
       final rawStandings = profileMap['standings'];
-      if (rawStandings != null && (rawStandings is Map || rawStandings is List)) {
+      if (rawStandings != null &&
+          (rawStandings is Map || rawStandings is List)) {
         try {
           standings = _standingsDataSource.parseStandings(
             rawStandings,
@@ -358,7 +359,10 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
           final it = rawScorers[i];
           if (it is Map) {
             scorers.add(
-              TopScorerDto.fromJson(i + 1, Map<String, dynamic>.from(it)).toEntity(),
+              TopScorerDto.fromJson(
+                i + 1,
+                Map<String, dynamic>.from(it),
+              ).toEntity(),
             );
           }
         }
@@ -371,7 +375,10 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
           final it = rawAssists[i];
           if (it is Map) {
             assists.add(
-              TopScorerDto.fromJson(i + 1, Map<String, dynamic>.from(it)).toEntity(),
+              TopScorerDto.fromJson(
+                i + 1,
+                Map<String, dynamic>.from(it),
+              ).toEntity(),
             );
           }
         }
@@ -384,28 +391,39 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
       fallbacks.add(
         getStandings(leagueId, lang: lang)
             .then((s) => standings = s)
-            .catchError((_) => standings ?? const LeagueStandingsEntity(leagueId: '', leagueTitle: '', rows: [])),
+            .catchError(
+              (_) =>
+                  standings ??
+                  const LeagueStandingsEntity(
+                    leagueId: '',
+                    leagueTitle: '',
+                    rows: [],
+                  ),
+            ),
       );
     }
     if (matches.isEmpty) {
       fallbacks.add(
-        getMatches(leagueId, lang: lang)
-            .then((m) => matches = m)
-            .catchError((_) => matches),
+        getMatches(
+          leagueId,
+          lang: lang,
+        ).then((m) => matches = m).catchError((_) => matches),
       );
     }
     if (scorers.isEmpty) {
       fallbacks.add(
-        getTopScorers(leagueId, lang: lang)
-            .then((sc) => scorers = sc)
-            .catchError((_) => scorers),
+        getTopScorers(
+          leagueId,
+          lang: lang,
+        ).then((sc) => scorers = sc).catchError((_) => scorers),
       );
     }
     if (assists.isEmpty) {
       fallbacks.add(
-        getAssists(leagueId, lang: lang)
-            .then((a) => assists = a)
-            .catchError((_) => assists),
+        getAssists(
+          leagueId,
+          lang: lang,
+        ).then((a) => assists = a).catchError((_) => assists),
       );
     }
 
@@ -415,7 +433,8 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
 
     return LeagueDetailsEntity(
       id: leagueId,
-      name: (standings?.leagueTitle.isNotEmpty == true &&
+      name:
+          (standings?.leagueTitle.isNotEmpty == true &&
               standings?.leagueTitle != 'League Standings')
           ? standings!.leagueTitle
           : name,

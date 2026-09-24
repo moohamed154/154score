@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -143,7 +143,10 @@ void main() {
     when(() => repo.getEvents(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess(sampleEvents));
     when(() => repo.getEventsPayload(any(), lang: any(named: 'lang')))
-        .thenAnswer((_) async => const ApiSuccess(MatchEventsPayload(events: sampleEvents)));
+        .thenAnswer(
+          (_) async =>
+              const ApiSuccess(MatchEventsPayload(events: sampleEvents)),
+        );
     when(() => repo.getStats(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess(sampleStats));
     when(

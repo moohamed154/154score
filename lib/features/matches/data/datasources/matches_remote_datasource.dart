@@ -36,7 +36,10 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
 
   MatchesRemoteDataSourceImpl(this._client);
 
-  List<LeagueGroupDto> _parseLeagueGroups(dynamic response, {String? defaultDate}) {
+  List<LeagueGroupDto> _parseLeagueGroups(
+    dynamic response, {
+    String? defaultDate,
+  }) {
     if (response is Map && response['data'] is List) {
       final list = response['data'] as List;
       final responseDate = response['date']?.toString() ?? defaultDate;
@@ -70,7 +73,8 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     if (date != null && date.isNotEmpty) queryParams['date'] = date;
     if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
-    if (leagueId != null && leagueId.isNotEmpty) queryParams['league_id'] = leagueId;
+    if (leagueId != null && leagueId.isNotEmpty)
+      queryParams['league_id'] = leagueId;
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
     final response = await _client.get(
@@ -95,7 +99,8 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     final queryParams = <String, dynamic>{'lang': lang};
     if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (date != null && date.isNotEmpty) queryParams['date'] = date;
-    if (leagueId != null && leagueId.isNotEmpty) queryParams['league_id'] = leagueId;
+    if (leagueId != null && leagueId.isNotEmpty)
+      queryParams['league_id'] = leagueId;
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
     final response = await _client.get(
@@ -118,7 +123,8 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     final queryParams = <String, dynamic>{'lang': lang};
     if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
-    if (leagueId != null && leagueId.isNotEmpty) queryParams['league_id'] = leagueId;
+    if (leagueId != null && leagueId.isNotEmpty)
+      queryParams['league_id'] = leagueId;
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
     final response = await _client.get(

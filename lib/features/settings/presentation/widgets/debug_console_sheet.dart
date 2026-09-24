@@ -81,14 +81,15 @@ class _DebugConsoleSheetState extends State<DebugConsoleSheet> {
                     const SizedBox(height: 2),
                     Text(
                       l10n.translate('debug_console_subtitle'),
-                      style: AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
-                      ),
+                      style:
+                          AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
                     ),
                   ],
                 ),
@@ -159,7 +160,9 @@ class _DebugConsoleSheetState extends State<DebugConsoleSheet> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                l10n.translate('debug_console_printed_all_notice'),
+                                l10n.translate(
+                                  'debug_console_printed_all_notice',
+                                ),
                               ),
                               duration: const Duration(seconds: 2),
                             ),
@@ -226,7 +229,9 @@ class _DebugConsoleSheetState extends State<DebugConsoleSheet> {
                     ? allHistory
                     : allHistory.where((rec) {
                         return rec.url.toLowerCase().contains(_searchQuery) ||
-                            (rec.statusCode?.toString().contains(_searchQuery) ??
+                            (rec.statusCode?.toString().contains(
+                                  _searchQuery,
+                                ) ??
                                 false) ||
                             rec.method.toLowerCase().contains(_searchQuery);
                       }).toList();
@@ -246,14 +251,15 @@ class _DebugConsoleSheetState extends State<DebugConsoleSheet> {
                         const SizedBox(height: 12),
                         Text(
                           l10n.translate('debug_console_no_logs'),
-                          style: AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
+                          style:
+                              AppTypography.getBodyMedium(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
                         ),
                       ],
                     ),
@@ -305,7 +311,8 @@ class _DebugRecordCardState extends State<_DebugRecordCard> {
   @override
   Widget build(BuildContext context) {
     final record = widget.record;
-    final isSuccess = !record.isError &&
+    final isSuccess =
+        !record.isError &&
         record.statusCode != null &&
         record.statusCode! >= 200 &&
         record.statusCode! < 300;
@@ -438,7 +445,10 @@ class _DebugRecordCardState extends State<_DebugRecordCard> {
                   ),
                   SelectableText(
                     record.url,
-                    style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                    ),
                   ),
                   const SizedBox(height: 8),
 
@@ -459,7 +469,9 @@ class _DebugRecordCardState extends State<_DebugRecordCard> {
                     children: [
                       ElevatedButton.icon(
                         icon: const Icon(Icons.terminal_rounded, size: 16),
-                        label: Text(widget.l10n.translate('debug_console_print_this')),
+                        label: Text(
+                          widget.l10n.translate('debug_console_print_this'),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.black,
@@ -485,7 +497,9 @@ class _DebugRecordCardState extends State<_DebugRecordCard> {
                       const SizedBox(width: 8),
                       OutlinedButton.icon(
                         icon: const Icon(Icons.copy_rounded, size: 16),
-                        label: Text(widget.l10n.translate('debug_console_copy')),
+                        label: Text(
+                          widget.l10n.translate('debug_console_copy'),
+                        ),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,

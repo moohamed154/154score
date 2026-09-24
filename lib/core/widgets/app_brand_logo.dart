@@ -24,10 +24,8 @@ class AppBrandLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveIsDark =
         isDark ?? (Theme.of(context).brightness == Brightness.dark);
-    final effectiveRadius =
-        borderRadius ?? BorderRadius.circular(size * 0.26);
-    final effectivePadding =
-        padding ?? EdgeInsets.all(size * 0.10);
+    final effectiveRadius = borderRadius ?? BorderRadius.circular(size * 0.26);
+    final effectivePadding = padding ?? EdgeInsets.all(size * 0.10);
 
     final imageWidget = Image.asset(
       'assets/icons/app_icon.png',
@@ -51,11 +49,7 @@ class AppBrandLogo extends StatelessWidget {
     );
 
     if (!withBackground) {
-      return SizedBox(
-        width: size,
-        height: size,
-        child: imageWidget,
-      );
+      return SizedBox(width: size, height: size, child: imageWidget);
     }
 
     return Container(
@@ -63,9 +57,7 @@ class AppBrandLogo extends StatelessWidget {
       height: size,
       padding: effectivePadding,
       decoration: BoxDecoration(
-        color: effectiveIsDark
-            ? const Color(0xFF16202C)
-            : Colors.white,
+        color: effectiveIsDark ? const Color(0xFF16202C) : Colors.white,
         borderRadius: effectiveRadius,
         border: Border.all(
           color: effectiveIsDark

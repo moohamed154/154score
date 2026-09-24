@@ -124,10 +124,7 @@ class AppTypography {
     );
   }
 
-  static TextStyle getButton({
-    required bool isDark,
-    required bool isArabic,
-  }) {
+  static TextStyle getButton({required bool isDark, required bool isArabic}) {
     final color = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
     if (isArabic) {
       return GoogleFonts.cairo(

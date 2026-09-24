@@ -75,14 +75,16 @@ class MatchHeaderBanner extends StatelessWidget {
       timestamp: match.timestamp,
     );
     final isLive =
-        MatchStatusHelper.isLive(phase) || ScoreHelper.isLiveStatus(effectiveStatus);
+        MatchStatusHelper.isLive(phase) ||
+        ScoreHelper.isLiveStatus(effectiveStatus);
     final isUpcoming = MatchStatusHelper.isUpcoming(phase);
     final isFinished = MatchStatusHelper.isFinished(phase);
 
     final score1Str = ScoreHelper.normalizeScore(s1);
     final score2Str = ScoreHelper.normalizeScore(s2);
     final hasScores = score1Str != '-' && score2Str != '-';
-    final hasPenalties = (p1 != null && p1.isNotEmpty && p1 != '-') &&
+    final hasPenalties =
+        (p1 != null && p1.isNotEmpty && p1 != '-') &&
         (p2 != null && p2.isNotEmpty && p2 != '-');
 
     final logoSize = isSmall ? 40.0 : 48.0;
@@ -108,10 +110,13 @@ class MatchHeaderBanner extends StatelessWidget {
             InkWell(
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
               onTap: () {
-                final lId = match.leagueId ??
+                final lId =
+                    match.leagueId ??
                     LeagueResolver.resolveId(match.leagueTitle);
                 if (lId != null && lId.isNotEmpty) {
-                  final logo = match.leagueLogo ?? UrlHelper.resolveChampionshipLogo(lId);
+                  final logo =
+                      match.leagueLogo ??
+                      UrlHelper.resolveChampionshipLogo(lId);
                   context.push(
                     '/league/$lId',
                     extra: {'title': match.leagueTitle, 'logo': logo},
@@ -378,9 +383,7 @@ class MatchHeaderBanner extends StatelessWidget {
     String? p2,
     String? effectiveStatus,
   }) {
-    final pillBg = isDark
-        ? const Color(0xFF1B2232)
-        : const Color(0xFFEDF2F7);
+    final pillBg = isDark ? const Color(0xFF1B2232) : const Color(0xFFEDF2F7);
 
     Widget content;
 
@@ -429,12 +432,12 @@ class MatchHeaderBanner extends StatelessWidget {
       final timeFormat = sl<LocalStorageService>().getTimeFormat();
       final timeStr =
           (match.time != null && match.time!.isNotEmpty && match.time != '-')
-              ? DateFormatter.formatDisplayTime(
-                  match.time!,
-                  timeFormat: timeFormat,
-                  isArabic: isArabic,
-                )
-              : 'VS';
+          ? DateFormatter.formatDisplayTime(
+              match.time!,
+              timeFormat: timeFormat,
+              isArabic: isArabic,
+            )
+          : 'VS';
       content = Text(
         timeStr,
         style: TextStyle(
@@ -453,9 +456,7 @@ class MatchHeaderBanner extends StatelessWidget {
         style: TextStyle(
           fontSize: isSmall ? 12 : 13,
           fontWeight: FontWeight.w600,
-          color: isDark
-              ? AppColors.darkTextMuted
-              : AppColors.lightTextMuted,
+          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
         ),
       );
     }

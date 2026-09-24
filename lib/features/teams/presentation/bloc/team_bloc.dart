@@ -48,9 +48,11 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
 
       await result.fold(
         onSuccess: (profile) async {
-          final initialChampId = profile.leagueId ??
+          final initialChampId =
+              profile.leagueId ??
               (profile.championships.isNotEmpty
-                  ? (profile.championships.first.urlId ?? profile.championships.first.id)
+                  ? (profile.championships.first.urlId ??
+                        profile.championships.first.id)
                   : null);
 
           LeagueStandingsEntity? initialStandings;

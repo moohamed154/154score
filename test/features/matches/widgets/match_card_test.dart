@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/localization/app_localizations.dart';
 import 'package:score154/features/matches/domain/entities/match_entity.dart';
@@ -37,38 +37,39 @@ void main() {
     expect(find.text('FT'), findsOneWidget);
   });
 
-  testWidgets('MatchCard renders live state with circular clock and minute correctly', (
-    WidgetTester tester,
-  ) async {
-    const match = MatchEntity(
-      id: '2',
-      team1: 'Al-Faisaly',
-      team2: 'Al Ittihad',
-      score1: '0',
-      score2: '3',
-      minute: '85',
-      status: 'Live',
-    );
+  testWidgets(
+    'MatchCard renders live state with circular clock and minute correctly',
+    (WidgetTester tester) async {
+      const match = MatchEntity(
+        id: '2',
+        team1: 'Al-Faisaly',
+        team2: 'Al Ittihad',
+        score1: '0',
+        score2: '3',
+        minute: '85',
+        status: 'Live',
+      );
 
-    await tester.pumpWidget(
-      const MaterialApp(
-        localizationsDelegates: [
-          AppLocalizations.delegate,
-          ...GlobalMaterialLocalizations.delegates,
-        ],
-        supportedLocales: [Locale('en')],
-        home: Scaffold(body: MatchCard(match: match)),
-      ),
-    );
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: [Locale('en')],
+          home: Scaffold(body: MatchCard(match: match)),
+        ),
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    expect(find.text('Al-Faisaly'), findsOneWidget);
-    expect(find.text('Al Ittihad'), findsOneWidget);
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('3'), findsOneWidget);
-    expect(find.text('85:00'), findsOneWidget);
-  });
+      expect(find.text('Al-Faisaly'), findsOneWidget);
+      expect(find.text('Al Ittihad'), findsOneWidget);
+      expect(find.text('0'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('85:00'), findsOneWidget);
+    },
+  );
 
   testWidgets('MatchCard renders upcoming state with time capsule correctly', (
     WidgetTester tester,

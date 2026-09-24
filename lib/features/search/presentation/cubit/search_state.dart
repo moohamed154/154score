@@ -17,8 +17,7 @@ class SearchState extends Equatable {
     this.errorMessage,
   });
 
-  bool get hasResults =>
-      results != null && results!.totalResults > 0;
+  bool get hasResults => results != null && results!.totalResults > 0;
 
   SearchState copyWith({
     SearchStatus? status,

@@ -144,7 +144,6 @@ class AppRouter {
         ],
       ),
 
-
       // Splash Screen
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -177,7 +176,8 @@ class AppRouter {
           var id = state.pathParameters['id'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
           final tabParam = state.uri.queryParameters['tab'];
-          final initialTab = extra?['tab'] as int? ??
+          final initialTab =
+              extra?['tab'] as int? ??
               (tabParam != null ? int.tryParse(tabParam) ?? 0 : 0);
           final title = extra?['title']?.toString();
           if ((id == '0' || id.isEmpty) && title != null) {
@@ -205,12 +205,15 @@ class AppRouter {
           final slug = state.pathParameters['slug'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
           final tabParam = state.uri.queryParameters['tab'];
-          final initialTab = extra?['tab'] as int? ??
+          final initialTab =
+              extra?['tab'] as int? ??
               (tabParam != null ? int.tryParse(tabParam) ?? 0 : 0);
-          final title = extra?['title']?.toString() ??
+          final title =
+              extra?['title']?.toString() ??
               (slug.isNotEmpty ? UrlHelper.slugToName(slug) : null);
           if (id == '0' || id.isEmpty) {
-            id = LeagueResolver.resolveId(title) ??
+            id =
+                LeagueResolver.resolveId(title) ??
                 LeagueResolver.resolveId(slug) ??
                 id;
           }
@@ -257,7 +260,8 @@ class AppRouter {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
-          final name = extra?['name']?.toString() ??
+          final name =
+              extra?['name']?.toString() ??
               (slug.isNotEmpty ? UrlHelper.slugToName(slug) : null);
           return _buildCupertinoPage(
             state: state,
@@ -402,10 +406,7 @@ class AppRouter {
             child: BlocProvider(
               create: (_) => sl<PlayerBloc>(
                 param1: id,
-                param2: {
-                  'slug': slug,
-                  if (extra != null) ...extra,
-                },
+                param2: {'slug': slug, if (extra != null) ...extra},
               ),
               child: PlayerView(
                 playerId: id,
@@ -429,10 +430,7 @@ class AppRouter {
             child: BlocProvider(
               create: (_) => sl<PlayerBloc>(
                 param1: id,
-                param2: {
-                  'slug': slug,
-                  if (extra != null) ...extra,
-                },
+                param2: {'slug': slug, if (extra != null) ...extra},
               ),
               child: PlayerView(
                 playerId: id,
@@ -446,8 +444,6 @@ class AppRouter {
       ),
 
       // Settings is now a shell branch (Branch 7) — see StatefulShellRoute above.
-
-
     ],
   );
 }

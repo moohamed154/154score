@@ -45,6 +45,16 @@ class TransferSocketUpdateEvent extends TransfersEvent {
   List<Object?> get props => [update];
 }
 
+class ChangeTransfersLanguageEvent extends TransfersEvent {
+  final String languageCode;
+  final Completer<void>? completer;
+
+  const ChangeTransfersLanguageEvent(this.languageCode, {this.completer});
+
+  @override
+  List<Object?> get props => [languageCode];
+}
+
 enum TransfersStatus { initial, loading, success, empty, error }
 
 class TransfersState extends Equatable {
@@ -103,6 +113,7 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
     on<LoadTransfersEvent>(_onLoadTransfers);
     on<SearchTransfersEvent>(_onSearchTransfers);
     on<TransferSocketUpdateEvent>(_onTransferSocketUpdate);
+    on<ChangeTransfersLanguageEvent>(_onChangeTransfersLanguage);
 
     if (webSocketService != null) {
       webSocketService!.subscribeTransfers();
@@ -192,6 +203,45 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
           (t.toTeamName?.toLowerCase().contains(q) ?? false) ||
           (t.playerPosition?.toLowerCase().contains(q) ?? false);
     }).toList();
+  }
+
+  Future<void> _onChangeTransfersLanguage(
+    ChangeTransfersLanguageEvent event,
+    Emitter<TransfersState> emit,
+  ) async {
+    final targetLang = event.languageCode;
+    try {
+      final result = await repository.getTransfers(lang: targetLang);
+
+      // Race condition check: ensure current language is still targetLang
+      final currentLang = localStorageService.getLanguage();
+      if (currentLang != targetLang) return;
+
+      result.fold(
+        onSuccess: (transfers) {
+          final filtered = _applySearch(transfers, state.searchQuery);
+          emit(
+            state.copyWith(
+              status: transfers.isEmpty
+                  ? TransfersStatus.empty
+                  : TransfersStatus.success,
+              allTransfers: transfers,
+              filteredTransfers: filtered,
+              errorMessage: null,
+            ),
+          );
+        },
+        onFailure: (failure) {
+          // Keep existing transfers visible
+        },
+      );
+    } catch (_) {
+      // Keep existing transfers visible
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
+    }
   }
 
   @override

@@ -64,9 +64,11 @@ class MatchEventEntity extends Equatable {
       playerNumber: playerNumber ?? this.playerNumber,
       playerPhoto: playerPhoto ?? this.playerPhoto,
       playerShortName: playerShortName ?? this.playerShortName,
-      secondaryPlayerNumber: secondaryPlayerNumber ?? this.secondaryPlayerNumber,
+      secondaryPlayerNumber:
+          secondaryPlayerNumber ?? this.secondaryPlayerNumber,
       secondaryPlayerPhoto: secondaryPlayerPhoto ?? this.secondaryPlayerPhoto,
-      secondaryPlayerShortName: secondaryPlayerShortName ?? this.secondaryPlayerShortName,
+      secondaryPlayerShortName:
+          secondaryPlayerShortName ?? this.secondaryPlayerShortName,
       isPeriodMarker: isPeriodMarker ?? this.isPeriodMarker,
     );
   }
@@ -300,10 +302,7 @@ class TeamLineupEntity extends Equatable {
           RegExp(r'(أ|ا|إ|آ)خبار\s+(نادي|النادي)\s*', caseSensitive: false),
           '',
         )
-        .replaceAll(
-          RegExp(r'\s*\bnews\b\s*', caseSensitive: false),
-          ' ',
-        )
+        .replaceAll(RegExp(r'\s*\bnews\b\s*', caseSensitive: false), ' ')
         .trim();
     return cleaned.isEmpty ? name : cleaned;
   }
@@ -330,7 +329,8 @@ class LineupPlayerEntity extends Equatable {
   final int? number;
   final String? position;
   final String? positionCode; // "G", "D", "M", "F", "SUB"
-  final String? detailedPosition; // "GK", "RB", "CB", "LB", "CDM", "CM", "RW", "LW", "CF"
+  final String?
+  detailedPosition; // "GK", "RB", "CB", "LB", "CDM", "CM", "RW", "LW", "CF"
   final int? formationPosition;
   final String? photo;
   final String? rating;
@@ -380,10 +380,9 @@ class LineupPlayerEntity extends Equatable {
 
   String? get id => playerId;
 
-  String get displayName =>
-      (shortName != null && shortName!.trim().isNotEmpty)
-          ? shortName!.trim()
-          : name;
+  String get displayName => (shortName != null && shortName!.trim().isNotEmpty)
+      ? shortName!.trim()
+      : name;
 
   bool get isGoalkeeper =>
       positionCode == 'G' ||
@@ -482,12 +481,7 @@ class LineupCoachEntity extends Equatable {
   final String? photo;
   final String? link;
 
-  const LineupCoachEntity({
-    this.coachId,
-    this.name,
-    this.photo,
-    this.link,
-  });
+  const LineupCoachEntity({this.coachId, this.name, this.photo, this.link});
 
   @override
   List<Object?> get props => [coachId, name, photo, link];
@@ -514,10 +508,9 @@ class LineupInjuryEntity extends Equatable {
     this.absenceTypeId,
   });
 
-  String get displayName =>
-      (shortName != null && shortName!.trim().isNotEmpty)
-          ? shortName!.trim()
-          : name;
+  String get displayName => (shortName != null && shortName!.trim().isNotEmpty)
+      ? shortName!.trim()
+      : name;
 
   @override
   List<Object?> get props => [
@@ -535,7 +528,8 @@ class LineupInjuryEntity extends Equatable {
 class MatchVideoItemEntity extends Equatable {
   final String title;
   final String url;
-  final String? type; // 'summary', 'goals', 'full_match', 'alternative_summary', 'goal_clip'
+  final String?
+  type; // 'summary', 'goals', 'full_match', 'alternative_summary', 'goal_clip'
   final String? minute;
   final String? playerName;
 
@@ -634,25 +628,28 @@ class MatchVideosEntity extends Equatable {
 
     if (itemsMap == null) return const MatchVideosEntity();
 
-    final videosContainer =
-        itemsMap['videos'] is Map ? itemsMap['videos'] as Map : null;
+    final videosContainer = itemsMap['videos'] is Map
+        ? itemsMap['videos'] as Map
+        : null;
 
-    final explicitHasVideo = itemsMap['has_video'] ??
+    final explicitHasVideo =
+        itemsMap['has_video'] ??
         itemsMap['hasVideo'] ??
         videosContainer?['has_video'] ??
         videosContainer?['hasVideo'];
 
     final bool isExplicitlyDisabled =
         (explicitHasVideo is bool && !explicitHasVideo) ||
-            explicitHasVideo == 'false' ||
-            explicitHasVideo == 0 ||
-            explicitHasVideo == '0';
+        explicitHasVideo == 'false' ||
+        explicitHasVideo == 0 ||
+        explicitHasVideo == '0';
 
     if (isExplicitlyDisabled) {
       return const MatchVideosEntity(hasVideo: false);
     }
 
-    final bool isExplicitlyEnabled = (explicitHasVideo is bool && explicitHasVideo) ||
+    final bool isExplicitlyEnabled =
+        (explicitHasVideo is bool && explicitHasVideo) ||
         explicitHasVideo == 'true' ||
         explicitHasVideo == 1 ||
         explicitHasVideo == '1' ||
@@ -663,19 +660,17 @@ class MatchVideosEntity extends Equatable {
     MatchVideoItemEntity? parseItem(dynamic obj, {String? defaultTitle}) {
       if (obj == null) return null;
       if (obj is Map) {
-        final url = (obj['url'] ??
-                obj['video_link'] ??
-                obj['video_url'] ??
-                obj['link'])
-            ?.toString();
+        final url =
+            (obj['url'] ?? obj['video_link'] ?? obj['video_url'] ?? obj['link'])
+                ?.toString();
         if (url == null ||
             url.trim().isEmpty ||
             url == 'null' ||
             url == 'undefined') {
           return null;
         }
-        final title = (obj['title'] ?? obj['name'] ?? defaultTitle)
-                ?.toString() ??
+        final title =
+            (obj['title'] ?? obj['name'] ?? defaultTitle)?.toString() ??
             defaultTitle ??
             '';
         return MatchVideoItemEntity(
@@ -730,25 +725,26 @@ class MatchVideosEntity extends Equatable {
     if (rawClips != null) {
       for (final c in rawClips) {
         if (c is Map) {
-          final pName = c['player_name']?.toString() ??
-              c['player']?.toString() ??
-              '';
-          final timeStr = c['time']?.toString() ??
+          final pName =
+              c['player_name']?.toString() ?? c['player']?.toString() ?? '';
+          final timeStr =
+              c['time']?.toString() ??
               (c['minute'] != null ? "${c['minute']}'" : '');
           final clipTitle = isArabic
               ? (pName.isNotEmpty
-                  ? 'هدف: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
-                  : 'هدف $timeStr')
+                    ? 'هدف: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
+                    : 'هدف $timeStr')
               : (pName.isNotEmpty
-                  ? 'Goal: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
-                  : 'Goal $timeStr');
+                    ? 'Goal: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
+                    : 'Goal $timeStr');
           final item = parseItem(c, defaultTitle: clipTitle);
           if (item != null) goalClips.add(item);
         }
       }
     }
 
-    final resolvedHasVideo = isExplicitlyEnabled ||
+    final resolvedHasVideo =
+        isExplicitlyEnabled ||
         summary != null ||
         goals != null ||
         videoLinks.isNotEmpty ||
@@ -770,13 +766,13 @@ class MatchVideosEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        hasVideo,
-        summary,
-        goals,
-        fullMatch,
-        videoLinks,
-        goalClips,
-      ];
+    hasVideo,
+    summary,
+    goals,
+    fullMatch,
+    videoLinks,
+    goalClips,
+  ];
 }
 
 class MatchEventsPayload extends Equatable {
@@ -818,7 +814,13 @@ class MatchH2HSummaryEntity extends Equatable {
   double get awayWinRatio => totalMatches > 0 ? awayWins / totalMatches : 0.0;
 
   @override
-  List<Object?> get props => [homeWins, awayWins, draws, homeTeamName, awayTeamName];
+  List<Object?> get props => [
+    homeWins,
+    awayWins,
+    draws,
+    homeTeamName,
+    awayTeamName,
+  ];
 }
 
 class MatchFormItemEntity extends Equatable {
@@ -839,11 +841,20 @@ class MatchFormItemEntity extends Equatable {
   });
 
   bool get isWin => winType.toLowerCase() == 'win';
-  bool get isDraw => winType.toLowerCase() == 'equal' || winType.toLowerCase() == 'draw';
-  bool get isLoss => winType.toLowerCase() == 'lose' || winType.toLowerCase() == 'loss';
+  bool get isDraw =>
+      winType.toLowerCase() == 'equal' || winType.toLowerCase() == 'draw';
+  bool get isLoss =>
+      winType.toLowerCase() == 'lose' || winType.toLowerCase() == 'loss';
 
   @override
-  List<Object?> get props => [matchId, opponentName, opponentLogo, score, winType, isHome];
+  List<Object?> get props => [
+    matchId,
+    opponentName,
+    opponentLogo,
+    score,
+    winType,
+    isHome,
+  ];
 }
 
 class MatchRecentFormEntity extends Equatable {
@@ -860,7 +871,12 @@ class MatchRecentFormEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [homeMatches, awayMatches, homeTeamName, awayTeamName];
+  List<Object?> get props => [
+    homeMatches,
+    awayMatches,
+    homeTeamName,
+    awayTeamName,
+  ];
 }
 
 class MatchReturnLegEntity extends Equatable {
@@ -885,7 +901,15 @@ class MatchReturnLegEntity extends Equatable {
   String get scoreText => '$homeScores - $awayScores';
 
   @override
-  List<Object?> get props => [matchId, homeTeam, awayTeam, homeScores, awayScores, aggResult, penalties];
+  List<Object?> get props => [
+    matchId,
+    homeTeam,
+    awayTeam,
+    homeScores,
+    awayScores,
+    aggResult,
+    penalties,
+  ];
 }
 
 class MatchQuickStatsEntity extends Equatable {
@@ -1033,15 +1057,8 @@ class MatchDetailsPayload extends Equatable {
   final List<MatchInfoSectionEntity> sections;
   final MatchOverviewDataEntity? overview;
 
-  const MatchDetailsPayload({
-    this.sections = const [],
-    this.overview,
-  });
+  const MatchDetailsPayload({this.sections = const [], this.overview});
 
   @override
   List<Object?> get props => [sections, overview];
 }
-
-
-
-

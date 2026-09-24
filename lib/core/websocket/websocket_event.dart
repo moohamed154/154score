@@ -199,8 +199,10 @@ class LiveMatchUpdate extends Equatable {
     Map? homeTeamMap;
     Map? awayTeamMap;
     if (json['teams'] is Map) {
-      if (json['teams']['home'] is Map) homeTeamMap = json['teams']['home'] as Map;
-      if (json['teams']['away'] is Map) awayTeamMap = json['teams']['away'] as Map;
+      if (json['teams']['home'] is Map)
+        homeTeamMap = json['teams']['home'] as Map;
+      if (json['teams']['away'] is Map)
+        awayTeamMap = json['teams']['away'] as Map;
     }
 
     final t1 =
@@ -291,9 +293,14 @@ class LiveMatchUpdate extends Equatable {
           ? json['clock'].toString()
           : json['minute']?.toString(),
       period: json['period']?.toString(),
-      extraTime: (json['extra_time'] is! Map && json['extra_time'] != null && json['extra_time'] != 'null')
+      extraTime:
+          (json['extra_time'] is! Map &&
+              json['extra_time'] != null &&
+              json['extra_time'] != 'null')
           ? json['extra_time']?.toString()
-          : (json['added_time']?.toString() ?? json['stoppage_time']?.toString() ?? json['injury_time']?.toString()),
+          : (json['added_time']?.toString() ??
+                json['stoppage_time']?.toString() ??
+                json['injury_time']?.toString()),
       eventType: json['event_type']?.toString() ?? json['type']?.toString(),
       playerName: json['player_name']?.toString() ?? json['player']?.toString(),
       timestamp: parsedTimestamp,
@@ -498,18 +505,18 @@ class MatchDetailRealtimeUpdate extends Equatable {
       );
     }
 
-    String parsedMatchId = (
-            json['match_id'] ??
-            json['matchId'] ??
-            payload['match_id'] ??
-            payload['matchId'] ??
-            fallbackMatchId ??
-            json['id'] ??
-            payload['id'] ??
-            '')
-        .toString()
-        .replaceAll('match:', '')
-        .trim();
+    String parsedMatchId =
+        (json['match_id'] ??
+                json['matchId'] ??
+                payload['match_id'] ??
+                payload['matchId'] ??
+                fallbackMatchId ??
+                json['id'] ??
+                payload['id'] ??
+                '')
+            .toString()
+            .replaceAll('match:', '')
+            .trim();
 
     if (parsedMatchId.isEmpty && json['channel'] != null) {
       final ch = json['channel'].toString();
@@ -535,22 +542,25 @@ class MatchDetailRealtimeUpdate extends Equatable {
     // Penalty shootout extraction
     String? pen1;
     String? pen2;
-    final pSource = (payload['score'] is Map && payload['score']['penalties'] is Map)
+    final pSource =
+        (payload['score'] is Map && payload['score']['penalties'] is Map)
         ? (payload['score']['penalties'] as Map)
         : (json['score'] is Map && json['score']['penalties'] is Map)
-            ? (json['score']['penalties'] as Map)
-            : null;
+        ? (json['score']['penalties'] as Map)
+        : null;
     if (pSource != null) {
       if (pSource['home'] != null) pen1 = pSource['home'].toString();
       if (pSource['away'] != null) pen2 = pSource['away'].toString();
     }
-    pen1 ??= payload['penalty_score_1']?.toString() ??
+    pen1 ??=
+        payload['penalty_score_1']?.toString() ??
         payload['penalties_1']?.toString() ??
         payload['penalties_home']?.toString() ??
         json['penalty_score_1']?.toString() ??
         json['penalties_1']?.toString() ??
         json['penalties_home']?.toString();
-    pen2 ??= payload['penalty_score_2']?.toString() ??
+    pen2 ??=
+        payload['penalty_score_2']?.toString() ??
         payload['penalties_2']?.toString() ??
         payload['penalties_away']?.toString() ??
         json['penalty_score_2']?.toString() ??
@@ -566,15 +576,16 @@ class MatchDetailRealtimeUpdate extends Equatable {
         ? rawClock
         : (rawMin ?? rawClock);
     final period = payload['period']?.toString() ?? json['period']?.toString();
-    final extraTime = (payload['extra_time'] is! Map &&
+    final extraTime =
+        (payload['extra_time'] is! Map &&
             payload['extra_time'] != null &&
             payload['extra_time'] != 'null')
         ? payload['extra_time']?.toString()
         : (payload['added_time']?.toString() ??
-            payload['stoppage_time']?.toString() ??
-            payload['injury_time']?.toString() ??
-            json['extra_time']?.toString() ??
-            json['added_time']?.toString());
+              payload['stoppage_time']?.toString() ??
+              payload['injury_time']?.toString() ??
+              json['extra_time']?.toString() ??
+              json['added_time']?.toString());
 
     // If backend sent scraped sections list: {"data": [{"section": "معلومات اللقاء", "items": [...]}]}
     if (json['data'] is List) {
@@ -626,14 +637,14 @@ class MatchDetailRealtimeUpdate extends Equatable {
       eventPlayer:
           payload['player_name']?.toString() ?? payload['player']?.toString(),
       eventAssist:
-          payload['assist_player']?.toString() ??
-          payload['assist']?.toString(),
+          payload['assist_player']?.toString() ?? payload['assist']?.toString(),
       eventMinute:
           payload['event_minute']?.toString() ?? payload['minute']?.toString(),
       isHomeTeam: isHome,
       timestamp: parsedTimestamp,
       sequence: parsedSequence,
-      videoUrl: payload['video_url']?.toString() ??
+      videoUrl:
+          payload['video_url']?.toString() ??
           payload['videoUrl']?.toString() ??
           payload['video']?.toString(),
       rawPayload: json,

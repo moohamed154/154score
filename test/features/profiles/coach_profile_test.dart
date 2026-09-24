@@ -7,6 +7,7 @@ import 'package:score154/features/profiles/domain/entities/profile_entity.dart';
 import 'package:score154/features/profiles/domain/repositories/profiles_repository.dart';
 
 class MockProfilesRepository extends Mock implements ProfilesRepository {}
+
 class MockApiClient extends Mock implements ApiClient {}
 
 void main() {
@@ -83,39 +84,45 @@ void main() {
             'team_logo': 'https://imgs.ysscores.com/teams/64/3451691957863.png',
             'role': 'المدير الفني',
             'from': '2023-04-29',
-            'to': '2028-06-30'
+            'to': '2028-06-30',
           },
           'career': [
             {
               'team_id': '8305',
               'team_name': 'خيتافي',
-              'team_logo': 'https://imgs.ysscores.com/teams/64/3451691957863.png',
+              'team_logo':
+                  'https://imgs.ysscores.com/teams/64/3451691957863.png',
               'role': 'المدير الفني',
               'from': '2023-04-29',
               'to': '2028-06-30',
               'duration': '2023 - الآن',
-              'is_current': true
+              'is_current': true,
             },
             {
               'team_id': '10267',
               'team_name': 'فالنسيا',
-              'team_logo': 'https://imgs.ysscores.com/teams/64/7881690196747.png',
+              'team_logo':
+                  'https://imgs.ysscores.com/teams/64/7881690196747.png',
               'role': 'المدير الفني',
               'from': '2021-07-01',
               'to': '2022-06-03',
               'duration': '2021 - 2022',
-              'is_current': false
-            }
+              'is_current': false,
+            },
           ],
           'metadata': [
             {'title': 'الدولة / الجنسية', 'content': 'إسبانيا'},
-            {'title': 'العمر والميلاد', 'content': '1964-03-05 - (62 عام)'}
-          ]
-        }
+            {'title': 'العمر والميلاد', 'content': '1964-03-05 - (62 عام)'},
+          ],
+        },
       };
 
-      when(() => apiClient.get('/api/coach/862633/pepe-bordalas', queryParameters: {'lang': 'ar'}))
-          .thenAnswer((_) async => mockResponse);
+      when(
+        () => apiClient.get(
+          '/api/coach/862633/pepe-bordalas',
+          queryParameters: {'lang': 'ar'},
+        ),
+      ).thenAnswer((_) async => mockResponse);
 
       final result = await dataSource.getProfile(
         '/api/coach/862633/pepe-bordalas',

@@ -161,9 +161,7 @@ class LeagueHeaderCard extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(6.0),
                 child: Icon(
-                  isFavorite
-                      ? Icons.star_rounded
-                      : Icons.star_border_rounded,
+                  isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
                   color: isFavorite
                       ? AppColors.yellowCard
                       : (isDark

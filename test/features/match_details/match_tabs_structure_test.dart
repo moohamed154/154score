@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -293,36 +293,41 @@ void main() {
     });
 
     // ── 9. Independent RefreshIndicator on Events tab ──────────────────────
-    testWidgets('Events tab has independent RefreshIndicator and triggers refresh', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        buildTestApp(
-          BlocProvider(
-            create: (_) => MatchDetailsBloc(
-              repository: repo,
-              webSocketService: ws,
-              localStorageService: storage,
-              matchId: 'test123',
+    testWidgets(
+      'Events tab has independent RefreshIndicator and triggers refresh',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTestApp(
+            BlocProvider(
+              create: (_) => MatchDetailsBloc(
+                repository: repo,
+                webSocketService: ws,
+                localStorageService: storage,
+                matchId: 'test123',
+              ),
+              child: const MatchDetailsView(matchId: 'test123'),
             ),
-            child: const MatchDetailsView(matchId: 'test123'),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // Verify RefreshIndicator is present
-      expect(find.byType(RefreshIndicator), findsWidgets);
+        // Verify RefreshIndicator is present
+        expect(find.byType(RefreshIndicator), findsWidgets);
 
-      // Perform a pull-to-refresh drag gesture on the first tab
-      await tester.drag(find.byKey(const PageStorageKey('events_tab_list')), const Offset(0, 300));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pumpAndSettle();
+        // Perform a pull-to-refresh drag gesture on the first tab
+        await tester.drag(
+          find.byKey(const PageStorageKey('events_tab_list')),
+          const Offset(0, 300),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pumpAndSettle();
 
-      // Verify repository was queried on refresh
-      verify(() => repo.getEventsPayload('test123', lang: any(named: 'lang'))).called(greaterThanOrEqualTo(1));
-    });
+        // Verify repository was queried on refresh
+        verify(() => repo.getEventsPayload('test123', lang: any(named: 'lang')))
+            .called(greaterThanOrEqualTo(1));
+      },
+    );
   });
 }

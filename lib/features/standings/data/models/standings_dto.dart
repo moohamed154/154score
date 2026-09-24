@@ -43,7 +43,8 @@ class StandingRowDto {
     String? rawLogo;
     String? teamId;
 
-    if (json['team_name'] is String && json['team_name'].toString().trim().isNotEmpty) {
+    if (json['team_name'] is String &&
+        json['team_name'].toString().trim().isNotEmpty) {
       name = json['team_name'].toString().trim();
     } else if (json['team_name'] is Map) {
       final tMap = json['team_name'] as Map;
@@ -68,15 +69,21 @@ class StandingRowDto {
       teamId ??= tMap['id']?.toString() ?? tMap['row_id']?.toString();
     }
 
-    if (name.isEmpty && json['team'] is String && json['team'].toString().trim().isNotEmpty) {
+    if (name.isEmpty &&
+        json['team'] is String &&
+        json['team'].toString().trim().isNotEmpty) {
       name = json['team'].toString().trim();
     }
 
-    if (name.isEmpty && json['name'] != null && json['name'].toString().trim().isNotEmpty) {
+    if (name.isEmpty &&
+        json['name'] != null &&
+        json['name'].toString().trim().isNotEmpty) {
       name = json['name'].toString().trim();
     }
 
-    if (name.isEmpty && json['title'] != null && json['title'].toString().trim().isNotEmpty) {
+    if (name.isEmpty &&
+        json['title'] != null &&
+        json['title'].toString().trim().isNotEmpty) {
       name = json['title'].toString().trim();
     }
 

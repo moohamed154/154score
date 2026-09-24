@@ -145,7 +145,9 @@ class MatchDto {
 
     // Check if rawStatus contains kick-off time (e.g. "10:00م", "02:30م", "10:00", "05:00 م")
     final timePattern = RegExp(r'^(\d{1,2}:\d{2})\s*([صم]|AM|PM|am|pm)?$');
-    final timeMatch = rawStatus != null ? timePattern.firstMatch(rawStatus) : null;
+    final timeMatch = rawStatus != null
+        ? timePattern.firstMatch(rawStatus)
+        : null;
 
     if (timeMatch != null) {
       final digits = timeMatch.group(1)!;
@@ -289,16 +291,23 @@ class MatchDto {
       halfTimeScore2: ht2,
       extraTimeScore1: et1,
       extraTimeScore2: et2,
-      time: (rawTime != null && rawTime.isNotEmpty && rawTime != 'null') ? rawTime : '-',
+      time: (rawTime != null && rawTime.isNotEmpty && rawTime != 'null')
+          ? rawTime
+          : '-',
       status: rawStatus ?? 'Not Started',
       statusCode: json['status_code']?.toString(),
       minute: (json['clock'] != null && json['clock'].toString().contains(':'))
           ? json['clock'].toString()
           : json['minute']?.toString(),
       period: json['period']?.toString(),
-      extraTime: (json['extra_time'] is! Map && json['extra_time'] != null && json['extra_time'] != 'null')
+      extraTime:
+          (json['extra_time'] is! Map &&
+              json['extra_time'] != null &&
+              json['extra_time'] != 'null')
           ? json['extra_time']?.toString()
-          : (json['added_time']?.toString() ?? json['stoppage_time']?.toString() ?? json['injury_time']?.toString()),
+          : (json['added_time']?.toString() ??
+                json['stoppage_time']?.toString() ??
+                json['injury_time']?.toString()),
       leagueTitle: lTitle,
       leagueLogo: lLogo,
       leagueId: lId,
@@ -430,7 +439,6 @@ class LeagueGroupDto {
       matches: matches ?? this.matches,
     );
   }
-
 
   factory LeagueGroupDto.fromJson(Map<String, dynamic> json, {String? date}) {
     final title =

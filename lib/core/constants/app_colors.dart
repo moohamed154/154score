@@ -52,5 +52,4 @@ class AppColors {
   static const Color uelBlue = Color(0xFF3B82F6);
   static const Color ueclOrange = Color(0xFFF59E0B);
   static const Color relegationRed = Color(0xFFEF4444);
-
 }

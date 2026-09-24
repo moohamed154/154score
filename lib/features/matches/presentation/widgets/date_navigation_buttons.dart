@@ -94,8 +94,8 @@ class DateNavigationButtons extends StatelessWidget {
                 color: !isSelectedInStandardRange
                     ? Colors.black
                     : (isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary),
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary),
                 size: 18,
               ),
             ),
@@ -144,7 +144,9 @@ class DateNavigationButtons extends StatelessWidget {
           child: Icon(
             icon,
             size: 18,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
           ),
         ),
       ),

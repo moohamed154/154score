@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/network/api_client.dart';
 import 'package:score154/features/match_details/data/datasources/match_details_remote_datasource.dart';
@@ -173,7 +173,7 @@ void main() {
                     'category': 'alternative_summary',
                     'title': 'ملخص إضافي',
                     'url': 'https://www.youtube.com/watch?v=uBkxy7BTsZs',
-                  }
+                  },
                 ],
                 'videos': {
                   'has_video': true,
@@ -191,7 +191,7 @@ void main() {
                       'category': 'alternative_summary',
                       'title': 'ملخص إضافي',
                       'url': 'https://www.youtube.com/watch?v=uBkxy7BTsZs',
-                    }
+                    },
                   ],
                   'goal_clips': [
                     {
@@ -213,7 +213,7 @@ void main() {
                       'type': 'goal',
                       'video_url':
                           'https://x.com/beINSPORTS/status/2098107791181304245',
-                    }
+                    },
                   ],
                 },
                 'all_events': [
@@ -238,18 +238,24 @@ void main() {
 
       expect(payload.events.length, 1);
       expect(payload.events[0].playerName, 'سيرجينيو ديست');
-      expect(payload.events[0].videoUrl,
-          'https://x.com/beINSPORTS/status/2098108413574004793');
+      expect(
+        payload.events[0].videoUrl,
+        'https://x.com/beINSPORTS/status/2098108413574004793',
+      );
 
       expect(payload.videos.hasVideo, isTrue);
       expect(payload.videos.summary?.title, 'ملخص إضافي');
-      expect(payload.videos.summary?.url,
-          'https://www.youtube.com/watch?v=uBkxy7BTsZs');
+      expect(
+        payload.videos.summary?.url,
+        'https://www.youtube.com/watch?v=uBkxy7BTsZs',
+      );
 
       expect(payload.videos.goalClips.length, 2);
       expect(payload.videos.goalClips[0].playerName, 'سيرجينيو ديست');
-      expect(payload.videos.goalClips[0].url,
-          'https://x.com/beINSPORTS/status/2098108413574004793');
+      expect(
+        payload.videos.goalClips[0].url,
+        'https://x.com/beINSPORTS/status/2098108413574004793',
+      );
 
       final chips = payload.videos.allChips;
       expect(chips.length, 3);
@@ -259,10 +265,12 @@ void main() {
     });
 
     test('when has_video is false, MatchVideosEntity hasVideo is false and allChips is empty', () async {
-      when(() => mockApiClient.get(
-            any(),
-            queryParameters: any(named: 'queryParameters'),
-          )).thenAnswer(
+      when(
+        () => mockApiClient.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
         (_) async => {
           'success': true,
           'data': [
@@ -279,7 +287,7 @@ void main() {
                   'goals': null,
                   'full_match': null,
                   'all': [],
-                  'goal_clips': []
+                  'goal_clips': [],
                 },
                 'all_events': [],
               },
@@ -296,43 +304,51 @@ void main() {
       expect(payload.videos.isNotEmpty, isFalse);
     });
 
-    test('news parsing drops items with تحميل تطبيق يلا شووت and download links', () async {
-      when(() => mockApiClient.get(
+    test(
+      'news parsing drops items with تحميل تطبيق يلا شووت and download links',
+      () async {
+        when(
+          () => mockApiClient.get(
             any(),
             queryParameters: any(named: 'queryParameters'),
-          )).thenAnswer(
-        (_) async => {
-          'success': true,
-          'data': [
-            {
-              'section': 'الأخبار',
-              'items': [
-                {
-                  'title': 'تحميل تطبيق يلا شووت للهواتف الذكية',
-                  'url': 'https://www.ysscores.com/ar/Download-Yalla-Shoot-App',
-                },
-                {
-                  'title': 'ريال مدريد يحقق فوزا مثيرا في الدوري',
-                  'url': 'https://www.ysscores.com/ar/news/12345',
-                },
-              ],
-            },
-          ],
-        },
-      );
+          ),
+        ).thenAnswer(
+          (_) async => {
+            'success': true,
+            'data': [
+              {
+                'section': 'الأخبار',
+                'items': [
+                  {
+                    'title': 'تحميل تطبيق يلا شووت للهواتف الذكية',
+                    'url':
+                        'https://www.ysscores.com/ar/Download-Yalla-Shoot-App',
+                  },
+                  {
+                    'title': 'ريال مدريد يحقق فوزا مثيرا في الدوري',
+                    'url': 'https://www.ysscores.com/ar/news/12345',
+                  },
+                ],
+              },
+            ],
+          },
+        );
 
-      final news = await dataSource.getNews('123456', lang: 'ar');
+        final news = await dataSource.getNews('123456', lang: 'ar');
 
-      expect(news.length, 1);
-      expect(news.first.title, 'ريال مدريد يحقق فوزا مثيرا في الدوري');
-      expect(news.any((n) => n.title.contains('تحميل تطبيق')), isFalse);
-    });
+        expect(news.length, 1);
+        expect(news.first.title, 'ريال مدريد يحقق فوزا مثيرا في الدوري');
+        expect(news.any((n) => n.title.contains('تحميل تطبيق')), isFalse);
+      },
+    );
 
     test('news parsing drops items with Download Yalla Shoot App and download links in English too', () async {
-      when(() => mockApiClient.get(
-            any(),
-            queryParameters: any(named: 'queryParameters'),
-          )).thenAnswer(
+      when(
+        () => mockApiClient.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
         (_) async => {
           'success': true,
           'data': [
@@ -356,15 +372,23 @@ void main() {
       final news = await dataSource.getNews('123456', lang: 'en');
 
       expect(news.length, 1);
-      expect(news.first.title, 'Real Madrid achieves an exciting league victory');
-      expect(news.any((n) => n.title.toLowerCase().contains('download yalla shoot')), isFalse);
+      expect(
+        news.first.title,
+        'Real Madrid achieves an exciting league victory',
+      );
+      expect(
+        news.any((n) => n.title.toLowerCase().contains('download yalla shoot')),
+        isFalse,
+      );
     });
 
     test('getDetailsPayload parses rich overview and sections from YallaShoot parity API', () async {
-      when(() => mockApiClient.get(
-            any(),
-            queryParameters: any(named: 'queryParameters'),
-          )).thenAnswer(
+      when(
+        () => mockApiClient.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
         (_) async => {
           'success': true,
           'overview': {
@@ -421,11 +445,7 @@ void main() {
               'offsides_away': 1,
             },
             'referees': [
-              {
-                'id': '501',
-                'name': 'أنتوني تايلور',
-                'role': 'حكم ساحة',
-              },
+              {'id': '501', 'name': 'أنتوني تايلور', 'role': 'حكم ساحة'},
             ],
           },
           'data': [

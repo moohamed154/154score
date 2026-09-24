@@ -22,9 +22,7 @@ class PlayerBioCard extends StatelessWidget {
     final items = <_BioItem>[];
 
     if (profile.age != null && profile.age! > 0) {
-      final ageText = isArabic
-          ? '${profile.age} سنة'
-          : '${profile.age} yrs';
+      final ageText = isArabic ? '${profile.age} سنة' : '${profile.age} yrs';
       final subtitle = profile.birthDay ?? '';
       items.add(
         _BioItem(
@@ -180,15 +178,16 @@ class PlayerBioCard extends StatelessWidget {
                         children: [
                           Text(
                             it.label,
-                            style: AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                              fontSize: 11,
-                            ),
+                            style:
+                                AppTypography.getBodySmall(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                  fontSize: 11,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -198,13 +197,14 @@ class PlayerBioCard extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   it.value,
-                                  style: AppTypography.getBodyMedium(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                  ),
+                                  style:
+                                      AppTypography.getBodyMedium(
+                                        isDark: isDark,
+                                        isArabic: isArabic,
+                                      ).copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13,
+                                      ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),

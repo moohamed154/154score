@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:score154/core/constants/app_colors.dart';
 import 'package:score154/core/constants/app_dimensions.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+
 import 'pitch_painter.dart';
 import 'pitch_player_node.dart';
 
@@ -61,10 +62,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 1. Team Segmented Toggle Switcher (Home vs Away)
-            _buildTeamToggleBar(
-              isDark: isDark,
-              isArabic: isArabic,
-            ),
+            _buildTeamToggleBar(isDark: isDark, isArabic: isArabic),
 
             const SizedBox(height: 10),
 
@@ -88,7 +86,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                   border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
                     width: 1.5,
                   ),
                   boxShadow: [
@@ -100,7 +100,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg - 1),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusLg - 1,
+                  ),
                   child: AspectRatio(
                     aspectRatio: 1 / 1.40,
                     child: Stack(
@@ -117,7 +119,10 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 220),
                           transitionBuilder: (child, animation) {
-                            return FadeTransition(opacity: animation, child: child);
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
                           },
                           child: KeyedSubtree(
                             key: ValueKey<int>(_currentIndex),
@@ -156,15 +161,14 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
   }
 
   /// Segmented team toggle tab bar above the pitch board.
-  Widget _buildTeamToggleBar({
-    required bool isDark,
-    required bool isArabic,
-  }) {
+  Widget _buildTeamToggleBar({required bool isDark, required bool isArabic}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+          color: isDark
+              ? AppColors.darkCardElevated
+              : AppColors.lightCardElevated,
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           border: Border.all(
             color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -215,18 +219,23 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
   }) {
     final displayName = team.displayName.isNotEmpty
         ? team.displayName
-        : (team.teamName ?? (isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
+        : (team.teamName ??
+              (isHome
+                  ? (isArabic ? 'صاحب الأرض' : 'Home')
+                  : (isArabic ? 'الضيف' : 'Away')));
 
     final hasLineup = team.startingXi.isNotEmpty;
-    const activeBorderColor = Color(0xFF00B4D8); // Cyan active border from Yalla Shoot screenshot
+    const activeBorderColor = Color(
+      0xFF00B4D8,
+    ); // Cyan active border from Yalla Shoot screenshot
     final activeStatusColor = widget.isConfirmed
         ? const Color(0xFF10B981) // Emerald (Confirmed)
         : const Color(0xFFF59E0B); // Amber (Probable)
     final dotColor = hasLineup
         ? (isSelected ? activeStatusColor : Colors.grey.shade600)
         : (isSelected
-            ? const Color(0xFFF59E0B).withValues(alpha: 0.8)
-            : Colors.grey.shade600);
+              ? const Color(0xFFF59E0B).withValues(alpha: 0.8)
+              : Colors.grey.shade600);
 
     return GestureDetector(
       onTap: onTap,
@@ -237,7 +246,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         decoration: BoxDecoration(
           color: isSelected
               ? (isDark ? const Color(0xFF0E253A) : Colors.white)
-              : (isDark ? const Color(0xFF141D2A) : Colors.black.withValues(alpha: 0.03)),
+              : (isDark
+                    ? const Color(0xFF141D2A)
+                    : Colors.black.withValues(alpha: 0.03)),
           borderRadius: BorderRadius.circular(AppDimensions.radiusSm + 2),
           border: isSelected
               ? Border.all(color: activeBorderColor, width: 1.5)
@@ -280,7 +291,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   color: isSelected
                       ? (isDark ? Colors.white : AppColors.lightTextPrimary)
-                      : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                      : (isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -291,11 +304,16 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
             if (team.formation != null && team.formation!.isNotEmpty) ...[
               const SizedBox(width: 7),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? activeStatusColor.withValues(alpha: 0.22)
-                      : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                      : (isDark
+                            ? Colors.white10
+                            : Colors.black.withValues(alpha: 0.05)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -305,18 +323,27 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                     fontWeight: FontWeight.w800,
                     color: isSelected
                         ? activeStatusColor
-                        : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                        : (isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted),
                   ),
                 ),
               ),
             ] else if (!hasLineup) ...[
               const SizedBox(width: 7),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.08))
-                      : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
+                      ? (isDark
+                            ? Colors.white.withValues(alpha: 0.12)
+                            : Colors.black.withValues(alpha: 0.08))
+                      : (isDark
+                            ? Colors.white.withValues(alpha: 0.06)
+                            : Colors.black.withValues(alpha: 0.04)),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isDark
@@ -330,7 +357,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                   style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
                 ),
               ),
@@ -388,7 +417,10 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
               if (team.formation != null && team.formation!.isNotEmpty) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: ringColor.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(10),
@@ -405,7 +437,10 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
               ] else if (team.startingXi.isEmpty) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
@@ -425,7 +460,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         ),
 
         // Coach info (if available)
-        if (team.coach != null && team.coach!.name != null && team.coach!.name!.isNotEmpty)
+        if (team.coach != null &&
+            team.coach!.name != null &&
+            team.coach!.name!.isNotEmpty)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -467,10 +504,16 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
       final otherHasLineup = otherTeam.startingXi.isNotEmpty;
       final teamName = team.displayName.isNotEmpty
           ? team.displayName
-          : (team.teamName ?? (isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
+          : (team.teamName ??
+                (isHome
+                    ? (isArabic ? 'صاحب الأرض' : 'Home')
+                    : (isArabic ? 'الضيف' : 'Away')));
       final otherName = otherTeam.displayName.isNotEmpty
           ? otherTeam.displayName
-          : (otherTeam.teamName ?? (!isHome ? (isArabic ? 'صاحب الأرض' : 'Home') : (isArabic ? 'الضيف' : 'Away')));
+          : (otherTeam.teamName ??
+                (!isHome
+                    ? (isArabic ? 'صاحب الأرض' : 'Home')
+                    : (isArabic ? 'الضيف' : 'Away')));
 
       return Center(
         child: Container(
@@ -512,7 +555,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
               ),
               const SizedBox(height: 12),
               Text(
-                isArabic ? 'لم يتم الإعلان عن التشكيلة' : 'Lineup Not Announced',
+                isArabic
+                    ? 'لم يتم الإعلان عن التشكيلة'
+                    : 'Lineup Not Announced',
                 style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
@@ -539,7 +584,10 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                     onTap: () => _onSelectTeam(isHome ? 1 : 0),
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 7,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -552,7 +600,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            isArabic ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                            isArabic
+                                ? Icons.arrow_back_rounded
+                                : Icons.arrow_forward_rounded,
                             size: 14,
                             color: AppColors.primary,
                           ),
@@ -561,11 +611,14 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                             isArabic
                                 ? 'عرض تشكيلة $otherName'
                                 : 'View $otherName Lineup',
-                            style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primary,
-                            ),
+                            style:
+                                (isArabic
+                                ? GoogleFonts.cairo
+                                : GoogleFonts.inter)(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
                           ),
                         ],
                       ),
@@ -596,10 +649,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: rowPlayers.map((player) {
-                return PitchPlayerNode(
-                  player: player,
-                  isHome: isHome,
-                );
+                return PitchPlayerNode(player: player, isHome: isHome);
               }).toList(),
             );
           }).toList(),
@@ -655,16 +705,20 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
             : outfield.length - currentIndex;
         final line = outfield.sublist(currentIndex, currentIndex + take);
         if (line.isNotEmpty) {
-          line.sort((a, b) =>
-              (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
+          line.sort(
+            (a, b) =>
+                (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0),
+          );
           tacticalLines.add(line);
         }
         currentIndex += take;
       }
       if (currentIndex < outfield.length) {
         final leftover = outfield.sublist(currentIndex);
-        leftover.sort((a, b) =>
-            (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
+        leftover.sort(
+          (a, b) =>
+              (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0),
+        );
         if (tacticalLines.isNotEmpty) {
           tacticalLines.last.addAll(leftover);
         } else {
@@ -676,18 +730,26 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
       final defenders = outfield.where((p) => p.positionCode == 'D').toList();
       final midfielders = outfield.where((p) => p.positionCode == 'M').toList();
       final forwards = outfield
-          .where((p) =>
-              p.positionCode == 'F' ||
-              p.positionCode == 'S' ||
-              (!defenders.contains(p) && !midfielders.contains(p)))
+          .where(
+            (p) =>
+                p.positionCode == 'F' ||
+                p.positionCode == 'S' ||
+                (!defenders.contains(p) && !midfielders.contains(p)),
+          )
           .toList();
 
-      defenders.sort((a, b) =>
-          (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
-      midfielders.sort((a, b) =>
-          (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
-      forwards.sort((a, b) =>
-          (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0));
+      defenders.sort(
+        (a, b) =>
+            (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0),
+      );
+      midfielders.sort(
+        (a, b) =>
+            (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0),
+      );
+      forwards.sort(
+        (a, b) =>
+            (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0),
+      );
 
       if (defenders.isNotEmpty) tacticalLines.add(defenders);
       if (midfielders.isNotEmpty) tacticalLines.add(midfielders);

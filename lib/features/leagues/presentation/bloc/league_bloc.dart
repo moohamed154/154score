@@ -64,11 +64,11 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
         onSuccess: (details) {
           final effectiveTitle =
               details.name.isNotEmpty && details.name != 'League'
-                  ? details.name
-                  : (details.standings?.leagueTitle.isNotEmpty == true &&
-                          details.standings?.leagueTitle != 'League Standings'
-                      ? details.standings!.leagueTitle
-                      : (state.leagueTitle ?? 'League'));
+              ? details.name
+              : (details.standings?.leagueTitle.isNotEmpty == true &&
+                        details.standings?.leagueTitle != 'League Standings'
+                    ? details.standings!.leagueTitle
+                    : (state.leagueTitle ?? 'League'));
 
           emit(
             state.copyWith(
@@ -101,7 +101,10 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
     } catch (e) {
       if (state.matches.isEmpty && state.standings == null) {
         emit(
-          state.copyWith(status: LeagueStatus.error, errorMessage: e.toString()),
+          state.copyWith(
+            status: LeagueStatus.error,
+            errorMessage: e.toString(),
+          ),
         );
       } else {
         emit(state.copyWith(status: LeagueStatus.success));
@@ -147,7 +150,8 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
           status: (update.status != null && update.status!.isNotEmpty)
               ? update.status
               : m.status,
-          statusCode: (update.statusCode != null && update.statusCode!.isNotEmpty)
+          statusCode:
+              (update.statusCode != null && update.statusCode!.isNotEmpty)
               ? update.statusCode
               : m.statusCode,
           minute: (update.minute != null && update.minute!.isNotEmpty)

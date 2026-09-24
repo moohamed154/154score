@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,7 +16,9 @@ import 'package:score154/core/constants/app_colors.dart';
 import 'package:score154/features/splash/presentation/views/splash_view.dart';
 
 class MockHomeCubit extends Mock implements HomeCubit {}
+
 class MockMatchesBloc extends Mock implements MatchesBloc {}
+
 class MockNetworkInfo extends Mock implements NetworkInfo {}
 
 void main() {
@@ -44,35 +47,40 @@ void main() {
   });
 
   group('SplashView Widget & Real Loading Tests', () {
-    testWidgets('renders all brand, logo, title, and real progress bar cleanly (no v1.0.0)', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          localizationsDelegates: [
-            AppLocalizations.delegate,
-            ...GlobalMaterialLocalizations.delegates,
-          ],
-          home: SplashView(),
-        ),
-      );
-      await tester.pump();
+    testWidgets(
+      'renders all brand, logo, title, and real progress bar cleanly (no v1.0.0)',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            home: SplashView(),
+          ),
+        );
+        await tester.pump();
 
-      // Verify immediate presence of scaffold, app_icon.png Image, 154, SCORE
-      expect(find.byType(SplashView), findsOneWidget);
-      expect(find.byType(Image), findsOneWidget);
-      expect(find.text('154'), findsOneWidget);
-      expect(find.text('SCORE'), findsOneWidget);
+        // Verify immediate presence of scaffold, app_icon.png Image, 154, SCORE
+        expect(find.byType(SplashView), findsOneWidget);
+        expect(find.byType(Image), findsOneWidget);
+        expect(find.text('154'), findsOneWidget);
+        expect(find.text('SCORE'), findsOneWidget);
 
-      // Verify v1.0.0 is completely deleted
-      expect(find.textContaining('v1.0'), findsNothing);
+        // Verify v1.0.0 is completely deleted
+        expect(find.textContaining('v1.0'), findsNothing);
 
-      // Advance initial layout & progress animation
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byType(SplashView), findsOneWidget);
+        // Advance initial layout & progress animation
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.byType(SplashView), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 800));
-    });
+        await tester.pump(const Duration(milliseconds: 800));
+      },
+    );
 
-    testWidgets('tap to skip navigates to / route via GoRouter', (tester) async {
+    testWidgets('tap to skip navigates to / route via GoRouter', (
+      tester,
+    ) async {
       String currentPath = '/splash';
 
       final testRouter = GoRouter(
@@ -113,133 +121,146 @@ void main() {
       expect(find.text('Home Screen'), findsOneWidget);
     });
 
-    testWidgets('auto-navigates to / when real loading completes for HomeCubit and MatchesBloc', (tester) async {
-      String currentPath = '/splash';
-      final mockHome = MockHomeCubit();
-      final mockMatches = MockMatchesBloc();
+    testWidgets(
+      'auto-navigates to / when real loading completes for HomeCubit and MatchesBloc',
+      (tester) async {
+        String currentPath = '/splash';
+        final mockHome = MockHomeCubit();
+        final mockMatches = MockMatchesBloc();
 
-      final homeController = StreamController<HomeState>.broadcast();
-      final matchesController = StreamController<MatchesState>.broadcast();
+        final homeController = StreamController<HomeState>.broadcast();
+        final matchesController = StreamController<MatchesState>.broadcast();
 
-      when(() => mockHome.state).thenReturn(const HomeState(status: HomeStatus.initial));
-      when(() => mockHome.loadHomeData()).thenAnswer((_) async {});
-      when(() => mockHome.stream).thenAnswer((_) => homeController.stream);
+        when(() => mockHome.state)
+            .thenReturn(const HomeState(status: HomeStatus.initial));
+        when(() => mockHome.loadHomeData()).thenAnswer((_) async {});
+        when(() => mockHome.stream).thenAnswer((_) => homeController.stream);
 
-      final initialMatchesState = MatchesState(
-        selectedDate: DateTime(2026, 9, 20),
-        status: MatchesStatus.initial,
-      );
-      when(() => mockMatches.state).thenReturn(initialMatchesState);
-      when(() => mockMatches.stream).thenAnswer((_) => matchesController.stream);
+        final initialMatchesState = MatchesState(
+          selectedDate: DateTime(2026, 9, 20),
+          status: MatchesStatus.initial,
+        );
+        when(() => mockMatches.state).thenReturn(initialMatchesState);
+        when(() => mockMatches.stream)
+            .thenAnswer((_) => matchesController.stream);
 
-      final testRouter = GoRouter(
-        initialLocation: '/splash',
-        routes: [
-          GoRoute(
-            path: '/splash',
-            builder: (context, state) => const SplashView(),
-          ),
-          GoRoute(
-            path: '/',
-            builder: (context, state) {
-              currentPath = '/';
-              return const Scaffold(body: Text('Home Screen'));
-            },
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<HomeCubit>.value(value: mockHome),
-            BlocProvider<MatchesBloc>.value(value: mockMatches),
+        final testRouter = GoRouter(
+          initialLocation: '/splash',
+          routes: [
+            GoRoute(
+              path: '/splash',
+              builder: (context, state) => const SplashView(),
+            ),
+            GoRoute(
+              path: '/',
+              builder: (context, state) {
+                currentPath = '/';
+                return const Scaffold(body: Text('Home Screen'));
+              },
+            ),
           ],
-          child: MaterialApp.router(
+        );
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<HomeCubit>.value(value: mockHome),
+              BlocProvider<MatchesBloc>.value(value: mockMatches),
+            ],
+            child: MaterialApp.router(
+              routerConfig: testRouter,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                ...GlobalMaterialLocalizations.delegates,
+              ],
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byType(SplashView), findsOneWidget);
+
+        // First frame post-callback dispatches real load
+        await tester.pump(const Duration(milliseconds: 100));
+
+        verifyNever(() => mockHome.loadHomeData());
+        verify(() => mockMatches.add(any(that: isA<LoadMatchesEvent>())))
+            .called(1);
+
+        // Emit real success event from matches
+        matchesController.add(
+          initialMatchesState.copyWith(status: MatchesStatus.success),
+        );
+
+        // Advance animation for progress bar to reach 100% and exit
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+
+        expect(currentPath, equals('/'));
+        expect(find.text('Home Screen'), findsOneWidget);
+
+        await homeController.close();
+        await matchesController.close();
+      },
+    );
+
+    testWidgets(
+      'handles no internet connection: stays on splash until connection is restored',
+      (tester) async {
+        String currentPath = '/splash';
+        when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => false);
+
+        final testRouter = GoRouter(
+          initialLocation: '/splash',
+          routes: [
+            GoRoute(
+              path: '/splash',
+              builder: (context, state) => const SplashView(),
+            ),
+            GoRoute(
+              path: '/',
+              builder: (context, state) {
+                currentPath = '/';
+                return const Scaffold(body: Text('Home Screen'));
+              },
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(
             routerConfig: testRouter,
             localizationsDelegates: const [
               AppLocalizations.delegate,
               ...GlobalMaterialLocalizations.delegates,
             ],
           ),
-        ),
-      );
-      await tester.pump();
+        );
 
-      expect(find.byType(SplashView), findsOneWidget);
+        // Allow network check to complete
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.pumpAndSettle();
 
-      // First frame post-callback dispatches real load
-      await tester.pump(const Duration(milliseconds: 100));
+        // Verify offline icon, title, and Try Again button are visible
+        expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
+        expect(find.text('No internet connection'), findsOneWidget);
+        expect(find.text('Try Again'), findsOneWidget);
 
-      verifyNever(() => mockHome.loadHomeData());
-      verify(() => mockMatches.add(any(that: isA<LoadMatchesEvent>()))).called(1);
+        // Verify "Continue Offline" button has been completely removed
+        expect(find.text('Continue Offline'), findsNothing);
 
-      // Emit real success event from matches
-      matchesController.add(initialMatchesState.copyWith(status: MatchesStatus.success));
+        // Tapping anywhere on the screen does NOT navigate away when offline
+        await tester.tap(find.byType(SplashView));
+        await tester.pumpAndSettle();
+        expect(currentPath, equals('/splash'));
+        expect(find.byType(SplashView), findsOneWidget);
+      },
+    );
 
-      // Advance animation for progress bar to reach 100% and exit
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pumpAndSettle();
-
-      expect(currentPath, equals('/'));
-      expect(find.text('Home Screen'), findsOneWidget);
-
-      await homeController.close();
-      await matchesController.close();
-    });
-
-    testWidgets('handles no internet connection: stays on splash until connection is restored', (tester) async {
-      String currentPath = '/splash';
-      when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => false);
-
-      final testRouter = GoRouter(
-        initialLocation: '/splash',
-        routes: [
-          GoRoute(
-            path: '/splash',
-            builder: (context, state) => const SplashView(),
-          ),
-          GoRoute(
-            path: '/',
-            builder: (context, state) {
-              currentPath = '/';
-              return const Scaffold(body: Text('Home Screen'));
-            },
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        MaterialApp.router(
-          routerConfig: testRouter,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            ...GlobalMaterialLocalizations.delegates,
-          ],
-        ),
-      );
-
-      // Allow network check to complete
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pumpAndSettle();
-
-      // Verify offline icon, title, and Try Again button are visible
-      expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
-      expect(find.text('No internet connection'), findsOneWidget);
-      expect(find.text('Try Again'), findsOneWidget);
-
-      // Verify "Continue Offline" button has been completely removed
-      expect(find.text('Continue Offline'), findsNothing);
-
-      // Tapping anywhere on the screen does NOT navigate away when offline
-      await tester.tap(find.byType(SplashView));
-      await tester.pumpAndSettle();
-      expect(currentPath, equals('/splash'));
-      expect(find.byType(SplashView), findsOneWidget);
-    });
-
-    testWidgets('tapping Try Again in offline mode retries connection check', (tester) async {
+    testWidgets('tapping Try Again in offline mode retries connection check', (
+      tester,
+    ) async {
       when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => false);
 
       await tester.pumpWidget(
@@ -271,7 +292,9 @@ void main() {
       expect(find.text('Loading...'), findsOneWidget);
     });
 
-    testWidgets('renders with zero overflow on small 320px screen width', (tester) async {
+    testWidgets('renders with zero overflow on small 320px screen width', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(320, 600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -296,32 +319,37 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('renders title in LTR order (154 then SCORE) even in Arabic locale', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          locale: Locale('ar'),
-          localizationsDelegates: [
-            AppLocalizations.delegate,
-            ...GlobalMaterialLocalizations.delegates,
-          ],
-          home: Directionality(
-            textDirection: TextDirection.rtl,
-            child: SplashView(),
+    testWidgets(
+      'renders title in LTR order (154 then SCORE) even in Arabic locale',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('ar'),
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            home: Directionality(
+              textDirection: TextDirection.rtl,
+              child: SplashView(),
+            ),
           ),
-        ),
-      );
-      await tester.pump();
+        );
+        await tester.pump();
 
-      final pos154 = tester.getTopLeft(find.text('154'));
-      final posScore = tester.getTopLeft(find.text('SCORE'));
+        final pos154 = tester.getTopLeft(find.text('154'));
+        final posScore = tester.getTopLeft(find.text('SCORE'));
 
-      // 154 must be to the left of SCORE (dx of 154 < dx of SCORE)
-      expect(pos154.dx, lessThan(posScore.dx));
+        // 154 must be to the left of SCORE (dx of 154 < dx of SCORE)
+        expect(pos154.dx, lessThan(posScore.dx));
 
-      await tester.pump(const Duration(milliseconds: 200));
-    });
+        await tester.pump(const Duration(milliseconds: 200));
+      },
+    );
 
-    testWidgets('adapts background and text colors to Light and Dark themes', (tester) async {
+    testWidgets('adapts background and text colors to Light and Dark themes', (
+      tester,
+    ) async {
       // 1. Light Theme
       await tester.pumpWidget(
         MaterialApp(

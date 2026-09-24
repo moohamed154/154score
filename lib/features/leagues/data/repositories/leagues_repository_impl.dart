@@ -10,7 +10,7 @@ import '../datasources/leagues_remote_datasource.dart';
 class LeaguesRepositoryImpl implements LeaguesRepository {
   final LeaguesRemoteDataSource _dataSource;
   final Map<String, ({LeagueDetailsEntity data, DateTime timestamp})>
-      _detailsCache = {};
+  _detailsCache = {};
 
   LeaguesRepositoryImpl(this._dataSource);
 

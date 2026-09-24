@@ -179,8 +179,7 @@ class WebSocketServiceImpl implements WebSocketService {
   Stream<MatchDetailRealtimeUpdate> matchUpdatesStream(String matchId) {
     final cleanTarget = matchId.replaceAll('match:', '').trim();
     return _matchDetailsController.stream.where(
-      (update) =>
-          update.matchId.replaceAll('match:', '').trim() == cleanTarget,
+      (update) => update.matchId.replaceAll('match:', '').trim() == cleanTarget,
     );
   }
 
@@ -435,7 +434,8 @@ class WebSocketServiceImpl implements WebSocketService {
           _processLiveMatchesList(map['data'] as List);
         } else if (map['matches'] is List) {
           // Case 2: Single League Group {"league_title": "...", "matches": [...]}
-          final lTitle = map['league_title']?.toString() ?? map['title']?.toString();
+          final lTitle =
+              map['league_title']?.toString() ?? map['title']?.toString();
           final lId = map['league_id']?.toString() ?? map['id']?.toString();
           for (final m in map['matches']) {
             if (m is Map) {
@@ -470,8 +470,11 @@ class WebSocketServiceImpl implements WebSocketService {
         final itemMap = Map<String, dynamic>.from(item);
         if (itemMap['matches'] is List) {
           // League Group item
-          final lTitle = itemMap['league_title']?.toString() ?? itemMap['title']?.toString();
-          final lId = itemMap['league_id']?.toString() ?? itemMap['id']?.toString();
+          final lTitle =
+              itemMap['league_title']?.toString() ??
+              itemMap['title']?.toString();
+          final lId =
+              itemMap['league_id']?.toString() ?? itemMap['id']?.toString();
           for (final m in itemMap['matches']) {
             if (m is Map) {
               _dispatchLiveMatch(
@@ -611,10 +614,7 @@ class WebSocketServiceImpl implements WebSocketService {
     _emitHealth();
   }
 
-  void _dispatchMatchUpdateMap(
-    Map<String, dynamic> map, {
-    String? eventName,
-  }) {
+  void _dispatchMatchUpdateMap(Map<String, dynamic> map, {String? eventName}) {
     String? fallbackId;
     if (eventName != null && eventName.startsWith('match:')) {
       fallbackId = eventName.substring('match:'.length);
@@ -653,9 +653,11 @@ class WebSocketServiceImpl implements WebSocketService {
         matchId: update.matchId,
         score1: update.score1,
         score2: update.score2,
-        penaltyScore1: update.rawPayload['penalty_score_1']?.toString() ??
+        penaltyScore1:
+            update.rawPayload['penalty_score_1']?.toString() ??
             update.rawPayload['penalties_1']?.toString(),
-        penaltyScore2: update.rawPayload['penalty_score_2']?.toString() ??
+        penaltyScore2:
+            update.rawPayload['penalty_score_2']?.toString() ??
             update.rawPayload['penalties_2']?.toString(),
         status: update.status,
         statusCode: update.statusCode,

@@ -8,6 +8,7 @@ import 'package:score154/core/constants/app_typography.dart';
 import 'package:score154/core/localization/app_localizations.dart';
 import 'package:score154/core/widgets/app_image.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+
 import 'pitch_player_node.dart';
 
 /// Detailed list view of Starting XI, Substitutes bench, Coaches, and Injuries.
@@ -57,10 +58,12 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     final otherTeam = _selectedTeamIndex == 0 ? widget.away : widget.home;
     final isHome = _selectedTeamIndex == 0;
 
-    final subbedInPlayers =
-        currentTeam.substitutes.where((p) => p.substituteIn).toList();
-    final benchPlayers =
-        currentTeam.substitutes.where((p) => !p.substituteIn).toList();
+    final subbedInPlayers = currentTeam.substitutes
+        .where((p) => p.substituteIn)
+        .toList();
+    final benchPlayers = currentTeam.substitutes
+        .where((p) => !p.substituteIn)
+        .toList();
 
     return Column(
       children: [
@@ -85,7 +88,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                       title: widget.home.displayName.isNotEmpty
                           ? widget.home.displayName
                           : (widget.home.teamName ??
-                              (isArabic ? 'صاحب الأرض' : 'Home')),
+                                (isArabic ? 'صاحب الأرض' : 'Home')),
                       formation: widget.home.formation,
                       hasLineup: widget.home.startingXi.isNotEmpty,
                       isSelected: _selectedTeamIndex == 0,
@@ -99,7 +102,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                       title: widget.away.displayName.isNotEmpty
                           ? widget.away.displayName
                           : (widget.away.teamName ??
-                              (isArabic ? 'الضيف' : 'Away')),
+                                (isArabic ? 'الضيف' : 'Away')),
                       formation: widget.away.formation,
                       hasLineup: widget.away.startingXi.isNotEmpty,
                       isSelected: _selectedTeamIndex == 1,
@@ -125,12 +128,17 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                 Container(
                   width: double.infinity,
                   margin: const EdgeInsets.symmetric(vertical: 20),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.darkCard : AppColors.lightCard,
                     borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                     border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
                     ),
                   ),
                   child: Column(
@@ -156,13 +164,14 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                       const SizedBox(height: 14),
                       Text(
                         isArabic ? 'التشكيلة غير متوفرة' : 'Lineup Unavailable',
-                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
+                        style:
+                            (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 6),
@@ -170,12 +179,13 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                         isArabic
                             ? 'لم تصدر التشكيلة الرسمية أو دكة البدلاء لفريق ${currentTeam.displayName.isNotEmpty ? currentTeam.displayName : (isHome ? 'صاحب الأرض' : 'الضيف')} حتى الآن'
                             : 'Official lineup and substitutes for ${currentTeam.displayName.isNotEmpty ? currentTeam.displayName : (isHome ? 'Home' : 'Away')} are not available yet',
-                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                          fontSize: 12,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
+                        style:
+                            (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                              fontSize: 12,
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                            ),
                         textAlign: TextAlign.center,
                       ),
                       if (otherTeam.startingXi.isNotEmpty) ...[
@@ -183,7 +193,8 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: () => _onSelectTeam(_selectedTeamIndex == 0 ? 1 : 0),
+                            onTap: () =>
+                                _onSelectTeam(_selectedTeamIndex == 0 ? 1 : 0),
                             borderRadius: BorderRadius.circular(20),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -191,7 +202,9 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.15),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: AppColors.primary,
@@ -213,13 +226,14 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                                     isArabic
                                         ? 'عرض تشكيلة ${otherTeam.displayName.isNotEmpty ? otherTeam.displayName : (!isHome ? 'صاحب الأرض' : 'الضيف')}'
                                         : 'View ${otherTeam.displayName.isNotEmpty ? otherTeam.displayName : (!isHome ? 'Home' : 'Away')} Lineup',
-                                    style: (isArabic
+                                    style:
+                                        (isArabic
                                         ? GoogleFonts.cairo
                                         : GoogleFonts.inter)(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.primary,
-                                    ),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primary,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -233,8 +247,7 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
               ],
 
               // 1. Starting XI Section (Shown only in list view, hidden below pitch)
-              if (widget.showStarters &&
-                  currentTeam.startingXi.isNotEmpty) ...[
+              if (widget.showStarters && currentTeam.startingXi.isNotEmpty) ...[
                 _buildSectionHeader(
                   title: isArabic ? 'التشكيلة الأساسية' : 'Starting XI',
                   count: currentTeam.startingXi.length,
@@ -323,7 +336,9 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
               // 6. Absences & Injuries Section
               if (currentTeam.injuries.isNotEmpty) ...[
                 _buildSectionHeader(
-                  title: isArabic ? 'الغيابات والإصابات' : 'Absences & Injuries',
+                  title: isArabic
+                      ? 'الغيابات والإصابات'
+                      : 'Absences & Injuries',
                   count: currentTeam.injuries.length,
                   isDark: isDark,
                   isArabic: isArabic,
@@ -381,7 +396,9 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   color: isSelected
                       ? (isDark ? Colors.white : AppColors.primary)
-                      : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                      : (isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted),
                   fontSize: 13,
                 ),
                 maxLines: 1,
@@ -412,7 +429,9 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                  color: isDark
+                      ? Colors.white10
+                      : Colors.black.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -420,7 +439,9 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                   style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
                 ),
               ),
@@ -498,10 +519,9 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color:
-                      isDark
-                          ? AppColors.darkCardElevated
-                          : AppColors.lightCardElevated,
+                  color: isDark
+                      ? AppColors.darkCardElevated
+                      : AppColors.lightCardElevated,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 alignment: Alignment.center,
@@ -539,13 +559,14 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                         ),
                         child: Text(
                           isArabic ? 'ق' : 'C',
-                          style: (isArabic
+                          style:
+                              (isArabic
                               ? GoogleFonts.cairo
                               : GoogleFonts.outfit)(
-                            fontSize: 8,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black,
-                          ),
+                                fontSize: 8,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.black,
+                              ),
                         ),
                       ),
                     ),
@@ -563,10 +584,9 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                       style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
-                        color:
-                            isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -610,14 +630,15 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                                 (player.isGoalkeeper
                                     ? (isArabic ? 'حارس المرمى' : 'Goalkeeper')
                                     : '-'),
-                            style: (isArabic
+                            style:
+                                (isArabic
                                 ? GoogleFonts.cairo
                                 : GoogleFonts.inter)(
-                              fontSize: 11,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                            ),
+                                  fontSize: 11,
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -652,7 +673,10 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                     ],
                     if (player.ownGoals > 0) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.redCard.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(3),
@@ -803,11 +827,13 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
         }
       }
     }
-    final subbedOutStarters =
-        team.startingXi.where((s) => s.substituteOut).toList();
+    final subbedOutStarters = team.startingXi
+        .where((s) => s.substituteOut)
+        .toList();
     if (subbedOutStarters.isNotEmpty) {
-      final subbedInSubs =
-          team.substitutes.where((s) => s.substituteIn).toList();
+      final subbedInSubs = team.substitutes
+          .where((s) => s.substituteIn)
+          .toList();
       final idx = subbedInSubs.indexOf(playerIn);
       if (idx != -1 && idx < subbedOutStarters.length) {
         return subbedOutStarters[idx].displayName;
@@ -922,13 +948,14 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                         Expanded(
                           child: Text(
                             playerIn.displayName,
-                            style: (isArabic
+                            style:
+                                (isArabic
                                 ? GoogleFonts.cairo
                                 : GoogleFonts.inter)(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF34D399),
-                            ),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF34D399),
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -950,13 +977,14 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                         Expanded(
                           child: Text(
                             subbedOutName,
-                            style: (isArabic
+                            style:
+                                (isArabic
                                 ? GoogleFonts.cairo
                                 : GoogleFonts.inter)(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFFEF4444),
-                            ),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFFEF4444),
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1180,8 +1208,9 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
           isDark: isDark,
           isArabic: isArabic,
           icon: Icons.sports,
-          accentColor:
-              isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          accentColor: isDark
+              ? const Color(0xFF94A3B8)
+              : const Color(0xFF64748B),
         ),
         const SizedBox(height: 8),
         Material(
@@ -1191,9 +1220,12 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
             onTap: () {
               final cleanName = coach.name?.trim() ?? '';
               final slug = cleanName.isNotEmpty
-                  ? Uri.encodeComponent(cleanName.replaceAll(RegExp(r'\s+'), '-'))
+                  ? Uri.encodeComponent(
+                      cleanName.replaceAll(RegExp(r'\s+'), '-'),
+                    )
                   : 'coach';
-              final coachId = (coach.coachId != null && coach.coachId!.trim().isNotEmpty)
+              final coachId =
+                  (coach.coachId != null && coach.coachId!.trim().isNotEmpty)
                   ? coach.coachId!.trim()
                   : '0';
               context.push('/coach/$coachId/$slug');
@@ -1230,29 +1262,31 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                           (coach.name != null && coach.name!.isNotEmpty)
                               ? coach.name!
                               : (isArabic ? 'المدير الفني' : 'Coach'),
-                          style: (isArabic
+                          style:
+                              (isArabic
                               ? GoogleFonts.cairo
                               : GoogleFonts.inter)(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13.5,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Text(
                           isArabic ? 'المدرب الفني' : 'Head Coach',
-                          style: (isArabic
+                          style:
+                              (isArabic
                               ? GoogleFonts.cairo
                               : GoogleFonts.inter)(
-                            fontSize: 11,
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                          ),
+                                fontSize: 11,
+                                color: isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted,
+                              ),
                         ),
                       ],
                     ),

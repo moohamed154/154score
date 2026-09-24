@@ -30,7 +30,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final dark = widget.isDark ?? (Theme.of(context).brightness == Brightness.dark);
+    final dark =
+        widget.isDark ?? (Theme.of(context).brightness == Brightness.dark);
     final arabic = widget.isArabic ?? l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
@@ -68,13 +69,14 @@ class _MatchFormCardState extends State<MatchFormCard> {
                   const SizedBox(width: 8),
                   Text(
                     arabic ? 'آخر المباريات' : 'Recent Form',
-                    style: AppTypography.getBodyLarge(
-                      isDark: dark,
-                      isArabic: arabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
+                    style:
+                        AppTypography.getBodyLarge(
+                          isDark: dark,
+                          isArabic: arabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
                   ),
                   const Spacer(),
                   Icon(
@@ -99,7 +101,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
             // Home Team Form Row
             if (homeMatches.isNotEmpty) ...[
               _buildTeamFormRow(
-                teamName: widget.recentForm.homeTeamName ??
+                teamName:
+                    widget.recentForm.homeTeamName ??
                     (arabic ? 'صاحب الأرض' : 'Home Team'),
                 matches: homeMatches,
                 isDark: dark,
@@ -119,7 +122,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
             // Away Team Form Row
             if (awayMatches.isNotEmpty) ...[
               _buildTeamFormRow(
-                teamName: widget.recentForm.awayTeamName ??
+                teamName:
+                    widget.recentForm.awayTeamName ??
                     (arabic ? 'الضيف' : 'Away Team'),
                 matches: awayMatches,
                 isDark: dark,
@@ -139,13 +143,14 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 Text(
                   widget.recentForm.homeTeamName ??
                       (arabic ? 'مباريات المضيف' : 'Home Matches'),
-                  style: AppTypography.getBodySmall(
-                    isDark: dark,
-                    isArabic: arabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: dark,
+                        isArabic: arabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 ...homeMatches.map(
@@ -161,13 +166,14 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 Text(
                   widget.recentForm.awayTeamName ??
                       (arabic ? 'مباريات الضيف' : 'Away Matches'),
-                  style: AppTypography.getBodySmall(
-                    isDark: dark,
-                    isArabic: arabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: dark,
+                        isArabic: arabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 ...awayMatches.map(
@@ -265,11 +271,7 @@ class _MatchFormCardState extends State<MatchFormCard> {
               const SizedBox(width: 8),
               if (match.opponentLogo != null &&
                   match.opponentLogo!.isNotEmpty) ...[
-                AppImage(
-                  imageUrl: match.opponentLogo!,
-                  width: 18,
-                  height: 18,
-                ),
+                AppImage(imageUrl: match.opponentLogo!, width: 18, height: 18),
                 const SizedBox(width: 6),
               ],
               Expanded(
@@ -286,19 +288,20 @@ class _MatchFormCardState extends State<MatchFormCard> {
               const SizedBox(width: 8),
               Text(
                 match.score,
-                style: AppTypography.getBodySmall(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: match.isWin
-                      ? AppColors.uclGreen
-                      : (match.isLoss
-                          ? AppColors.relegationRed
-                          : (isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary)),
-                ),
+                style:
+                    AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: match.isWin
+                          ? AppColors.uclGreen
+                          : (match.isLoss
+                                ? AppColors.relegationRed
+                                : (isDark
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.lightTextPrimary)),
+                    ),
               ),
               if (canNav) ...[
                 const SizedBox(width: 4),

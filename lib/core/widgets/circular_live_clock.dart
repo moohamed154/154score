@@ -171,17 +171,19 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     // Detect periods
     final p = (widget.period ?? '').toLowerCase();
     final s = (widget.status ?? '').toLowerCase();
-    final is1stHalf = p.contains('1st') ||
+    final is1stHalf =
+        p.contains('1st') ||
         p.contains('first') ||
         s.contains('الأول') ||
         s.contains('الاول');
-    final is2ndHalf = p.contains('2nd') ||
-        p.contains('second') ||
-        s.contains('الثاني');
-    final is1stExtra = p.contains('1st_extra') ||
+    final is2ndHalf =
+        p.contains('2nd') || p.contains('second') || s.contains('الثاني');
+    final is1stExtra =
+        p.contains('1st_extra') ||
         s.contains('الإضافي الأول') ||
         s.contains('الاضافي الاول');
-    final is2ndExtra = p.contains('2nd_extra') ||
+    final is2ndExtra =
+        p.contains('2nd_extra') ||
         s.contains('الإضافي الثاني') ||
         s.contains('الاضافي الثاني');
 
@@ -236,7 +238,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
 
       // Check if another screen (e.g. Homepage or MatchDetails) already has an active ticking clock for this match
       if (syncedClock != null && syncedClock.elapsedExtraSeconds > 0) {
-        if (computedElapsedExtraSec == 0 || syncedClock.elapsedExtraSeconds > computedElapsedExtraSec) {
+        if (computedElapsedExtraSec == 0 ||
+            syncedClock.elapsedExtraSeconds > computedElapsedExtraSec) {
           computedElapsedExtraSec = syncedClock.elapsedExtraSeconds;
         }
       }
@@ -247,7 +250,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       }
 
       // If still 0 and not synced, check estimate from kickoff time
-      if (computedElapsedExtraSec == 0 && (syncedClock == null || syncedClock.elapsedExtraSeconds == 0)) {
+      if (computedElapsedExtraSec == 0 &&
+          (syncedClock == null || syncedClock.elapsedExtraSeconds == 0)) {
         final est = MatchStatusHelper.estimateMatchMinutes(
           time: widget.time,
           status: widget.status,
@@ -266,7 +270,10 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
           widget.extraTime!.isNotEmpty &&
           widget.extraTime != 'null') {
         final clean = widget.extraTime!.trim();
-        if (clean != '+00:00' && clean != '00:00' && clean != '0' && clean != '+0') {
+        if (clean != '+00:00' &&
+            clean != '00:00' &&
+            clean != '0' &&
+            clean != '+0') {
           if (clean.contains('/')) {
             final parts = clean.split('/');
             final elapsedPart = parts.first.replaceAll('+', '').trim();
@@ -296,12 +303,15 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         }
       }
 
-      if (parsedTotalExtraMinutes == 0 && syncedClock != null && syncedClock.totalExtraMinutes > 0) {
+      if (parsedTotalExtraMinutes == 0 &&
+          syncedClock != null &&
+          syncedClock.totalExtraMinutes > 0) {
         parsedTotalExtraMinutes = syncedClock.totalExtraMinutes;
       }
 
       _elapsedExtraSeconds = explicitElapsedSec ?? computedElapsedExtraSec;
-      if (syncedClock != null && syncedClock.elapsedExtraSeconds > _elapsedExtraSeconds) {
+      if (syncedClock != null &&
+          syncedClock.elapsedExtraSeconds > _elapsedExtraSeconds) {
         _elapsedExtraSeconds = syncedClock.elapsedExtraSeconds;
       }
       _totalExtraMinutes = parsedTotalExtraMinutes > 0
@@ -314,12 +324,15 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         _displayExtra = '+$mm:$ss / $_totalExtraMinutes';
       } else if (_elapsedExtraSeconds > 0) {
         _displayExtra = '+$mm:$ss';
-      } else if (widget.extraTime != null && widget.extraTime!.startsWith('+')) {
+      } else if (widget.extraTime != null &&
+          widget.extraTime!.startsWith('+')) {
         _displayExtra = widget.extraTime;
       }
 
       // Record state in sync registry
-      if (_elapsedExtraSeconds > 0 || _totalExtraMinutes > 0 || _currentMinute > 0) {
+      if (_elapsedExtraSeconds > 0 ||
+          _totalExtraMinutes > 0 ||
+          _currentMinute > 0) {
         LiveClockSync.recordClock(
           matchId: widget.matchId,
           minute: _currentMinute,
@@ -343,7 +356,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     } else {
       final p = (widget.period ?? '').toLowerCase();
       final s = (widget.status ?? '').toLowerCase();
-      final is1stHalf = p.contains('1st') ||
+      final is1stHalf =
+          p.contains('1st') ||
           p.contains('first') ||
           s.contains('الأول') ||
           s.contains('الاول');
@@ -384,10 +398,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
             if (_elapsedExtraSeconds < maxExtraSec) {
               _elapsedExtraSeconds++;
             }
-            final mm =
-                (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
-            final ss =
-                (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
+            final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
+            final ss = (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
             if (_totalExtraMinutes > 0) {
               _displayExtra = '+$mm:$ss / $_totalExtraMinutes';
             } else {
@@ -519,11 +531,10 @@ class _CircularClockPainter extends CustomPainter {
     final radius = (size.width - strokeWidth * 2) / 2;
 
     // 1. Background Track
-    final trackPaint =
-        Paint()
-          ..color = arcColor.withValues(alpha: 0.18)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth;
+    final trackPaint = Paint()
+      ..color = arcColor.withValues(alpha: 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
 
     canvas.drawCircle(center, radius, trackPaint);
 
@@ -531,12 +542,11 @@ class _CircularClockPainter extends CustomPainter {
     const startAngle = -pi / 2;
     final sweepAngle = (progress * 2 * pi).clamp(0.01, 2 * pi);
 
-    final arcPaint =
-        Paint()
-          ..color = arcColor
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeWidth = strokeWidth;
+    final arcPaint = Paint()
+      ..color = arcColor
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = strokeWidth;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -575,10 +585,9 @@ class _CircularClockPainter extends CustomPainter {
       ),
       const Radius.circular(2.0),
     );
-    final notchPaint =
-        Paint()
-          ..color = notchColor
-          ..style = PaintingStyle.fill;
+    final notchPaint = Paint()
+      ..color = notchColor
+      ..style = PaintingStyle.fill;
     canvas.drawRRect(notchRect, notchPaint);
   }
 
@@ -623,11 +632,10 @@ class _CircularClockPainter extends CustomPainter {
     );
 
     // Radial spokes to simulate soccer ball seams
-    final spokePaint =
-        Paint()
-          ..color = const Color(0xFF1E2430)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.6;
+    final spokePaint = Paint()
+      ..color = const Color(0xFF1E2430)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.6;
 
     for (int i = 0; i < 5; i++) {
       final spokeAngle = (i * 2 * pi / 5) - (pi / 2);

@@ -20,6 +20,7 @@ import '../../../../core/widgets/error_view.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../leagues/presentation/bloc/league_bloc.dart';
 import '../../../leagues/presentation/views/league_view.dart';
+import '../../../settings/presentation/cubit/settings_cubits.dart';
 
 enum StandingsTab { favorites, hidden }
 
@@ -61,18 +62,21 @@ class ChampionshipInfo {
         json['league_id']?.toString() ?? json['id']?.toString() ?? '';
     final seasonId =
         json['season_id']?.toString() ?? json['url_id']?.toString();
-    final name = json['name']?.toString() ??
+    final name =
+        json['name']?.toString() ??
         json['title2']?.toString() ??
         json['title']?.toString() ??
         '';
     final slug = json['slug']?.toString();
     final rawImage = json['image']?.toString();
-    final logo = json['logo']?.toString() ??
+    final logo =
+        json['logo']?.toString() ??
         (rawImage != null && rawImage.isNotEmpty
             ? 'https://imgs.ysscores.com/championship/128/$rawImage'
             : '');
     final rawImageLight = json['image_light']?.toString();
-    final logoLight = json['logo_light']?.toString() ??
+    final logoLight =
+        json['logo_light']?.toString() ??
         (rawImageLight != null && rawImageLight.isNotEmpty
             ? 'https://imgs.ysscores.com/championship/128/$rawImageLight'
             : null);
@@ -110,21 +114,21 @@ class ChampionshipInfo {
   }
 
   Map<String, dynamic> toJson() => {
-        'league_id': id,
-        'season_id': seasonId,
-        'name': name,
-        'slug': slug,
-        'logo': logo,
-        'logo_light': logoLight,
-        'has_standings': hasStandings,
-        'is_featured': isFeatured,
-        'is_favorite': isFavorite,
-        'type': type,
-        'type_name': typeName,
-        'has_scorers': hasScorers,
-        'has_cups': hasCups,
-        'rank': rank,
-      };
+    'league_id': id,
+    'season_id': seasonId,
+    'name': name,
+    'slug': slug,
+    'logo': logo,
+    'logo_light': logoLight,
+    'has_standings': hasStandings,
+    'is_featured': isFeatured,
+    'is_favorite': isFavorite,
+    'type': type,
+    'type_name': typeName,
+    'has_scorers': hasScorers,
+    'has_cups': hasCups,
+    'rank': rank,
+  };
 }
 
 const List<ChampionshipInfo> kDefaultFallbackChampionships = [
@@ -237,7 +241,27 @@ class _StandingsViewState extends State<StandingsView> {
     final storage = sl<LocalStorageService>();
 
     // 1. Startup: Load cached championships if available
-    final cachedData = storage.getCachedRankings();
+    _loadCachedRankings(storage.getLanguage());
+
+    // 2. Fallback if no cache found yet
+    if (_allLeagues.isEmpty) {
+      _featuredLeagues = List<ChampionshipInfo>.from(
+        kDefaultFallbackChampionships,
+      );
+      _allLeagues = List<ChampionshipInfo>.from(kDefaultFallbackChampionships);
+    }
+
+    _searchController.addListener(_onSearchChanged);
+
+    // 3. Guaranteed fresh network fetch on first open
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchRankings();
+    });
+  }
+
+  void _loadCachedRankings(String lang) {
+    final storage = sl<LocalStorageService>();
+    final cachedData = storage.getCachedRankings(lang: lang);
     if (cachedData != null && cachedData.isNotEmpty) {
       try {
         final decoded = jsonDecode(cachedData);
@@ -264,27 +288,21 @@ class _StandingsViewState extends State<StandingsView> {
           }
 
           if (cachedAll.isNotEmpty || cachedFeatured.isNotEmpty) {
-            _featuredLeagues = cachedFeatured;
-            _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
-            _isLoading = false;
+            if (mounted) {
+              setState(() {
+                _featuredLeagues = cachedFeatured;
+                _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
+                _isLoading = false;
+              });
+            } else {
+              _featuredLeagues = cachedFeatured;
+              _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
+              _isLoading = false;
+            }
           }
         }
       } catch (_) {}
     }
-
-    // 2. Fallback if no cache found yet
-    if (_allLeagues.isEmpty) {
-      _featuredLeagues =
-          List<ChampionshipInfo>.from(kDefaultFallbackChampionships);
-      _allLeagues = List<ChampionshipInfo>.from(kDefaultFallbackChampionships);
-    }
-
-    _searchController.addListener(_onSearchChanged);
-
-    // 3. Guaranteed fresh network fetch on first open
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchRankings();
-    });
   }
 
   void _onSearchChanged() {
@@ -351,6 +369,7 @@ class _StandingsViewState extends State<StandingsView> {
                   'featured': fetchedFeatured.map((e) => e.toJson()).toList(),
                   'leagues': fetchedAll.map((e) => e.toJson()).toList(),
                 }),
+                lang: lang,
               ),
             );
 
@@ -430,8 +449,9 @@ class _StandingsViewState extends State<StandingsView> {
     }
     final moved = list.removeAt(oldIndex);
     list.insert(newIndex, moved);
-    final identifiers =
-        list.map((e) => e.name.isNotEmpty ? e.name : e.id).toList();
+    final identifiers = list
+        .map((e) => e.name.isNotEmpty ? e.name : e.id)
+        .toList();
     context.read<FavoritesCubit>().setFavoriteCompetitions(identifiers);
   }
 
@@ -449,33 +469,29 @@ class _StandingsViewState extends State<StandingsView> {
     final surfaceBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     const primary = AppColors.primary;
 
-    return Scaffold(
-      backgroundColor: bg,
-      body: SafeArea(
-        bottom: false,
-        child: BlocBuilder<FavoritesCubit, FavoritesState>(
-          builder: (context, favState) {
-            final currentFavKeys = favState.favoriteCompetitions.isNotEmpty
-                ? favState.favoriteCompetitions
-                : (storage.hasCustomFavoriteCompetitions()
-                    ? <String>[]
-                    : _featuredLeagues.map((e) => e.name).toList());
+    return BlocListener<LocaleCubit, LocaleState>(
+      listenWhen: (prev, curr) => prev.locale != curr.locale,
+      listener: (context, localeState) {
+        _loadCachedRankings(localeState.locale.languageCode);
+        _fetchRankings();
+      },
+      child: Scaffold(
+        backgroundColor: bg,
+        body: SafeArea(
+          bottom: false,
+          child: BlocBuilder<FavoritesCubit, FavoritesState>(
+            builder: (context, favState) {
+              final currentFavKeys = favState.favoriteCompetitions.isNotEmpty
+                  ? favState.favoriteCompetitions
+                  : (storage.hasCustomFavoriteCompetitions()
+                        ? <String>[]
+                        : _featuredLeagues.map((e) => e.name).toList());
 
-            // Build favorite cards in user order
-            final List<ChampionshipInfo> favoriteCards = [];
-            for (final key in currentFavKeys) {
-              ChampionshipInfo? matched;
-              for (final l in _allLeagues) {
-                if (l.id == key ||
-                    l.name == key ||
-                    l.slug == key ||
-                    (l.seasonId != null && l.seasonId == key)) {
-                  matched = l;
-                  break;
-                }
-              }
-              if (matched == null) {
-                for (final l in _featuredLeagues) {
+              // Build favorite cards in user order
+              final List<ChampionshipInfo> favoriteCards = [];
+              for (final key in currentFavKeys) {
+                ChampionshipInfo? matched;
+                for (final l in _allLeagues) {
                   if (l.id == key ||
                       l.name == key ||
                       l.slug == key ||
@@ -484,223 +500,242 @@ class _StandingsViewState extends State<StandingsView> {
                     break;
                   }
                 }
+                if (matched == null) {
+                  for (final l in _featuredLeagues) {
+                    if (l.id == key ||
+                        l.name == key ||
+                        l.slug == key ||
+                        (l.seasonId != null && l.seasonId == key)) {
+                      matched = l;
+                      break;
+                    }
+                  }
+                }
+                if (matched != null &&
+                    !favoriteCards.any((c) => c.id == matched!.id)) {
+                  favoriteCards.add(matched);
+                }
               }
-              if (matched != null &&
-                  !favoriteCards.any((c) => c.id == matched!.id)) {
-                favoriteCards.add(matched);
+
+              // Also ensure any championship that is favorite according to favState is added
+              for (final l in _allLeagues) {
+                if (favState.isFavoriteCompetition(
+                      id: l.id,
+                      name: l.name,
+                      slug: l.slug,
+                    ) &&
+                    !favoriteCards.any((c) => c.id == l.id)) {
+                  favoriteCards.add(l);
+                }
               }
-            }
 
-            // Also ensure any championship that is favorite according to favState is added
-            for (final l in _allLeagues) {
-              if (favState.isFavoriteCompetition(
-                    id: l.id,
-                    name: l.name,
-                    slug: l.slug,
-                  ) &&
-                  !favoriteCards.any((c) => c.id == l.id)) {
-                favoriteCards.add(l);
+              // Build hidden cards (all other championships not in favorites)
+              final List<ChampionshipInfo> hiddenCards = [];
+              for (final l in _allLeagues) {
+                if (!favoriteCards.any((f) => f.id == l.id)) {
+                  hiddenCards.add(l);
+                }
               }
-            }
 
-            // Build hidden cards (all other championships not in favorites)
-            final List<ChampionshipInfo> hiddenCards = [];
-            for (final l in _allLeagues) {
-              if (!favoriteCards.any((f) => f.id == l.id)) {
-                hiddenCards.add(l);
-              }
-            }
+              // Search query filtering
+              final searchQuery = _searchController.text.trim().toLowerCase();
+              final List<ChampionshipInfo> displayedFavorites =
+                  searchQuery.isEmpty
+                  ? favoriteCards
+                  : favoriteCards
+                        .where(
+                          (c) =>
+                              c.name.toLowerCase().contains(searchQuery) ||
+                              (c.slug ?? '').toLowerCase().contains(
+                                searchQuery,
+                              ),
+                        )
+                        .toList();
 
-            // Search query filtering
-            final searchQuery = _searchController.text.trim().toLowerCase();
-            final List<ChampionshipInfo> displayedFavorites = searchQuery.isEmpty
-                ? favoriteCards
-                : favoriteCards
-                    .where((c) =>
-                        c.name.toLowerCase().contains(searchQuery) ||
-                        (c.slug ?? '').toLowerCase().contains(searchQuery))
-                    .toList();
+              final List<ChampionshipInfo> displayedHidden = searchQuery.isEmpty
+                  ? hiddenCards
+                  : hiddenCards
+                        .where(
+                          (c) =>
+                              c.name.toLowerCase().contains(searchQuery) ||
+                              (c.slug ?? '').toLowerCase().contains(
+                                searchQuery,
+                              ),
+                        )
+                        .toList();
 
-            final List<ChampionshipInfo> displayedHidden = searchQuery.isEmpty
-                ? hiddenCards
-                : hiddenCards
-                    .where((c) =>
-                        c.name.toLowerCase().contains(searchQuery) ||
-                        (c.slug ?? '').toLowerCase().contains(searchQuery))
-                    .toList();
+              final isFavoritesTab = _activeTab == StandingsTab.favorites;
+              final currentList = isFavoritesTab
+                  ? displayedFavorites
+                  : displayedHidden;
 
-            final isFavoritesTab = _activeTab == StandingsTab.favorites;
-            final currentList =
-                isFavoritesTab ? displayedFavorites : displayedHidden;
-
-            return Column(
-              children: [
-                // 1. Top Brand Bar (identical to Home screen style)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      AppBrandLogo(
-                        size: 32,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        '154Score',
-                        style: AppTypography.getHeadingLarge(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
+              return Column(
+                children: [
+                  // 1. Top Brand Bar (identical to Home screen style)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        AppBrandLogo(size: 32, isDark: isDark),
+                        const SizedBox(width: 10),
+                        Text(
+                          '154Score',
+                          style:
+                              AppTypography.getHeadingLarge(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                // 2. Capsule Search Bar (Pinned)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: _buildSearchBar(
-                    context,
-                    isDark: isDark,
-                    l10n: l10n,
-                    surfaceBg: surfaceBg,
-                    cardBorder: cardBorder,
+                  // 2. Capsule Search Bar (Pinned)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: _buildSearchBar(
+                      context,
+                      isDark: isDark,
+                      l10n: l10n,
+                      surfaceBg: surfaceBg,
+                      cardBorder: cardBorder,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                // 3. YallaShoot 2-Segment Control Pill with App Brand Colors
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildSegmentControl(
-                    context,
-                    favoritesCount: favoriteCards.length,
-                    hiddenCount: hiddenCards.length,
-                    isDark: isDark,
-                    l10n: l10n,
-                    primary: primary,
-                    surfaceBg: surfaceBg,
-                    cardBorder: cardBorder,
+                  // 3. YallaShoot 2-Segment Control Pill with App Brand Colors
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildSegmentControl(
+                      context,
+                      favoritesCount: favoriteCards.length,
+                      hiddenCount: hiddenCards.length,
+                      isDark: isDark,
+                      l10n: l10n,
+                      primary: primary,
+                      surfaceBg: surfaceBg,
+                      cardBorder: cardBorder,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // 4. Scrollable Content Area
-                Expanded(
-                  child: RefreshIndicator(
-                    color: primary,
-                    onRefresh: () async {
-                      try {
-                        await _fetchRankings(
-                          search: _searchController.text.trim(),
-                        ).timeout(const Duration(milliseconds: 3500));
-                      } catch (_) {}
-                    },
-                    child: _isLoading && _allLeagues.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: _buildLoadingSkeletons(
-                              isDark,
-                              cardBg,
-                              cardBorder,
+                  // 4. Scrollable Content Area
+                  Expanded(
+                    child: RefreshIndicator(
+                      color: primary,
+                      onRefresh: () async {
+                        try {
+                          await _fetchRankings(
+                            search: _searchController.text.trim(),
+                          ).timeout(const Duration(milliseconds: 3500));
+                        } catch (_) {}
+                      },
+                      child: _isLoading && _allLeagues.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: _buildLoadingSkeletons(
+                                isDark,
+                                cardBg,
+                                cardBorder,
+                              ),
+                            )
+                          : _errorMessage != null && _allLeagues.isEmpty
+                          ? ErrorView(
+                              message: _errorMessage!,
+                              onRetry: () => _fetchRankings(),
+                            )
+                          : currentList.isEmpty
+                          ? _buildEmptyState(
+                              isFavorites: isFavoritesTab,
+                              isSearching: searchQuery.isNotEmpty,
+                              isDark: isDark,
+                              cardBg: cardBg,
+                              cardBorder: cardBorder,
+                              primary: primary,
+                              l10n: l10n,
+                            )
+                          : isFavoritesTab && searchQuery.isEmpty
+                          ? ReorderableListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
+                              itemCount: displayedFavorites.length,
+                              buildDefaultDragHandles: false,
+                              // ignore: deprecated_member_use
+                              onReorder: (oldIndex, newIndex) {
+                                _onReorderFavorites(
+                                  context,
+                                  oldIndex,
+                                  newIndex,
+                                  favoriteCards,
+                                );
+                              },
+                              itemBuilder: (context, index) {
+                                final item = displayedFavorites[index];
+                                return _buildChampionshipCard(
+                                  key: ValueKey('fav_${item.id}_$index'),
+                                  context: context,
+                                  item: item,
+                                  index: index,
+                                  isFavorite: true,
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                  isSearching: false,
+                                  cardBg: cardBg,
+                                  cardBorder: cardBorder,
+                                  onToggleStar: () => _toggleFavoriteItem(
+                                    context,
+                                    item,
+                                    favoriteCards,
+                                  ),
+                                );
+                              },
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
+                              itemCount: currentList.length,
+                              itemBuilder: (context, index) {
+                                final item = currentList[index];
+                                return _buildChampionshipCard(
+                                  key: ValueKey('item_${item.id}_$index'),
+                                  context: context,
+                                  item: item,
+                                  index: index,
+                                  isFavorite: isFavoritesTab,
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                  isSearching: searchQuery.isNotEmpty,
+                                  cardBg: cardBg,
+                                  cardBorder: cardBorder,
+                                  onToggleStar: () => _toggleFavoriteItem(
+                                    context,
+                                    item,
+                                    favoriteCards,
+                                  ),
+                                );
+                              },
                             ),
-                          )
-                        : _errorMessage != null && _allLeagues.isEmpty
-                            ? ErrorView(
-                                message: _errorMessage!,
-                                onRetry: () => _fetchRankings(),
-                              )
-                            : currentList.isEmpty
-                                ? _buildEmptyState(
-                                    isFavorites: isFavoritesTab,
-                                    isSearching: searchQuery.isNotEmpty,
-                                    isDark: isDark,
-                                    cardBg: cardBg,
-                                    cardBorder: cardBorder,
-                                    primary: primary,
-                                    l10n: l10n,
-                                  )
-                                : isFavoritesTab && searchQuery.isEmpty
-                                    ? ReorderableListView.builder(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 4,
-                                        ),
-                                        itemCount: displayedFavorites.length,
-                                        buildDefaultDragHandles: false,
-                                        // ignore: deprecated_member_use
-                                        onReorder: (oldIndex, newIndex) {
-                                          _onReorderFavorites(
-                                            context,
-                                            oldIndex,
-                                            newIndex,
-                                            favoriteCards,
-                                          );
-                                        },
-                                        itemBuilder: (context, index) {
-                                          final item =
-                                              displayedFavorites[index];
-                                          return _buildChampionshipCard(
-                                            key: ValueKey(
-                                              'fav_${item.id}_$index',
-                                            ),
-                                            context: context,
-                                            item: item,
-                                            index: index,
-                                            isFavorite: true,
-                                            isDark: isDark,
-                                            isArabic: isArabic,
-                                            isSearching: false,
-                                            cardBg: cardBg,
-                                            cardBorder: cardBorder,
-                                            onToggleStar: () =>
-                                                _toggleFavoriteItem(
-                                              context,
-                                              item,
-                                              favoriteCards,
-                                            ),
-                                          );
-                                        },
-                                      )
-                                    : ListView.builder(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 4,
-                                        ),
-                                        itemCount: currentList.length,
-                                        itemBuilder: (context, index) {
-                                          final item = currentList[index];
-                                          return _buildChampionshipCard(
-                                            key: ValueKey(
-                                              'item_${item.id}_$index',
-                                            ),
-                                            context: context,
-                                            item: item,
-                                            index: index,
-                                            isFavorite: isFavoritesTab,
-                                            isDark: isDark,
-                                            isArabic: isArabic,
-                                            isSearching:
-                                                searchQuery.isNotEmpty,
-                                            cardBg: cardBg,
-                                            cardBorder: cardBorder,
-                                            onToggleStar: () =>
-                                                _toggleFavoriteItem(
-                                              context,
-                                              item,
-                                              favoriteCards,
-                                            ),
-                                          );
-                                        },
-                                      ),
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -718,10 +753,7 @@ class _StandingsViewState extends State<StandingsView> {
       decoration: BoxDecoration(
         color: surfaceBg,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: cardBorder,
-          width: 0.8,
-        ),
+        border: Border.all(color: cardBorder, width: 0.8),
       ),
       child: TextField(
         controller: _searchController,
@@ -781,10 +813,7 @@ class _StandingsViewState extends State<StandingsView> {
       decoration: BoxDecoration(
         color: surfaceBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: cardBorder,
-          width: 0.8,
-        ),
+        border: Border.all(color: cardBorder, width: 0.8),
       ),
       child: Row(
         children: [
@@ -816,8 +845,8 @@ class _StandingsViewState extends State<StandingsView> {
                         color: isFavoritesActive
                             ? Colors.white
                             : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary),
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -830,8 +859,8 @@ class _StandingsViewState extends State<StandingsView> {
                           color: isFavoritesActive
                               ? Colors.white
                               : (isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary),
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -844,8 +873,8 @@ class _StandingsViewState extends State<StandingsView> {
                           color: isFavoritesActive
                               ? Colors.black.withValues(alpha: 0.22)
                               : (isDark
-                                  ? AppColors.darkCard
-                                  : AppColors.lightCardElevated),
+                                    ? AppColors.darkCard
+                                    : AppColors.lightCardElevated),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -856,8 +885,8 @@ class _StandingsViewState extends State<StandingsView> {
                             color: isFavoritesActive
                                 ? Colors.white
                                 : (isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary),
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary),
                           ),
                         ),
                       ),
@@ -896,8 +925,8 @@ class _StandingsViewState extends State<StandingsView> {
                         color: !isFavoritesActive
                             ? Colors.white
                             : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary),
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -910,8 +939,8 @@ class _StandingsViewState extends State<StandingsView> {
                           color: !isFavoritesActive
                               ? Colors.white
                               : (isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary),
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -924,8 +953,8 @@ class _StandingsViewState extends State<StandingsView> {
                           color: !isFavoritesActive
                               ? Colors.black.withValues(alpha: 0.22)
                               : (isDark
-                                  ? AppColors.darkCard
-                                  : AppColors.lightCardElevated),
+                                    ? AppColors.darkCard
+                                    : AppColors.lightCardElevated),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -936,8 +965,8 @@ class _StandingsViewState extends State<StandingsView> {
                             color: !isFavoritesActive
                                 ? Colors.white
                                 : (isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary),
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary),
                           ),
                         ),
                       ),
@@ -967,10 +996,9 @@ class _StandingsViewState extends State<StandingsView> {
   }) {
     final title = item.name;
     final normalizedLogo = UrlHelper.normalizeImageUrl(item.logo);
-    final targetLeagueId =
-        (item.seasonId != null && item.seasonId!.isNotEmpty)
-            ? item.seasonId!
-            : item.id;
+    final targetLeagueId = (item.seasonId != null && item.seasonId!.isNotEmpty)
+        ? item.seasonId!
+        : item.id;
 
     return Container(
       key: key,
@@ -978,10 +1006,7 @@ class _StandingsViewState extends State<StandingsView> {
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: cardBorder,
-          width: 0.8,
-        ),
+        border: Border.all(color: cardBorder, width: 0.8),
       ),
       child: Material(
         color: Colors.transparent,
@@ -1051,7 +1076,8 @@ class _StandingsViewState extends State<StandingsView> {
                 SizedBox(
                   width: 34,
                   height: 34,
-                  child: (normalizedLogo != null &&
+                  child:
+                      (normalizedLogo != null &&
                           UrlHelper.isValidImageUrl(normalizedLogo))
                       ? CachedNetworkImage(
                           imageUrl: normalizedLogo,
@@ -1112,8 +1138,8 @@ class _StandingsViewState extends State<StandingsView> {
                       color: isFavorite
                           ? AppColors.yellowCard
                           : (isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted),
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted),
                       size: 24,
                     ),
                   ),
@@ -1145,7 +1171,9 @@ class _StandingsViewState extends State<StandingsView> {
               Icon(
                 Icons.search_off_rounded,
                 size: 48,
-                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
               ),
               const SizedBox(height: 12),
               Text(
@@ -1171,9 +1199,7 @@ class _StandingsViewState extends State<StandingsView> {
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: cardBorder,
-          ),
+          border: Border.all(color: cardBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1197,8 +1223,8 @@ class _StandingsViewState extends State<StandingsView> {
               isFavorites
                   ? l10n.translate('no_favorite_championships')
                   : (l10n.isArabic
-                      ? 'لا توجد بطولات مخفية'
-                      : 'No hidden championships'),
+                        ? 'لا توجد بطولات مخفية'
+                        : 'No hidden championships'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -1212,8 +1238,8 @@ class _StandingsViewState extends State<StandingsView> {
               isFavorites
                   ? l10n.translate('no_favorite_championships_hint')
                   : (l10n.isArabic
-                      ? 'اضغط على النجمة بجانب أي بطولة لإخفائها'
-                      : 'Tap the star on any competition to manage it'),
+                        ? 'اضغط على النجمة بجانب أي بطولة لإخفائها'
+                        : 'Tap the star on any competition to manage it'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
@@ -1228,11 +1254,7 @@ class _StandingsViewState extends State<StandingsView> {
     );
   }
 
-  Widget _buildLoadingSkeletons(
-    bool isDark,
-    Color cardBg,
-    Color cardBorder,
-  ) {
+  Widget _buildLoadingSkeletons(bool isDark, Color cardBg, Color cardBorder) {
     return Skeletonizer(
       enabled: true,
       child: Column(
@@ -1244,9 +1266,7 @@ class _StandingsViewState extends State<StandingsView> {
             decoration: BoxDecoration(
               color: cardBg,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: cardBorder,
-              ),
+              border: Border.all(color: cardBorder),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(

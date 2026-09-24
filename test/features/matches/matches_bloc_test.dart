@@ -31,6 +31,7 @@ void main() {
         .thenAnswer((_) => const Stream<LiveMatchUpdate>.empty());
     when(() => mockStorage.getLanguage()).thenReturn('en');
     when(() => mockStorage.getTimezoneOffset()).thenReturn(3);
+    when(() => mockStorage.getTimeFormat()).thenReturn('24h');
     when(() => mockStorage.getFavoriteMatches()).thenReturn([]);
     when(() => mockStorage.getFavoriteCompetitions()).thenReturn([]);
     when(() => mockStorage.getFavoriteTeams()).thenReturn([]);
@@ -44,8 +45,10 @@ void main() {
         slug: any(named: 'slug'),
       ),
     ).thenReturn(false);
-    when(() => mockStorage.setMatchesFilter(any())).thenAnswer((_) async => true);
-    when(() => mockStorage.setMatchesSortOrder(any())).thenAnswer((_) async => true);
+    when(() => mockStorage.setMatchesFilter(any()))
+        .thenAnswer((_) async => true);
+    when(() => mockStorage.setMatchesSortOrder(any()))
+        .thenAnswer((_) async => true);
   });
 
   final testDate = DateTime(2026, 8, 27);
@@ -137,12 +140,21 @@ void main() {
         allLeagues: testLeagues,
         filteredLeagues: testLeagues,
       ),
-      act: (bloc) => bloc.add(const ChangeFilterEvent(MatchFilterType.favorites)),
+      act: (bloc) =>
+          bloc.add(const ChangeFilterEvent(MatchFilterType.favorites)),
       expect: () => [
         isA<MatchesState>()
-            .having((s) => s.activeFilter, 'activeFilter', MatchFilterType.favorites)
+            .having(
+              (s) => s.activeFilter,
+              'activeFilter',
+              MatchFilterType.favorites,
+            )
             .having((s) => s.filteredLeagues.length, 'filtered length', 1)
-            .having((s) => s.filteredLeagues.first.matches.first.isFavorite, 'isFavorite', true),
+            .having(
+              (s) => s.filteredLeagues.first.matches.first.isFavorite,
+              'isFavorite',
+              true,
+            ),
       ],
     );
 
@@ -167,7 +179,11 @@ void main() {
       expect: () => [
         isA<MatchesState>()
             .having((s) => s.filteredLeagues.length, 'filtered length', 1)
-            .having((s) => s.filteredLeagues.first.matches.first.isFavorite, 'isFavorite', true),
+            .having(
+              (s) => s.filteredLeagues.first.matches.first.isFavorite,
+              'isFavorite',
+              true,
+            ),
       ],
     );
   });

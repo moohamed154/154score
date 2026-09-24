@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -7,8 +9,14 @@ import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/widgets/app_brand_logo.dart';
+import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/matches/presentation/bloc/matches_bloc.dart';
+import '../../features/matches/presentation/bloc/matches_event.dart';
 import '../../features/matches/presentation/bloc/matches_state.dart';
+import '../../features/settings/presentation/cubit/settings_cubits.dart';
+import '../../features/standings/presentation/bloc/standings_bloc.dart';
+import '../../features/transfers/presentation/bloc/transfers_bloc.dart';
+import '../../features/videos/presentation/bloc/videos_bloc.dart';
 
 class AppScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -22,99 +30,162 @@ class AppScaffold extends StatelessWidget {
     final isArabic = l10n.isArabic;
     final width = MediaQuery.of(context).size.width;
 
-    return BlocBuilder<MatchesBloc, MatchesState>(
-      builder: (context, matchesState) {
-        final liveCount = matchesState.liveMatchesCount;
+    return BlocConsumer<LocaleCubit, LocaleState>(
+      listenWhen: (prev, curr) => prev.locale != curr.locale,
+      listener: (context, localeState) {
+        final lang = localeState.locale.languageCode;
+        final token = localeState.requestToken;
 
-        // Desktop Layout (> 1024px)
-        if (width >= AppDimensions.tabletMaxWidth) {
-          return Scaffold(
-            body: Row(
-              children: [
-                _buildDesktopSidebar(context, isDark, isArabic, liveCount),
-                const VerticalDivider(width: 1),
-                Expanded(child: navigationShell),
-              ],
-            ),
-          );
-        }
+        final matchesCompleter = Completer<void>();
+        final standingsCompleter = Completer<void>();
+        final transfersCompleter = Completer<void>();
+        final videosCompleter = Completer<void>();
+        final homeCompleter = Completer<void>();
 
-        // Tablet Layout (768px - 1024px)
-        if (width >= AppDimensions.mobileMaxWidth) {
-          return Scaffold(
-            body: Row(
-              children: [
-                NavigationRail(
-                  selectedIndex: navigationShell.currentIndex,
-                  onDestinationSelected: (index) => _onTap(context, index),
-                  labelType: NavigationRailLabelType.all,
-                  destinations: _buildRailDestinations(l10n, liveCount),
+        context.read<MatchesBloc>().add(
+          ChangeMatchesLanguageEvent(lang, completer: matchesCompleter),
+        );
+        context.read<StandingsBloc>().add(
+          ChangeStandingsLanguageEvent(lang, completer: standingsCompleter),
+        );
+        context.read<TransfersBloc>().add(
+          ChangeTransfersLanguageEvent(lang, completer: transfersCompleter),
+        );
+        context.read<VideosBloc>().add(
+          ChangeVideosLanguageEvent(lang, completer: videosCompleter),
+        );
+        context.read<HomeCubit>().changeLanguage(
+          lang,
+          completer: homeCompleter,
+        );
+
+        // When all background refreshes finish (or timeout), notify LocaleCubit to hide indicator
+        Future.wait([
+          matchesCompleter.future,
+          standingsCompleter.future,
+          transfersCompleter.future,
+          videosCompleter.future,
+          homeCompleter.future,
+        ]).timeout(const Duration(seconds: 5), onTimeout: () => []).then((_) {
+          if (context.mounted) {
+            context.read<LocaleCubit>().notifyRefreshCompleted(token: token);
+          }
+        });
+      },
+      builder: (context, localeState) {
+        Widget contentWithIndicator() {
+          return Stack(
+            children: [
+              navigationShell,
+              if (localeState.showIndicator)
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: LinearProgressIndicator(
+                    minHeight: 2.5,
+                    backgroundColor: Colors.transparent,
+                    color: AppColors.primary,
+                  ),
                 ),
-                const VerticalDivider(width: 1),
-                Expanded(child: navigationShell),
-              ],
-            ),
-          );
-        }
-
-        // Map shell branch index → bottom nav display index
-        // Branch 7 (Settings) → nav item 5; branches 5/6 not shown → fallback 0
-        final navIndex = switch (navigationShell.currentIndex) {
-          >= 0 && <= 4 => navigationShell.currentIndex,
-          7 => 5,
-          _ => 0,
-        };
-
-        return Scaffold(
-          body: navigationShell,
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: navIndex,
-            onTap: (index) => _onTap(context, index),
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home_outlined),
-                activeIcon: const Icon(Icons.home_rounded),
-                label: l10n.translate('nav_home'),
-              ),
-              BottomNavigationBarItem(
-                icon: Badge(
-                  isLabelVisible: liveCount > 0,
-                  label: Text(liveCount.toString()),
-                  backgroundColor: AppColors.liveRed,
-                  child: const Icon(Icons.sports_soccer_outlined),
-                ),
-                activeIcon: Badge(
-                  isLabelVisible: liveCount > 0,
-                  label: Text(liveCount.toString()),
-                  backgroundColor: AppColors.liveRed,
-                  child: const Icon(Icons.sports_soccer_rounded),
-                ),
-                label: l10n.translate('nav_matches'),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.table_chart_outlined),
-                activeIcon: const Icon(Icons.table_chart_rounded),
-                label: l10n.translate('nav_standings'),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.swap_horiz_outlined),
-                activeIcon: const Icon(Icons.swap_horiz_rounded),
-                label: l10n.translate('nav_transfers'),
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.video_library_outlined),
-                activeIcon: const Icon(Icons.video_library_rounded),
-                label: l10n.translate('nav_videos'),
-              ),
-
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.more_horiz_outlined),
-                activeIcon: const Icon(Icons.more_horiz_rounded),
-                label: l10n.translate('nav_settings'),
-              ),
-
             ],
-          ),
+          );
+        }
+
+        return BlocBuilder<MatchesBloc, MatchesState>(
+          builder: (context, matchesState) {
+            final liveCount = matchesState.liveMatchesCount;
+
+            // Desktop Layout (> 1024px)
+            if (width >= AppDimensions.tabletMaxWidth) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    _buildDesktopSidebar(context, isDark, isArabic, liveCount),
+                    const VerticalDivider(width: 1),
+                    Expanded(child: contentWithIndicator()),
+                  ],
+                ),
+              );
+            }
+
+            // Tablet Layout (768px - 1024px)
+            if (width >= AppDimensions.mobileMaxWidth) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    NavigationRail(
+                      selectedIndex: navigationShell.currentIndex,
+                      onDestinationSelected: (index) => _onTap(context, index),
+                      labelType: NavigationRailLabelType.all,
+                      destinations: _buildRailDestinations(l10n, liveCount),
+                    ),
+                    const VerticalDivider(width: 1),
+                    Expanded(child: contentWithIndicator()),
+                  ],
+                ),
+              );
+            }
+
+            // Map shell branch index → bottom nav display index
+            // Branch 7 (Settings) → nav item 5; branches 5/6 not shown → fallback 0
+            final navIndex = switch (navigationShell.currentIndex) {
+              >= 0 && <= 4 => navigationShell.currentIndex,
+              7 => 5,
+              _ => 0,
+            };
+
+            return Scaffold(
+              body: contentWithIndicator(),
+              bottomNavigationBar: BottomNavigationBar(
+                currentIndex: navIndex,
+                onTap: (index) => _onTap(context, index),
+                items: [
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.home_outlined),
+                    activeIcon: const Icon(Icons.home_rounded),
+                    label: l10n.translate('nav_home'),
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Badge(
+                      isLabelVisible: liveCount > 0,
+                      label: Text(liveCount.toString()),
+                      backgroundColor: AppColors.liveRed,
+                      child: const Icon(Icons.sports_soccer_outlined),
+                    ),
+                    activeIcon: Badge(
+                      isLabelVisible: liveCount > 0,
+                      label: Text(liveCount.toString()),
+                      backgroundColor: AppColors.liveRed,
+                      child: const Icon(Icons.sports_soccer_rounded),
+                    ),
+                    label: l10n.translate('nav_matches'),
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.table_chart_outlined),
+                    activeIcon: const Icon(Icons.table_chart_rounded),
+                    label: l10n.translate('nav_standings'),
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.swap_horiz_outlined),
+                    activeIcon: const Icon(Icons.swap_horiz_rounded),
+                    label: l10n.translate('nav_transfers'),
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.video_library_outlined),
+                    activeIcon: const Icon(Icons.video_library_rounded),
+                    label: l10n.translate('nav_videos'),
+                  ),
+
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.more_horiz_outlined),
+                    activeIcon: const Icon(Icons.more_horiz_rounded),
+                    label: l10n.translate('nav_settings'),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -128,7 +199,6 @@ class AppScaffold extends StatelessWidget {
       initialLocation: branchIndex == navigationShell.currentIndex,
     );
   }
-
 
   List<NavigationRailDestination> _buildRailDestinations(
     AppLocalizations l10n,
@@ -217,10 +287,7 @@ class AppScaffold extends StatelessWidget {
           // Branding
           Row(
             children: [
-              AppBrandLogo(
-                size: 34,
-                isDark: isDark,
-              ),
+              AppBrandLogo(size: 34, isDark: isDark),
               const SizedBox(width: 10),
               Text(
                 '154Score',

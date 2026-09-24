@@ -10,6 +10,7 @@ import 'package:score154/core/localization/app_localizations.dart';
 import 'package:score154/core/utils/url_helper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+
 import '../../bloc/match_details_bloc.dart';
 
 /// Renders a single player node positioned tactically on the pitch board.
@@ -30,11 +31,13 @@ class PitchPlayerNode extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
 
-    final ringColor = teamColor ??
+    final ringColor =
+        teamColor ??
         (isHome ? const Color(0xFF10B981) : const Color(0xFF38BDF8));
 
     return Semantics(
-      label: '${player.name}, #${player.number ?? '-'}, ${player.position ?? ''}',
+      label:
+          '${player.name}, #${player.number ?? '-'}, ${player.position ?? ''}',
       button: true,
       child: GestureDetector(
         onTap: () => showLineupPlayerModal(context, player),
@@ -54,10 +57,7 @@ class PitchPlayerNode extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 2.0,
-                    ),
+                    border: Border.all(color: Colors.white, width: 2.0),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.4),
@@ -67,18 +67,23 @@ class PitchPlayerNode extends StatelessWidget {
                     ],
                   ),
                   child: ClipOval(
-                    child: (UrlHelper.normalizePlayerPhotoUrl(player.photo) != null &&
+                    child:
+                        (UrlHelper.normalizePlayerPhotoUrl(player.photo) !=
+                                null &&
                             UrlHelper.isValidImageUrl(
                               UrlHelper.normalizePlayerPhotoUrl(player.photo),
                             ))
                         ? CachedNetworkImage(
-                            imageUrl: UrlHelper.normalizePlayerPhotoUrl(player.photo)!,
+                            imageUrl: UrlHelper.normalizePlayerPhotoUrl(
+                              player.photo,
+                            )!,
                             width: 44,
                             height: 44,
                             fit: BoxFit.cover,
                             memCacheWidth: 90,
                             memCacheHeight: 90,
-                            placeholder: (_, __) => _buildFallbackJersey(ringColor),
+                            placeholder: (_, __) =>
+                                _buildFallbackJersey(ringColor),
                             errorWidget: (_, __, ___) =>
                                 _buildFallbackJersey(ringColor),
                           )
@@ -181,7 +186,9 @@ class PitchPlayerNode extends StatelessWidget {
                                 ],
                                 const CustomPaint(
                                   size: Size(11, 7.5),
-                                  painter: FootballBootPainter(color: Colors.white),
+                                  painter: FootballBootPainter(
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ],
                             ),
@@ -235,7 +242,9 @@ class PitchPlayerNode extends StatelessWidget {
                 // Captain 'C' Badge
                 if (player.isCaptain)
                   Positioned(
-                    top: (player.yellowCards > 0 || player.redCards > 0) ? 9 : -2,
+                    top: (player.yellowCards > 0 || player.redCards > 0)
+                        ? 9
+                        : -2,
                     left: -3,
                     child: Container(
                       width: 15,
@@ -254,12 +263,13 @@ class PitchPlayerNode extends StatelessWidget {
                       alignment: Alignment.center,
                       child: Text(
                         isArabic ? 'ق' : 'C',
-                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.outfit)(
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black,
-                          height: 1.0,
-                        ),
+                        style:
+                            (isArabic ? GoogleFonts.cairo : GoogleFonts.outfit)(
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black,
+                              height: 1.0,
+                            ),
                       ),
                     ),
                   ),
@@ -275,7 +285,10 @@ class PitchPlayerNode extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF0F172A),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFFFD700), width: 1.0),
+                        border: Border.all(
+                          color: const Color(0xFFFFD700),
+                          width: 1.0,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.4),
@@ -371,7 +384,10 @@ class PitchPlayerNode extends StatelessWidget {
                     bottom: -3,
                     left: 1,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 3,
+                        vertical: 1.5,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF0F172A),
                         borderRadius: BorderRadius.circular(4),
@@ -481,10 +497,7 @@ class PitchPlayerNode extends StatelessWidget {
 
 /// Global reusable interactive bottom sheet displaying player match performance,
 /// in-game contributions (goals, assists, cards, substitutions), and MOTM highlight.
-void showLineupPlayerModal(
-  BuildContext context,
-  LineupPlayerEntity p,
-) {
+void showLineupPlayerModal(BuildContext context, LineupPlayerEntity p) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final l10n = AppLocalizations.of(context);
   final isArabic = l10n.isArabic;
@@ -527,7 +540,8 @@ void showLineupPlayerModal(
     }
   } catch (_) {}
 
-  final hasContributions = p.goals > 0 ||
+  final hasContributions =
+      p.goals > 0 ||
       p.assists > 0 ||
       p.yellowCards > 0 ||
       p.redCards > 0 ||
@@ -588,19 +602,25 @@ void showLineupPlayerModal(
                         border: Border.all(color: AppColors.primary, width: 2),
                       ),
                       child: ClipOval(
-                        child: (UrlHelper.normalizePlayerPhotoUrl(p.photo) != null &&
+                        child:
+                            (UrlHelper.normalizePlayerPhotoUrl(p.photo) !=
+                                    null &&
                                 UrlHelper.isValidImageUrl(
                                   UrlHelper.normalizePlayerPhotoUrl(p.photo),
                                 ))
                             ? CachedNetworkImage(
-                                imageUrl: UrlHelper.normalizePlayerPhotoUrl(p.photo)!,
+                                imageUrl: UrlHelper.normalizePlayerPhotoUrl(
+                                  p.photo,
+                                )!,
                                 width: 58,
                                 height: 58,
                                 fit: BoxFit.cover,
                                 memCacheWidth: 120,
                                 memCacheHeight: 120,
-                                placeholder: (_, __) => _buildPlayerJerseyPlaceholder(p.number),
-                                errorWidget: (_, __, ___) => _buildPlayerJerseyPlaceholder(p.number),
+                                placeholder: (_, __) =>
+                                    _buildPlayerJerseyPlaceholder(p.number),
+                                errorWidget: (_, __, ___) =>
+                                    _buildPlayerJerseyPlaceholder(p.number),
                               )
                             : _buildPlayerJerseyPlaceholder(p.number),
                       ),
@@ -672,14 +692,15 @@ void showLineupPlayerModal(
                                 (p.isGoalkeeper
                                     ? (isArabic ? 'حارس المرمى' : 'Goalkeeper')
                                     : '-'),
-                            style: AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                            ),
+                            style:
+                                AppTypography.getBodySmall(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                ),
                           ),
                         ],
                       ),
@@ -766,8 +787,9 @@ void showLineupPlayerModal(
                       color: isDark
                           ? AppColors.darkCardElevated
                           : AppColors.lightCardElevated,
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       border: Border.all(
                         color: isDark
                             ? AppColors.darkBorder
@@ -782,7 +804,9 @@ void showLineupPlayerModal(
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.15),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: const Icon(
@@ -796,15 +820,16 @@ void showLineupPlayerModal(
                               isArabic
                                   ? 'ما قدمه اللاعب في المباراة'
                                   : 'Player Match Contributions',
-                              style: (isArabic
-                                      ? GoogleFonts.cairo
-                                      : GoogleFonts.inter)(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 12.5,
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary,
-                              ),
+                              style:
+                                  (isArabic
+                                  ? GoogleFonts.cairo
+                                  : GoogleFonts.inter)(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12.5,
+                                    color: isDark
+                                        ? AppColors.darkTextPrimary
+                                        : AppColors.lightTextPrimary,
+                                  ),
                             ),
                           ],
                         ),
@@ -856,7 +881,8 @@ void showLineupPlayerModal(
                                 isDark: isDark,
                                 isArabic: isArabic,
                               ),
-                            if (p.substituteOut && (!p.isSubstitute || p.substituteIn))
+                            if (p.substituteOut &&
+                                (!p.isSubstitute || p.substituteIn))
                               _buildContributionBadge(
                                 icon: Icons.swap_horiz_rounded,
                                 label: isArabic
@@ -906,8 +932,9 @@ void showLineupPlayerModal(
                       color: isDark
                           ? AppColors.darkCardElevated
                           : AppColors.lightCardElevated,
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       border: Border.all(
                         color: isDark
                             ? AppColors.darkBorder
@@ -928,19 +955,20 @@ void showLineupPlayerModal(
                           child: Text(
                             isArabic
                                 ? (p.isStarter
-                                    ? 'شارك كأساسي في المباراة دون أحداث مسجلة'
-                                    : 'متواجد على مقاعد البدلاء دون مشاركة')
+                                      ? 'شارك كأساسي في المباراة دون أحداث مسجلة'
+                                      : 'متواجد على مقاعد البدلاء دون مشاركة')
                                 : (p.isStarter
-                                    ? 'Started the match with no logged cards/goals'
-                                    : 'Available on the substitute bench'),
-                            style: (isArabic
-                                    ? GoogleFonts.cairo
-                                    : GoogleFonts.inter)(
-                              fontSize: 12,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                            ),
+                                      ? 'Started the match with no logged cards/goals'
+                                      : 'Available on the substitute bench'),
+                            style:
+                                (isArabic
+                                ? GoogleFonts.cairo
+                                : GoogleFonts.inter)(
+                                  fontSize: 12,
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                ),
                           ),
                         ),
                       ],
@@ -1027,7 +1055,8 @@ Widget _buildModalAttr({
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: badgeColor ??
+          color:
+              badgeColor ??
               (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(6),
         ),
@@ -1058,10 +1087,7 @@ Widget _buildContributionBadge({
     decoration: BoxDecoration(
       color: color.withValues(alpha: isDark ? 0.20 : 0.12),
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(
-        color: color.withValues(alpha: 0.45),
-        width: 0.8,
-      ),
+      border: Border.all(color: color.withValues(alpha: 0.45), width: 0.8),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,

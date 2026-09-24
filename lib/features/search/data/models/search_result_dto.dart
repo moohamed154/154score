@@ -16,9 +16,7 @@ class SearchResultDto {
     );
 
     final teams = _mapList(
-      data['teams'] as List<dynamic>? ??
-          data['team'] as List<dynamic>? ??
-          [],
+      data['teams'] as List<dynamic>? ?? data['team'] as List<dynamic>? ?? [],
       _mapTeam,
     );
 

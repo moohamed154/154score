@@ -51,8 +51,8 @@ abstract class LocalStorageService {
   bool isFavoriteMatch(String matchId);
 
   // Cached Rankings / Standings Directory
-  String? getCachedRankings();
-  Future<bool> setCachedRankings(String json);
+  String? getCachedRankings({String? lang});
+  Future<bool> setCachedRankings(String json, {String? lang});
 
   // Tips Persistence
   bool isReorderTipDismissed();
@@ -76,7 +76,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyTimezoneOffset = 'app_timezone_offset';
   static const String _keyFavoriteTeams = 'app_favorite_teams';
   static const String _keyFavoriteCompetitions = 'app_favorite_competitions';
-  static const String _keyFavoriteCompetitionTitles = 'app_favorite_competition_titles';
+  static const String _keyFavoriteCompetitionTitles =
+      'app_favorite_competition_titles';
   static const String _keyFavoriteMatches = 'app_favorite_matches';
   static const String _keyCachedRankings = 'app_cached_rankings';
   static const String _keyReorderTipDismissed = 'app_reorder_tip_dismissed';
@@ -284,7 +285,12 @@ class LocalStorageServiceImpl implements LocalStorageService {
     String? slug,
   }) async {
     final list = getFavoriteCompetitions().toList();
-    final isFav = isFavoriteCompetition(compName: compName, id: id, name: name, slug: slug);
+    final isFav = isFavoriteCompetition(
+      compName: compName,
+      id: id,
+      name: name,
+      slug: slug,
+    );
 
     final targets = <String>{};
     void addTarget(String? s) {
@@ -323,8 +329,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
       final canonicalName = (name != null && name.trim().isNotEmpty)
           ? name.trim()
           : ((compName != null && compName.trim().isNotEmpty)
-              ? compName.trim()
-              : (id?.trim() ?? ''));
+                ? compName.trim()
+                : (id?.trim() ?? ''));
 
       if (canonicalName.isNotEmpty && !list.contains(canonicalName)) {
         list.add(canonicalName);
@@ -359,13 +365,16 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
-  String? getCachedRankings() {
-    return _prefs.getString(_keyCachedRankings);
+  String? getCachedRankings({String? lang}) {
+    final effectiveLang = lang ?? getLanguage();
+    return _prefs.getString('${_keyCachedRankings}_$effectiveLang') ??
+        _prefs.getString(_keyCachedRankings);
   }
 
   @override
-  Future<bool> setCachedRankings(String json) {
-    return _prefs.setString(_keyCachedRankings, json);
+  Future<bool> setCachedRankings(String json, {String? lang}) {
+    final effectiveLang = lang ?? getLanguage();
+    return _prefs.setString('${_keyCachedRankings}_$effectiveLang', json);
   }
 
   @override
@@ -398,4 +407,3 @@ class LocalStorageServiceImpl implements LocalStorageService {
     return _prefs.setString(_keyMatchesSortOrder, sortOrder);
   }
 }
-

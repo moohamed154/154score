@@ -54,7 +54,8 @@ class LiveClockSync {
     int second,
     int elapsedExtraSeconds,
     int totalExtraMinutes,
-  })? getLiveClock(String? matchId) {
+  })?
+  getLiveClock(String? matchId) {
     if (matchId == null) return null;
     final cleanId = _cleanMatchId(matchId);
     final record = _clocks[cleanId];

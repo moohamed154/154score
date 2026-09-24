@@ -83,9 +83,9 @@ class FavoritesView extends StatelessWidget {
                       label: Text(displayTitle),
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
-                        context
-                            .read<FavoritesCubit>()
-                            .toggleCompetition(name: comp);
+                        context.read<FavoritesCubit>().toggleCompetition(
+                          name: comp,
+                        );
                       },
                     );
                   }).toList(),

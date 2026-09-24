@@ -28,6 +28,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   final Map<String, List<LeagueGroupEntity>> _cachedDateLeagues = {};
   final Map<String, DateTime> _cachedDateTimes = {};
 
+  static String _cacheKey(String dateStr, String lang) => '$dateStr-$lang';
+
   static MatchFilterType _parseSavedFilter(String? val) {
     if (val == null) return MatchFilterType.all;
     return MatchFilterType.values.firstWhere(
@@ -73,6 +75,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     on<ChangeTimezoneEvent>(_onChangeTimezone);
     on<ChangeTimeFormatEvent>(_onChangeTimeFormat);
     on<LiveMatchesSnapshotReceivedEvent>(_onLiveMatchesSnapshotReceived);
+    on<ChangeMatchesLanguageEvent>(_onChangeMatchesLanguage);
 
     // 1. Listen to Real-Time WebSocket updates
     try {
@@ -99,11 +102,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     Emitter<MatchesState> emit,
   ) async {
     final dateStr = DateFormatter.toApiDateString(event.date);
+    final lang = localStorageService.getLanguage();
+    final cacheKey = _cacheKey(dateStr, lang);
 
     // 1. SWR Instant Memory Cache: If already loaded, show cached data immediately (0ms)
-    if (!event.isRefresh && _cachedDateLeagues.containsKey(dateStr)) {
+    if (!event.isRefresh && _cachedDateLeagues.containsKey(cacheKey)) {
       final favMatches = localStorageService.getFavoriteMatches();
-      final cached = _cachedDateLeagues[dateStr]!.map((l) {
+      final cached = _cachedDateLeagues[cacheKey]!.map((l) {
         return l.copyWith(
           matches: l.matches.map((m) {
             return m.copyWith(isFavorite: favMatches.contains(m.id));
@@ -130,8 +135,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         ),
       );
 
-      final cachedTime = _cachedDateTimes[dateStr];
-      final isFresh = cachedTime != null &&
+      final cachedTime = _cachedDateTimes[cacheKey];
+      final isFresh =
+          cachedTime != null &&
           DateTime.now().difference(cachedTime) < const Duration(seconds: 20);
 
       if (isFresh) {
@@ -145,14 +151,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         state.copyWith(
           status: MatchesStatus.loading,
           selectedDate: event.date,
-          allLeagues: [],       // clear stale data → skeleton shows
+          allLeagues: [], // clear stale data → skeleton shows
           filteredLeagues: [],
         ),
       );
     }
 
     try {
-      final lang = localStorageService.getLanguage();
       final offset = localStorageService.getTimezoneOffset();
 
       final result = await repository.getMatchesByDate(
@@ -181,8 +186,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           }).toList();
 
           // Update in-memory date cache
-          _cachedDateLeagues[dateStr] = populatedWithFavs;
-          _cachedDateTimes[dateStr] = DateTime.now();
+          _cachedDateLeagues[cacheKey] = populatedWithFavs;
+          _cachedDateTimes[cacheKey] = DateTime.now();
 
           final reconciledLeagues =
               RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(
@@ -222,7 +227,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         },
         onFailure: (failure) {
           // If we already have cached data displayed, don't clobber it with an error screen on silent revalidation
-          if (!_cachedDateLeagues.containsKey(dateStr)) {
+          if (!_cachedDateLeagues.containsKey(cacheKey)) {
             emit(
               state.copyWith(
                 status: MatchesStatus.error,
@@ -250,10 +255,12 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
     for (final date in event.dates) {
       final dateStr = DateFormatter.toApiDateString(date);
+      final cacheKey = _cacheKey(dateStr, lang);
 
       // Skip if already cached and fresh (< 60 s old)
-      final cachedTime = _cachedDateTimes[dateStr];
-      final isFresh = cachedTime != null &&
+      final cachedTime = _cachedDateTimes[cacheKey];
+      final isFresh =
+          cachedTime != null &&
           DateTime.now().difference(cachedTime) < const Duration(seconds: 60);
       if (isFresh) continue;
 
@@ -273,8 +280,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
                 }).toList(),
               );
             }).toList();
-            _cachedDateLeagues[dateStr] = populated;
-            _cachedDateTimes[dateStr] = DateTime.now();
+            _cachedDateLeagues[cacheKey] = populated;
+            _cachedDateTimes[cacheKey] = DateTime.now();
           },
           onFailure: (_) {}, // Silently ignore — preload is best-effort
         );
@@ -459,10 +466,12 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       sortOrder: state.sortOrder,
       query: state.searchQuery,
     );
-    emit(state.copyWith(
-      filteredLeagues: List.from(filtered),
-      timeFormat: event.format,
-    ));
+    emit(
+      state.copyWith(
+        filteredLeagues: List.from(filtered),
+        timeFormat: event.format,
+      ),
+    );
   }
 
   void _onLiveMatchReceived(
@@ -1071,14 +1080,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       };
       result.sort((a, b) {
         final aHasLive = a.matches.any(
-          (m) => MatchStatusHelper.isLive(
-            MatchStatusHelper.parseMatch(m),
-          ),
+          (m) => MatchStatusHelper.isLive(MatchStatusHelper.parseMatch(m)),
         );
         final bHasLive = b.matches.any(
-          (m) => MatchStatusHelper.isLive(
-            MatchStatusHelper.parseMatch(m),
-          ),
+          (m) => MatchStatusHelper.isLive(MatchStatusHelper.parseMatch(m)),
         );
         if (aHasLive && !bHasLive) return -1;
         if (!aHasLive && bHasLive) return 1;
@@ -1103,6 +1108,141 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     }
 
     return result;
+  }
+
+  Future<void> _onChangeMatchesLanguage(
+    ChangeMatchesLanguageEvent event,
+    Emitter<MatchesState> emit,
+  ) async {
+    final targetLang = event.languageCode;
+    final dateStr = DateFormatter.toApiDateString(state.selectedDate);
+    final targetCacheKey = _cacheKey(dateStr, targetLang);
+
+    final favMatches = localStorageService.getFavoriteMatches();
+
+    // 1. Instant Cache: If target language already cached, display immediately (0ms)
+    if (_cachedDateLeagues.containsKey(targetCacheKey)) {
+      final cached = _cachedDateLeagues[targetCacheKey]!.map((l) {
+        return l.copyWith(
+          matches: l.matches.map((m) {
+            return m.copyWith(isFavorite: favMatches.contains(m.id));
+          }).toList(),
+        );
+      }).toList();
+
+      final liveCount = _calculateLiveCount(cached);
+      final filtered = _applyFilters(
+        leagues: cached,
+        filter: state.activeFilter,
+        leagueId: state.selectedLeagueId,
+        leagueTitle: state.selectedLeagueTitle,
+        sortOrder: state.sortOrder,
+        query: state.searchQuery,
+      );
+
+      emit(
+        state.copyWith(
+          status: cached.isEmpty ? MatchesStatus.empty : MatchesStatus.success,
+          allLeagues: cached,
+          filteredLeagues: filtered,
+          liveMatchesCount: liveCount,
+          isLanguageRefreshing: false,
+          errorMessage: null,
+        ),
+      );
+      _syncLiveRoomsAndPoller();
+
+      final cachedTime = _cachedDateTimes[targetCacheKey];
+      final isFresh =
+          cachedTime != null &&
+          DateTime.now().difference(cachedTime) < const Duration(seconds: 30);
+      if (isFresh) {
+        if (event.completer != null && !event.completer!.isCompleted) {
+          event.completer!.complete();
+        }
+        return;
+      }
+    } else {
+      // 2. Uncached: KEEP CURRENT LEAGUES VISIBLE on screen!
+      // Do NOT set MatchesStatus.loading or clear allLeagues.
+      emit(state.copyWith(isLanguageRefreshing: true));
+    }
+
+    try {
+      final offset = localStorageService.getTimezoneOffset();
+      final result = await repository.getMatchesByDate(
+        date: dateStr,
+        lang: targetLang,
+        utcOffset: offset,
+      );
+
+      // 3. Race condition protection: ensure user hasn't switched away
+      final currentAppLang = localStorageService.getLanguage();
+      if (currentAppLang != targetLang) {
+        return;
+      }
+
+      result.fold(
+        onSuccess: (leagues) {
+          final populatedWithFavs = leagues.map((l) {
+            return l.copyWith(
+              matches: l.matches.map((m) {
+                return m.copyWith(isFavorite: favMatches.contains(m.id));
+              }).toList(),
+            );
+          }).toList();
+
+          _cachedDateLeagues[targetCacheKey] = populatedWithFavs;
+          _cachedDateTimes[targetCacheKey] = DateTime.now();
+
+          final reconciledLeagues =
+              RealtimeMergeEngine.reconcileRestLeaguesWithRealtime(
+                restLeagues: populatedWithFavs,
+                currentLeagues: state.allLeagues,
+              ).map((l) {
+                return l.copyWith(
+                  matches: l.matches.map((m) {
+                    return m.copyWith(isFavorite: favMatches.contains(m.id));
+                  }).toList(),
+                );
+              }).toList();
+
+          final liveCount = _calculateLiveCount(reconciledLeagues);
+          final filtered = _applyFilters(
+            leagues: reconciledLeagues,
+            filter: state.activeFilter,
+            leagueId: state.selectedLeagueId,
+            leagueTitle: state.selectedLeagueTitle,
+            sortOrder: state.sortOrder,
+            query: state.searchQuery,
+          );
+
+          emit(
+            state.copyWith(
+              status: reconciledLeagues.isEmpty
+                  ? MatchesStatus.empty
+                  : MatchesStatus.success,
+              allLeagues: reconciledLeagues,
+              filteredLeagues: filtered,
+              liveMatchesCount: liveCount,
+              isLanguageRefreshing: false,
+              errorMessage: null,
+            ),
+          );
+          _syncLiveRoomsAndPoller();
+        },
+        onFailure: (failure) {
+          // Keep existing visible data intact
+          emit(state.copyWith(isLanguageRefreshing: false));
+        },
+      );
+    } catch (_) {
+      emit(state.copyWith(isLanguageRefreshing: false));
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
+    }
   }
 
   @override

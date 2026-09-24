@@ -35,7 +35,12 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
     return await _standingsDataSource.getStandings(championshipId, lang: lang);
   }
 
-  MatchEntity _mapMatch(Map m, String? fallbackTeamName, String? fallbackLogo, String? leagueId) {
+  MatchEntity _mapMatch(
+    Map m,
+    String? fallbackTeamName,
+    String? fallbackLogo,
+    String? leagueId,
+  ) {
     final mId = m['match_id']?.toString() ?? '';
     final hTeam = m['home_team']?.toString() ?? '';
     final aTeam = m['away_team']?.toString() ?? '';
@@ -47,7 +52,9 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
     final mTime = m['time']?.toString();
     final champId = m['championship_id']?.toString() ?? leagueId;
     final champName = m['championship_name']?.toString();
-    final champLogo = UrlHelper.normalizeImageUrl(m['championship_logo']?.toString());
+    final champLogo = UrlHelper.normalizeImageUrl(
+      m['championship_logo']?.toString(),
+    );
 
     String? s1;
     String? s2;
@@ -76,8 +83,18 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
       team2: aTeam,
       score1: s1,
       score2: s2,
-      team1Logo: hLogo ?? (fallbackTeamName != null && hTeam.toLowerCase().contains(fallbackTeamName.toLowerCase()) ? fallbackLogo : null),
-      team2Logo: aLogo ?? (fallbackTeamName != null && aTeam.toLowerCase().contains(fallbackTeamName.toLowerCase()) ? fallbackLogo : null),
+      team1Logo:
+          hLogo ??
+          (fallbackTeamName != null &&
+                  hTeam.toLowerCase().contains(fallbackTeamName.toLowerCase())
+              ? fallbackLogo
+              : null),
+      team2Logo:
+          aLogo ??
+          (fallbackTeamName != null &&
+                  aTeam.toLowerCase().contains(fallbackTeamName.toLowerCase())
+              ? fallbackLogo
+              : null),
       leagueId: champId,
       leagueTitle: champName,
       leagueLogo: champLogo,
@@ -94,25 +111,30 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
     // 1. Fetch from 154score API team endpoints
     if (teamId.isNotEmpty && int.tryParse(teamId) != null) {
       try {
-        final profileFuture = _client.get(
-          ApiEndpoints.teamProfile(teamId),
-          queryParameters: {'lang': lang},
-        ).catchError((_) => null);
+        final profileFuture = _client
+            .get(
+              ApiEndpoints.teamProfile(teamId),
+              queryParameters: {'lang': lang},
+            )
+            .catchError((_) => null);
 
-        final playersFuture = _client.get(
-          ApiEndpoints.teamPlayers(teamId),
-          queryParameters: {'lang': lang},
-        ).catchError((_) => null);
+        final playersFuture = _client
+            .get(
+              ApiEndpoints.teamPlayers(teamId),
+              queryParameters: {'lang': lang},
+            )
+            .catchError((_) => null);
 
-        final transfersFuture = _client.get(
-          ApiEndpoints.teamTransfers(teamId),
-          queryParameters: {'lang': lang},
-        ).catchError((_) => null);
+        final transfersFuture = _client
+            .get(
+              ApiEndpoints.teamTransfers(teamId),
+              queryParameters: {'lang': lang},
+            )
+            .catchError((_) => null);
 
-        final newsFuture = _client.get(
-          ApiEndpoints.teamNews(teamId),
-          queryParameters: {'lang': lang},
-        ).catchError((_) => null);
+        final newsFuture = _client
+            .get(ApiEndpoints.teamNews(teamId), queryParameters: {'lang': lang})
+            .catchError((_) => null);
 
         final results = await Future.wait([
           profileFuture,
@@ -133,14 +155,18 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             data['logo']?.toString(),
           );
           final country = data['country']?.toString();
-          final countryFlag = UrlHelper.normalizeImageUrl(data['country_flag']?.toString());
+          final countryFlag = UrlHelper.normalizeImageUrl(
+            data['country_flag']?.toString(),
+          );
           final countryCode = data['country_code']?.toString();
           final about = data['about']?.toString();
           final federation = data['federation']?.toString();
           final division = data['division']?.toString();
           final stadiumId = data['stadium_id']?.toString();
           final stadiumName = data['stadium_name']?.toString();
-          final worldRanking = data['world_ranking'] is num ? (data['world_ranking'] as num).toInt() : null;
+          final worldRanking = data['world_ranking'] is num
+              ? (data['world_ranking'] as num).toInt()
+              : null;
 
           // Championships
           final championships = <TeamChampionshipEntity>[];
@@ -151,10 +177,15 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
                   TeamChampionshipEntity(
                     id: c['id']?.toString() ?? '',
                     urlId: c['url_id']?.toString(),
-                    title: c['title']?.toString() ?? c['name']?.toString() ?? '',
-                    logo: UrlHelper.normalizeImageUrl(c['logo']?.toString() ?? c['image']?.toString()),
+                    title:
+                        c['title']?.toString() ?? c['name']?.toString() ?? '',
+                    logo: UrlHelper.normalizeImageUrl(
+                      c['logo']?.toString() ?? c['image']?.toString(),
+                    ),
                     type: c['type'] is num ? (c['type'] as num).toInt() : null,
-                    ranking: c['ranking'] is num ? (c['ranking'] as num).toInt() : null,
+                    ranking: c['ranking'] is num
+                        ? (c['ranking'] as num).toInt()
+                        : null,
                   ),
                 );
               }
@@ -176,8 +207,12 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
                   TeamCupEntity(
                     title: cup['title']?.toString() ?? '',
                     logo: UrlHelper.normalizeImageUrl(cup['logo']?.toString()),
-                    cupImage: UrlHelper.normalizeImageUrl(cup['cup_image']?.toString()),
-                    count: cup['count'] is num ? (cup['count'] as num).toInt() : 0,
+                    cupImage: UrlHelper.normalizeImageUrl(
+                      cup['cup_image']?.toString(),
+                    ),
+                    count: cup['count'] is num
+                        ? (cup['count'] as num).toInt()
+                        : 0,
                     years: yearsList,
                   ),
                 );
@@ -196,22 +231,34 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             final catM = data['categorized_matches'] as Map;
             if (catM['online'] is List) {
               for (final m in catM['online']) {
-                if (m is Map) online.add(_mapMatch(m, effectiveName, effectiveLogo, leagueId));
+                if (m is Map)
+                  online.add(
+                    _mapMatch(m, effectiveName, effectiveLogo, leagueId),
+                  );
               }
             }
             if (catM['coming'] is List) {
               for (final m in catM['coming']) {
-                if (m is Map) upcoming.add(_mapMatch(m, effectiveName, effectiveLogo, leagueId));
+                if (m is Map)
+                  upcoming.add(
+                    _mapMatch(m, effectiveName, effectiveLogo, leagueId),
+                  );
               }
             }
             if (catM['end'] is List) {
               for (final m in catM['end']) {
-                if (m is Map) recent.add(_mapMatch(m, effectiveName, effectiveLogo, leagueId));
+                if (m is Map)
+                  recent.add(
+                    _mapMatch(m, effectiveName, effectiveLogo, leagueId),
+                  );
               }
             }
             if (catM['postponed'] is List) {
               for (final m in catM['postponed']) {
-                if (m is Map) postponed.add(_mapMatch(m, effectiveName, effectiveLogo, leagueId));
+                if (m is Map)
+                  postponed.add(
+                    _mapMatch(m, effectiveName, effectiveLogo, leagueId),
+                  );
               }
             }
           } else {
@@ -219,9 +266,15 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             final rawMatches = data['matches'] as List? ?? [];
             for (final rawM in rawMatches) {
               if (rawM is Map) {
-                final match = _mapMatch(rawM, effectiveName, effectiveLogo, leagueId);
+                final match = _mapMatch(
+                  rawM,
+                  effectiveName,
+                  effectiveLogo,
+                  leagueId,
+                );
                 final statusLower = match.status?.toLowerCase() ?? '';
-                final isFinished = statusLower.contains('انتهت') ||
+                final isFinished =
+                    statusLower.contains('انتهت') ||
                     statusLower.contains('ft') ||
                     statusLower.contains('fin') ||
                     statusLower.contains('ended') ||
@@ -241,7 +294,9 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             final p1 = int.tryParse(m.score1 ?? '');
             final p2 = int.tryParse(m.score2 ?? '');
             if (p1 != null && p2 != null) {
-              final isHome = m.team1.toLowerCase().contains(effectiveName.toLowerCase());
+              final isHome = m.team1.toLowerCase().contains(
+                effectiveName.toLowerCase(),
+              );
               final teamScore = isHome ? p1 : p2;
               final oppScore = isHome ? p2 : p1;
               if (teamScore > oppScore) {
@@ -265,14 +320,18 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             if (pData['coach'] is Map) {
               final cMap = pData['coach'] as Map;
               coach = TeamCoachEntity(
-                id: cMap['coach_id']?.toString() ?? cMap['id']?.toString() ?? '',
+                id:
+                    cMap['coach_id']?.toString() ??
+                    cMap['id']?.toString() ??
+                    '',
                 name: cMap['name']?.toString() ?? '',
                 photo: UrlHelper.normalizeImageUrl(cMap['photo']?.toString()),
               );
             }
 
             TeamSquadPlayerEntity mapPlayer(Map p) {
-              final pId = p['player_id']?.toString() ?? p['id']?.toString() ?? '';
+              final pId =
+                  p['player_id']?.toString() ?? p['id']?.toString() ?? '';
               final pName = p['name']?.toString() ?? '';
               return TeamSquadPlayerEntity(
                 id: pId,
@@ -414,7 +473,8 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
           // Standings row for primary championship
           StandingRowEntity? standingRow;
           String? effectiveLeagueTitle;
-          final targetLeagueId = leagueId ??
+          final targetLeagueId =
+              leagueId ??
               (championships.isNotEmpty
                   ? (championships.first.urlId ?? championships.first.id)
                   : null);
@@ -444,7 +504,9 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             teamName: effectiveName,
             teamLogo: effectiveLogo,
             leagueId: targetLeagueId,
-            leagueName: effectiveLeagueTitle ?? (championships.isNotEmpty ? championships.first.title : null),
+            leagueName:
+                effectiveLeagueTitle ??
+                (championships.isNotEmpty ? championships.first.title : null),
             country: country,
             countryFlag: countryFlag,
             countryCode: countryCode,
@@ -536,7 +598,8 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
 
     for (final match in allMatches) {
       final statusLower = match.status?.toLowerCase() ?? '';
-      final isFinished = statusLower.contains('انتهت') ||
+      final isFinished =
+          statusLower.contains('انتهت') ||
           statusLower.contains('ft') ||
           statusLower.contains('fin') ||
           statusLower.contains('ended') ||

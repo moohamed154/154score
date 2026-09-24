@@ -206,8 +206,9 @@ class _GenericProfileViewState extends State<GenericProfileView> {
               color: AppColors.primary,
               onRefresh: () async {
                 try {
-                  await _loadProfile()
-                      .timeout(const Duration(milliseconds: 3500));
+                  await _loadProfile().timeout(
+                    const Duration(milliseconds: 3500),
+                  );
                 } catch (_) {}
               },
               child: _buildContent(context, isDark, isArabic),
@@ -222,45 +223,62 @@ class _GenericProfileViewState extends State<GenericProfileView> {
 
     // Exclude redundant sections ("معلومات البطاقة" and "معلومات أخرى") when their items
     // are already prominently presented in the Hero, Voice Player, Highlights Grid, or Career card.
-    final visibleSections = p.sections.map((sec) {
-      final sLower = sec.section.toLowerCase();
-      final isRedundantSection = sLower.contains('بطاقة') ||
-          sLower.contains('card') ||
-          sLower.contains('أخرى') ||
-          sLower.contains('more info') ||
-          sLower.contains('معلومات المعلق') ||
-          sLower.contains('commentator information') ||
-          sLower.contains('معلومات المدرب') ||
-          sLower.contains('coach information') ||
-          sLower.contains('المسيرة') ||
-          sLower.contains('career');
+    final visibleSections = p.sections
+        .map((sec) {
+          final sLower = sec.section.toLowerCase();
+          final isRedundantSection =
+              sLower.contains('بطاقة') ||
+              sLower.contains('card') ||
+              sLower.contains('أخرى') ||
+              sLower.contains('more info') ||
+              sLower.contains('معلومات المعلق') ||
+              sLower.contains('commentator information') ||
+              sLower.contains('معلومات المدرب') ||
+              sLower.contains('coach information') ||
+              sLower.contains('المسيرة') ||
+              sLower.contains('career');
 
-      if (hasHighlights && isRedundantSection) {
-        return const ProfileSectionEntity(section: '', items: []);
-      }
+          if (hasHighlights && isRedundantSection) {
+            return const ProfileSectionEntity(section: '', items: []);
+          }
 
-      // Filter out items already showcased in hero or highlights grid
-      final cleanItems = sec.items.where((it) {
-        if (it.content.isEmpty) return false;
-        final t = it.title.toLowerCase();
-        if (t == 'الاسم' || t == 'name') return false;
-        if (t.contains('الانجليزي') || t.contains('english')) return false;
-        if (hasHighlights) {
-          if (t.contains('القناة') || t.contains('channel')) return false;
-          if (t.contains('الدولة') || t.contains('country') || t.contains('جنسية')) return false;
-          if (t.contains('الميلاد') || t.contains('birth') || t.contains('عمر') || t.contains('age')) return false;
-          if (t.contains('لغة') || t.contains('language')) return false;
-          if (t.contains('النادي') || t.contains('club') || t.contains('فريق')) return false;
-          if (t.contains('المنصب') || t.contains('role')) return false;
-        }
-        if (p.voiceUrl != null && (t.contains('صوت') || t.contains('voice') || t.contains('audio'))) {
-          return false;
-        }
-        return true;
-      }).toList();
+          // Filter out items already showcased in hero or highlights grid
+          final cleanItems = sec.items.where((it) {
+            if (it.content.isEmpty) return false;
+            final t = it.title.toLowerCase();
+            if (t == 'الاسم' || t == 'name') return false;
+            if (t.contains('الانجليزي') || t.contains('english')) return false;
+            if (hasHighlights) {
+              if (t.contains('القناة') || t.contains('channel')) return false;
+              if (t.contains('الدولة') ||
+                  t.contains('country') ||
+                  t.contains('جنسية'))
+                return false;
+              if (t.contains('الميلاد') ||
+                  t.contains('birth') ||
+                  t.contains('عمر') ||
+                  t.contains('age'))
+                return false;
+              if (t.contains('لغة') || t.contains('language')) return false;
+              if (t.contains('النادي') ||
+                  t.contains('club') ||
+                  t.contains('فريق'))
+                return false;
+              if (t.contains('المنصب') || t.contains('role')) return false;
+            }
+            if (p.voiceUrl != null &&
+                (t.contains('صوت') ||
+                    t.contains('voice') ||
+                    t.contains('audio'))) {
+              return false;
+            }
+            return true;
+          }).toList();
 
-      return ProfileSectionEntity(section: sec.section, items: cleanItems);
-    }).where((sec) => sec.section.isNotEmpty && sec.items.isNotEmpty).toList();
+          return ProfileSectionEntity(section: sec.section, items: cleanItems);
+        })
+        .where((sec) => sec.section.isNotEmpty && sec.items.isNotEmpty)
+        .toList();
 
     return ListView(
       padding: EdgeInsets.all(hMargin),
@@ -303,7 +321,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           }),
 
         // Coach Managerial Career History
-        if (widget.type == ProfileType.coach && (p.career.isNotEmpty || p.residentTeams.isNotEmpty)) ...[
+        if (widget.type == ProfileType.coach &&
+            (p.career.isNotEmpty || p.residentTeams.isNotEmpty)) ...[
           const SizedBox(height: AppDimensions.sm),
           _buildCoachCareerCard(context, p, isDark, isArabic),
         ]
@@ -324,10 +343,12 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             isDark: isDark,
             isArabic: isArabic,
           ),
-          ...p.upcomingMatches.map((m) => Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: MatchCard(match: m),
-          )),
+          ...p.upcomingMatches.map(
+            (m) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: MatchCard(match: m),
+            ),
+          ),
         ],
 
         // Recent/Past Matches (Commentators, Referees)
@@ -341,10 +362,12 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             isDark: isDark,
             isArabic: isArabic,
           ),
-          ...p.recentMatches.map((m) => Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: MatchCard(match: m),
-          )),
+          ...p.recentMatches.map(
+            (m) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: MatchCard(match: m),
+            ),
+          ),
         ],
 
         const SizedBox(height: AppDimensions.lg),
@@ -374,17 +397,22 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             child: Row(
               children: [
-                const Icon(Icons.shield_outlined, size: 18, color: AppColors.primary),
+                const Icon(
+                  Icons.shield_outlined,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   isArabic ? 'الأندية والفرق المقيمة' : 'Home Teams & Clubs',
-                  style: AppTypography.getBodyLarge(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
+                  style:
+                      AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                 ),
               ],
             ),
@@ -400,11 +428,14 @@ class _GenericProfileViewState extends State<GenericProfileView> {
               return InkWell(
                 onTap: team.id.isNotEmpty
                     ? () => context.push(
-                          '/team/${team.id}?slug=${Uri.encodeComponent(team.name)}',
-                        )
+                        '/team/${team.id}?slug=${Uri.encodeComponent(team.name)}',
+                      )
                     : null,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       AppImage(
@@ -420,9 +451,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                           style: AppTypography.getBodyMedium(
                             isDark: isDark,
                             isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          ).copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
                       const Icon(
@@ -466,35 +495,44 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             child: Row(
               children: [
-                const Icon(Icons.history_edu_rounded, size: 18, color: AppColors.primary),
+                const Icon(
+                  Icons.history_edu_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   isArabic ? 'المسيرة التدريبية' : 'Managerial Career',
-                  style: AppTypography.getBodyLarge(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
+                  style:
+                      AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '${list.length}',
-                    style: AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                      fontSize: 11,
-                    ),
+                    style:
+                        AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                          fontSize: 11,
+                        ),
                   ),
                 ),
               ],
@@ -511,11 +549,14 @@ class _GenericProfileViewState extends State<GenericProfileView> {
               return InkWell(
                 onTap: team.id.isNotEmpty && team.id != '0'
                     ? () => context.push(
-                          '/team/${team.id}?slug=${Uri.encodeComponent(team.name)}',
-                        )
+                        '/team/${team.id}?slug=${Uri.encodeComponent(team.name)}',
+                      )
                     : null,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       AppImage(
@@ -537,9 +578,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                                     style: AppTypography.getBodyMedium(
                                       isDark: isDark,
                                       isArabic: isArabic,
-                                    ).copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    ).copyWith(fontWeight: FontWeight.w700),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -547,12 +586,19 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                                 if (team.isCurrent) ...[
                                   const SizedBox(width: 8),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: Colors.green.withValues(alpha: 0.15),
+                                      color: Colors.green.withValues(
+                                        alpha: 0.15,
+                                      ),
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
-                                        color: Colors.green.withValues(alpha: 0.4),
+                                        color: Colors.green.withValues(
+                                          alpha: 0.4,
+                                        ),
                                         width: 0.8,
                                       ),
                                     ),
@@ -571,19 +617,22 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                             const SizedBox(height: 3),
                             Text(
                               [
-                                team.role ?? (isArabic ? 'المدير الفني' : 'Head Coach'),
-                                if (team.duration != null && team.duration!.isNotEmpty)
+                                team.role ??
+                                    (isArabic ? 'المدير الفني' : 'Head Coach'),
+                                if (team.duration != null &&
+                                    team.duration!.isNotEmpty)
                                   team.duration!,
                               ].join(' • '),
-                              style: AppTypography.getBodySmall(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted,
-                                fontSize: 11,
-                              ),
+                              style:
+                                  AppTypography.getBodySmall(
+                                    isDark: isDark,
+                                    isArabic: isArabic,
+                                  ).copyWith(
+                                    color: isDark
+                                        ? AppColors.darkTextMuted
+                                        : AppColors.lightTextMuted,
+                                    fontSize: 11,
+                                  ),
                             ),
                           ],
                         ),
@@ -631,10 +680,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             style: AppTypography.getBodyLarge(
               isDark: isDark,
               isArabic: isArabic,
-            ).copyWith(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-            ),
+            ).copyWith(fontWeight: FontWeight.w800, fontSize: 16),
           ),
           const Spacer(),
           Container(
@@ -648,10 +694,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
               style: AppTypography.getBodySmall(
                 isDark: isDark,
                 isArabic: isArabic,
-              ).copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
+              ).copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
             ),
           ),
         ],
@@ -669,7 +712,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
     if (p.channel != null && p.channel!.isNotEmpty) count++;
     if (p.country != null && p.country!.isNotEmpty) count++;
     if (p.birthDate != null && p.birthDate!.isNotEmpty) count++;
-    if (p.commentaryLanguage != null && p.commentaryLanguage!.isNotEmpty) count++;
+    if (p.commentaryLanguage != null && p.commentaryLanguage!.isNotEmpty)
+      count++;
     return count >= 2;
   }
 
@@ -822,15 +866,16 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                   children: [
                     Text(
                       item.label,
-                      style: AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
-                        fontSize: 11,
-                      ),
+                      style:
+                          AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                            fontSize: 11,
+                          ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -840,10 +885,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                       style: AppTypography.getBodyMedium(
                         isDark: isDark,
                         isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
+                      ).copyWith(fontWeight: FontWeight.w700, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -875,9 +917,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -903,27 +943,29 @@ class _GenericProfileViewState extends State<GenericProfileView> {
               children: [
                 Text(
                   isArabic ? 'صوت المعلق' : 'Commentator Voice Sample',
-                  style: AppTypography.getBodyMedium(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
+                  style:
+                      AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   isArabic
                       ? 'استمع إلى عينة ونبرة التعليق الصوتي'
                       : 'Listen to commentary voice sample',
-                  style: AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
+                  style:
+                      AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
                 ),
               ],
             ),
@@ -987,13 +1029,14 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                 const SizedBox(width: 8),
                 Text(
                   sec.section,
-                  style: AppTypography.getBodyLarge(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
+                  style:
+                      AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                 ),
               ],
             ),
@@ -1010,7 +1053,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
 
               return InkWell(
                 onTap: it.link != null && it.link!.isNotEmpty
-                    ? () => UrlHelper.launchExternalUrl(it.link, context: context)
+                    ? () =>
+                          UrlHelper.launchExternalUrl(it.link, context: context)
                     : null,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -1024,8 +1068,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                         height: 32,
                         decoration: BoxDecoration(
                           color: (isDark
-                                  ? AppColors.darkCardElevated
-                                  : AppColors.lightCardElevated),
+                              ? AppColors.darkCardElevated
+                              : AppColors.lightCardElevated),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Icon(
@@ -1041,14 +1085,15 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                         flex: 4,
                         child: Text(
                           it.title,
-                          style: AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                          ),
+                          style:
+                              AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted,
+                              ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1060,15 +1105,16 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                             Flexible(
                               child: Text(
                                 it.content,
-                                style: AppTypography.getBodyMedium(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: it.link != null
-                                      ? AppColors.primary
-                                      : null,
-                                ),
+                                style:
+                                    AppTypography.getBodyMedium(
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                    ).copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: it.link != null
+                                          ? AppColors.primary
+                                          : null,
+                                    ),
                                 textAlign: TextAlign.end,
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
@@ -1174,22 +1220,25 @@ class _GenericProfileViewState extends State<GenericProfileView> {
                   const SizedBox(height: 4),
                   Text(
                     p.englishName!,
-                    style: AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: false,
-                    ).copyWith(
-                      color: isDark
-                          ? AppColors.darkTextMuted
-                          : AppColors.lightTextMuted,
-                      letterSpacing: 0.4,
-                    ),
+                    style:
+                        AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: false,
+                        ).copyWith(
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                          letterSpacing: 0.4,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                 ],
                 const SizedBox(height: 12),
                 _buildBadge(
                   icon: Icons.stadium_rounded,
-                  label: p.role ?? (isArabic ? 'استاد كرة قدم' : 'Football Stadium'),
+                  label:
+                      p.role ??
+                      (isArabic ? 'استاد كرة قدم' : 'Football Stadium'),
                   color: AppColors.primary,
                   isDark: isDark,
                 ),
@@ -1207,7 +1256,8 @@ class _GenericProfileViewState extends State<GenericProfileView> {
     bool isDark,
     bool isArabic,
   ) {
-    final roleText = p.role ??
+    final roleText =
+        p.role ??
         (widget.type == ProfileType.referee
             ? (isArabic ? 'حكم كرة قدم' : 'Football Referee')
             : widget.type == ProfileType.coach
@@ -1250,10 +1300,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             height: 104,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primary,
-                width: 2.5,
-              ),
+              border: Border.all(color: AppColors.primary, width: 2.5),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primary.withValues(alpha: 0.25),
@@ -1292,15 +1339,16 @@ class _GenericProfileViewState extends State<GenericProfileView> {
             const SizedBox(height: 4),
             Text(
               p.englishName!,
-              style: AppTypography.getBodyMedium(
-                isDark: isDark,
-                isArabic: false,
-              ).copyWith(
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
-                letterSpacing: 0.5,
-              ),
+              style:
+                  AppTypography.getBodyMedium(
+                    isDark: isDark,
+                    isArabic: false,
+                  ).copyWith(
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                    letterSpacing: 0.5,
+                  ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1374,12 +1422,7 @@ class _GenericProfileViewState extends State<GenericProfileView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (flagUrl != null && flagUrl.isNotEmpty) ...[
-            AppImage(
-              imageUrl: flagUrl,
-              width: 16,
-              height: 11,
-              borderRadius: 2,
-            ),
+            AppImage(imageUrl: flagUrl, width: 16, height: 11, borderRadius: 2),
             const SizedBox(width: 6),
           ] else if (icon != null) ...[
             Icon(icon, size: 14, color: color),

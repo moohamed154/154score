@@ -48,7 +48,8 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
       return MatchStatusHelper.isLive(phase);
     }).length;
 
-    final isTimeSlot = widget.isTimeSorted ||
+    final isTimeSlot =
+        widget.isTimeSorted ||
         (widget.league.leagueId == null &&
             RegExp(r'^\d{1,2}:\d{2}').hasMatch(widget.league.leagueTitle));
 
@@ -90,10 +91,12 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                     onTap: () {
-                      final lId = widget.league.leagueId ??
+                      final lId =
+                          widget.league.leagueId ??
                           LeagueResolver.resolveId(widget.league.leagueTitle);
                       if (lId != null && lId.isNotEmpty) {
-                        final logo = widget.league.leagueLogo ??
+                        final logo =
+                            widget.league.leagueLogo ??
                             UrlHelper.resolveChampionshipLogo(lId);
                         context.push(
                           '/league/$lId',

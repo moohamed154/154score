@@ -11,6 +11,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:score154/features/match_details/presentation/bloc/match_details_bloc.dart';
 import 'package:score154/features/match_details/presentation/bloc/match_details_event.dart';
 import 'package:score154/features/match_details/presentation/bloc/match_details_state.dart';
+
 import 'lineup_empty_state_widget.dart';
 import 'lineup_squad_list_widget.dart';
 import 'match_pitch_widget.dart';
@@ -21,10 +22,7 @@ enum _LineupViewMode { pitch, list }
 class LineupTabView extends StatefulWidget {
   final String matchId;
 
-  const LineupTabView({
-    super.key,
-    required this.matchId,
-  });
+  const LineupTabView({super.key, required this.matchId});
 
   @override
   State<LineupTabView> createState() => _LineupTabViewState();
@@ -57,7 +55,8 @@ class _LineupTabViewState extends State<LineupTabView> {
           previous.lineup != current.lineup,
       builder: (context, state) {
         // 1. Loading State
-        if (state.status == MatchDetailsStatus.loading && state.lineup == null) {
+        if (state.status == MatchDetailsStatus.loading &&
+            state.lineup == null) {
           return _buildSkeletonLoader(context, isDark);
         }
 
@@ -67,8 +66,8 @@ class _LineupTabViewState extends State<LineupTabView> {
             message: state.errorMessage,
             onRetry: () {
               context.read<MatchDetailsBloc>().add(
-                    LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
-                  );
+                LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
+              );
             },
           );
         }
@@ -82,12 +81,12 @@ class _LineupTabViewState extends State<LineupTabView> {
             onRefresh: () async {
               final completer = Completer<void>();
               context.read<MatchDetailsBloc>().add(
-                    LoadMatchDetailsEvent(
-                      widget.matchId,
-                      isRefresh: true,
-                      completer: completer,
-                    ),
-                  );
+                LoadMatchDetailsEvent(
+                  widget.matchId,
+                  isRefresh: true,
+                  completer: completer,
+                ),
+              );
               try {
                 await completer.future.timeout(const Duration(seconds: 3));
               } catch (_) {}
@@ -117,12 +116,12 @@ class _LineupTabViewState extends State<LineupTabView> {
           onRefresh: () async {
             final completer = Completer<void>();
             context.read<MatchDetailsBloc>().add(
-                  LoadMatchDetailsEvent(
-                    widget.matchId,
-                    isRefresh: true,
-                    completer: completer,
-                  ),
-                );
+              LoadMatchDetailsEvent(
+                widget.matchId,
+                isRefresh: true,
+                completer: completer,
+              ),
+            );
             try {
               await completer.future.timeout(const Duration(seconds: 3));
             } catch (_) {}
@@ -214,7 +213,8 @@ class _LineupTabViewState extends State<LineupTabView> {
     final String label;
     if (customText != null && customText.trim().isNotEmpty) {
       final trimmed = customText.trim();
-      final textIsProbable = trimmed.contains('متوقعة') ||
+      final textIsProbable =
+          trimmed.contains('متوقعة') ||
           trimmed.toLowerCase().contains('probable') ||
           trimmed.toLowerCase().contains('predicted');
       if (isConfirmed && textIsProbable) {
@@ -241,10 +241,7 @@ class _LineupTabViewState extends State<LineupTabView> {
           Container(
             width: 7,
             height: 7,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
           Text(
@@ -263,7 +260,9 @@ class _LineupTabViewState extends State<LineupTabView> {
   Widget _buildViewSwitcher(bool isDark, bool isArabic) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+        color: isDark
+            ? AppColors.darkCardElevated
+            : AppColors.lightCardElevated,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -317,7 +316,9 @@ class _LineupTabViewState extends State<LineupTabView> {
               size: 14,
               color: isSelected
                   ? Colors.black
-                  : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                  : (isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted),
             ),
             const SizedBox(width: 4),
             Text(
@@ -327,7 +328,9 @@ class _LineupTabViewState extends State<LineupTabView> {
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected
                     ? Colors.black
-                    : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                    : (isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted),
               ),
             ),
           ],
@@ -377,7 +380,9 @@ class _LineupTabViewState extends State<LineupTabView> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.grey,
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusLg,
+                      ),
                     ),
                   ),
                 ),

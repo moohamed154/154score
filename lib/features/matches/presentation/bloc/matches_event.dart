@@ -161,3 +161,13 @@ class PreloadMatchesEvent extends MatchesEvent {
   @override
   List<Object?> get props => [dates];
 }
+
+class ChangeMatchesLanguageEvent extends MatchesEvent {
+  final String languageCode;
+  final Completer<void>? completer;
+
+  const ChangeMatchesLanguageEvent(this.languageCode, {this.completer});
+
+  @override
+  List<Object?> get props => [languageCode];
+}

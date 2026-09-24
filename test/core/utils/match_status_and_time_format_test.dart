@@ -7,68 +7,124 @@ void main() {
   group('DateFormatter.formatDisplayTime', () {
     test('formats 24h correctly', () {
       expect(
-        DateFormatter.formatDisplayTime('20:30', timeFormat: '24h', isArabic: true),
+        DateFormatter.formatDisplayTime(
+          '20:30',
+          timeFormat: '24h',
+          isArabic: true,
+        ),
         '20:30',
       );
       expect(
-        DateFormatter.formatDisplayTime('08:15', timeFormat: '24h', isArabic: false),
+        DateFormatter.formatDisplayTime(
+          '08:15',
+          timeFormat: '24h',
+          isArabic: false,
+        ),
         '08:15',
       );
       expect(
-        DateFormatter.formatDisplayTime('00:05', timeFormat: '24h', isArabic: false),
+        DateFormatter.formatDisplayTime(
+          '00:05',
+          timeFormat: '24h',
+          isArabic: false,
+        ),
         '00:05',
       );
     });
 
     test('formats 12h Arabic correctly with م and ص', () {
       expect(
-        DateFormatter.formatDisplayTime('20:30', timeFormat: '12h', isArabic: true),
+        DateFormatter.formatDisplayTime(
+          '20:30',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
         '08:30 م',
       );
       expect(
-        DateFormatter.formatDisplayTime('08:15', timeFormat: '12h', isArabic: true),
+        DateFormatter.formatDisplayTime(
+          '08:15',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
         '08:15 ص',
       );
       expect(
-        DateFormatter.formatDisplayTime('12:00', timeFormat: '12h', isArabic: true),
+        DateFormatter.formatDisplayTime(
+          '12:00',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
         '12:00 م',
       );
       expect(
-        DateFormatter.formatDisplayTime('00:45', timeFormat: '12h', isArabic: true),
+        DateFormatter.formatDisplayTime(
+          '00:45',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
         '12:45 ص',
       );
     });
 
     test('formats 12h English correctly with PM and AM', () {
       expect(
-        DateFormatter.formatDisplayTime('20:30', timeFormat: '12h', isArabic: false),
+        DateFormatter.formatDisplayTime(
+          '20:30',
+          timeFormat: '12h',
+          isArabic: false,
+        ),
         '08:30 PM',
       );
       expect(
-        DateFormatter.formatDisplayTime('08:15', timeFormat: '12h', isArabic: false),
+        DateFormatter.formatDisplayTime(
+          '08:15',
+          timeFormat: '12h',
+          isArabic: false,
+        ),
         '08:15 AM',
       );
       expect(
-        DateFormatter.formatDisplayTime('12:00', timeFormat: '12h', isArabic: false),
+        DateFormatter.formatDisplayTime(
+          '12:00',
+          timeFormat: '12h',
+          isArabic: false,
+        ),
         '12:00 PM',
       );
       expect(
-        DateFormatter.formatDisplayTime('00:45', timeFormat: '12h', isArabic: false),
+        DateFormatter.formatDisplayTime(
+          '00:45',
+          timeFormat: '12h',
+          isArabic: false,
+        ),
         '12:45 AM',
       );
     });
 
     test('handles already-tagged strings gracefully', () {
       expect(
-        DateFormatter.formatDisplayTime('08:30 م', timeFormat: '24h', isArabic: true),
+        DateFormatter.formatDisplayTime(
+          '08:30 م',
+          timeFormat: '24h',
+          isArabic: true,
+        ),
         '20:30',
       );
       expect(
-        DateFormatter.formatDisplayTime('08:30 PM', timeFormat: '24h', isArabic: false),
+        DateFormatter.formatDisplayTime(
+          '08:30 PM',
+          timeFormat: '24h',
+          isArabic: false,
+        ),
         '20:30',
       );
       expect(
-        DateFormatter.formatDisplayTime('08:30 AM', timeFormat: '12h', isArabic: true),
+        DateFormatter.formatDisplayTime(
+          '08:30 AM',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
         '08:30 ص',
       );
     });
@@ -83,7 +139,11 @@ void main() {
         '-',
       );
       expect(
-        DateFormatter.formatDisplayTime(null, timeFormat: '12h', isArabic: true),
+        DateFormatter.formatDisplayTime(
+          null,
+          timeFormat: '12h',
+          isArabic: true,
+        ),
         '-',
       );
     });

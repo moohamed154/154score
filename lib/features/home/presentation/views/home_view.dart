@@ -48,7 +48,7 @@ class _HomeViewState extends State<HomeView> {
       context.read<MatchesBloc>().add(
         PreloadMatchesEvent([
           now.subtract(const Duration(days: 1)), // yesterday
-          now.add(const Duration(days: 1)),       // tomorrow
+          now.add(const Duration(days: 1)), // tomorrow
         ]),
       );
     });
@@ -83,20 +83,18 @@ class _HomeViewState extends State<HomeView> {
                       children: [
                         const SizedBox(width: 16),
                         // Logo + Title + Date
-                        AppBrandLogo(
-                          size: 32,
-                          isDark: isDark,
-                        ),
+                        AppBrandLogo(size: 32, isDark: isDark),
                         const SizedBox(width: 10),
                         Text(
                           '154Score',
-                          style: AppTypography.getHeadingLarge(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
+                          style:
+                              AppTypography.getHeadingLarge(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
                         ),
                         const Spacer(),
                         // Actions row ordered from left: Date Selector -> Search -> Filter
@@ -137,7 +135,8 @@ class _HomeViewState extends State<HomeView> {
                                 ),
                               ),
                               tooltip: l10n.translate('filter_title'),
-                              onPressed: () => MatchFilterBottomSheet.show(context),
+                              onPressed: () =>
+                                  MatchFilterBottomSheet.show(context),
                             ),
                             const SizedBox(width: 4),
                           ],
@@ -186,50 +185,52 @@ class _HomeViewState extends State<HomeView> {
                 );
 
                 try {
-                  await matchesCompleter.future
-                      .timeout(const Duration(seconds: 3));
+                  await matchesCompleter.future.timeout(
+                    const Duration(seconds: 3),
+                  );
                 } catch (_) {}
               },
               child: ListView(
                 padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-              children: [
-                // Selected date label (updates when swiping days)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: Text(
-                    _formatDate(matchesState.selectedDate, isArabic),
-                    style: AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                children: [
+                  // Selected date label (updates when swiping days)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Text(
+                      _formatDate(matchesState.selectedDate, isArabic),
+                      style:
+                          AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
                     ),
                   ),
-                ),
 
-                if (isHomeLoading)
-                  _buildMatchesSkeleton(context, isDark, isArabic)
-                else ...[
-                  // 1. LIVE NOW Section (if any live matches)
-                  _buildLiveNowSection(
-                    context,
-                    matchesState,
-                    isDark,
-                    isArabic,
-                  ),
+                  if (isHomeLoading)
+                    _buildMatchesSkeleton(context, isDark, isArabic)
+                  else ...[
+                    // 1. LIVE NOW Section (if any live matches)
+                    _buildLiveNowSection(
+                      context,
+                      matchesState,
+                      isDark,
+                      isArabic,
+                    ),
 
-                  // 2. Matches for Selected Date
-                  _buildMatchesSection(
-                    context,
-                    matchesState,
-                    isDark,
-                    isArabic,
-                  ),
+                    // 2. Matches for Selected Date
+                    _buildMatchesSection(
+                      context,
+                      matchesState,
+                      isDark,
+                      isArabic,
+                    ),
+                  ],
                 ],
-              ],
-            ),
+              ),
             ),
           );
         },
@@ -239,12 +240,22 @@ class _HomeViewState extends State<HomeView> {
 
   String _formatDate(DateTime date, bool isArabic) {
     const englishDays = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     ];
     const arabicDays = [
-      'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس',
-      'الجمعة', 'السبت', 'الأحد',
+      'الاثنين',
+      'الثلاثاء',
+      'الأربعاء',
+      'الخميس',
+      'الجمعة',
+      'السبت',
+      'الأحد',
     ];
     final dayIndex = date.weekday - 1; // weekday: 1=Monday … 7=Sunday
     final dayName = isArabic ? arabicDays[dayIndex] : englishDays[dayIndex];

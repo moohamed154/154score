@@ -1,4 +1,4 @@
-﻿import 'package:dio/dio.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/network/debug_console.dart';
 
@@ -79,7 +79,10 @@ void main() {
       );
 
       expect(DebugConsole.history.length, 1);
-      expect(DebugConsole.history.first.url, 'https://api.example.com/matches?date=2026-09-09');
+      expect(
+        DebugConsole.history.first.url,
+        'https://api.example.com/matches?date=2026-09-09',
+      );
       expect(DebugConsole.history.first.statusCode, 200);
       expect(DebugConsole.history.first.duration?.inMilliseconds, 200);
       expect(notified, 1);
@@ -152,13 +155,18 @@ void main() {
         Response(
           requestOptions: reqOptions,
           statusCode: 200,
-          data: {'teams': ['A', 'B']},
+          data: {
+            'teams': ['A', 'B'],
+          },
         ),
       );
 
       expect(() => DebugConsole.printLatestResponse(), returnsNormally);
       expect(() => DebugConsole.printAllResponses(), returnsNormally);
-      expect(() => DebugConsole.printRecord(DebugConsole.history.first), returnsNormally);
+      expect(
+        () => DebugConsole.printRecord(DebugConsole.history.first),
+        returnsNormally,
+      );
     });
 
     test('clear empties history and triggers listener', () {
@@ -176,28 +184,31 @@ void main() {
   });
 
   group('DebugConsoleInterceptor Tests', () {
-    test('interceptor captures requests and logs responses to DebugConsole', () async {
-      final dio = Dio();
-      dio.httpClientAdapter = _MockAdapter((options) async {
-        return ResponseBody.fromString(
-          '{"success": true, "message": "mocked"}',
-          200,
-          headers: {
-            Headers.contentTypeHeader: [Headers.jsonContentType],
-          },
-        );
-      });
-      dio.interceptors.add(DebugConsoleInterceptor());
+    test(
+      'interceptor captures requests and logs responses to DebugConsole',
+      () async {
+        final dio = Dio();
+        dio.httpClientAdapter = _MockAdapter((options) async {
+          return ResponseBody.fromString(
+            '{"success": true, "message": "mocked"}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: [Headers.jsonContentType],
+            },
+          );
+        });
+        dio.interceptors.add(DebugConsoleInterceptor());
 
-      final response = await dio.get('https://fake.url/api/test');
-      expect(response.statusCode, 200);
+        final response = await dio.get('https://fake.url/api/test');
+        expect(response.statusCode, 200);
 
-      expect(DebugConsole.history.length, 1);
-      final record = DebugConsole.history.first;
-      expect(record.url, 'https://fake.url/api/test');
-      expect(record.statusCode, 200);
-      expect(record.duration, isNotNull);
-    });
+        expect(DebugConsole.history.length, 1);
+        final record = DebugConsole.history.first;
+        expect(record.url, 'https://fake.url/api/test');
+        expect(record.statusCode, 200);
+        expect(record.duration, isNotNull);
+      },
+    );
 
     test('interceptor captures errors and logs them to DebugConsole', () async {
       final dio = Dio();

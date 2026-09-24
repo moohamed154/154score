@@ -923,391 +923,535 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('6. Sanitizes team names with "أخبار نادي" in UI and omits team logos from pitch badge and tabs', (
-      tester,
-    ) async {
-      final bloc = MatchDetailsBloc(
-        repository: mockRepo,
-        webSocketService: mockWs,
-        localStorageService: mockStorage,
-        matchId: sampleMatchId,
-      );
-
-      final uncleanedLineup = MatchLineupEntity(
-        matchId: sampleMatchId,
-        lineupsAvailable: true,
-        formationType: 'confirmed',
-        home: TeamLineupEntity(
-          teamId: '1',
-          teamName: 'أخبار نادي ريال مدريد',
-          teamLogo: 'https://imgs.ysscores.com/teams/real.png',
-          formation: '4-3-3',
-          startingXi: sampleLineup.home!.startingXi,
-        ),
-        away: TeamLineupEntity(
-          teamId: '2',
-          teamName: 'اخبار نادي ريال بيتيس',
-          teamLogo: 'https://imgs.ysscores.com/teams/betis.png',
-          formation: '4-2-3-1',
-          startingXi: sampleLineup.away!.startingXi,
-        ),
-      );
-
-      bloc.emit(
-        MatchDetailsState(
+    testWidgets(
+      '6. Sanitizes team names with "أخبار نادي" in UI and omits team logos from pitch badge and tabs',
+      (tester) async {
+        final bloc = MatchDetailsBloc(
+          repository: mockRepo,
+          webSocketService: mockWs,
+          localStorageService: mockStorage,
           matchId: sampleMatchId,
-          status: MatchDetailsStatus.success,
-          lineup: uncleanedLineup,
-        ),
-      );
+        );
 
-      await tester.pumpWidget(
-        buildTestApp(
-          child: BlocProvider.value(
-            value: bloc,
-            child: const LineupTabView(matchId: sampleMatchId),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      // Pitch board should show 'ريال مدريد' and 'ريال بيتيس' without 'أخبار نادي'
-      expect(find.text('ريال مدريد'), findsWidgets);
-      expect(find.text('ريال بيتيس'), findsWidgets);
-      expect(find.textContaining('أخبار نادي'), findsNothing);
-      expect(find.textContaining('اخبار نادي'), findsNothing);
-
-      // Switch to squad list view
-      await tester.tap(find.text('القائمة'));
-      await tester.pumpAndSettle();
-
-      // Squad list tabs should also show 'ريال مدريد' and 'ريال بيتيس' without 'أخبار نادي'
-      expect(find.text('ريال مدريد'), findsWidgets);
-      expect(find.text('ريال بيتيس'), findsWidgets);
-      expect(find.textContaining('أخبار نادي'), findsNothing);
-      expect(find.textContaining('اخبار نادي'), findsNothing);
-    });
-
-    testWidgets('7. Uses formation "4-2-3-1" from response to partition tactical lines into separate 4, 2, 3 rows', (
-      tester,
-    ) async {
-      final bloc = MatchDetailsBloc(
-        repository: mockRepo,
-        webSocketService: mockWs,
-        localStorageService: mockStorage,
-        matchId: sampleMatchId,
-      );
-
-      const realBetisLineup = MatchLineupEntity(
-        matchId: sampleMatchId,
-        lineupsAvailable: true,
-        formationType: 'confirmed',
-        home: TeamLineupEntity(
-          teamId: '8603',
-          teamName: 'ريال بيتيس',
-          formation: '4-2-3-1',
-          startingXi: [
-            LineupPlayerEntity(playerId: '1', name: 'فاييس', number: 1, positionCode: 'G', formationPosition: 1),
-            LineupPlayerEntity(playerId: '11', name: 'غارسيا', number: 11, positionCode: 'D', formationPosition: 1),
-            LineupPlayerEntity(playerId: '4', name: 'ناتان', number: 4, positionCode: 'D', formationPosition: 2),
-            LineupPlayerEntity(playerId: '3', name: 'يورينتي', number: 3, positionCode: 'D', formationPosition: 3),
-            LineupPlayerEntity(playerId: '2', name: 'بيليرين', number: 2, positionCode: 'D', formationPosition: 4),
-            LineupPlayerEntity(playerId: '21', name: 'روكا', number: 21, positionCode: 'M', formationPosition: 1),
-            LineupPlayerEntity(playerId: '6', name: 'بيرنال', number: 6, positionCode: 'M', formationPosition: 2),
-            LineupPlayerEntity(playerId: '8', name: 'فورنالس', number: 8, positionCode: 'F', formationPosition: 1),
-            LineupPlayerEntity(playerId: '22', name: 'إيسكو', number: 22, positionCode: 'F', formationPosition: 2),
-            LineupPlayerEntity(playerId: '7', name: 'أنتوني', number: 7, positionCode: 'F', formationPosition: 3),
-            LineupPlayerEntity(playerId: '9', name: 'هيرنانديز', number: 9, positionCode: 'S', formationPosition: 1),
-          ],
-        ),
-        away: TeamLineupEntity(
-          teamId: '8633',
-          teamName: 'ريال مدريد',
-          formation: '4-2-3-1',
-          startingXi: [
-            LineupPlayerEntity(playerId: '1', name: 'كورتوا', number: 1, positionCode: 'G', formationPosition: 1),
-            LineupPlayerEntity(playerId: '17', name: 'كوكورييا', number: 17, positionCode: 'D', formationPosition: 1),
-            LineupPlayerEntity(playerId: '4', name: 'هاوسن', number: 4, positionCode: 'D', formationPosition: 2),
-            LineupPlayerEntity(playerId: '16', name: 'كوناتي', number: 16, positionCode: 'D', formationPosition: 3),
-            LineupPlayerEntity(playerId: '24', name: 'دومفريس', number: 24, positionCode: 'D', formationPosition: 4),
-            LineupPlayerEntity(playerId: '6', name: 'كامافينجا', number: 6, positionCode: 'M', formationPosition: 1),
-            LineupPlayerEntity(playerId: '8', name: 'فالفيردي', number: 8, positionCode: 'M', formationPosition: 2),
-            LineupPlayerEntity(playerId: '7', name: 'جونيور', number: 7, positionCode: 'F', formationPosition: 1),
-            LineupPlayerEntity(playerId: '5', name: 'بيلينغهام', number: 5, positionCode: 'F', formationPosition: 2),
-            LineupPlayerEntity(playerId: '15', name: 'غولر', number: 15, positionCode: 'F', formationPosition: 3),
-            LineupPlayerEntity(playerId: '10', name: 'مبابي', number: 10, positionCode: 'S', formationPosition: 1),
-          ],
-        ),
-      );
-
-      bloc.emit(
-        const MatchDetailsState(
+        final uncleanedLineup = MatchLineupEntity(
           matchId: sampleMatchId,
-          status: MatchDetailsStatus.success,
-          lineup: realBetisLineup,
-        ),
-      );
-
-      await tester.pumpWidget(
-        buildTestApp(
-          child: BlocProvider.value(
-            value: bloc,
-            child: const LineupTabView(matchId: sampleMatchId),
+          lineupsAvailable: true,
+          formationType: 'confirmed',
+          home: TeamLineupEntity(
+            teamId: '1',
+            teamName: 'أخبار نادي ريال مدريد',
+            teamLogo: 'https://imgs.ysscores.com/teams/real.png',
+            formation: '4-3-3',
+            startingXi: sampleLineup.home!.startingXi,
           ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      // Pitch board is present
-      expect(find.byType(MatchPitchWidget), findsOneWidget);
-
-      // Verify Home team (Real Betis) players across tactical lines are rendered
-      expect(find.text('فاييس'), findsWidgets);
-      expect(find.text('غارسيا'), findsWidgets);
-      expect(find.text('بيليرين'), findsWidgets);
-      expect(find.text('روكا'), findsWidgets);
-      expect(find.text('بيرنال'), findsWidgets);
-      expect(find.text('فورنالس'), findsWidgets);
-      expect(find.text('إيسكو'), findsWidgets);
-      expect(find.text('أنتوني'), findsWidgets);
-      expect(find.text('هيرنانديز'), findsWidgets);
-
-      // Toggle to Away team (Real Madrid)
-      await tester.tap(find.text('ريال مدريد').first);
-      await tester.pumpAndSettle();
-
-      // Verify Away team (Real Madrid) players are now rendered on pitch
-      expect(find.text('كورتوا'), findsWidgets);
-      expect(find.text('مبابي'), findsWidgets);
-    });
-
-    testWidgets('8. Verifies Arabic font (Cairo) is applied to pitch team badges and player tags in Arabic mode', (
-      tester,
-    ) async {
-      final bloc = MatchDetailsBloc(
-        repository: mockRepo,
-        webSocketService: mockWs,
-        localStorageService: mockStorage,
-        matchId: sampleMatchId,
-      );
-
-      bloc.emit(
-        const MatchDetailsState(
-          matchId: sampleMatchId,
-          status: MatchDetailsStatus.success,
-          lineup: sampleLineup,
-        ),
-      );
-
-      await tester.pumpWidget(
-        buildTestApp(
-          locale: const Locale('ar'),
-          child: BlocProvider.value(
-            value: bloc,
-            child: const LineupTabView(matchId: sampleMatchId),
+          away: TeamLineupEntity(
+            teamId: '2',
+            teamName: 'اخبار نادي ريال بيتيس',
+            teamLogo: 'https://imgs.ysscores.com/teams/betis.png',
+            formation: '4-2-3-1',
+            startingXi: sampleLineup.away!.startingXi,
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
-
-      // Find team badge text 'ريال مدريد'
-      final teamTextWidget = tester.widget<Text>(find.text('ريال مدريد').first);
-      expect(teamTextWidget.style?.fontFamily, contains('Cairo'));
-
-      // Find player tag text 'كورتوا'
-      final playerTextWidget = tester.widget<Text>(find.text('كورتوا').first);
-      expect(playerTextWidget.style?.fontFamily, contains('Cairo'));
-    });
-
-    testWidgets('9. Separates Substitutions and Bench with player IN / OUT pairs matching Yalla Shoot layout', (
-      tester,
-    ) async {
-      const subbedInPlayer = LineupPlayerEntity(
-        playerId: '101',
-        name: 'كيم مين جاي',
-        number: 3,
-        rating: '6.8',
-        substituteIn: true,
-        substituteTime: 46,
-        subbedForName: 'أوباميكانو',
-      );
-      const benchPlayer = LineupPlayerEntity(
-        playerId: '102',
-        name: 'يوناس أوربيغ',
-        number: 40,
-        substituteIn: false,
-      );
-
-      const team = TeamLineupEntity(
-        teamName: 'بايرن ميونخ',
-        startingXi: [
-          LineupPlayerEntity(
-            playerId: '1',
-            name: 'أوباميكانو',
-            number: 2,
-            substituteOut: true,
-            substituteTime: 46,
+        bloc.emit(
+          MatchDetailsState(
+            matchId: sampleMatchId,
+            status: MatchDetailsStatus.success,
+            lineup: uncleanedLineup,
           ),
-        ],
-        substitutes: [subbedInPlayer, benchPlayer],
-      );
+        );
 
-      await tester.pumpWidget(
-        buildTestApp(
-          locale: const Locale('ar'),
-          child: const LineupSquadListWidget(
-            home: team,
-            away: team,
-            showStarters: false,
+        await tester.pumpWidget(
+          buildTestApp(
+            child: BlocProvider.value(
+              value: bloc,
+              child: const LineupTabView(matchId: sampleMatchId),
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // Expect distinct headers for Substitutions and Bench
-      expect(find.text('التبديلات'), findsOneWidget);
-      expect(find.text('دكة البدلاء'), findsOneWidget);
+        // Pitch board should show 'ريال مدريد' and 'ريال بيتيس' without 'أخبار نادي'
+        expect(find.text('ريال مدريد'), findsWidgets);
+        expect(find.text('ريال بيتيس'), findsWidgets);
+        expect(find.textContaining('أخبار نادي'), findsNothing);
+        expect(find.textContaining('اخبار نادي'), findsNothing);
 
-      // Verify Player IN (كيم مين جاي) and Player OUT (أوباميكانو) are displayed
-      expect(find.text('كيم مين جاي'), findsOneWidget);
-      expect(find.text('أوباميكانو'), findsOneWidget);
-      expect(find.text("46'"), findsOneWidget);
+        // Switch to squad list view
+        await tester.tap(find.text('القائمة'));
+        await tester.pumpAndSettle();
 
-      // Verify Bench Player is displayed
-      expect(find.text('يوناس أوربيغ'), findsOneWidget);
-    });
+        // Squad list tabs should also show 'ريال مدريد' and 'ريال بيتيس' without 'أخبار نادي'
+        expect(find.text('ريال مدريد'), findsWidgets);
+        expect(find.text('ريال بيتيس'), findsWidgets);
+        expect(find.textContaining('أخبار نادي'), findsNothing);
+        expect(find.textContaining('اخبار نادي'), findsNothing);
+      },
+    );
 
     testWidgets(
-        '10. Renders Goal and Assist badges on PitchPlayerNode when player has goals and assists',
-        (tester) async {
-      const playerWithGoalsAndAssists = LineupPlayerEntity(
-        playerId: '9',
-        name: 'هاري كين',
-        number: 9,
-        position: 'مهاجم',
-        positionCode: 'S',
-        goals: 2,
-        assists: 1,
-        rating: '8.2',
-        yellowCards: 0,
-      );
+      '7. Uses formation "4-2-3-1" from response to partition tactical lines into separate 4, 2, 3 rows',
+      (tester) async {
+        final bloc = MatchDetailsBloc(
+          repository: mockRepo,
+          webSocketService: mockWs,
+          localStorageService: mockStorage,
+          matchId: sampleMatchId,
+        );
 
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: PitchPlayerNode(
-                player: playerWithGoalsAndAssists,
-                isHome: true,
+        const realBetisLineup = MatchLineupEntity(
+          matchId: sampleMatchId,
+          lineupsAvailable: true,
+          formationType: 'confirmed',
+          home: TeamLineupEntity(
+            teamId: '8603',
+            teamName: 'ريال بيتيس',
+            formation: '4-2-3-1',
+            startingXi: [
+              LineupPlayerEntity(
+                playerId: '1',
+                name: 'فاييس',
+                number: 1,
+                positionCode: 'G',
+                formationPosition: 1,
+              ),
+              LineupPlayerEntity(
+                playerId: '11',
+                name: 'غارسيا',
+                number: 11,
+                positionCode: 'D',
+                formationPosition: 1,
+              ),
+              LineupPlayerEntity(
+                playerId: '4',
+                name: 'ناتان',
+                number: 4,
+                positionCode: 'D',
+                formationPosition: 2,
+              ),
+              LineupPlayerEntity(
+                playerId: '3',
+                name: 'يورينتي',
+                number: 3,
+                positionCode: 'D',
+                formationPosition: 3,
+              ),
+              LineupPlayerEntity(
+                playerId: '2',
+                name: 'بيليرين',
+                number: 2,
+                positionCode: 'D',
+                formationPosition: 4,
+              ),
+              LineupPlayerEntity(
+                playerId: '21',
+                name: 'روكا',
+                number: 21,
+                positionCode: 'M',
+                formationPosition: 1,
+              ),
+              LineupPlayerEntity(
+                playerId: '6',
+                name: 'بيرنال',
+                number: 6,
+                positionCode: 'M',
+                formationPosition: 2,
+              ),
+              LineupPlayerEntity(
+                playerId: '8',
+                name: 'فورنالس',
+                number: 8,
+                positionCode: 'F',
+                formationPosition: 1,
+              ),
+              LineupPlayerEntity(
+                playerId: '22',
+                name: 'إيسكو',
+                number: 22,
+                positionCode: 'F',
+                formationPosition: 2,
+              ),
+              LineupPlayerEntity(
+                playerId: '7',
+                name: 'أنتوني',
+                number: 7,
+                positionCode: 'F',
+                formationPosition: 3,
+              ),
+              LineupPlayerEntity(
+                playerId: '9',
+                name: 'هيرنانديز',
+                number: 9,
+                positionCode: 'S',
+                formationPosition: 1,
+              ),
+            ],
+          ),
+          away: TeamLineupEntity(
+            teamId: '8633',
+            teamName: 'ريال مدريد',
+            formation: '4-2-3-1',
+            startingXi: [
+              LineupPlayerEntity(
+                playerId: '1',
+                name: 'كورتوا',
+                number: 1,
+                positionCode: 'G',
+                formationPosition: 1,
+              ),
+              LineupPlayerEntity(
+                playerId: '17',
+                name: 'كوكورييا',
+                number: 17,
+                positionCode: 'D',
+                formationPosition: 1,
+              ),
+              LineupPlayerEntity(
+                playerId: '4',
+                name: 'هاوسن',
+                number: 4,
+                positionCode: 'D',
+                formationPosition: 2,
+              ),
+              LineupPlayerEntity(
+                playerId: '16',
+                name: 'كوناتي',
+                number: 16,
+                positionCode: 'D',
+                formationPosition: 3,
+              ),
+              LineupPlayerEntity(
+                playerId: '24',
+                name: 'دومفريس',
+                number: 24,
+                positionCode: 'D',
+                formationPosition: 4,
+              ),
+              LineupPlayerEntity(
+                playerId: '6',
+                name: 'كامافينجا',
+                number: 6,
+                positionCode: 'M',
+                formationPosition: 1,
+              ),
+              LineupPlayerEntity(
+                playerId: '8',
+                name: 'فالفيردي',
+                number: 8,
+                positionCode: 'M',
+                formationPosition: 2,
+              ),
+              LineupPlayerEntity(
+                playerId: '7',
+                name: 'جونيور',
+                number: 7,
+                positionCode: 'F',
+                formationPosition: 1,
+              ),
+              LineupPlayerEntity(
+                playerId: '5',
+                name: 'بيلينغهام',
+                number: 5,
+                positionCode: 'F',
+                formationPosition: 2,
+              ),
+              LineupPlayerEntity(
+                playerId: '15',
+                name: 'غولر',
+                number: 15,
+                positionCode: 'F',
+                formationPosition: 3,
+              ),
+              LineupPlayerEntity(
+                playerId: '10',
+                name: 'مبابي',
+                number: 10,
+                positionCode: 'S',
+                formationPosition: 1,
+              ),
+            ],
+          ),
+        );
+
+        bloc.emit(
+          const MatchDetailsState(
+            matchId: sampleMatchId,
+            status: MatchDetailsStatus.success,
+            lineup: realBetisLineup,
+          ),
+        );
+
+        await tester.pumpWidget(
+          buildTestApp(
+            child: BlocProvider.value(
+              value: bloc,
+              child: const LineupTabView(matchId: sampleMatchId),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Pitch board is present
+        expect(find.byType(MatchPitchWidget), findsOneWidget);
+
+        // Verify Home team (Real Betis) players across tactical lines are rendered
+        expect(find.text('فاييس'), findsWidgets);
+        expect(find.text('غارسيا'), findsWidgets);
+        expect(find.text('بيليرين'), findsWidgets);
+        expect(find.text('روكا'), findsWidgets);
+        expect(find.text('بيرنال'), findsWidgets);
+        expect(find.text('فورنالس'), findsWidgets);
+        expect(find.text('إيسكو'), findsWidgets);
+        expect(find.text('أنتوني'), findsWidgets);
+        expect(find.text('هيرنانديز'), findsWidgets);
+
+        // Toggle to Away team (Real Madrid)
+        await tester.tap(find.text('ريال مدريد').first);
+        await tester.pumpAndSettle();
+
+        // Verify Away team (Real Madrid) players are now rendered on pitch
+        expect(find.text('كورتوا'), findsWidgets);
+        expect(find.text('مبابي'), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      '8. Verifies Arabic font (Cairo) is applied to pitch team badges and player tags in Arabic mode',
+      (tester) async {
+        final bloc = MatchDetailsBloc(
+          repository: mockRepo,
+          webSocketService: mockWs,
+          localStorageService: mockStorage,
+          matchId: sampleMatchId,
+        );
+
+        bloc.emit(
+          const MatchDetailsState(
+            matchId: sampleMatchId,
+            status: MatchDetailsStatus.success,
+            lineup: sampleLineup,
+          ),
+        );
+
+        await tester.pumpWidget(
+          buildTestApp(
+            locale: const Locale('ar'),
+            child: BlocProvider.value(
+              value: bloc,
+              child: const LineupTabView(matchId: sampleMatchId),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Find team badge text 'ريال مدريد'
+        final teamTextWidget = tester.widget<Text>(
+          find.text('ريال مدريد').first,
+        );
+        expect(teamTextWidget.style?.fontFamily, contains('Cairo'));
+
+        // Find player tag text 'كورتوا'
+        final playerTextWidget = tester.widget<Text>(find.text('كورتوا').first);
+        expect(playerTextWidget.style?.fontFamily, contains('Cairo'));
+      },
+    );
+
+    testWidgets(
+      '9. Separates Substitutions and Bench with player IN / OUT pairs matching Yalla Shoot layout',
+      (tester) async {
+        const subbedInPlayer = LineupPlayerEntity(
+          playerId: '101',
+          name: 'كيم مين جاي',
+          number: 3,
+          rating: '6.8',
+          substituteIn: true,
+          substituteTime: 46,
+          subbedForName: 'أوباميكانو',
+        );
+        const benchPlayer = LineupPlayerEntity(
+          playerId: '102',
+          name: 'يوناس أوربيغ',
+          number: 40,
+          substituteIn: false,
+        );
+
+        const team = TeamLineupEntity(
+          teamName: 'بايرن ميونخ',
+          startingXi: [
+            LineupPlayerEntity(
+              playerId: '1',
+              name: 'أوباميكانو',
+              number: 2,
+              substituteOut: true,
+              substituteTime: 46,
+            ),
+          ],
+          substitutes: [subbedInPlayer, benchPlayer],
+        );
+
+        await tester.pumpWidget(
+          buildTestApp(
+            locale: const Locale('ar'),
+            child: const LineupSquadListWidget(
+              home: team,
+              away: team,
+              showStarters: false,
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Expect distinct headers for Substitutions and Bench
+        expect(find.text('التبديلات'), findsOneWidget);
+        expect(find.text('دكة البدلاء'), findsOneWidget);
+
+        // Verify Player IN (كيم مين جاي) and Player OUT (أوباميكانو) are displayed
+        expect(find.text('كيم مين جاي'), findsOneWidget);
+        expect(find.text('أوباميكانو'), findsOneWidget);
+        expect(find.text("46'"), findsOneWidget);
+
+        // Verify Bench Player is displayed
+        expect(find.text('يوناس أوربيغ'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '10. Renders Goal and Assist badges on PitchPlayerNode when player has goals and assists',
+      (tester) async {
+        const playerWithGoalsAndAssists = LineupPlayerEntity(
+          playerId: '9',
+          name: 'هاري كين',
+          number: 9,
+          position: 'مهاجم',
+          positionCode: 'S',
+          goals: 2,
+          assists: 1,
+          rating: '8.2',
+          yellowCards: 0,
+        );
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: PitchPlayerNode(
+                  player: playerWithGoalsAndAssists,
+                  isHome: true,
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // Verify number 9 (present on fallback avatar jersey + number badge)
-      expect(find.text('9'), findsNWidgets(2));
+        // Verify number 9 (present on fallback avatar jersey + number badge)
+        expect(find.text('9'), findsNWidgets(2));
 
-      // Verify rating 8.2
-      expect(find.text('8.2'), findsOneWidget);
+        // Verify rating 8.2
+        expect(find.text('8.2'), findsOneWidget);
 
-      // Verify goal count 2 and soccer ball icon
-      expect(find.text('2'), findsOneWidget);
-      expect(find.byIcon(Icons.sports_soccer_rounded), findsOneWidget);
+        // Verify goal count 2 and soccer ball icon
+        expect(find.text('2'), findsOneWidget);
+        expect(find.byIcon(Icons.sports_soccer_rounded), findsOneWidget);
 
-      // Verify FootballBootPainter is rendered for assist
-      final customPaints = tester.widgetList<CustomPaint>(find.byType(CustomPaint));
-      final hasBootPainter = customPaints.any((cp) => cp.painter is FootballBootPainter);
-      expect(hasBootPainter, isTrue);
-    });
+        // Verify FootballBootPainter is rendered for assist
+        final customPaints = tester.widgetList<CustomPaint>(
+          find.byType(CustomPaint),
+        );
+        final hasBootPainter = customPaints.any(
+          (cp) => cp.painter is FootballBootPainter,
+        );
+        expect(hasBootPainter, isTrue);
+      },
+    );
 
-    testWidgets('11. Handles lineup available for one team only (auto-selects, shows unavailable badge & empty pitch overlay with switch action)', (
-      tester,
-    ) async {
-      final bloc = MatchDetailsBloc(
-        repository: mockRepo,
-        webSocketService: mockWs,
-        localStorageService: mockStorage,
-        matchId: sampleMatchId,
-      );
-
-      // Home has NO lineup (like Lusail in the screenshot)
-      // Away has a full lineup (like Al-Markhiya)
-      const singleTeamLineup = MatchLineupEntity(
-        matchId: sampleMatchId,
-        lineupsAvailable: true,
-        formationType: 'probable',
-        formationTypeText: 'تشكيلة متوقعة',
-        home: TeamLineupEntity(
-          teamId: '10',
-          teamName: 'لوسيل',
-          formation: null,
-          startingXi: [],
-          substitutes: [],
-        ),
-        away: TeamLineupEntity(
-          teamId: '20',
-          teamName: 'المرخية',
-          formation: '4-3-3',
-          startingXi: [
-            LineupPlayerEntity(
-              playerId: '101',
-              name: 'علي حسن',
-              number: 10,
-              position: 'مهاجم',
-              positionCode: 'S',
-            ),
-          ],
-          substitutes: [],
-        ),
-      );
-
-      bloc.emit(
-        const MatchDetailsState(
+    testWidgets(
+      '11. Handles lineup available for one team only (auto-selects, shows unavailable badge & empty pitch overlay with switch action)',
+      (tester) async {
+        final bloc = MatchDetailsBloc(
+          repository: mockRepo,
+          webSocketService: mockWs,
+          localStorageService: mockStorage,
           matchId: sampleMatchId,
-          status: MatchDetailsStatus.success,
-          lineup: singleTeamLineup,
-        ),
-      );
+        );
 
-      await tester.pumpWidget(
-        buildTestApp(
-          child: BlocProvider.value(
-            value: bloc,
-            child: const LineupTabView(matchId: sampleMatchId),
+        // Home has NO lineup (like Lusail in the screenshot)
+        // Away has a full lineup (like Al-Markhiya)
+        const singleTeamLineup = MatchLineupEntity(
+          matchId: sampleMatchId,
+          lineupsAvailable: true,
+          formationType: 'probable',
+          formationTypeText: 'تشكيلة متوقعة',
+          home: TeamLineupEntity(
+            teamId: '10',
+            teamName: 'لوسيل',
+            formation: null,
+            startingXi: [],
+            substitutes: [],
           ),
-        ),
-      );
+          away: TeamLineupEntity(
+            teamId: '20',
+            teamName: 'المرخية',
+            formation: '4-3-3',
+            startingXi: [
+              LineupPlayerEntity(
+                playerId: '101',
+                name: 'علي حسن',
+                number: 10,
+                position: 'مهاجم',
+                positionCode: 'S',
+              ),
+            ],
+            substitutes: [],
+          ),
+        );
 
-      await tester.pumpAndSettle();
+        bloc.emit(
+          const MatchDetailsState(
+            matchId: sampleMatchId,
+            status: MatchDetailsStatus.success,
+            lineup: singleTeamLineup,
+          ),
+        );
 
-      // 1. LineupTabView automatically selected Away team (المرخية) because Home (لوسيل) has no players
-      expect(find.text('علي حسن'), findsWidgets);
+        await tester.pumpWidget(
+          buildTestApp(
+            child: BlocProvider.value(
+              value: bloc,
+              child: const LineupTabView(matchId: sampleMatchId),
+            ),
+          ),
+        );
 
-      // 2. The team toggle shows 'غير معلنة' for لوسيل
-      expect(find.text('غير معلنة'), findsWidgets);
+        await tester.pumpAndSettle();
 
-      // 3. User manually selects the team with no lineup (لوسيل)
-      await tester.tap(find.text('لوسيل').first);
-      await tester.pumpAndSettle();
+        // 1. LineupTabView automatically selected Away team (المرخية) because Home (لوسيل) has no players
+        expect(find.text('علي حسن'), findsWidgets);
 
-      // 4. Tactical board shows the empty state overlay
-      expect(find.text('لم يتم الإعلان عن التشكيلة'), findsOneWidget);
-      expect(find.text('تشكيلة لوسيل غير متوفرة حالياً'), findsOneWidget);
+        // 2. The team toggle shows 'غير معلنة' for لوسيل
+        expect(find.text('غير معلنة'), findsWidgets);
 
-      // 5. Shows quick action button to switch to Al-Markhiya
-      expect(find.text('عرض تشكيلة المرخية'), findsWidgets);
+        // 3. User manually selects the team with no lineup (لوسيل)
+        await tester.tap(find.text('لوسيل').first);
+        await tester.pumpAndSettle();
 
-      // 6. Tapping the switch button switches back to Al-Markhiya
-      await tester.tap(find.text('عرض تشكيلة المرخية').first);
-      await tester.pumpAndSettle();
-      expect(find.text('علي حسن'), findsWidgets);
-    });
+        // 4. Tactical board shows the empty state overlay
+        expect(find.text('لم يتم الإعلان عن التشكيلة'), findsOneWidget);
+        expect(find.text('تشكيلة لوسيل غير متوفرة حالياً'), findsOneWidget);
+
+        // 5. Shows quick action button to switch to Al-Markhiya
+        expect(find.text('عرض تشكيلة المرخية'), findsWidgets);
+
+        // 6. Tapping the switch button switches back to Al-Markhiya
+        await tester.tap(find.text('عرض تشكيلة المرخية').first);
+        await tester.pumpAndSettle();
+        expect(find.text('علي حسن'), findsWidgets);
+      },
+    );
   });
 }

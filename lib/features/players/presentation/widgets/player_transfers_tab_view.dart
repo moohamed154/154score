@@ -45,10 +45,7 @@ class PlayerTransfersTabView extends StatelessWidget {
     );
   }
 
-  Widget _buildTransferCard(
-    BuildContext context,
-    PlayerTransferEntity tr,
-  ) {
+  Widget _buildTransferCard(BuildContext context, PlayerTransferEntity tr) {
     final team = tr.team;
     final isActive = tr.active;
 
@@ -91,8 +88,8 @@ class PlayerTransfersTabView extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: (isDark
-                          ? AppColors.darkCardElevated
-                          : AppColors.lightCardElevated),
+                      ? AppColors.darkCardElevated
+                      : AppColors.lightCardElevated),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: team?.logo != null
@@ -159,15 +156,16 @@ class PlayerTransfersTabView extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       _formatDateRange(tr),
-                      style: AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
-                        fontSize: 11,
-                      ),
+                      style:
+                          AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                            fontSize: 11,
+                          ),
                     ),
                   ],
                 ),
@@ -186,10 +184,12 @@ class PlayerTransfersTabView extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: _getTransferTypeColor(tr.type).withValues(alpha: 0.12),
+                        color: _getTransferTypeColor(tr.type)
+                            .withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: _getTransferTypeColor(tr.type).withValues(alpha: 0.3),
+                          color: _getTransferTypeColor(tr.type)
+                              .withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -205,13 +205,14 @@ class PlayerTransfersTabView extends StatelessWidget {
                   if (tr.fee.isNotEmpty && tr.fee != tr.type)
                     Text(
                       tr.fee,
-                      style: AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.green,
-                      ),
+                      style:
+                          AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.green,
+                          ),
                     ),
                 ],
               ),

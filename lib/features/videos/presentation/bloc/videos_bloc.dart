@@ -38,6 +38,16 @@ class SelectVideoCategoryEvent extends VideosEvent {
   List<Object?> get props => [categoryId];
 }
 
+class ChangeVideosLanguageEvent extends VideosEvent {
+  final String languageCode;
+  final Completer<void>? completer;
+
+  const ChangeVideosLanguageEvent(this.languageCode, {this.completer});
+
+  @override
+  List<Object?> get props => [languageCode];
+}
+
 enum VideosStatus { initial, loading, success, empty, error }
 
 class VideosState extends Equatable {
@@ -89,6 +99,7 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
     : super(const VideosState()) {
     on<LoadVideosEvent>(_onLoadVideos);
     on<SelectVideoCategoryEvent>(_onSelectCategory);
+    on<ChangeVideosLanguageEvent>(_onChangeVideosLanguage);
   }
 
   Future<void> _onLoadVideos(
@@ -131,6 +142,44 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
       emit(
         state.copyWith(status: VideosStatus.error, errorMessage: e.toString()),
       );
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
+    }
+  }
+
+  Future<void> _onChangeVideosLanguage(
+    ChangeVideosLanguageEvent event,
+    Emitter<VideosState> emit,
+  ) async {
+    final targetLang = event.languageCode;
+    try {
+      final videosFuture = repository.getVideos(
+        champId: state.selectedCategory,
+        lang: targetLang,
+      );
+      final categoriesFuture = repository.getCategories(lang: targetLang);
+
+      final videosRes = (await videosFuture).dataOrNull ?? [];
+      final categoriesRes = (await categoriesFuture).dataOrNull ?? [];
+
+      // Race condition check: make sure current language is still targetLang
+      final currentLang = localStorageService.getLanguage();
+      if (currentLang != targetLang) return;
+
+      emit(
+        state.copyWith(
+          status: videosRes.isEmpty ? VideosStatus.empty : VideosStatus.success,
+          videos: videosRes,
+          categories: categoriesRes.isNotEmpty
+              ? categoriesRes
+              : state.categories,
+          errorMessage: null,
+        ),
+      );
+    } catch (_) {
+      // Keep existing videos visible
     } finally {
       if (event.completer != null && !event.completer!.isCompleted) {
         event.completer!.complete();

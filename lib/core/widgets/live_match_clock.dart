@@ -227,7 +227,9 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       }
 
       final isStoppageMinute = (_currentMinute == 45 || _currentMinute >= 90);
-      if (isStoppageMinute && _elapsedExtraSeconds == 0 && estimated.extraMinute > 0) {
+      if (isStoppageMinute &&
+          _elapsedExtraSeconds == 0 &&
+          estimated.extraMinute > 0) {
         _elapsedExtraSeconds = estimated.extraMinute * 60;
       }
     }
@@ -240,7 +242,8 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     // 5. Default total extra time if stoppage is active
     final p = (widget.period ?? '').toLowerCase();
     final s = (widget.status ?? '').toLowerCase();
-    final is1stHalf = p.contains('1st') ||
+    final is1stHalf =
+        p.contains('1st') ||
         s.contains('الأول') ||
         s.contains('الاول') ||
         s.contains('first');
@@ -256,8 +259,13 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       baseMinute = 120;
     }
 
-    final isStoppageMinute = (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120);
-    final hasExtra = _totalExtraMinutes > 0 ||
+    final isStoppageMinute =
+        (baseMinute == 45 ||
+        baseMinute == 90 ||
+        baseMinute == 105 ||
+        baseMinute == 120);
+    final hasExtra =
+        _totalExtraMinutes > 0 ||
         _elapsedExtraSeconds > 0 ||
         (widget.extraTime != null &&
             widget.extraTime!.isNotEmpty &&
@@ -276,7 +284,9 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       if (_totalExtraMinutes == 0) {
         final elapsedM = _elapsedExtraSeconds ~/ 60;
         final defaultTotal = baseMinute == 45 ? 3 : 5;
-        _totalExtraMinutes = elapsedM > defaultTotal ? elapsedM + 1 : defaultTotal;
+        _totalExtraMinutes = elapsedM > defaultTotal
+            ? elapsedM + 1
+            : defaultTotal;
       }
     }
 
@@ -288,7 +298,8 @@ class _LiveMatchClockState extends State<LiveMatchClock>
 
     final p = (widget.period ?? '').toLowerCase();
     final s = (widget.status ?? '').toLowerCase();
-    final is1stHalf = p.contains('1st') ||
+    final is1stHalf =
+        p.contains('1st') ||
         s.contains('الأول') ||
         s.contains('الاول') ||
         s.contains('first');
@@ -305,7 +316,10 @@ class _LiveMatchClockState extends State<LiveMatchClock>
     }
 
     final isExtraPeriod =
-        (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120) &&
+        (baseMinute == 45 ||
+            baseMinute == 90 ||
+            baseMinute == 105 ||
+            baseMinute == 120) &&
         (_totalExtraMinutes > 0 || _elapsedExtraSeconds > 0 || m > baseMinute);
 
     if (MatchStatusHelper.isInPlay(phase)) {
@@ -335,7 +349,9 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       _displayString = '';
     }
 
-    if (_elapsedExtraSeconds > 0 || _totalExtraMinutes > 0 || _currentMinute > 0) {
+    if (_elapsedExtraSeconds > 0 ||
+        _totalExtraMinutes > 0 ||
+        _currentMinute > 0) {
       LiveClockSync.recordClock(
         matchId: widget.matchId,
         minute: _currentMinute,
@@ -364,7 +380,8 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         _currentMinute < 130) {
       final p = (widget.period ?? '').toLowerCase();
       final s = (widget.status ?? '').toLowerCase();
-      final is1stHalf = p.contains('1st') ||
+      final is1stHalf =
+          p.contains('1st') ||
           s.contains('الأول') ||
           s.contains('الاول') ||
           s.contains('first');
@@ -384,8 +401,13 @@ class _LiveMatchClockState extends State<LiveMatchClock>
           }
 
           final isExtraPeriod =
-              (baseMinute == 45 || baseMinute == 90 || baseMinute == 105 || baseMinute == 120) &&
-              (_totalExtraMinutes > 0 || _elapsedExtraSeconds > 0 || _currentMinute > baseMinute);
+              (baseMinute == 45 ||
+                  baseMinute == 90 ||
+                  baseMinute == 105 ||
+                  baseMinute == 120) &&
+              (_totalExtraMinutes > 0 ||
+                  _elapsedExtraSeconds > 0 ||
+                  _currentMinute > baseMinute);
 
           if (isExtraPeriod) {
             final maxExtraSec = _totalExtraMinutes > 0
@@ -463,7 +485,8 @@ class _LiveMatchClockState extends State<LiveMatchClock>
 
     final p = (widget.period ?? '').toLowerCase();
     final s = (widget.status ?? '').toLowerCase();
-    final is1stHalf = p.contains('1st') ||
+    final is1stHalf =
+        p.contains('1st') ||
         s.contains('الأول') ||
         s.contains('الاول') ||
         s.contains('first');
@@ -556,11 +579,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
           ),
           const SizedBox(width: 4),
         ],
-        Text(
-          label,
-          style: textStyle,
-          textDirection: TextDirection.ltr,
-        ),
+        Text(label, style: textStyle, textDirection: TextDirection.ltr),
       ],
     );
   }

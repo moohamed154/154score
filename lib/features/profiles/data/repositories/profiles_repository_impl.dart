@@ -105,7 +105,8 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
 
     // Resolve known commentators when navigation arrives with missing or 0 id
     if (effectiveId == '0' || effectiveId.isEmpty) {
-      final resolvedId = CommentatorResolver.resolveId(cleanSlug) ??
+      final resolvedId =
+          CommentatorResolver.resolveId(cleanSlug) ??
           CommentatorResolver.resolveId(slug);
       if (resolvedId != null) {
         effectiveId = resolvedId;
@@ -178,9 +179,7 @@ class ProfilesRepositoryImpl implements ProfilesRepository {
           role: lang == 'ar' ? 'لاعب كرة قدم' : 'Football Player',
           sections: [
             ProfileSectionEntity(
-              section: lang == 'ar'
-                  ? 'معلومات اللاعب'
-                  : 'Player Information',
+              section: lang == 'ar' ? 'معلومات اللاعب' : 'Player Information',
               items: [
                 ProfileItemEntity(
                   title: lang == 'ar' ? 'الاسم' : 'Name',

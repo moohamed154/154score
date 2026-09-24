@@ -163,8 +163,11 @@ class PlayerStatsTabView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: (isDark ? AppColors.darkBackground : AppColors.lightBackground)
-                  .withValues(alpha: 0.5),
+              color:
+                  (isDark
+                          ? AppColors.darkBackground
+                          : AppColors.lightBackground)
+                      .withValues(alpha: 0.5),
               border: Border(
                 top: BorderSide(
                   color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -188,7 +191,8 @@ class PlayerStatsTabView extends StatelessWidget {
                 if (stat.scorePenalty > 0 || stat.missPenalty > 0)
                   _buildMiniStat(
                     label: isArabic ? 'ركلات جزاء' : 'Penalties',
-                    value: '${stat.scorePenalty}/${stat.scorePenalty + stat.missPenalty}',
+                    value:
+                        '${stat.scorePenalty}/${stat.scorePenalty + stat.missPenalty}',
                     badgeColor: Colors.indigoAccent,
                   ),
                 if (!isGoalkeeper && stat.cleanSheets > 0)
@@ -237,13 +241,13 @@ class PlayerStatsTabView extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: AppTypography.getBodySmall(
-            isDark: isDark,
-            isArabic: isArabic,
-          ).copyWith(
-            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-            fontSize: 11,
-          ),
+          style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
+              .copyWith(
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
+                fontSize: 11,
+              ),
         ),
       ],
     );
@@ -260,10 +264,7 @@ class PlayerStatsTabView extends StatelessWidget {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: badgeColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: badgeColor, shape: BoxShape.circle),
         ),
         const SizedBox(width: 5),
         Text(
@@ -275,10 +276,7 @@ class PlayerStatsTabView extends StatelessWidget {
         ),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
         ),
       ],
     );

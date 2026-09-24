@@ -97,8 +97,12 @@ void main() {
         },
       };
 
-      when(() => mockClient.get(any(), queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => mockPayload);
+      when(
+        () => mockClient.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => mockPayload);
 
       final result = await ds.getStandings('943487', lang: 'ar');
 
@@ -116,10 +120,7 @@ void main() {
     });
 
     test('LeagueStandingsEntity correctly detects hasBothGroupsAndStages', () {
-      const stage = TournamentStageEntity(
-        stageName: 'النهائي',
-        matches: [],
-      );
+      const stage = TournamentStageEntity(stageName: 'النهائي', matches: []);
 
       const row = StandingRowEntity(
         position: 1,
@@ -138,7 +139,9 @@ void main() {
         leagueId: '894789',
         leagueTitle: 'كأس العالم',
         rows: [row],
-        groups: {'المجموعة A': [row]},
+        groups: {
+          'المجموعة A': [row],
+        },
         stages: [stage],
       );
 
@@ -147,7 +150,9 @@ void main() {
       expect(entityBoth.hasBothGroupsAndStages, isTrue);
     });
 
-    testWidgets('StandingsTable handles and fixes duplicate rank numbers', (tester) async {
+    testWidgets('StandingsTable handles and fixes duplicate rank numbers', (
+      tester,
+    ) async {
       // Simulating table with duplicate positions (like 1, 1, 2, 2)
       final duplicateRows = [
         const StandingRowEntity(
@@ -188,9 +193,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createTestApp(
-        StandingsTable(rows: duplicateRows),
-      ));
+      await tester.pumpWidget(
+        createTestApp(StandingsTable(rows: duplicateRows)),
+      );
       await tester.pumpAndSettle();
 
       // Ensure that '1', '2', and '3' are displayed sequentially, NOT two '1's!
@@ -202,7 +207,9 @@ void main() {
       expect(find.text('أتلتيكو مدريد'), findsOneWidget);
     });
 
-    testWidgets('TournamentStagesWidget renders stage pills and match cards', (tester) async {
+    testWidgets('TournamentStagesWidget renders stage pills and match cards', (
+      tester,
+    ) async {
       final stages = [
         const TournamentStageEntity(
           stageName: 'نصف النهائي',
@@ -220,7 +227,11 @@ void main() {
           matches: [
             StageMatchEntity(
               matchId: 'm2',
-              teamA: StageTeamEntity(name: 'الأرجنتين', score: 3, isWinner: true),
+              teamA: StageTeamEntity(
+                name: 'الأرجنتين',
+                score: 3,
+                isWinner: true,
+              ),
               teamB: StageTeamEntity(name: 'فرنسا', score: 3, isWinner: false),
               matchDate: '2022-12-18',
             ),
@@ -228,9 +239,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createTestApp(
-        TournamentStagesWidget(stages: stages),
-      ));
+      await tester.pumpWidget(
+        createTestApp(TournamentStagesWidget(stages: stages)),
+      );
       await tester.pumpAndSettle();
 
       // Because 'النهائي' is the final stage, it should default to 'النهائي'

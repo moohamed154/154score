@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -27,8 +28,7 @@ class SplashView extends StatefulWidget {
   State<SplashView> createState() => _SplashViewState();
 }
 
-class _SplashViewState extends State<SplashView>
-    with TickerProviderStateMixin {
+class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
   late final AnimationController _entranceController;
   late final AnimationController _progressController;
   late final AnimationController _exitController;
@@ -81,15 +81,13 @@ class _SplashViewState extends State<SplashView>
       curve: const Interval(0.25, 0.65, curve: Curves.easeOut),
     );
 
-    _titleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.30),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.25, 0.65, curve: Curves.easeOutCubic),
-      ),
-    );
+    _titleSlideAnimation =
+        Tween<Offset>(begin: const Offset(0.0, 0.30), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.25, 0.65, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _subtitleFadeAnimation = CurvedAnimation(
       parent: _entranceController,
@@ -117,9 +115,10 @@ class _SplashViewState extends State<SplashView>
       duration: const Duration(milliseconds: 300),
     );
 
-    _exitFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _exitController, curve: Curves.easeIn),
-    );
+    _exitFadeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _exitController, curve: Curves.easeIn));
 
     _exitController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -156,7 +155,9 @@ class _SplashViewState extends State<SplashView>
         isConnected = await networkInfo.isConnected;
 
         unawaited(_connectivitySubscription?.cancel());
-        _connectivitySubscription = networkInfo.onConnectivityChanged.listen((connected) {
+        _connectivitySubscription = networkInfo.onConnectivityChanged.listen((
+          connected,
+        ) {
           if (connected && _isOffline && mounted) {
             unawaited(_startRealLoading());
           }
@@ -198,7 +199,9 @@ class _SplashViewState extends State<SplashView>
         });
 
         if (matchesBloc.state.status == MatchesStatus.initial) {
-          matchesBloc.add(LoadMatchesEvent(date: matchesBloc.state.selectedDate));
+          matchesBloc.add(
+            LoadMatchesEvent(date: matchesBloc.state.selectedDate),
+          );
         }
       }
     } catch (_) {}
@@ -235,13 +238,15 @@ class _SplashViewState extends State<SplashView>
     if (!_matchesLoaded) {
       try {
         if (sl.isRegistered<NetworkInfo>()) {
-          unawaited(sl<NetworkInfo>().isConnected.then((connected) {
-            if (!connected && mounted) {
-              setState(() {
-                _isOffline = true;
-              });
-            }
-          }));
+          unawaited(
+            sl<NetworkInfo>().isConnected.then((connected) {
+              if (!connected && mounted) {
+                setState(() {
+                  _isOffline = true;
+                });
+              }
+            }),
+          );
         }
       } catch (_) {}
     }
@@ -261,30 +266,30 @@ class _SplashViewState extends State<SplashView>
     final startValue = _currentProgress;
     _targetProgress = newTarget;
 
-    _progressTweenAnimation = Tween<double>(
-      begin: startValue,
-      end: _targetProgress,
-    ).animate(
-      CurvedAnimation(
-        parent: _progressController,
-        curve: Curves.easeOutCubic,
-      ),
+    _progressTweenAnimation =
+        Tween<double>(begin: startValue, end: _targetProgress).animate(
+          CurvedAnimation(
+            parent: _progressController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    unawaited(
+      _progressController.forward(from: 0.0).then((_) {
+        if (!mounted) return;
+        _currentProgress = _targetProgress;
+
+        if (_currentProgress >= 1.0) {
+          _timeoutTimer?.cancel();
+          // Brief settling time so user sees 100% completion before smooth exit
+          _staggerTimer = Timer(const Duration(milliseconds: 250), () {
+            if (mounted && !_hasNavigated) {
+              unawaited(_exitController.forward());
+            }
+          });
+        }
+      }),
     );
-
-    unawaited(_progressController.forward(from: 0.0).then((_) {
-      if (!mounted) return;
-      _currentProgress = _targetProgress;
-
-      if (_currentProgress >= 1.0) {
-        _timeoutTimer?.cancel();
-        // Brief settling time so user sees 100% completion before smooth exit
-        _staggerTimer = Timer(const Duration(milliseconds: 250), () {
-          if (mounted && !_hasNavigated) {
-            unawaited(_exitController.forward());
-          }
-        });
-      }
-    }));
   }
 
   void _navigateToNext() {
@@ -331,17 +336,20 @@ class _SplashViewState extends State<SplashView>
       };
     }
 
-    final isDark = themeMode == ThemeMode.dark ||
+    final isDark =
+        themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             (Theme.of(context).brightness == Brightness.dark ||
-                MediaQuery.maybePlatformBrightnessOf(context) == Brightness.dark));
+                MediaQuery.maybePlatformBrightnessOf(context) ==
+                    Brightness.dark));
 
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
@@ -350,10 +358,7 @@ class _SplashViewState extends State<SplashView>
           }
         },
         child: AnimatedBuilder(
-          animation: Listenable.merge([
-            _entranceController,
-            _exitController,
-          ]),
+          animation: Listenable.merge([_entranceController, _exitController]),
           builder: (context, child) {
             return Opacity(
               opacity: _exitFadeAnimation.value,
@@ -434,7 +439,8 @@ class _SplashViewState extends State<SplashView>
                 gradient: RadialGradient(
                   colors: [
                     AppColors.primary.withValues(
-                      alpha: (isDark ? 0.28 : 0.20) *
+                      alpha:
+                          (isDark ? 0.28 : 0.20) *
                           (1.0 - _pulseWaveAnimation.value),
                     ),
                     AppColors.primary.withValues(alpha: 0.0),
@@ -450,8 +456,9 @@ class _SplashViewState extends State<SplashView>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.primary
-                      .withValues(alpha: isDark ? 0.25 : 0.20),
+                  color: AppColors.primary.withValues(
+                    alpha: isDark ? 0.25 : 0.20,
+                  ),
                   width: 1.5,
                 ),
               ),
@@ -471,14 +478,16 @@ class _SplashViewState extends State<SplashView>
                       : const [Colors.white, Color(0xFFEDF2F7)],
                 ),
                 border: Border.all(
-                  color: AppColors.primary
-                      .withValues(alpha: isDark ? 0.8 : 0.9),
+                  color: AppColors.primary.withValues(
+                    alpha: isDark ? 0.8 : 0.9,
+                  ),
                   width: 2.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary
-                        .withValues(alpha: isDark ? 0.35 : 0.20),
+                    color: AppColors.primary.withValues(
+                      alpha: isDark ? 0.35 : 0.20,
+                    ),
                     blurRadius: 24,
                     spreadRadius: isDark ? 2 : 1,
                     offset: const Offset(0, 4),
@@ -527,8 +536,9 @@ class _SplashViewState extends State<SplashView>
                   color: AppColors.primary,
                   shadows: [
                     Shadow(
-                      color: AppColors.primary
-                          .withValues(alpha: isDark ? 0.5 : 0.25),
+                      color: AppColors.primary.withValues(
+                        alpha: isDark ? 0.5 : 0.25,
+                      ),
                       blurRadius: 16,
                     ),
                   ],
@@ -560,8 +570,9 @@ class _SplashViewState extends State<SplashView>
         constraints: const BoxConstraints(maxWidth: 270),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         decoration: BoxDecoration(
-          color: (isDark ? AppColors.darkSurface : Colors.white)
-              .withValues(alpha: isDark ? 0.6 : 0.85),
+          color: (isDark ? AppColors.darkSurface : Colors.white).withValues(
+            alpha: isDark ? 0.6 : 0.85,
+          ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: (isDark ? AppColors.darkBorder : AppColors.lightBorder)
@@ -602,7 +613,8 @@ class _SplashViewState extends State<SplashView>
   Widget _buildRealProgressBar(AppLocalizations l10n, bool isDark) {
     const barWidth = 190.0;
     const barHeight = 4.0;
-    final progressValue = (_progressTweenAnimation?.value ?? _currentProgress).clamp(0.0, 1.0);
+    final progressValue = (_progressTweenAnimation?.value ?? _currentProgress)
+        .clamp(0.0, 1.0);
 
     return FadeTransition(
       opacity: _subtitleFadeAnimation,
@@ -613,8 +625,9 @@ class _SplashViewState extends State<SplashView>
             width: barWidth,
             height: barHeight,
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: isDark ? 0.08 : 0.06),
+              color: (isDark ? Colors.white : Colors.black).withValues(
+                alpha: isDark ? 0.08 : 0.06,
+              ),
               borderRadius: BorderRadius.circular(barHeight / 2),
             ),
             alignment: Alignment.centerLeft,
@@ -632,8 +645,9 @@ class _SplashViewState extends State<SplashView>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary
-                        .withValues(alpha: isDark ? 0.6 : 0.35),
+                    color: AppColors.primary.withValues(
+                      alpha: isDark ? 0.6 : 0.35,
+                    ),
                     blurRadius: 8,
                     offset: const Offset(0, 1),
                   ),
@@ -647,8 +661,9 @@ class _SplashViewState extends State<SplashView>
             style: GoogleFonts.cairo(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color:
-                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
               letterSpacing: 0.5,
             ),
           ),
@@ -663,8 +678,9 @@ class _SplashViewState extends State<SplashView>
       constraints: const BoxConstraints(maxWidth: 300),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: (isDark ? AppColors.darkSurface : Colors.white)
-            .withValues(alpha: isDark ? 0.85 : 0.95),
+        color: (isDark ? AppColors.darkSurface : Colors.white).withValues(
+          alpha: isDark ? 0.85 : 0.95,
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.statusLive.withValues(alpha: 0.35),

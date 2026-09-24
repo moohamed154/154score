@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -139,7 +139,10 @@ void main() {
     when(() => repo.getEvents(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess(sampleEvents));
     when(() => repo.getEventsPayload(any(), lang: any(named: 'lang')))
-        .thenAnswer((_) async => const ApiSuccess(MatchEventsPayload(events: sampleEvents)));
+        .thenAnswer(
+          (_) async =>
+              const ApiSuccess(MatchEventsPayload(events: sampleEvents)),
+        );
     when(() => repo.getStats(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess([]));
     when(
@@ -422,83 +425,95 @@ void main() {
     });
 
     // ── 16. Event with video_url renders video badge and hasVideo flag ────────
-    testWidgets('16. Event with video_url renders video badge and hasVideo flag', (
-      tester,
-    ) async {
-      const eventWithVideo = MatchEventEntity(
-        minute: '67',
-        playerName: 'كيليان مبابي',
-        type: 'goal',
-        isHomeTeam: true,
-        score: '1 - 0',
-        videoUrl: 'https://x.com/beINSPORTS/status/2097768372154876218',
-      );
+    testWidgets(
+      '16. Event with video_url renders video badge and hasVideo flag',
+      (tester) async {
+        const eventWithVideo = MatchEventEntity(
+          minute: '67',
+          playerName: 'كيليان مبابي',
+          type: 'goal',
+          isHomeTeam: true,
+          score: '1 - 0',
+          videoUrl: 'https://x.com/beINSPORTS/status/2097768372154876218',
+        );
 
-      expect(eventWithVideo.hasVideo, isTrue);
+        expect(eventWithVideo.hasVideo, isTrue);
 
-      await tester.pumpWidget(
-        buildTestApp(const TimelineEventItem(event: eventWithVideo)),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          buildTestApp(const TimelineEventItem(event: eventWithVideo)),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
-      expect(find.text('فيديو'), findsNothing);
-    });
+        expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+        expect(find.text('فيديو'), findsNothing);
+      },
+    );
 
     // ── 17. StatusPill with live extra time shows base minute and stoppage ────
-    testWidgets('17. StatusPill with live extra time shows base minute and stoppage', (
-      tester,
-    ) async {
-      // Simulation of Paris vs Bratislava (1st half extra time with extraTime = "1")
-      await tester.pumpWidget(
-        buildTestApp(
-          const StatusPill(
-            status: 'الشوط الأول',
-            minute: '45',
-            extraTime: '1',
-            score1: '0',
-            score2: '3',
-            time: '22:00',
-            period: '1st_half',
+    testWidgets(
+      '17. StatusPill with live extra time shows base minute and stoppage',
+      (tester) async {
+        // Simulation of Paris vs Bratislava (1st half extra time with extraTime = "1")
+        await tester.pumpWidget(
+          buildTestApp(
+            const StatusPill(
+              status: 'الشوط الأول',
+              minute: '45',
+              extraTime: '1',
+              score1: '0',
+              score2: '3',
+              time: '22:00',
+              period: '1st_half',
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Must display base minute '45' and stoppage format '00:00  / 1' (not bare '00:00 / 1')
-      expect(find.text('45'), findsOneWidget);
-      expect(find.text('00:00  / 1'), findsOneWidget);
-    });
+        // Must display base minute '45' and stoppage format '00:00  / 1' (not bare '00:00 / 1')
+        expect(find.text('45'), findsOneWidget);
+        expect(find.text('00:00  / 1'), findsOneWidget);
+      },
+    );
 
     // ── 18. MatchDetailsBloc cleans match: prefix when loading events & stats ─
-    test('18. MatchDetailsBloc cleans match: prefix when loading events & stats', () async {
-      when(() => repo.getEvents('5802935', lang: any(named: 'lang')))
-          .thenAnswer((_) async => const ApiSuccess(sampleEvents));
-      when(() => repo.getStats('5802935', lang: any(named: 'lang')))
-          .thenAnswer((_) async => const ApiSuccess([]));
-      when(() => repo.getDetails('5802935', lang: any(named: 'lang'), utcOffset: any(named: 'utcOffset')))
-          .thenAnswer((_) async => const ApiSuccess([]));
-      when(() => repo.getNews('5802935', lang: any(named: 'lang')))
-          .thenAnswer((_) async => const ApiSuccess([]));
-      when(() => repo.getLineups('5802935', lang: any(named: 'lang')))
-          .thenAnswer((_) async => const ApiSuccess(null));
+    test(
+      '18. MatchDetailsBloc cleans match: prefix when loading events & stats',
+      () async {
+        when(() => repo.getEvents('5802935', lang: any(named: 'lang')))
+            .thenAnswer((_) async => const ApiSuccess(sampleEvents));
+        when(() => repo.getStats('5802935', lang: any(named: 'lang')))
+            .thenAnswer((_) async => const ApiSuccess([]));
+        when(
+          () => repo.getDetails(
+            '5802935',
+            lang: any(named: 'lang'),
+            utcOffset: any(named: 'utcOffset'),
+          ),
+        ).thenAnswer((_) async => const ApiSuccess([]));
+        when(() => repo.getNews('5802935', lang: any(named: 'lang')))
+            .thenAnswer((_) async => const ApiSuccess([]));
+        when(() => repo.getLineups('5802935', lang: any(named: 'lang')))
+            .thenAnswer((_) async => const ApiSuccess(null));
 
-      final bloc = MatchDetailsBloc(
-        repository: repo,
-        webSocketService: ws,
-        localStorageService: storage,
-        matchId: 'match:5802935',
-      );
+        final bloc = MatchDetailsBloc(
+          repository: repo,
+          webSocketService: ws,
+          localStorageService: storage,
+          matchId: 'match:5802935',
+        );
 
-      bloc.add(const LoadMatchDetailsEvent('match:5802935'));
-      await pumpEventQueue();
+        bloc.add(const LoadMatchDetailsEvent('match:5802935'));
+        await pumpEventQueue();
 
-      verify(() => repo.getEventsPayload('5802935', lang: any(named: 'lang'))).called(1);
-      verify(() => repo.getStats('5802935', lang: any(named: 'lang'))).called(1);
-      expect(bloc.state.events, sampleEvents);
-      expect(bloc.state.matchId, '5802935');
+        verify(() => repo.getEventsPayload('5802935', lang: any(named: 'lang')))
+            .called(1);
+        verify(() => repo.getStats('5802935', lang: any(named: 'lang')))
+            .called(1);
+        expect(bloc.state.events, sampleEvents);
+        expect(bloc.state.matchId, '5802935');
 
-      await bloc.close();
-    });
+        await bloc.close();
+      },
+    );
   });
 }

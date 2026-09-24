@@ -31,8 +31,11 @@ class PlayerProfileDto {
       team = PlayerTeamEntity(
         id: (t['id'] ?? t['row_id'] ?? '').toString(),
         name: (t['name'] ?? t['title'] ?? '').toString(),
-        fullName: (t['full_name'] ?? t['full_title'] ?? t['title'] ?? '').toString(),
-        logo: UrlHelper.normalizeImageUrl((t['logo'] ?? t['image'])?.toString()),
+        fullName: (t['full_name'] ?? t['full_title'] ?? t['title'] ?? '')
+            .toString(),
+        logo: UrlHelper.normalizeImageUrl(
+          (t['logo'] ?? t['image'])?.toString(),
+        ),
         worldRanking: int.tryParse(t['world_ranking']?.toString() ?? '0') ?? 0,
       );
     } else if (map['team_name'] is Map) {
@@ -41,7 +44,9 @@ class PlayerProfileDto {
         id: (t['row_id'] ?? t['id'] ?? '').toString(),
         name: (t['title'] ?? '').toString(),
         fullName: (t['full_title'] ?? t['title'] ?? '').toString(),
-        logo: UrlHelper.normalizeImageUrl((t['image'] ?? map['team_logo'])?.toString()),
+        logo: UrlHelper.normalizeImageUrl(
+          (t['image'] ?? map['team_logo'])?.toString(),
+        ),
         worldRanking: int.tryParse(t['world_ranking']?.toString() ?? '0') ?? 0,
       );
     } else if (map['team_logo'] != null) {
@@ -61,7 +66,9 @@ class PlayerProfileDto {
         id: (c['id'] ?? '').toString(),
         name: (c['name'] ?? c['title'] ?? '').toString(),
         code: (c['code'] ?? '').toString(),
-        flag: UrlHelper.normalizeImageUrl((c['flag'] ?? c['image'])?.toString()),
+        flag: UrlHelper.normalizeImageUrl(
+          (c['flag'] ?? c['image'])?.toString(),
+        ),
       );
     } else if (map['country_flag'] != null) {
       country = PlayerCountryEntity(
@@ -86,10 +93,12 @@ class PlayerProfileDto {
     final city = map['city']?.toString();
     final retired = map['retired'] == true || map['retired'] == 1;
     final died = map['died'] == true || map['died'] == 1;
-    final playerStatus = int.tryParse(map['player_status']?.toString() ?? '1') ?? 1;
+    final playerStatus =
+        int.tryParse(map['player_status']?.toString() ?? '1') ?? 1;
 
     // Season / League Statistics
-    final rawStats = (map['statistics'] ?? map['player_statistics']) as List? ?? [];
+    final rawStats =
+        (map['statistics'] ?? map['player_statistics']) as List? ?? [];
     final stats = <PlayerStatisticEntity>[];
     for (final s in rawStats) {
       if (s is Map) {
@@ -98,8 +107,12 @@ class PlayerProfileDto {
           id: (l['id'] ?? '').toString(),
           seasonId: l['season_id']?.toString() ?? l['url_id']?.toString(),
           name: (l['name'] ?? l['title'] ?? '').toString(),
-          logo: UrlHelper.normalizeImageUrl((l['logo'] ?? l['image'])?.toString()),
-          logoLight: UrlHelper.normalizeImageUrl((l['logo_light'] ?? l['image_light'])?.toString()),
+          logo: UrlHelper.normalizeImageUrl(
+            (l['logo'] ?? l['image'])?.toString(),
+          ),
+          logoLight: UrlHelper.normalizeImageUrl(
+            (l['logo_light'] ?? l['image_light'])?.toString(),
+          ),
           type: int.tryParse(l['type']?.toString() ?? ''),
           ranking: int.tryParse(l['ranking']?.toString() ?? ''),
           followed: l['followed'] == 1 || l['followed'] == true,
@@ -110,15 +123,34 @@ class PlayerProfileDto {
             league: leagueEntity,
             appearances: int.tryParse(s['appearances']?.toString() ?? '0') ?? 0,
             goals: int.tryParse(s['goals']?.toString() ?? '0') ?? 0,
-            assists: int.tryParse((s['assists'] ?? s['assist'])?.toString() ?? '0') ?? 0,
-            scorePenalty: int.tryParse(s['score_penalty']?.toString() ?? '0') ?? 0,
-            missPenalty: int.tryParse(s['miss_penalty']?.toString() ?? '0') ?? 0,
+            assists:
+                int.tryParse(
+                  (s['assists'] ?? s['assist'])?.toString() ?? '0',
+                ) ??
+                0,
+            scorePenalty:
+                int.tryParse(s['score_penalty']?.toString() ?? '0') ?? 0,
+            missPenalty:
+                int.tryParse(s['miss_penalty']?.toString() ?? '0') ?? 0,
             cancelGoal: int.tryParse(s['cancel_goal']?.toString() ?? '0') ?? 0,
             ownGoal: int.tryParse(s['own_goal']?.toString() ?? '0') ?? 0,
-            yellowCards: int.tryParse((s['yellow_cards'] ?? s['yellow_card'])?.toString() ?? '0') ?? 0,
-            redCards: int.tryParse((s['red_cards'] ?? s['red_card'])?.toString() ?? '0') ?? 0,
-            cleanSheets: int.tryParse(s['clean_sheets']?.toString() ?? '0') ?? 0,
-            manOfMatch: int.tryParse((s['man_of_match'] ?? s['man_match'])?.toString() ?? '0') ?? 0,
+            yellowCards:
+                int.tryParse(
+                  (s['yellow_cards'] ?? s['yellow_card'])?.toString() ?? '0',
+                ) ??
+                0,
+            redCards:
+                int.tryParse(
+                  (s['red_cards'] ?? s['red_card'])?.toString() ?? '0',
+                ) ??
+                0,
+            cleanSheets:
+                int.tryParse(s['clean_sheets']?.toString() ?? '0') ?? 0,
+            manOfMatch:
+                int.tryParse(
+                  (s['man_of_match'] ?? s['man_match'])?.toString() ?? '0',
+                ) ??
+                0,
           ),
         );
       }
@@ -135,9 +167,13 @@ class PlayerProfileDto {
           destTeam = PlayerTeamEntity(
             id: (dt['id'] ?? dt['row_id'] ?? '').toString(),
             name: (dt['name'] ?? dt['title'] ?? '').toString(),
-            fullName: (dt['full_name'] ?? dt['full_title'] ?? dt['title'] ?? '').toString(),
-            logo: UrlHelper.normalizeImageUrl((dt['logo'] ?? dt['image'])?.toString()),
-            worldRanking: int.tryParse(dt['world_ranking']?.toString() ?? '0') ?? 0,
+            fullName: (dt['full_name'] ?? dt['full_title'] ?? dt['title'] ?? '')
+                .toString(),
+            logo: UrlHelper.normalizeImageUrl(
+              (dt['logo'] ?? dt['image'])?.toString(),
+            ),
+            worldRanking:
+                int.tryParse(dt['world_ranking']?.toString() ?? '0') ?? 0,
           );
         } else if (tr['team_in'] is Map) {
           final dt = tr['team_in'] as Map;
@@ -146,14 +182,22 @@ class PlayerProfileDto {
             name: (dt['title'] ?? '').toString(),
             fullName: (dt['full_title'] ?? dt['title'] ?? '').toString(),
             logo: UrlHelper.normalizeImageUrl(dt['image']?.toString()),
-            worldRanking: int.tryParse(dt['world_ranking']?.toString() ?? '0') ?? 0,
+            worldRanking:
+                int.tryParse(dt['world_ranking']?.toString() ?? '0') ?? 0,
           );
         }
 
         final type = (tr['type'] ?? tr['trans'] ?? '').toString();
         final rawFee = (tr['raw_fee'] ?? tr['value'] ?? '0').toString();
-        final fee = (tr['fee'] ?? (rawFee != '0' ? rawFee : (lang == 'en' ? 'Free Transfer' : 'انتقال حر'))).toString();
-        final season = (tr['season'] ?? tr['date_from']?.toString().split('-').first ?? '').toString();
+        final fee =
+            (tr['fee'] ??
+                    (rawFee != '0'
+                        ? rawFee
+                        : (lang == 'en' ? 'Free Transfer' : 'انتقال حر')))
+                .toString();
+        final season =
+            (tr['season'] ?? tr['date_from']?.toString().split('-').first ?? '')
+                .toString();
 
         transfers.add(
           PlayerTransferEntity(

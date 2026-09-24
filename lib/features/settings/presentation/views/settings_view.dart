@@ -86,45 +86,64 @@ class _SettingsViewState extends State<SettingsView> {
 
           const SizedBox(height: 24),
 
-          // Section: Language
-          _buildSectionHeader(
-            l10n.translate('settings_language'),
-            isDark,
-            isArabic,
-          ),
-          BlocBuilder<LocaleCubit, Locale>(
-            builder: (context, currentLocale) {
-              return _buildCard(
-                isDark: isDark,
-                child: RadioGroup<String>(
-                  groupValue: currentLocale.languageCode,
-                  onChanged: (lang) {
-                    if (lang != null) {
-                      context.read<LocaleCubit>().setLocale(Locale(lang));
-                    }
-                  },
-                  child: Column(
+          BlocBuilder<LocaleCubit, LocaleState>(
+            builder: (context, localeState) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      RadioListTile<String>(
-                        title: Text(l10n.translate('lang_arabic')),
-                        secondary: const Text(
-                          '🇸🇦',
-                          style: TextStyle(fontSize: 22),
-                        ),
-                        value: 'ar',
+                      _buildSectionHeader(
+                        l10n.translate('settings_language'),
+                        isDark,
+                        isArabic,
                       ),
-                      const Divider(height: 1),
-                      RadioListTile<String>(
-                        title: Text(l10n.translate('lang_english')),
-                        secondary: const Text(
-                          '🇬🇧',
-                          style: TextStyle(fontSize: 22),
+                      if (localeState.showIndicator) ...[
+                        const SizedBox(width: 8),
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
                         ),
-                        value: 'en',
-                      ),
+                      ],
                     ],
                   ),
-                ),
+                  _buildCard(
+                    isDark: isDark,
+                    child: RadioGroup<String>(
+                      groupValue: localeState.locale.languageCode,
+                      onChanged: (lang) {
+                        if (lang != null) {
+                          context.read<LocaleCubit>().setLocale(Locale(lang));
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          RadioListTile<String>(
+                            title: Text(l10n.translate('lang_arabic')),
+                            secondary: const Text(
+                              '🇸🇦',
+                              style: TextStyle(fontSize: 22),
+                            ),
+                            value: 'ar',
+                          ),
+                          const Divider(height: 1),
+                          RadioListTile<String>(
+                            title: Text(l10n.translate('lang_english')),
+                            secondary: const Text(
+                              '🇬🇧',
+                              style: TextStyle(fontSize: 22),
+                            ),
+                            value: 'en',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -162,7 +181,9 @@ class _SettingsViewState extends State<SettingsView> {
                         storage.setTimeFormat(val);
                         setState(() {});
                         try {
-                          context.read<MatchesBloc>().add(ChangeTimeFormatEvent(val));
+                          context.read<MatchesBloc>().add(
+                            ChangeTimeFormatEvent(val),
+                          );
                         } catch (_) {}
                       }
                     },
@@ -193,7 +214,9 @@ class _SettingsViewState extends State<SettingsView> {
                         storage.setTimezoneOffset(val);
                         setState(() {});
                         try {
-                          context.read<MatchesBloc>().add(ChangeTimezoneEvent(val));
+                          context.read<MatchesBloc>().add(
+                            ChangeTimezoneEvent(val),
+                          );
                         } catch (_) {}
                       }
                     },
@@ -272,10 +295,7 @@ class _SettingsViewState extends State<SettingsView> {
               children: [
                 Row(
                   children: [
-                    AppBrandLogo(
-                      size: 40,
-                      isDark: isDark,
-                    ),
+                    AppBrandLogo(size: 40, isDark: isDark),
                     const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

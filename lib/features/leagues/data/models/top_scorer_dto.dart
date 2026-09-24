@@ -81,7 +81,7 @@ class TopScorerDto {
         json['image']?.toString() ??
         (json['player'] is Map
             ? (json['player']['photo']?.toString() ??
-                json['player']['image']?.toString())
+                  json['player']['image']?.toString())
             : null);
 
     final playerId =

@@ -52,10 +52,12 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
 
           for (final it in rawItems) {
             if (it is Map) {
-              final title =
-                  (it['title'] ?? it['label'] ?? '').toString().trim();
-              final content =
-                  (it['content'] ?? it['value'] ?? '').toString().trim();
+              final title = (it['title'] ?? it['label'] ?? '')
+                  .toString()
+                  .trim();
+              final content = (it['content'] ?? it['value'] ?? '')
+                  .toString()
+                  .trim();
               final icon = it['icon']?.toString();
               final link = (it['link'] ?? it['url'])?.toString();
 
@@ -185,8 +187,7 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
                 tLower.contains('دولة') ||
                 tLower.contains('جنسية')) {
               country ??= c;
-            } else if (tLower.contains('مركز') ||
-                tLower.contains('position')) {
+            } else if (tLower.contains('مركز') || tLower.contains('position')) {
               role ??= c;
             }
             metaItems.add(ProfileItemEntity(title: t, content: c));
@@ -231,7 +232,8 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
       if (map['channel'] != null && map['channel'].toString().isNotEmpty) {
         channel = map['channel'].toString();
       }
-      if (map['birth_date'] != null && map['birth_date'].toString().isNotEmpty) {
+      if (map['birth_date'] != null &&
+          map['birth_date'].toString().isNotEmpty) {
         birthDate = map['birth_date'].toString();
       }
       if (map['commentary_language'] != null &&
@@ -255,7 +257,9 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
             for (final it in rawItems) {
               if (it is Map) {
                 final t = (it['title'] ?? it['label'] ?? '').toString().trim();
-                final c = (it['content'] ?? it['value'] ?? '').toString().trim();
+                final c = (it['content'] ?? it['value'] ?? '')
+                    .toString()
+                    .trim();
                 if (t.isNotEmpty && c.isNotEmpty) {
                   items.add(
                     ProfileItemEntity(
@@ -289,16 +293,18 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
       final map = response['data'] as Map;
       capacity = (map['capacity'] ?? map['seats'])?.toString();
       builtDate = (map['built_date'] ?? map['create'])?.toString();
-      pitchSurface = (map['pitch_surface'] ?? map['floor'] ?? map['surface'])?.toString();
+      pitchSurface = (map['pitch_surface'] ?? map['floor'] ?? map['surface'])
+          ?.toString();
       city = map['city']?.toString();
       mapUrl = (map['map_link'] ?? map['link_map'])?.toString();
 
-      final rawUpcoming = map['upcoming_matches'] as List? ??
+      final rawUpcoming =
+          map['upcoming_matches'] as List? ??
           (map['matches'] is Map
               ? (map['matches']['coming'] as List? ??
-                  (map['matches']['coming'] is Map
-                      ? map['matches']['coming']['data'] as List?
-                      : null))
+                    (map['matches']['coming'] is Map
+                        ? map['matches']['coming']['data'] as List?
+                        : null))
               : null) ??
           [];
       for (final m in rawUpcoming) {
@@ -311,12 +317,13 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
         }
       }
 
-      final rawRecent = map['recent_matches'] as List? ??
+      final rawRecent =
+          map['recent_matches'] as List? ??
           (map['matches'] is Map
               ? (map['matches']['end'] as List? ??
-                  (map['matches']['end'] is Map
-                      ? map['matches']['end']['data'] as List?
-                      : null))
+                    (map['matches']['end'] is Map
+                        ? map['matches']['end']['data'] as List?
+                        : null))
               : null) ??
           [];
       for (final m in rawRecent) {
@@ -329,20 +336,25 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
         }
       }
 
-      final rawTeams = map['teams'] as List? ??
+      final rawTeams =
+          map['teams'] as List? ??
           (map['stadium_teams'] is List
               ? map['stadium_teams'] as List
               : (map['stadium_teams'] is Map
-                  ? (map['stadium_teams'] as Map).values.toList()
-                  : null)) ??
+                    ? (map['stadium_teams'] as Map).values.toList()
+                    : null)) ??
           [];
       for (final t in rawTeams) {
         if (t is Map) {
           final tId = (t['id'] ?? t['row_id'] ?? '').toString();
           final tName = (t['name'] ?? t['title'] ?? '').toString();
           final tFullName = (t['full_name'] ?? t['full_title'])?.toString();
-          final tLogo = UrlHelper.normalizeImageUrl((t['logo'] ?? t['image'])?.toString());
-          final tRank = t['world_ranking'] is num ? (t['world_ranking'] as num).toInt() : null;
+          final tLogo = UrlHelper.normalizeImageUrl(
+            (t['logo'] ?? t['image'])?.toString(),
+          );
+          final tRank = t['world_ranking'] is num
+              ? (t['world_ranking'] as num).toInt()
+              : null;
           final tRole = t['role']?.toString();
           final tFrom = t['from']?.toString();
           final tTo = t['to']?.toString();
@@ -375,7 +387,9 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
         currentTeam = ProfileTeamEntity(
           id: (ct['id'] ?? ct['team_id'] ?? '').toString(),
           name: (ct['name'] ?? ct['team_name'] ?? '').toString(),
-          logo: UrlHelper.normalizeImageUrl((ct['logo'] ?? ct['team_logo'])?.toString()),
+          logo: UrlHelper.normalizeImageUrl(
+            (ct['logo'] ?? ct['team_logo'])?.toString(),
+          ),
           role: ct['role']?.toString(),
           from: ct['from']?.toString(),
           to: ct['to']?.toString(),
@@ -384,18 +398,34 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
       }
 
       final career = <ProfileTeamEntity>[];
-      final rawCareer = map['career'] as List? ?? (map['teams_c'] as List? ?? []);
+      final rawCareer =
+          map['career'] as List? ?? (map['teams_c'] as List? ?? []);
       for (final c in rawCareer) {
         if (c is Map) {
-          final tMap = c['team'] is Map ? Map<String, dynamic>.from(c['team'] as Map) : c;
-          final cId = (c['team_id'] ?? c['id'] ?? tMap['row_id'] ?? tMap['id'] ?? '').toString();
-          final cName = (c['team_name'] ?? c['name'] ?? tMap['title'] ?? tMap['full_title'] ?? '').toString();
-          final cLogo = UrlHelper.normalizeImageUrl((c['team_logo'] ?? c['logo'] ?? tMap['image'])?.toString());
+          final tMap = c['team'] is Map
+              ? Map<String, dynamic>.from(c['team'] as Map)
+              : c;
+          final cId =
+              (c['team_id'] ?? c['id'] ?? tMap['row_id'] ?? tMap['id'] ?? '')
+                  .toString();
+          final cName =
+              (c['team_name'] ??
+                      c['name'] ??
+                      tMap['title'] ??
+                      tMap['full_title'] ??
+                      '')
+                  .toString();
+          final cLogo = UrlHelper.normalizeImageUrl(
+            (c['team_logo'] ?? c['logo'] ?? tMap['image'])?.toString(),
+          );
           final cRole = (c['role'] ?? c['type'])?.toString();
           final cFrom = c['from']?.toString();
           final cTo = c['to']?.toString();
           final cDuration = c['duration']?.toString();
-          final cIsCurrent = c['is_current'] == true || c['team_coach'] == 1 || c['team_coach'] == '1';
+          final cIsCurrent =
+              c['is_current'] == true ||
+              c['team_coach'] == 1 ||
+              c['team_coach'] == '1';
 
           if (cId.isNotEmpty || cName.isNotEmpty) {
             career.add(

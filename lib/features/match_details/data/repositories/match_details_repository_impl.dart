@@ -43,7 +43,10 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
     }
 
     try {
-      final data = await _remoteDataSource.getEventsPayload(cleanId, lang: lang);
+      final data = await _remoteDataSource.getEventsPayload(
+        cleanId,
+        lang: lang,
+      );
       _eventsCache[key] = _CacheEntry(data);
       return ApiSuccess(data);
     } catch (e) {

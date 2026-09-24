@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 /// Paints an authentic, high-definition football pitch with alternating grass stripes,
@@ -20,7 +21,8 @@ class PitchPainter extends CustomPainter {
     final h = size.height;
 
     // 1. Base Turf Color
-    final grassColor = baseGrassColor ??
+    final grassColor =
+        baseGrassColor ??
         (isDark ? const Color(0xFF143B25) : const Color(0xFF1E663B));
     final grassPaint = Paint()..color = grassColor;
     final pitchRect = Rect.fromLTWH(0, 0, w, h);
@@ -91,12 +93,7 @@ class PitchPainter extends CustomPainter {
     final goalBoxW = fieldW * 0.26;
     final goalBoxH = fieldH * 0.06;
     final goalBoxLeft = centerX - (goalBoxW / 2);
-    final topGoalRect = Rect.fromLTWH(
-      goalBoxLeft,
-      marginY,
-      goalBoxW,
-      goalBoxH,
-    );
+    final topGoalRect = Rect.fromLTWH(goalBoxLeft, marginY, goalBoxW, goalBoxH);
     canvas.drawRect(topGoalRect, linePaint);
 
     // Top Penalty Spot & Arc
@@ -156,10 +153,7 @@ class PitchPainter extends CustomPainter {
     const cornerRadius = 8.0;
     // Top-Left
     canvas.drawArc(
-      Rect.fromCircle(
-        center: Offset(marginX, marginY),
-        radius: cornerRadius,
-      ),
+      Rect.fromCircle(center: Offset(marginX, marginY), radius: cornerRadius),
       0,
       math.pi / 2,
       false,
