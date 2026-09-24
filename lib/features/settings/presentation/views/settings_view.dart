@@ -34,12 +34,20 @@ class _SettingsViewState extends State<SettingsView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          l10n.translate('settings_title'),
-          style: AppTypography.getHeadingMedium(
-            isDark: isDark,
-            isArabic: isArabic,
-          ),
+        titleSpacing: 16,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBrandLogo(size: 40, isDark: isDark),
+            const SizedBox(width: 10),
+            Text(
+              '154Score',
+              style: AppTypography.getHeadingLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+            ),
+          ],
         ),
         automaticallyImplyLeading: false,
       ),

@@ -199,10 +199,12 @@ class _HomeViewState extends State<HomeView> {
                     child: Text(
                       _formatDate(matchesState.selectedDate, isArabic),
                       style:
-                          AppTypography.getBodySmall(
+                          AppTypography.getBodyLarge(
                             isDark: isDark,
                             isArabic: isArabic,
                           ).copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                             color: isDark
                                 ? AppColors.darkTextSecondary
                                 : AppColors.lightTextSecondary,
