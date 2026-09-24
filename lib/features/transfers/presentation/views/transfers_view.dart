@@ -7,7 +7,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/transfer_entity.dart';
@@ -43,9 +45,32 @@ class _TransfersViewState extends State<TransfersView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isArabic = l10n.isArabic;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.translate('transfers_title'))),
+      appBar: AppBar(
+        titleSpacing: 16,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBrandLogo(
+              size: 32,
+              isDark: isDark,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              '154Score',
+              style: AppTypography.getHeadingLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
       body: BlocBuilder<TransfersBloc, TransfersState>(
         builder: (context, state) {
           return Column(

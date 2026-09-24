@@ -7,7 +7,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/match_entity.dart';
@@ -50,11 +52,31 @@ class _MatchesViewState extends State<MatchesView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isArabic = AppLocalizations.of(context).isArabic;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context).translate('nav_matches'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        titleSpacing: 16,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBrandLogo(
+              size: 32,
+              isDark: isDark,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              '154Score',
+              style: AppTypography.getHeadingLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
         ),
         actions: [
           Row(

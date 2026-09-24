@@ -9,6 +9,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/video_entity.dart';
@@ -39,7 +40,29 @@ class _VideosViewState extends State<VideosView> {
     final isArabic = l10n.isArabic;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.translate('videos_title'))),
+      appBar: AppBar(
+        titleSpacing: 16,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBrandLogo(
+              size: 32,
+              isDark: isDark,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              '154Score',
+              style: AppTypography.getHeadingLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
       body: BlocBuilder<VideosBloc, VideosState>(
         builder: (context, state) {
           return Column(
