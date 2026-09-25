@@ -80,6 +80,24 @@ class FavoritesState extends Equatable {
     return false;
   }
 
+  bool isFavoriteTeam({String? id, String? name}) {
+    if (favoriteTeams.isEmpty) return false;
+    final cleanId = id?.trim().toLowerCase();
+    final cleanName = name?.trim().toLowerCase();
+
+    return favoriteTeams.any((team) {
+      final clean = team.trim().toLowerCase();
+      return (cleanName != null && clean == cleanName) ||
+          (cleanId != null && clean == cleanId);
+    });
+  }
+
+  bool isFavoriteMatch(String matchId) {
+    if (favoriteMatches.isEmpty) return false;
+    final clean = matchId.trim().toLowerCase();
+    return favoriteMatches.any((m) => m.trim().toLowerCase() == clean);
+  }
+
   @override
   List<Object?> get props => [
     favoriteTeams,
@@ -109,6 +127,14 @@ class FavoritesCubit extends Cubit<FavoritesState> {
 
   bool isCompetitionFavorite({String? id, String? name, String? slug}) {
     return state.isFavoriteCompetition(id: id, name: name, slug: slug);
+  }
+
+  bool isTeamFavorite({String? id, String? name}) {
+    return state.isFavoriteTeam(id: id, name: name);
+  }
+
+  bool isMatchFavorite(String matchId) {
+    return state.isFavoriteMatch(matchId);
   }
 
   Future<void> toggleTeam(String teamName) async {

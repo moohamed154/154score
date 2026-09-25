@@ -20,6 +20,9 @@ import '../../domain/entities/team_entity.dart';
 import '../bloc/team_bloc.dart';
 import '../bloc/team_event.dart';
 import '../bloc/team_state.dart';
+import '../../../matches/presentation/bloc/matches_bloc.dart';
+import '../../../matches/presentation/bloc/matches_event.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../widgets/team_header_card.dart';
 
 class TeamView extends StatefulWidget {
@@ -93,9 +96,34 @@ class _TeamViewState extends State<TeamView>
                 isDark: isDark,
                 isArabic: isArabic,
               ).copyWith(fontWeight: FontWeight.w700),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
+            actions: [
+              BlocBuilder<FavoritesCubit, FavoritesState>(
+                builder: (context, favState) {
+                  final isFav = favState.isFavoriteTeam(
+                    id: widget.teamId,
+                    name: displayName,
+                  );
+                  return IconButton(
+                    icon: Icon(
+                      isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: isFav ? AppColors.yellowCard : null,
+                      size: 24,
+                    ),
+                    tooltip: isArabic ? 'تفضيل الفريق' : 'Favorite Team',
+                    onPressed: () {
+                      context.read<FavoritesCubit>().toggleTeam(displayName);
+                      try {
+                        context.read<MatchesBloc>().add(
+                          const RefreshFavoritesEvent(),
+                        );
+                      } catch (_) {}
+                    },
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+            ],
           ),
           body: Column(
             children: [

@@ -72,6 +72,9 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
       );
     }
 
+    final isFavoritesSection = widget.league.leagueTitle == 'Favorites' ||
+        widget.league.leagueTitle == 'المفضلة';
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
       child: Column(
@@ -86,11 +89,15 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             child: Row(
               children: [
-                // League Identity (Clickable to open LeagueView)
+                // League Identity (Clickable to open LeagueView or toggle if favorites)
                 Expanded(
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                     onTap: () {
+                      if (isFavoritesSection) {
+                        setState(() => _isExpanded = !_isExpanded);
+                        return;
+                      }
                       final lId =
                           widget.league.leagueId ??
                           LeagueResolver.resolveId(widget.league.leagueTitle);
@@ -109,14 +116,21 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                     },
                     child: Row(
                       children: [
-                        AppImage(
-                          imageUrl: widget.league.leagueLogo,
-                          width: 24,
-                          height: 24,
-                          borderRadius: 4,
-                          fit: BoxFit.contain,
-                          placeholderIcon: Icons.emoji_events_outlined,
-                        ),
+                        if (isFavoritesSection)
+                          const Icon(
+                            Icons.star_rounded,
+                            color: AppColors.yellowCard,
+                            size: 24,
+                          )
+                        else
+                          AppImage(
+                            imageUrl: widget.league.leagueLogo,
+                            width: 24,
+                            height: 24,
+                            borderRadius: 4,
+                            fit: BoxFit.contain,
+                            placeholderIcon: Icons.emoji_events_outlined,
+                          ),
                         const SizedBox(width: AppDimensions.md),
                         Expanded(
                           child: Text(
@@ -129,62 +143,66 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          isArabic
-                              ? Icons.chevron_left_rounded
-                              : Icons.chevron_right_rounded,
-                          size: 16,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
+                        if (!isFavoritesSection) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            isArabic
+                                ? Icons.chevron_left_rounded
+                                : Icons.chevron_right_rounded,
+                            size: 16,
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                          ),
+                        ],
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                if (!isFavoritesSection) ...[
+                  const SizedBox(width: 6),
 
-                // League Favorite Star Button
-                BlocBuilder<FavoritesCubit, FavoritesState>(
-                  builder: (context, favState) {
-                    final isFav = favState.isFavoriteCompetition(
-                      id: widget.league.leagueId,
-                      name: widget.league.leagueTitle,
-                    );
+                  // League Favorite Star Button
+                  BlocBuilder<FavoritesCubit, FavoritesState>(
+                    builder: (context, favState) {
+                      final isFav = favState.isFavoriteCompetition(
+                        id: widget.league.leagueId,
+                        name: widget.league.leagueTitle,
+                      );
 
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusFull,
-                      ),
-                      onTap: () {
-                        context.read<FavoritesCubit>().toggleCompetition(
-                          id: widget.league.leagueId,
-                          name: widget.league.leagueTitle,
-                        );
-                        try {
-                          context.read<MatchesBloc>().add(
-                            const RefreshFavoritesEvent(),
-                          );
-                        } catch (_) {}
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Icon(
-                          isFav
-                              ? Icons.star_rounded
-                              : Icons.star_border_rounded,
-                          size: 18,
-                          color: isFav
-                              ? AppColors.yellowCard
-                              : (isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted),
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusFull,
                         ),
-                      ),
-                    );
-                  },
-                ),
+                        onTap: () {
+                          context.read<FavoritesCubit>().toggleCompetition(
+                            id: widget.league.leagueId,
+                            name: widget.league.leagueTitle,
+                          );
+                          try {
+                            context.read<MatchesBloc>().add(
+                              const RefreshFavoritesEvent(),
+                            );
+                          } catch (_) {}
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Icon(
+                            isFav
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
+                            size: 18,
+                            color: isFav
+                                ? AppColors.yellowCard
+                                : (isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
                 const SizedBox(width: 6),
 
                 // Match count & Live count & Expand/Collapse Trigger

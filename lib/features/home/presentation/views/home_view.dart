@@ -13,16 +13,13 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
-import '../../../../core/widgets/section_header.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../matches/presentation/widgets/date_navigation_buttons.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
-import '../../../matches/presentation/widgets/live_match_card.dart';
 import '../../../matches/presentation/widgets/match_filter_bottom_sheet.dart';
-import '../../../matches/presentation/widgets/match_filters_bar.dart';
 import '../../../matches/presentation/widgets/swipe_date_detector.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 
@@ -83,7 +80,7 @@ class _HomeViewState extends State<HomeView> {
                     child: Row(
                       children: [
                         const SizedBox(width: 16),
-                        // Logo + Title + Date
+                        // Logo + Title
                         AppBrandLogo(size: 40, isDark: isDark),
                         const SizedBox(width: 10),
                         Text(
@@ -98,28 +95,11 @@ class _HomeViewState extends State<HomeView> {
                               ),
                         ),
                         const Spacer(),
-                        // Actions row ordered from left: Date Selector -> Search -> Filter
+                        // Actions row ordered: Filter -> Search -> Date Navigation (<, 📅, >)
                         Row(
                           textDirection: TextDirection.ltr,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const SizedBox(width: 4),
-                            // Date Navigation Buttons (<, 📅, >)
-                            DateNavigationButtons(
-                              selectedDate: matchesState.selectedDate,
-                              onDateSelected: (date) {
-                                context.read<MatchesBloc>().add(
-                                  LoadMatchesEvent(date: date),
-                                );
-                              },
-                              isDark: isDark,
-                            ),
-                            // Search Icon
-                            IconButton(
-                              icon: const Icon(Icons.search_rounded),
-                              tooltip: l10n.translate('nav_search'),
-                              onPressed: () => context.push('/search'),
-                            ),
                             // Filter Icon with active badge indicator
                             IconButton(
                               icon: Badge(
@@ -138,6 +118,22 @@ class _HomeViewState extends State<HomeView> {
                               tooltip: l10n.translate('filter_title'),
                               onPressed: () =>
                                   MatchFilterBottomSheet.show(context),
+                            ),
+                            // Search Icon
+                            IconButton(
+                              icon: const Icon(Icons.search_rounded),
+                              tooltip: l10n.translate('nav_search'),
+                              onPressed: () => context.push('/search'),
+                            ),
+                            // Date Navigation Buttons (<, 📅, >)
+                            DateNavigationButtons(
+                              selectedDate: matchesState.selectedDate,
+                              onDateSelected: (date) {
+                                context.read<MatchesBloc>().add(
+                                  LoadMatchesEvent(date: date),
+                                );
+                              },
+                              isDark: isDark,
                             ),
                             const SizedBox(width: 4),
                           ],
@@ -171,94 +167,68 @@ class _HomeViewState extends State<HomeView> {
             ),
           );
         },
-        child: BlocBuilder<MatchesBloc, MatchesState>(
-          builder: (context, matchesState) {
-            final isHomeLoading =
-                (matchesState.status == MatchesStatus.loading ||
-                    matchesState.status == MatchesStatus.initial) &&
-                matchesState.allLeagues.isEmpty;
-
-            return SwipeDateDetector(
-              currentDate: matchesState.selectedDate,
-              onDateChanged: (date) {
-                context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
-              },
-              child: Column(
-                children: [
-                  // Filter Options Bar (All, Live, Upcoming, Finished, Favorites)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 4),
-                    child: MatchFiltersBar(
-                      activeFilter: matchesState.activeFilter,
-                      liveCount: matchesState.liveMatchesCount,
-                      onFilterSelected: (filter) {
-                        context.read<MatchesBloc>().add(
-                          ChangeFilterEvent(filter),
-                        );
-                      },
-                    ),
-                  ),
-
-                  // Main Matches Scroll Area
-                  Expanded(
-                    child: RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: () async {
-                        final matchesCompleter = Completer<void>();
-                        context.read<MatchesBloc>().add(
-                          LoadMatchesEvent(
-                            date: matchesState.selectedDate,
-                            isRefresh: true,
-                            completer: matchesCompleter,
-                          ),
-                        );
-
-                        try {
-                          await matchesCompleter.future.timeout(
-                            const Duration(seconds: 3),
-                          );
-                        } catch (_) {}
-                      },
-                      child: ListView(
-                        padding: const EdgeInsets.only(
-                          top: 4,
-                          bottom: AppDimensions.xxxl,
-                        ),
-                        children: [
-                          if (isHomeLoading)
-                            _buildMatchesSkeleton(
-                              context,
-                              isDark,
-                              isArabic,
-                              matchesState.selectedDate,
-                            )
-                          else ...[
-                            // 1. LIVE NOW Section (if any live matches and not filtering by Live)
-                            if (matchesState.activeFilter !=
-                                MatchFilterType.live)
-                              _buildLiveNowSection(
-                                context,
-                                matchesState,
-                                isDark,
-                                isArabic,
-                              ),
-
-                            // 2. Matches for Selected Date
-                            _buildMatchesSection(
-                              context,
-                              matchesState,
-                              isDark,
-                              isArabic,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
+        child: BlocListener<FavoritesCubit, FavoritesState>(
+          listener: (context, favState) {
+            context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
           },
+          child: BlocBuilder<MatchesBloc, MatchesState>(
+            builder: (context, matchesState) {
+              final isHomeLoading =
+                  (matchesState.status == MatchesStatus.loading ||
+                      matchesState.status == MatchesStatus.initial) &&
+                  matchesState.allLeagues.isEmpty;
+
+              return SwipeDateDetector(
+                currentDate: matchesState.selectedDate,
+                onDateChanged: (date) {
+                  context.read<MatchesBloc>().add(LoadMatchesEvent(date: date));
+                },
+                child: RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    final matchesCompleter = Completer<void>();
+                    context.read<MatchesBloc>().add(
+                      LoadMatchesEvent(
+                        date: matchesState.selectedDate,
+                        isRefresh: true,
+                        completer: matchesCompleter,
+                      ),
+                    );
+
+                    try {
+                      await matchesCompleter.future.timeout(
+                        const Duration(seconds: 3),
+                      );
+                    } catch (_) {}
+                  },
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.only(
+                      bottom: AppDimensions.xxxl,
+                    ),
+                    children: [
+                      if (isHomeLoading)
+                        _buildMatchesSkeleton(
+                          context,
+                          isDark,
+                          isArabic,
+                          matchesState.selectedDate,
+                        )
+                      else
+                        _buildMatchesSection(
+                          context,
+                          matchesState,
+                          isDark,
+                          isArabic,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -288,62 +258,7 @@ class _HomeViewState extends State<HomeView> {
     final dd = date.day.toString().padLeft(2, '0');
     final mm = date.month.toString().padLeft(2, '0');
     final yyyy = date.year.toString();
-    return '$dayName, $dd/$mm/$yyyy';
-  }
-
-  Widget _buildLiveNowSection(
-    BuildContext context,
-    MatchesState matchesState,
-    bool isDark,
-    bool isArabic,
-  ) {
-    final l10n = AppLocalizations.of(context);
-
-    // Extract all live matches from state
-    final liveMatches = <dynamic>[];
-    for (final league in matchesState.allLeagues) {
-      for (final m in league.matches) {
-        if (m.status != null &&
-            (m.status!.toLowerCase().contains('live') ||
-                m.status!.toLowerCase().contains('مباشر') ||
-                m.status!.toLowerCase().contains('شوط') ||
-                m.status!.toLowerCase().contains('half') ||
-                m.status!.toLowerCase().contains('استراحة'))) {
-          liveMatches.add(m);
-        }
-      }
-    }
-
-    if (liveMatches.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(
-          title: l10n.translate('live_now'),
-          leading: Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.liveRed,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 156,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
-            itemCount: liveMatches.length,
-            itemBuilder: (context, index) {
-              return LiveMatchCard(match: liveMatches[index]);
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
+    return isArabic ? '$dayName، $dd/$mm/$yyyy' : '$dayName, $dd/$mm/$yyyy';
   }
 
   Widget _buildMatchesSection(
@@ -353,6 +268,24 @@ class _HomeViewState extends State<HomeView> {
     bool isArabic,
   ) {
     final displayLeagues = state.filteredLeagues;
+
+    // Clean Date Header directly above the match list matching Yalla Shoot layout
+    final dateHeader = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Text(
+        _formatDate(state.selectedDate, isArabic),
+        style: AppTypography.getBodyLarge(
+          isDark: isDark,
+          isArabic: isArabic,
+        ).copyWith(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: isDark
+              ? AppColors.darkTextPrimary
+              : AppColors.lightTextPrimary,
+        ),
+      ),
+    );
 
     if ((state.status == MatchesStatus.loading ||
             state.status == MatchesStatus.initial) &&
@@ -366,50 +299,82 @@ class _HomeViewState extends State<HomeView> {
     }
 
     if (state.status == MatchesStatus.error && displayLeagues.isEmpty) {
-      return ErrorView(
-        message: state.errorMessage,
-        onRetry: () => context.read<MatchesBloc>().add(
-          LoadMatchesEvent(date: state.selectedDate),
-        ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          dateHeader,
+          ErrorView(
+            message: state.errorMessage,
+            onRetry: () => context.read<MatchesBloc>().add(
+              LoadMatchesEvent(date: state.selectedDate),
+            ),
+          ),
+        ],
       );
     }
 
     if (displayLeagues.isEmpty) {
-      if (state.activeFilter == MatchFilterType.live) {
-        return const EmptyView(
-          titleKey: 'no_live_matches',
-          icon: Icons.live_tv_outlined,
-        );
-      }
-      if (state.activeFilter == MatchFilterType.favorites) {
-        return const EmptyView(
-          titleKey: 'no_favorites_matches',
-          icon: Icons.star_border_rounded,
-        );
-      }
-      return const EmptyView(
-        titleKey: 'no_matches_date',
-        icon: Icons.sports_soccer_rounded,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          dateHeader,
+          if (state.activeFilter == MatchFilterType.live)
+            const EmptyView(
+              titleKey: 'no_live_matches',
+              icon: Icons.live_tv_outlined,
+            )
+          else if (state.activeFilter == MatchFilterType.favorites)
+            const EmptyView(
+              titleKey: 'no_favorites_matches',
+              icon: Icons.star_border_rounded,
+            )
+          else
+            const EmptyView(
+              titleKey: 'no_matches_date',
+              icon: Icons.sports_soccer_rounded,
+            ),
+        ],
       );
+    }
+
+    // Extract Favorite Matches for today (pinned on top like Yalla Shoot)
+    // Always pinned on top across all filters and sorting orders
+    final List<MatchEntity> favoriteMatches = [];
+    if (state.activeFilter != MatchFilterType.favorites) {
+      for (final league in displayLeagues) {
+        for (final m in league.matches) {
+          if (m.isFavorite && !favoriteMatches.any((fav) => fav.id == m.id)) {
+            favoriteMatches.add(m);
+          }
+        }
+      }
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
-          title: _formatDate(state.selectedDate, isArabic),
-          titleStyle:
-              AppTypography.getBodyLarge(
-                isDark: isDark,
-                isArabic: isArabic,
-              ).copyWith(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
-              ),
-        ),
+        dateHeader,
+
+        // Pinned Favorites section if any matches favorited
+        if (favoriteMatches.isNotEmpty)
+          LeagueSectionWidget(
+            key: ValueKey('fav_section_${state.selectedDate.day}'),
+            league: LeagueGroupEntity(
+              leagueTitle: isArabic ? 'المفضلة' : 'Favorites',
+              matches: favoriteMatches,
+            ),
+            timeFormat: state.timeFormat,
+            onFavoriteMatchTap: (matchId) {
+              context.read<MatchesBloc>().add(
+                ToggleMatchFavoriteEvent(matchId),
+              );
+              try {
+                context.read<FavoritesCubit>().loadFavorites();
+              } catch (_) {}
+            },
+          ),
+
+        // Championship / League Sections
         ...displayLeagues.map((league) {
           return LeagueSectionWidget(
             key: ValueKey('${league.leagueTitle}_${state.timeFormat}'),
@@ -436,28 +401,28 @@ class _HomeViewState extends State<HomeView> {
     bool isArabic, [
     DateTime? selectedDate,
   ]) {
-    final l10n = AppLocalizations.of(context);
     final title = selectedDate != null
         ? _formatDate(selectedDate, isArabic)
-        : l10n.translate('nav_matches');
+        : (isArabic ? 'المباريات' : 'Matches');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
-          title: title,
-          titleStyle: selectedDate != null
-              ? AppTypography.getBodyLarge(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                )
-              : null,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Text(
+            title,
+            style: AppTypography.getBodyLarge(
+              isDark: isDark,
+              isArabic: isArabic,
+            ).copyWith(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
         ),
         Skeletonizer(
           enabled: true,

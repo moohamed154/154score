@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -13,6 +14,9 @@ import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/circular_live_clock.dart';
 import '../../../../core/widgets/penalty_shootout_widget.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
+import '../bloc/matches_bloc.dart';
+import '../bloc/matches_event.dart';
 import '../../domain/entities/match_entity.dart';
 
 class MatchCard extends StatelessWidget {
@@ -82,6 +86,7 @@ class MatchCard extends StatelessWidget {
               extra: match,
             );
           },
+          onLongPress: () => _showMatchOptionsBottomSheet(context),
           child: Stack(
             children: [
               Padding(
@@ -205,38 +210,52 @@ class MatchCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Home Team (Logo on top, name below)
+        // Home Team (Logo on top, name below) - Tappable
         Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppImage(
-                imageUrl: match.team1Logo,
-                width: logoSize,
-                height: logoSize,
-                borderRadius: logoSize / 2,
-                fit: BoxFit.contain,
-                placeholderIcon: Icons.shield_outlined,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                match.team1,
-                style:
-                    AppTypography.getBodyMedium(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: isSmall ? 12 : 13,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
-            ],
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+            onTap: () {
+              final tId = Uri.encodeComponent(match.team1);
+              context.push(
+                '/team/$tId',
+                extra: {
+                  'name': match.team1,
+                  'logo': match.team1Logo,
+                  'leagueId': match.leagueId,
+                },
+              );
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppImage(
+                  imageUrl: match.team1Logo,
+                  width: logoSize,
+                  height: logoSize,
+                  borderRadius: logoSize / 2,
+                  fit: BoxFit.contain,
+                  placeholderIcon: Icons.shield_outlined,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  match.team1,
+                  style:
+                      AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmall ? 12 : 13,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
 
@@ -299,38 +318,52 @@ class MatchCard extends StatelessWidget {
           ),
         ),
 
-        // Away Team (Logo on top, name below)
+        // Away Team (Logo on top, name below) - Tappable
         Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppImage(
-                imageUrl: match.team2Logo,
-                width: logoSize,
-                height: logoSize,
-                borderRadius: logoSize / 2,
-                fit: BoxFit.contain,
-                placeholderIcon: Icons.shield_outlined,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                match.team2,
-                style:
-                    AppTypography.getBodyMedium(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: isSmall ? 12 : 13,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
-            ],
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+            onTap: () {
+              final tId = Uri.encodeComponent(match.team2);
+              context.push(
+                '/team/$tId',
+                extra: {
+                  'name': match.team2,
+                  'logo': match.team2Logo,
+                  'leagueId': match.leagueId,
+                },
+              );
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppImage(
+                  imageUrl: match.team2Logo,
+                  width: logoSize,
+                  height: logoSize,
+                  borderRadius: logoSize / 2,
+                  fit: BoxFit.contain,
+                  placeholderIcon: Icons.shield_outlined,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  match.team2,
+                  style:
+                      AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmall ? 12 : 13,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -354,40 +387,54 @@ class MatchCard extends StatelessWidget {
 
     return Row(
       children: [
-        // Home Team (Name on left/start, Logo on right/end next to capsule)
+        // Home Team (Name on left/start, Logo on right/end next to capsule) - Tappable
         Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Flexible(
-                child: Text(
-                  match.team1,
-                  style:
-                      AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: isSmall ? 12 : 14,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+            onTap: () {
+              final tId = Uri.encodeComponent(match.team1);
+              context.push(
+                '/team/$tId',
+                extra: {
+                  'name': match.team1,
+                  'logo': match.team1Logo,
+                  'leagueId': match.leagueId,
+                },
+              );
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
+                    match.team1,
+                    style:
+                        AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 12 : 14,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                  ),
                 ),
-              ),
-              SizedBox(width: isSmall ? 6 : 8),
-              AppImage(
-                imageUrl: match.team1Logo,
-                width: logoSize,
-                height: logoSize,
-                borderRadius: logoSize / 2,
-                fit: BoxFit.contain,
-                placeholderIcon: Icons.shield_outlined,
-              ),
-            ],
+                SizedBox(width: isSmall ? 6 : 8),
+                AppImage(
+                  imageUrl: match.team1Logo,
+                  width: logoSize,
+                  height: logoSize,
+                  borderRadius: logoSize / 2,
+                  fit: BoxFit.contain,
+                  placeholderIcon: Icons.shield_outlined,
+                ),
+              ],
+            ),
           ),
         ),
 
@@ -409,40 +456,54 @@ class MatchCard extends StatelessWidget {
 
         SizedBox(width: isSmall ? 8 : 12),
 
-        // Away Team (Logo on left/start next to capsule, Name on right/end)
+        // Away Team (Logo on left/start next to capsule, Name on right/end) - Tappable
         Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              AppImage(
-                imageUrl: match.team2Logo,
-                width: logoSize,
-                height: logoSize,
-                borderRadius: logoSize / 2,
-                fit: BoxFit.contain,
-                placeholderIcon: Icons.shield_outlined,
-              ),
-              SizedBox(width: isSmall ? 6 : 8),
-              Flexible(
-                child: Text(
-                  match.team2,
-                  style:
-                      AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: isSmall ? 12 : 14,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.start,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+            onTap: () {
+              final tId = Uri.encodeComponent(match.team2);
+              context.push(
+                '/team/$tId',
+                extra: {
+                  'name': match.team2,
+                  'logo': match.team2Logo,
+                  'leagueId': match.leagueId,
+                },
+              );
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                AppImage(
+                  imageUrl: match.team2Logo,
+                  width: logoSize,
+                  height: logoSize,
+                  borderRadius: logoSize / 2,
+                  fit: BoxFit.contain,
+                  placeholderIcon: Icons.shield_outlined,
                 ),
-              ),
-            ],
+                SizedBox(width: isSmall ? 6 : 8),
+                Flexible(
+                  child: Text(
+                    match.team2,
+                    style:
+                        AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 12 : 14,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.start,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -582,6 +643,231 @@ class MatchCard extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+
+  void _showMatchOptionsBottomSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isArabic = AppLocalizations.of(context).isArabic;
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetContext) {
+        return BlocBuilder<FavoritesCubit, FavoritesState>(
+          builder: (context, favState) {
+            final isTeam1Fav = favState.isFavoriteTeam(
+              id: match.team1Id,
+              name: match.team1,
+            );
+            final isTeam2Fav = favState.isFavoriteTeam(
+              id: match.team2Id,
+              name: match.team2,
+            );
+            final isMatchFav = match.isFavorite;
+            final isLeagueFav = match.leagueTitle != null &&
+                favState.isFavoriteCompetition(
+                  id: match.leagueId,
+                  name: match.leagueTitle,
+                );
+
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppDimensions.radiusXl),
+                ),
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle
+                    Container(
+                      width: 36,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: AppColors.yellowCard,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isArabic ? 'خيارات المفضلة' : 'Favorite Options',
+                            style: AppTypography.getBodyLarge(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+
+                    // Team 1
+                    ListTile(
+                      leading: AppImage(
+                        imageUrl: match.team1Logo,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 14,
+                        fit: BoxFit.contain,
+                        placeholderIcon: Icons.shield_outlined,
+                      ),
+                      title: Text(
+                        match.team1,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        isTeam1Fav
+                            ? (isArabic ? 'في قائمة الفرق المفضلة' : 'In Favorite Teams')
+                            : (isArabic ? 'إضافة إلى الفرق المفضلة' : 'Add to Favorite Teams'),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isTeam1Fav ? AppColors.primary : null,
+                        ),
+                      ),
+                      trailing: Icon(
+                        isTeam1Fav ? Icons.star_rounded : Icons.star_border_rounded,
+                        color: isTeam1Fav ? AppColors.yellowCard : null,
+                        size: 24,
+                      ),
+                      onTap: () {
+                        context.read<FavoritesCubit>().toggleTeam(match.team1);
+                        try {
+                          context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
+                        } catch (_) {}
+                      },
+                    ),
+
+                    // Team 2
+                    ListTile(
+                      leading: AppImage(
+                        imageUrl: match.team2Logo,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 14,
+                        fit: BoxFit.contain,
+                        placeholderIcon: Icons.shield_outlined,
+                      ),
+                      title: Text(
+                        match.team2,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        isTeam2Fav
+                            ? (isArabic ? 'في قائمة الفرق المفضلة' : 'In Favorite Teams')
+                            : (isArabic ? 'إضافة إلى الفرق المفضلة' : 'Add to Favorite Teams'),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isTeam2Fav ? AppColors.primary : null,
+                        ),
+                      ),
+                      trailing: Icon(
+                        isTeam2Fav ? Icons.star_rounded : Icons.star_border_rounded,
+                        color: isTeam2Fav ? AppColors.yellowCard : null,
+                        size: 24,
+                      ),
+                      onTap: () {
+                        context.read<FavoritesCubit>().toggleTeam(match.team2);
+                        try {
+                          context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
+                        } catch (_) {}
+                      },
+                    ),
+
+                    // Match
+                    ListTile(
+                      leading: const Icon(Icons.sports_soccer_rounded, size: 24),
+                      title: Text(
+                        isArabic ? 'المباراة' : 'Match',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        isMatchFav
+                            ? (isArabic ? 'في قائمة المباريات المفضلة' : 'In Favorite Matches')
+                            : (isArabic ? 'إضافة المباراة للمفضلة' : 'Add Match to Favorites'),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isMatchFav ? AppColors.primary : null,
+                        ),
+                      ),
+                      trailing: Icon(
+                        isMatchFav ? Icons.star_rounded : Icons.star_border_rounded,
+                        color: isMatchFav ? AppColors.yellowCard : null,
+                        size: 24,
+                      ),
+                      onTap: () {
+                        if (onFavoriteTap != null) {
+                          onFavoriteTap!();
+                        } else {
+                          context.read<MatchesBloc>().add(
+                            ToggleMatchFavoriteEvent(match.id),
+                          );
+                          try {
+                            context.read<FavoritesCubit>().loadFavorites();
+                          } catch (_) {}
+                        }
+                      },
+                    ),
+
+                    // League (if available)
+                    if (match.leagueTitle != null && match.leagueTitle!.isNotEmpty)
+                      ListTile(
+                        leading: AppImage(
+                          imageUrl: match.leagueLogo,
+                          width: 24,
+                          height: 24,
+                          fit: BoxFit.contain,
+                          placeholderIcon: Icons.emoji_events_outlined,
+                        ),
+                        title: Text(
+                          match.leagueTitle!,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          isLeagueFav
+                              ? (isArabic ? 'في البطولات المفضلة' : 'In Favorite Competitions')
+                              : (isArabic ? 'إضافة البطولة للمفضلة' : 'Add Competition to Favorites'),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isLeagueFav ? AppColors.primary : null,
+                          ),
+                        ),
+                        trailing: Icon(
+                          isLeagueFav ? Icons.star_rounded : Icons.star_border_rounded,
+                          color: isLeagueFav ? AppColors.yellowCard : null,
+                          size: 24,
+                        ),
+                        onTap: () {
+                          context.read<FavoritesCubit>().toggleCompetition(
+                            id: match.leagueId,
+                            name: match.leagueTitle,
+                          );
+                          try {
+                            context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
+                          } catch (_) {}
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

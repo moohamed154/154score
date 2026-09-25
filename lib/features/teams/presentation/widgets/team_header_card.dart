@@ -1,11 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
+import '../../../matches/presentation/bloc/matches_bloc.dart';
+import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../domain/entities/team_entity.dart';
 
 class TeamHeaderCard extends StatelessWidget {
@@ -199,6 +203,42 @@ class TeamHeaderCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 8),
+
+              // Favorite Star Button
+              BlocBuilder<FavoritesCubit, FavoritesState>(
+                builder: (context, favState) {
+                  final isFav = favState.isFavoriteTeam(
+                    id: profile?.teamId,
+                    name: name,
+                  );
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusFull,
+                    ),
+                    onTap: () {
+                      context.read<FavoritesCubit>().toggleTeam(name);
+                      try {
+                        context.read<MatchesBloc>().add(
+                          const RefreshFavoritesEvent(),
+                        );
+                      } catch (_) {}
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Icon(
+                        isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                        color: isFav
+                            ? AppColors.yellowCard
+                            : (isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted),
+                        size: isSmall ? 22 : 26,
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),

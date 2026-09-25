@@ -136,13 +136,7 @@ class _MatchesViewState extends State<MatchesView> {
       ),
       body: BlocListener<FavoritesCubit, FavoritesState>(
         listener: (context, favState) {
-          final bloc = context.read<MatchesBloc>();
-          bloc.add(
-            ApplyMatchesFilterEvent(
-              filter: bloc.state.activeFilter,
-              sortOrder: bloc.state.sortOrder,
-            ),
-          );
+          context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
         },
         child: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, state) {
@@ -324,24 +318,56 @@ class _MatchesViewState extends State<MatchesView> {
       );
     }
 
-    return ListView.builder(
+    // Extract Favorite Matches for today (pinned on top)
+    final List<MatchEntity> favoriteMatches = [];
+    if (state.activeFilter != MatchFilterType.favorites) {
+      for (final league in state.filteredLeagues) {
+        for (final m in league.matches) {
+          if (m.isFavorite && !favoriteMatches.any((fav) => fav.id == m.id)) {
+            favoriteMatches.add(m);
+          }
+        }
+      }
+    }
+
+    return ListView(
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-      itemCount: state.filteredLeagues.length,
-      itemBuilder: (context, index) {
-        final league = state.filteredLeagues[index];
-        return LeagueSectionWidget(
-          key: ValueKey('${league.leagueTitle}_${state.timeFormat}'),
-          league: league,
-          timeFormat: state.timeFormat,
-          isTimeSorted: state.sortOrder == MatchesSortOrder.time,
-          onFavoriteMatchTap: (matchId) {
-            context.read<MatchesBloc>().add(ToggleMatchFavoriteEvent(matchId));
-            try {
-              context.read<FavoritesCubit>().loadFavorites();
-            } catch (_) {}
-          },
-        );
-      },
+      children: [
+        // Pinned Favorites Section
+        if (favoriteMatches.isNotEmpty)
+          LeagueSectionWidget(
+            key: ValueKey('fav_section_${state.selectedDate.day}'),
+            league: LeagueGroupEntity(
+              leagueTitle: isArabic ? 'المفضلة' : 'Favorites',
+              matches: favoriteMatches,
+            ),
+            timeFormat: state.timeFormat,
+            onFavoriteMatchTap: (matchId) {
+              context.read<MatchesBloc>().add(
+                ToggleMatchFavoriteEvent(matchId),
+              );
+              try {
+                context.read<FavoritesCubit>().loadFavorites();
+              } catch (_) {}
+            },
+          ),
+
+        // Leagues list
+        ...state.filteredLeagues.map((league) {
+          return LeagueSectionWidget(
+            key: ValueKey('${league.leagueTitle}_${state.timeFormat}'),
+            league: league,
+            timeFormat: state.timeFormat,
+            isTimeSorted: state.sortOrder == MatchesSortOrder.time,
+            onFavoriteMatchTap: (matchId) {
+              context.read<MatchesBloc>().add(ToggleMatchFavoriteEvent(matchId));
+              try {
+                context.read<FavoritesCubit>().loadFavorites();
+              } catch (_) {}
+            },
+          );
+        }),
+      ],
     );
   }
 }
