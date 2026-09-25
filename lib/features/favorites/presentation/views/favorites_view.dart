@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/team_resolver.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
@@ -20,19 +21,35 @@ class FavoritesView extends StatelessWidget {
     bool isDark,
   ) {
     final controller = TextEditingController();
-    const popularTeams = [
-      'الأهلي',
-      'الزمالك',
-      'ريال مدريد',
-      'برشلونة',
-      'مانشستر سيتي',
-      'ليفربول',
-      'الهلال',
-      'النصر',
-      'أرسنال',
-      'بايرن ميونخ',
-      'باريس سان جيرمان',
-    ];
+    final popularTeams = isArabic
+        ? const [
+            'الأهلي',
+            'الزمالك',
+            'ريال مدريد',
+            'برشلونة',
+            'مانشستر سيتي',
+            'ليفربول',
+            'الهلال',
+            'النصر',
+            'أرسنال',
+            'بايرن ميونخ',
+            'باريس سان جيرمان',
+            'مصر',
+          ]
+        : const [
+            'Real Madrid',
+            'Barcelona',
+            'Manchester City',
+            'Liverpool',
+            'Arsenal',
+            'Bayern Munich',
+            'Paris Saint-Germain',
+            'Al Ahly',
+            'Zamalek',
+            'Al Hilal',
+            'Al Nassr',
+            'Egypt',
+          ];
 
     showDialog<void>(
       context: context,
@@ -174,9 +191,13 @@ class FavoritesView extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: state.favoriteTeams.map((team) {
+                    final displayTitle =
+                        TeamResolver.getLocalizedName(team, isArabic: isArabic) ??
+                        state.teamTitles[team.trim()] ??
+                        team;
                     return Chip(
                       avatar: const Icon(Icons.shield_outlined, size: 18),
-                      label: Text(team),
+                      label: Text(displayTitle),
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
                         context.read<FavoritesCubit>().toggleTeam(team);

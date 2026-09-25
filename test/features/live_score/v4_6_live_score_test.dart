@@ -45,9 +45,15 @@ class _MockStorageForLiveScore implements LocalStorageService {
   @override
   List<String> getFavoriteTeams() => [];
   @override
-  Future<bool> toggleFavoriteTeam(String teamName) async => true;
+  Future<bool> toggleFavoriteTeam(String teamName, {String? id}) async => true;
   @override
-  bool isFavoriteTeam(String teamName) => false;
+  bool isFavoriteTeam(String teamName, {String? id}) => false;
+  @override
+  Map<String, String> getFavoriteTeamTitles() => {};
+  @override
+  Future<bool> registerTeamTitles(Map<String, String> titles) async => true;
+  @override
+  String resolveTeamTitle(String teamOrId, {bool? isArabic}) => teamOrId;
   @override
   List<String> getFavoriteCompetitions() => [];
   @override

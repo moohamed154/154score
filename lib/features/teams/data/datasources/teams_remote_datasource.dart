@@ -101,6 +101,89 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
     );
   }
 
+  Future<String?> _resolveNumericTeamId(String query, String lang) async {
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) return null;
+    if (int.tryParse(cleanQuery) != null) return cleanQuery;
+
+    try {
+      final res = await _client.get(
+        ApiEndpoints.search,
+        queryParameters: {'q': cleanQuery, 'lang': lang},
+      ).catchError((_) => null);
+
+      if (res is Map && res['data'] is Map) {
+        final teams = res['data']['teams'] as List? ?? [];
+        if (teams.isNotEmpty) {
+          final qLower = cleanQuery.toLowerCase();
+          for (final t in teams) {
+            if (t is Map) {
+              final title = (t['title']?.toString() ?? '').toLowerCase().trim();
+              final fullTitle =
+                  (t['full_title']?.toString() ?? '').toLowerCase().trim();
+              if (title == qLower || fullTitle == qLower) {
+                final id = t['id']?.toString();
+                if (id != null && int.tryParse(id) != null) return id;
+              }
+            }
+          }
+          for (final t in teams) {
+            if (t is Map) {
+              final id = t['id']?.toString();
+              if (id != null && int.tryParse(id) != null) return id;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> _fetchTeamEndpoints(
+    String id,
+    String lang,
+  ) async {
+    try {
+      final profileFuture = _client
+          .get(ApiEndpoints.teamProfile(id), queryParameters: {'lang': lang})
+          .catchError((_) => null);
+
+      final playersFuture = _client
+          .get(ApiEndpoints.teamPlayers(id), queryParameters: {'lang': lang})
+          .catchError((_) => null);
+
+      final transfersFuture = _client
+          .get(ApiEndpoints.teamTransfers(id), queryParameters: {'lang': lang})
+          .catchError((_) => null);
+
+      final newsFuture = _client
+          .get(ApiEndpoints.teamNews(id), queryParameters: {'lang': lang})
+          .catchError((_) => null);
+
+      final matchesFuture = _client
+          .get(ApiEndpoints.teamMatches(id), queryParameters: {'lang': lang})
+          .catchError((_) => null);
+
+      final results = await Future.wait([
+        profileFuture,
+        playersFuture,
+        transfersFuture,
+        newsFuture,
+        matchesFuture,
+      ]);
+
+      return {
+        'profile': results[0],
+        'players': results[1],
+        'transfers': results[2],
+        'news': results[3],
+        'matches': results[4],
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Future<TeamProfileEntity> getTeamProfile(
     String teamId, {
@@ -108,52 +191,52 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
     String? leagueId,
     required String lang,
   }) async {
+    final cleanId = UrlHelper.safeDecodeComponent(teamId).trim();
+    String? cleanName = teamName?.trim();
+    if (cleanName == null || cleanName.isEmpty) {
+      if (int.tryParse(cleanId) == null && cleanId.isNotEmpty) {
+        cleanName = cleanId;
+      }
+    }
+
+    String? resolvedId;
+    if (int.tryParse(cleanId) != null) {
+      resolvedId = cleanId;
+    } else {
+      final queryToSearch =
+          (cleanName != null && cleanName.isNotEmpty) ? cleanName : cleanId;
+      resolvedId = await _resolveNumericTeamId(queryToSearch, lang);
+    }
+
     // 1. Fetch from 154score API team endpoints
-    if (teamId.isNotEmpty && int.tryParse(teamId) != null) {
+    if (resolvedId != null && int.tryParse(resolvedId) != null) {
       try {
-        final profileFuture = _client
-            .get(
-              ApiEndpoints.teamProfile(teamId),
-              queryParameters: {'lang': lang},
-            )
-            .catchError((_) => null);
+        var endpointsRes = await _fetchTeamEndpoints(resolvedId, lang);
 
-        final playersFuture = _client
-            .get(
-              ApiEndpoints.teamPlayers(teamId),
-              queryParameters: {'lang': lang},
-            )
-            .catchError((_) => null);
+        if ((endpointsRes == null || endpointsRes['profile'] == null) &&
+            resolvedId == cleanId &&
+            cleanName != null &&
+            cleanName.isNotEmpty) {
+          final fallbackId = await _resolveNumericTeamId(cleanName, lang);
+          if (fallbackId != null && fallbackId != resolvedId) {
+            resolvedId = fallbackId;
+            endpointsRes = await _fetchTeamEndpoints(resolvedId, lang);
+          }
+        }
 
-        final transfersFuture = _client
-            .get(
-              ApiEndpoints.teamTransfers(teamId),
-              queryParameters: {'lang': lang},
-            )
-            .catchError((_) => null);
-
-        final newsFuture = _client
-            .get(ApiEndpoints.teamNews(teamId), queryParameters: {'lang': lang})
-            .catchError((_) => null);
-
-        final results = await Future.wait([
-          profileFuture,
-          playersFuture,
-          transfersFuture,
-          newsFuture,
-        ]);
-
-        final profileRes = results[0];
-        final playersRes = results[1];
-        final transfersRes = results[2];
-        final newsRes = results[3];
+        final profileRes = endpointsRes?['profile'];
+        final playersRes = endpointsRes?['players'];
+        final transfersRes = endpointsRes?['transfers'];
+        final newsRes = endpointsRes?['news'];
+        final matchesRes = endpointsRes?['matches'];
 
         if (profileRes is Map && profileRes['data'] is Map) {
           final data = profileRes['data'] as Map;
-          final effectiveName = data['name']?.toString() ?? teamName ?? 'Team';
+          final effectiveName = data['name']?.toString() ?? cleanName ?? 'Team';
           final effectiveLogo = UrlHelper.normalizeImageUrl(
-            data['logo']?.toString(),
-          );
+                data['logo']?.toString(),
+              ) ??
+              UrlHelper.resolveTeamLogo(resolvedId);
           final country = data['country']?.toString();
           final countryFlag = UrlHelper.normalizeImageUrl(
             data['country_flag']?.toString(),
@@ -227,43 +310,64 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
           final postponed = <MatchEntity>[];
           final form = <String>[];
 
+          Map? catM;
           if (data['categorized_matches'] is Map) {
-            final catM = data['categorized_matches'] as Map;
+            catM = data['categorized_matches'] as Map;
+          } else if (matchesRes is Map &&
+              matchesRes['data'] is Map &&
+              matchesRes['data']['categorized_matches'] is Map) {
+            catM = matchesRes['data']['categorized_matches'] as Map;
+          }
+
+          if (catM != null) {
             if (catM['online'] is List) {
               for (final m in catM['online']) {
-                if (m is Map)
+                if (m is Map) {
                   online.add(
                     _mapMatch(m, effectiveName, effectiveLogo, leagueId),
                   );
+                }
               }
             }
             if (catM['coming'] is List) {
               for (final m in catM['coming']) {
-                if (m is Map)
+                if (m is Map) {
                   upcoming.add(
                     _mapMatch(m, effectiveName, effectiveLogo, leagueId),
                   );
+                }
               }
             }
             if (catM['end'] is List) {
               for (final m in catM['end']) {
-                if (m is Map)
+                if (m is Map) {
                   recent.add(
                     _mapMatch(m, effectiveName, effectiveLogo, leagueId),
                   );
+                }
               }
             }
             if (catM['postponed'] is List) {
               for (final m in catM['postponed']) {
-                if (m is Map)
+                if (m is Map) {
                   postponed.add(
                     _mapMatch(m, effectiveName, effectiveLogo, leagueId),
                   );
+                }
               }
             }
-          } else {
-            // Fallback parsing from flat matches
-            final rawMatches = data['matches'] as List? ?? [];
+          }
+
+          // Fallback parsing from flat matches if recent & upcoming are empty
+          if (recent.isEmpty && upcoming.isEmpty) {
+            final rawMatches = (data['matches'] is List &&
+                    (data['matches'] as List).isNotEmpty)
+                ? (data['matches'] as List)
+                : (matchesRes is Map &&
+                        matchesRes['data'] is Map &&
+                        matchesRes['data']['matches'] is List
+                    ? (matchesRes['data']['matches'] as List)
+                    : []);
             for (final rawM in rawMatches) {
               if (rawM is Map) {
                 final match = _mapMatch(
@@ -500,7 +604,7 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
           }
 
           return TeamProfileEntity(
-            teamId: teamId,
+            teamId: resolvedId,
             teamName: effectiveName,
             teamLogo: effectiveLogo,
             leagueId: targetLeagueId,
@@ -533,23 +637,49 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
       } catch (_) {}
     }
 
-    // 2. Fallback: search matches across the day's leagues
+    // 2. Fallback: search matches across the day's leagues & league standings
+    String fallbackName = cleanName ??
+        (int.tryParse(cleanId) == null && cleanId.isNotEmpty ? cleanId : 'Team');
+    String? fallbackLogo = (resolvedId != null
+        ? UrlHelper.resolveTeamLogo(resolvedId)
+        : null);
+    String? effectiveLeagueId = leagueId;
+    String? effectiveLeagueTitle;
+    StandingRowEntity? standingRow;
+
+    if (leagueId != null && leagueId.isNotEmpty) {
+      try {
+        final standings =
+            await _standingsDataSource.getStandings(leagueId, lang: lang);
+        effectiveLeagueTitle = standings.leagueTitle;
+        final qLower = fallbackName.toLowerCase();
+        for (final row in standings.rows) {
+          final rName = row.teamName.toLowerCase();
+          if (rName == qLower ||
+              (qLower.length > 3 && rName.contains(qLower)) ||
+              (rName.length > 3 && qLower.contains(rName))) {
+            standingRow = row;
+            fallbackLogo ??= row.teamLogo;
+            fallbackName = row.teamName;
+            break;
+          }
+        }
+      } catch (_) {}
+    }
+
     final queryParams = <String, dynamic>{'lang': lang};
     if (leagueId != null && leagueId.isNotEmpty) {
       queryParams['champ_id'] = leagueId;
     }
 
-    final response = await _client.get(
-      ApiEndpoints.matches,
-      queryParameters: queryParams,
-    );
+    final response = await _client
+        .get(
+          ApiEndpoints.matches,
+          queryParameters: queryParams,
+        )
+        .catchError((_) => null);
 
     final allMatches = <MatchEntity>[];
-    String effectiveName = teamName ?? 'Team';
-    String? effectiveLogo;
-    String? effectiveLeagueId = leagueId;
-    String? effectiveLeagueTitle;
-
     if (response is Map && response['data'] is List) {
       final leagues = response['data'] as List;
       for (final l in leagues) {
@@ -565,7 +695,7 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
 
               final t1Name = match.team1.toLowerCase();
               final t2Name = match.team2.toLowerCase();
-              final queryLower = (teamName ?? teamId).toLowerCase();
+              final queryLower = (cleanName ?? cleanId).toLowerCase();
 
               final isTeam1 =
                   t1Name == queryLower ||
@@ -577,11 +707,11 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
               if (isTeam1 || isTeam2) {
                 allMatches.add(match);
                 if (isTeam1) {
-                  effectiveName = match.team1;
-                  effectiveLogo ??= match.team1Logo;
+                  fallbackName = match.team1;
+                  fallbackLogo ??= match.team1Logo;
                 } else {
-                  effectiveName = match.team2;
-                  effectiveLogo ??= match.team2Logo;
+                  fallbackName = match.team2;
+                  fallbackLogo ??= match.team2Logo;
                 }
                 effectiveLeagueId ??= match.leagueId ?? lId;
                 effectiveLeagueTitle ??= match.leagueTitle ?? lTitle;
@@ -610,7 +740,7 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
         final p2 = int.tryParse(match.score2 ?? '');
         if (p1 != null && p2 != null) {
           final isHome = match.team1.toLowerCase().contains(
-            effectiveName.toLowerCase(),
+            fallbackName.toLowerCase(),
           );
           final teamScore = isHome ? p1 : p2;
           final oppScore = isHome ? p2 : p1;
@@ -628,11 +758,12 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
     }
 
     return TeamProfileEntity(
-      teamId: teamId,
-      teamName: effectiveName,
-      teamLogo: effectiveLogo,
+      teamId: resolvedId ?? cleanId,
+      teamName: fallbackName,
+      teamLogo: fallbackLogo,
       leagueId: effectiveLeagueId,
       leagueName: effectiveLeagueTitle,
+      standingsRow: standingRow,
       upcomingMatches: upcoming,
       recentMatches: recent,
       form: form.take(5).toList(),

@@ -310,9 +310,10 @@ class TopScorersTable extends StatelessWidget {
                         const SizedBox(height: 2),
                         InkWell(
                           onTap: () {
-                            final tId =
-                                scorer.teamId ??
-                                Uri.encodeComponent(scorer.teamName!);
+                            final tId = (scorer.teamId != null &&
+                                    scorer.teamId!.trim().isNotEmpty)
+                                ? scorer.teamId!.trim()
+                                : Uri.encodeComponent(scorer.teamName!.trim());
                             context.push(
                               '/team/$tId',
                               extra: {

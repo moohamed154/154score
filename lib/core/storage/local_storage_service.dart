@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/team_resolver.dart';
+
 abstract class LocalStorageService {
   Future<void> init();
 
@@ -27,8 +29,11 @@ abstract class LocalStorageService {
 
   // Favorites
   List<String> getFavoriteTeams();
-  Future<bool> toggleFavoriteTeam(String teamName);
-  bool isFavoriteTeam(String teamName);
+  Future<bool> toggleFavoriteTeam(String teamName, {String? id});
+  bool isFavoriteTeam(String teamName, {String? id});
+  Map<String, String> getFavoriteTeamTitles();
+  Future<bool> registerTeamTitles(Map<String, String> titles);
+  String resolveTeamTitle(String teamOrId, {bool? isArabic});
 
   List<String> getFavoriteCompetitions();
   bool hasCustomFavoriteCompetitions();
@@ -79,6 +84,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyTimezoneOffset = 'app_timezone_offset';
   static const String _keyTimezoneAuto = 'app_timezone_auto';
   static const String _keyFavoriteTeams = 'app_favorite_teams';
+  static const String _keyFavoriteTeamTitles = 'app_favorite_team_titles';
   static const String _keyFavoriteCompetitions = 'app_favorite_competitions';
   static const String _keyFavoriteCompetitionTitles =
       'app_favorite_competition_titles';
@@ -236,19 +242,154 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
-  Future<bool> toggleFavoriteTeam(String teamName) async {
-    final list = getFavoriteTeams().toList();
-    if (list.contains(teamName)) {
-      list.remove(teamName);
-    } else {
-      list.add(teamName);
+  Map<String, String> getFavoriteTeamTitles() {
+    final res = <String, String>{};
+    final raw = _prefs.getString(_keyFavoriteTeamTitles);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) {
+          decoded.forEach((k, v) {
+            if (k != null && v != null) {
+              res[k.toString()] = v.toString();
+            }
+          });
+        }
+      } catch (_) {}
     }
-    return _prefs.setStringList(_keyFavoriteTeams, list);
+    return res;
   }
 
   @override
-  bool isFavoriteTeam(String teamName) {
-    return getFavoriteTeams().contains(teamName);
+  Future<bool> registerTeamTitles(Map<String, String> titles) async {
+    final current = getFavoriteTeamTitles();
+    current.addAll(titles);
+    titles.forEach((id, name) {
+      if (name.trim().isNotEmpty) {
+        current[name.trim().toLowerCase()] = id;
+      }
+    });
+    return _prefs.setString(_keyFavoriteTeamTitles, jsonEncode(current));
+  }
+
+  @override
+  String resolveTeamTitle(String teamOrId, {bool? isArabic}) {
+    final trimmed = teamOrId.trim();
+    if (isArabic != null) {
+      final loc = TeamResolver.getLocalizedName(trimmed, isArabic: isArabic);
+      if (loc != null) return loc;
+    }
+    final titles = getFavoriteTeamTitles();
+    return titles[trimmed] ?? trimmed;
+  }
+
+  @override
+  bool isFavoriteTeam(String teamName, {String? id}) {
+    final list = getFavoriteTeams();
+    if (list.isEmpty) return false;
+
+    final cleanName = teamName.trim();
+    final cleanId = id?.trim();
+
+    // 1. Direct match on name or ID, or via TeamResolver cross-lingual match
+    for (final fav in list) {
+      final cleanFav = fav.trim();
+      if (cleanName.isNotEmpty &&
+          cleanFav.toLowerCase() == cleanName.toLowerCase()) {
+        return true;
+      }
+      if (cleanId != null &&
+          cleanId.isNotEmpty &&
+          cleanFav.toLowerCase() == cleanId.toLowerCase()) {
+        return true;
+      }
+      if (cleanName.isNotEmpty && TeamResolver.areSameTeam(cleanFav, cleanName)) {
+        return true;
+      }
+      if (cleanId != null &&
+          cleanId.isNotEmpty &&
+          TeamResolver.areSameTeam(cleanFav, cleanId)) {
+        return true;
+      }
+    }
+
+    // 2. Check teamTitles mapping
+    final titles = getFavoriteTeamTitles();
+    if (cleanId != null && titles.containsKey(cleanId)) {
+      final mappedName = titles[cleanId]!;
+      for (final fav in list) {
+        if (fav.trim().toLowerCase() == mappedName.trim().toLowerCase() ||
+            TeamResolver.areSameTeam(fav, mappedName)) {
+          return true;
+        }
+      }
+    }
+    if (cleanName.isNotEmpty && titles.containsKey(cleanName.toLowerCase())) {
+      final mappedId = titles[cleanName.toLowerCase()]!;
+      for (final fav in list) {
+        if (fav.trim().toLowerCase() == mappedId.trim().toLowerCase() ||
+            TeamResolver.areSameTeam(fav, mappedId)) {
+          return true;
+        }
+      }
+    }
+
+    // 3. Check canonical key
+    final nameKey = cleanName.isNotEmpty ? TeamResolver.getCanonicalKey(cleanName) : null;
+    final idKey = (cleanId != null && cleanId.isNotEmpty) ? TeamResolver.getCanonicalKey(cleanId) : null;
+    if (nameKey != null || idKey != null) {
+      for (final fav in list) {
+        final favKey = TeamResolver.getCanonicalKey(fav);
+        if (favKey != null) {
+          if (nameKey != null && favKey == nameKey) return true;
+          if (idKey != null && favKey == idKey) return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  @override
+  Future<bool> toggleFavoriteTeam(String teamName, {String? id}) async {
+    final list = getFavoriteTeams().toList();
+    final isFav = isFavoriteTeam(teamName, id: id);
+    final cleanName = teamName.trim();
+    final cleanId = id?.trim();
+
+    if (isFav) {
+      // Remove all matching variants (both languages, aliases, ID)
+      list.removeWhere((item) {
+        final cleanItem = item.trim();
+        if (cleanName.isNotEmpty &&
+            cleanItem.toLowerCase() == cleanName.toLowerCase()) {
+          return true;
+        }
+        if (cleanId != null &&
+            cleanId.isNotEmpty &&
+            cleanItem.toLowerCase() == cleanId.toLowerCase()) {
+          return true;
+        }
+        if (cleanName.isNotEmpty &&
+            TeamResolver.areSameTeam(cleanItem, cleanName)) {
+          return true;
+        }
+        if (cleanId != null &&
+            cleanId.isNotEmpty &&
+            TeamResolver.areSameTeam(cleanItem, cleanId)) {
+          return true;
+        }
+        return false;
+      });
+    } else {
+      if (cleanName.isNotEmpty && !list.contains(cleanName)) {
+        list.add(cleanName);
+      }
+      if (cleanId != null && cleanId.isNotEmpty && cleanName.isNotEmpty) {
+        unawaited(registerTeamTitles({cleanId: cleanName}));
+      }
+    }
+    return _prefs.setStringList(_keyFavoriteTeams, list);
   }
 
   @override

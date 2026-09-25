@@ -7,6 +7,7 @@ import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/realtime_merge_engine.dart';
+import '../../../../core/utils/team_resolver.dart';
 import '../../../../core/websocket/websocket_event.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../domain/entities/match_entity.dart';
@@ -389,12 +390,20 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     if (favMatches.contains(match.id)) return true;
     return favTeams.any((team) {
       final cleanTeam = team.trim().toLowerCase();
-      return cleanTeam == match.team1.trim().toLowerCase() ||
+      if (cleanTeam == match.team1.trim().toLowerCase() ||
           cleanTeam == match.team2.trim().toLowerCase() ||
           (match.team1Id != null &&
               cleanTeam == match.team1Id!.trim().toLowerCase()) ||
           (match.team2Id != null &&
-              cleanTeam == match.team2Id!.trim().toLowerCase());
+              cleanTeam == match.team2Id!.trim().toLowerCase())) {
+        return true;
+      }
+      return TeamResolver.areSameTeam(team, match.team1) ||
+          TeamResolver.areSameTeam(team, match.team2) ||
+          (match.team1Id != null &&
+              TeamResolver.areSameTeam(team, match.team1Id!)) ||
+          (match.team2Id != null &&
+              TeamResolver.areSameTeam(team, match.team2Id!));
     });
   }
 

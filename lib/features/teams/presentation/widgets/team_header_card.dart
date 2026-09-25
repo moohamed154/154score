@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/url_helper.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -32,8 +34,15 @@ class TeamHeaderCard extends StatelessWidget {
     final isSmall = AppDimensions.isSmallScreen(context);
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
-    final name = profile?.teamName ?? fallbackName;
-    final logo = profile?.teamLogo ?? fallbackLogo;
+    final name = (profile?.teamName != null && profile!.teamName.isNotEmpty)
+        ? profile!.teamName
+        : fallbackName;
+    final logo = (profile?.teamLogo != null && profile!.teamLogo!.isNotEmpty)
+        ? profile!.teamLogo
+        : (fallbackLogo ??
+              (profile?.teamId != null && int.tryParse(profile!.teamId) != null
+                  ? UrlHelper.resolveTeamLogo(profile!.teamId)
+                  : null));
     final leagueName = profile?.leagueName;
     final leagueId = profile?.leagueId;
     final row = profile?.standingsRow;
@@ -218,7 +227,10 @@ class TeamHeaderCard extends StatelessWidget {
                       AppDimensions.radiusFull,
                     ),
                     onTap: () {
-                      context.read<FavoritesCubit>().toggleTeam(name);
+                      context.read<FavoritesCubit>().toggleTeam(
+                        name,
+                        id: profile?.teamId,
+                      );
                       try {
                         context.read<MatchesBloc>().add(
                           const RefreshFavoritesEvent(),
@@ -232,8 +244,8 @@ class TeamHeaderCard extends StatelessWidget {
                         color: isFav
                             ? AppColors.yellowCard
                             : (isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted),
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted),
                         size: isSmall ? 22 : 26,
                       ),
                     ),

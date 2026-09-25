@@ -186,9 +186,13 @@ class MatchHeaderBanner extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                     onTap: () {
-                      final tId = Uri.encodeComponent(match.team1);
+                      final targetId =
+                          (match.team1Id != null &&
+                                  match.team1Id!.trim().isNotEmpty)
+                              ? match.team1Id!.trim()
+                              : Uri.encodeComponent(match.team1.trim());
                       context.push(
-                        '/team/$tId',
+                        '/team/$targetId',
                         extra: {
                           'name': match.team1,
                           'logo': match.team1Logo,
@@ -318,9 +322,13 @@ class MatchHeaderBanner extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                     onTap: () {
-                      final tId = Uri.encodeComponent(match.team2);
+                      final targetId =
+                          (match.team2Id != null &&
+                                  match.team2Id!.trim().isNotEmpty)
+                              ? match.team2Id!.trim()
+                              : Uri.encodeComponent(match.team2.trim());
                       context.push(
-                        '/team/$tId',
+                        '/team/$targetId',
                         extra: {
                           'name': match.team2,
                           'logo': match.team2Logo,

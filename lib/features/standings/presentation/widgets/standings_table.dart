@@ -295,12 +295,12 @@ class StandingsTable extends StatelessWidget {
           : Colors.transparent,
       child: InkWell(
         onTap: () {
-          final rawId = (row.teamId != null && row.teamId!.isNotEmpty)
-              ? row.teamId!
-              : Uri.encodeComponent(row.teamName);
-          final encodedId = Uri.encodeComponent(rawId);
+          final targetId =
+              (row.teamId != null && row.teamId!.trim().isNotEmpty)
+                  ? row.teamId!.trim()
+                  : Uri.encodeComponent(row.teamName.trim());
           context.push(
-            '/team/$encodedId',
+            '/team/$targetId',
             extra: {'name': row.teamName, 'logo': row.teamLogo},
           );
         },

@@ -65,10 +65,19 @@ class MockLocalStorageService implements LocalStorageService {
   List<String> getFavoriteTeams() => [];
 
   @override
-  Future<bool> toggleFavoriteTeam(String teamName) async => true;
+  Future<bool> toggleFavoriteTeam(String teamName, {String? id}) async => true;
 
   @override
-  bool isFavoriteTeam(String teamName) => false;
+  bool isFavoriteTeam(String teamName, {String? id}) => false;
+
+  @override
+  Map<String, String> getFavoriteTeamTitles() => {};
+
+  @override
+  Future<bool> registerTeamTitles(Map<String, String> titles) async => true;
+
+  @override
+  String resolveTeamTitle(String teamOrId, {bool? isArabic}) => teamOrId;
 
   @override
   List<String> getFavoriteCompetitions() => [];
@@ -650,6 +659,67 @@ void main() {
       expect(find.text('برشلونة'), findsWidgets);
       expect(find.text('النادي السابق'), findsOneWidget);
       expect(find.text('النادي الجديد'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('8. MatchCard and StandingsTable team taps with numeric teamId', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390 * 2, 844 * 2);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      const match = MatchEntity(
+        id: '202',
+        team1: 'ريال مدريد',
+        team2: 'برشلونة',
+        team1Id: '8633',
+        team2Id: '8634',
+        score1: '3',
+        score2: '2',
+        status: 'انتهت',
+      );
+
+      const rows = [
+        StandingRowEntity(
+          position: 1,
+          teamName: 'ريال مدريد',
+          teamId: '8633',
+          played: 12,
+          wins: 10,
+          draws: 2,
+          losses: 0,
+          goalsFor: 28,
+          goalsAgainst: 8,
+          goalDiff: 20,
+          points: 32,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        createTestApp(
+          const Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  MatchCard(match: match),
+                  StandingsTable(rows: rows),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap team 1 in MatchCard
+      await tester.tap(find.text('ريال مدريد').first);
+      await tester.pumpAndSettle();
+
+      // Tap team in StandingsTable
+      await tester.tap(find.text('ريال مدريد').last);
+      await tester.pumpAndSettle();
+
       expect(tester.takeException(), isNull);
     });
   });

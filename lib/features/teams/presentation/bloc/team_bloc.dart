@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
@@ -48,6 +50,13 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
 
       await result.fold(
         onSuccess: (profile) async {
+          if (profile.teamId.isNotEmpty && profile.teamName.isNotEmpty) {
+            unawaited(
+              localStorageService.registerTeamTitles({
+                profile.teamId: profile.teamName,
+              }),
+            );
+          }
           final initialChampId =
               profile.leagueId ??
               (profile.championships.isNotEmpty
@@ -70,6 +79,7 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
           emit(
             state.copyWith(
               status: TeamStatus.success,
+              teamId: profile.teamId,
               teamName: profile.teamName,
               teamLogo: profile.teamLogo ?? state.teamLogo,
               profile: profile,

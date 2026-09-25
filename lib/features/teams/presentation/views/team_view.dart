@@ -100,8 +100,9 @@ class _TeamViewState extends State<TeamView>
             actions: [
               BlocBuilder<FavoritesCubit, FavoritesState>(
                 builder: (context, favState) {
+                  final effectiveTeamId = state.profile?.teamId ?? state.teamId;
                   final isFav = favState.isFavoriteTeam(
-                    id: widget.teamId,
+                    id: effectiveTeamId,
                     name: displayName,
                   );
                   return IconButton(
@@ -112,7 +113,10 @@ class _TeamViewState extends State<TeamView>
                     ),
                     tooltip: isArabic ? 'تفضيل الفريق' : 'Favorite Team',
                     onPressed: () {
-                      context.read<FavoritesCubit>().toggleTeam(displayName);
+                      context.read<FavoritesCubit>().toggleTeam(
+                            displayName,
+                            id: effectiveTeamId,
+                          );
                       try {
                         context.read<MatchesBloc>().add(
                           const RefreshFavoritesEvent(),
