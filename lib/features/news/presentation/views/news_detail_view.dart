@@ -429,10 +429,11 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
                 shape: BoxShape.circle,
               ),
               child: IconButton(
+                padding: EdgeInsets.zero,
                 icon: const Icon(
-                  Icons.arrow_back_rounded,
+                  Icons.arrow_back_ios_new_rounded,
                   color: Colors.white,
-                  size: 20,
+                  size: 18,
                 ),
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
