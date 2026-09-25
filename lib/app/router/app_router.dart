@@ -14,7 +14,8 @@ import '../../features/leagues/presentation/views/league_view.dart';
 import '../../features/match_details/presentation/bloc/match_details_bloc.dart';
 import '../../features/match_details/presentation/views/match_details_view.dart';
 import '../../features/matches/domain/entities/match_entity.dart';
-import '../../features/matches/presentation/views/matches_view.dart';
+import '../../features/news/presentation/views/news_detail_view.dart';
+import '../../features/news/presentation/views/news_view.dart';
 import '../../features/players/presentation/bloc/player_bloc.dart';
 import '../../features/players/presentation/views/player_view.dart';
 import '../../features/profiles/presentation/views/generic_profile_view.dart';
@@ -65,12 +66,12 @@ class AppRouter {
             ],
           ),
 
-          // Branch 1: Matches
+          // Branch 1: News
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/matches',
-                builder: (context, state) => const MatchesView(),
+                path: '/news',
+                builder: (context, state) => const NewsView(),
               ),
             ],
           ),
@@ -160,6 +161,21 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/splash',
         builder: (context, state) => const SplashView(),
+      ),
+
+      // News Detail
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/news/:id',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final extra = state.extra as Map<String, dynamic>?;
+          final slug = extra?['slug']?.toString();
+          return _buildCupertinoPage(
+            state: state,
+            child: NewsDetailView(articleId: id, slug: slug),
+          );
+        },
       ),
 
       // Match Details

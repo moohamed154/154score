@@ -57,6 +57,11 @@ import '../../features/settings/presentation/cubit/settings_cubits.dart';
 import '../../features/search/data/repositories/search_repository.dart';
 import '../../features/search/presentation/cubit/search_cubit.dart';
 
+import '../../features/news/data/datasources/news_remote_datasource.dart';
+import '../../features/news/data/repositories/news_repository_impl.dart';
+import '../../features/news/domain/repositories/news_repository.dart';
+import '../../features/news/presentation/bloc/news_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -101,6 +106,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<VideosRemoteDataSource>(
     () => VideosRemoteDataSourceImpl(sl()),
   );
+  sl.registerLazySingleton<NewsRemoteDataSource>(
+    () => NewsRemoteDataSourceImpl(sl()),
+  );
   sl.registerLazySingleton<ProfilesRemoteDataSource>(
     () => ProfilesRemoteDataSourceImpl(sl()),
   );
@@ -126,6 +134,7 @@ Future<void> initDependencies() async {
     () => TransfersRepositoryImpl(sl()),
   );
   sl.registerLazySingleton<VideosRepository>(() => VideosRepositoryImpl(sl()));
+  sl.registerLazySingleton<NewsRepository>(() => NewsRepositoryImpl(sl()));
   sl.registerLazySingleton<ProfilesRepository>(
     () => ProfilesRepositoryImpl(sl()),
   );
@@ -196,6 +205,10 @@ Future<void> initDependencies() async {
 
   sl.registerFactory<VideosBloc>(
     () => VideosBloc(repository: sl(), localStorageService: sl()),
+  );
+
+  sl.registerFactory<NewsBloc>(
+    () => NewsBloc(repository: sl(), localStorageService: sl()),
   );
 
   sl.registerFactory<HomeCubit>(

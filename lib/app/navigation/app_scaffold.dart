@@ -13,6 +13,7 @@ import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/matches/presentation/bloc/matches_bloc.dart';
 import '../../features/matches/presentation/bloc/matches_event.dart';
 import '../../features/matches/presentation/bloc/matches_state.dart';
+import '../../features/news/presentation/bloc/news_bloc.dart';
 import '../../features/settings/presentation/cubit/settings_cubits.dart';
 import '../../features/standings/presentation/bloc/standings_bloc.dart';
 import '../../features/transfers/presentation/bloc/transfers_bloc.dart';
@@ -41,6 +42,7 @@ class AppScaffold extends StatelessWidget {
         final transfersCompleter = Completer<void>();
         final videosCompleter = Completer<void>();
         final homeCompleter = Completer<void>();
+        final newsCompleter = Completer<void>();
 
         context.read<MatchesBloc>().add(
           ChangeMatchesLanguageEvent(lang, completer: matchesCompleter),
@@ -54,6 +56,9 @@ class AppScaffold extends StatelessWidget {
         context.read<VideosBloc>().add(
           ChangeVideosLanguageEvent(lang, completer: videosCompleter),
         );
+        context.read<NewsBloc>().add(
+          ChangeNewsLanguageEvent(lang, completer: newsCompleter),
+        );
         context.read<HomeCubit>().changeLanguage(
           lang,
           completer: homeCompleter,
@@ -66,6 +71,7 @@ class AppScaffold extends StatelessWidget {
           transfersCompleter.future,
           videosCompleter.future,
           homeCompleter.future,
+          newsCompleter.future,
         ]).timeout(const Duration(seconds: 5), onTimeout: () => []).then((_) {
           if (context.mounted) {
             context.read<LocaleCubit>().notifyRefreshCompleted(token: token);
@@ -101,7 +107,7 @@ class AppScaffold extends StatelessWidget {
               return Scaffold(
                 body: Row(
                   children: [
-                    _buildDesktopSidebar(context, isDark, isArabic, liveCount),
+                    _buildDesktopSidebar(context, isDark, isArabic),
                     const VerticalDivider(width: 1),
                     Expanded(child: contentWithIndicator()),
                   ],
@@ -147,19 +153,9 @@ class AppScaffold extends StatelessWidget {
                     label: l10n.translate('nav_home'),
                   ),
                   BottomNavigationBarItem(
-                    icon: Badge(
-                      isLabelVisible: liveCount > 0,
-                      label: Text(liveCount.toString()),
-                      backgroundColor: AppColors.liveRed,
-                      child: const Icon(Icons.sports_soccer_outlined),
-                    ),
-                    activeIcon: Badge(
-                      isLabelVisible: liveCount > 0,
-                      label: Text(liveCount.toString()),
-                      backgroundColor: AppColors.liveRed,
-                      child: const Icon(Icons.sports_soccer_rounded),
-                    ),
-                    label: l10n.translate('nav_matches'),
+                    icon: const Icon(Icons.newspaper_outlined),
+                    activeIcon: const Icon(Icons.newspaper_rounded),
+                    label: l10n.translate('nav_news'),
                   ),
                   BottomNavigationBarItem(
                     icon: const Icon(Icons.table_chart_outlined),
@@ -211,19 +207,9 @@ class AppScaffold extends StatelessWidget {
         label: Text(l10n.translate('nav_home')),
       ),
       NavigationRailDestination(
-        icon: Badge(
-          isLabelVisible: liveCount > 0,
-          label: Text(liveCount.toString()),
-          backgroundColor: AppColors.liveRed,
-          child: const Icon(Icons.sports_soccer_outlined),
-        ),
-        selectedIcon: Badge(
-          isLabelVisible: liveCount > 0,
-          label: Text(liveCount.toString()),
-          backgroundColor: AppColors.liveRed,
-          child: const Icon(Icons.sports_soccer_rounded),
-        ),
-        label: Text(l10n.translate('nav_matches')),
+        icon: const Icon(Icons.newspaper_outlined),
+        selectedIcon: const Icon(Icons.newspaper_rounded),
+        label: Text(l10n.translate('nav_news')),
       ),
       NavigationRailDestination(
         icon: const Icon(Icons.table_chart_outlined),
@@ -257,24 +243,18 @@ class AppScaffold extends StatelessWidget {
     BuildContext context,
     bool isDark,
     bool isArabic,
-    int liveCount,
   ) {
     final l10n = AppLocalizations.of(context);
     final selectedIndex = navigationShell.currentIndex;
 
     final navItems = [
-      (Icons.home_rounded, l10n.translate('nav_home'), 0, null),
-      (
-        Icons.sports_soccer_rounded,
-        l10n.translate('nav_matches'),
-        1,
-        liveCount > 0 ? liveCount.toString() : null,
-      ),
-      (Icons.table_chart_rounded, l10n.translate('nav_standings'), 2, null),
-      (Icons.swap_horiz_rounded, l10n.translate('nav_transfers'), 3, null),
-      (Icons.video_library_rounded, l10n.translate('nav_videos'), 4, null),
-      (Icons.favorite_rounded, l10n.translate('nav_favorites'), 5, null),
-      (Icons.search_rounded, l10n.translate('nav_search'), 6, null),
+      (Icons.home_rounded, l10n.translate('nav_home'), 0),
+      (Icons.newspaper_rounded, l10n.translate('nav_news'), 1),
+      (Icons.table_chart_rounded, l10n.translate('nav_standings'), 2),
+      (Icons.swap_horiz_rounded, l10n.translate('nav_transfers'), 3),
+      (Icons.video_library_rounded, l10n.translate('nav_videos'), 4),
+      (Icons.favorite_rounded, l10n.translate('nav_favorites'), 5),
+      (Icons.search_rounded, l10n.translate('nav_search'), 6),
     ];
 
     return Container(
@@ -332,28 +312,6 @@ class AppScaffold extends StatelessWidget {
                         color: isSelected ? AppColors.primary : null,
                       ),
                 ),
-                trailing: item.$4 != null
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.liveRed,
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusFull,
-                          ),
-                        ),
-                        child: Text(
-                          item.$4!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      )
-                    : null,
                 onTap: () => _onTap(context, item.$3),
               ),
             );

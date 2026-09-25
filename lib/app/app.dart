@@ -8,6 +8,7 @@ import '../core/theme/app_theme.dart';
 import '../features/favorites/presentation/cubit/favorites_cubit.dart';
 import '../features/home/presentation/cubit/home_cubit.dart';
 import '../features/matches/presentation/bloc/matches_bloc.dart';
+import '../features/news/presentation/bloc/news_bloc.dart';
 import '../features/settings/presentation/cubit/settings_cubits.dart';
 import '../features/standings/presentation/bloc/standings_bloc.dart';
 import '../features/transfers/presentation/bloc/transfers_bloc.dart';
@@ -51,6 +52,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<ThemeCubit>(create: (_) => sl<ThemeCubit>()),
         BlocProvider<LocaleCubit>(create: (_) => sl<LocaleCubit>()),
         BlocProvider<MatchesBloc>(create: (_) => sl<MatchesBloc>()),
+        BlocProvider<NewsBloc>(create: (_) => sl<NewsBloc>()),
         BlocProvider<HomeCubit>(create: (_) => sl<HomeCubit>()),
         BlocProvider<StandingsBloc>(create: (_) => sl<StandingsBloc>()),
         BlocProvider<TransfersBloc>(create: (_) => sl<TransfersBloc>()),
