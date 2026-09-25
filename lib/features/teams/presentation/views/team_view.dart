@@ -187,6 +187,8 @@ class _TeamViewState extends State<TeamView>
                 profile: state.profile,
                 fallbackName: displayName,
                 fallbackLogo: state.teamLogo ?? widget.initialLogo,
+                isLoading:
+                    state.status == TeamStatus.loading || state.profile == null,
               ),
 
               // Tab Bar (6 Tabs)
@@ -246,25 +248,29 @@ class _TeamViewState extends State<TeamView>
                           child: ListView(
                             padding: const EdgeInsets.only(
                               bottom: AppDimensions.xxxl,
+                              top: 8,
                             ),
                             children: [
-                              SectionHeader(
-                                title: isArabic
-                                    ? 'المباريات القادمة'
-                                    : 'Upcoming Matches',
+                              Skeleton.ignore(
+                                child: SectionHeader(
+                                  title: isArabic
+                                      ? 'المباريات القادمة'
+                                      : 'Upcoming Matches',
+                                ),
                               ),
                               ...List.generate(
-                                3,
-                                (_) => const MatchCard(
+                                8,
+                                (i) => MatchCard(
                                   match: MatchEntity(
-                                    id: 'skeleton',
-                                    team1: 'Arsenal FC',
-                                    team2: 'Chelsea FC',
+                                    id: 'skeleton_$i',
+                                    team1: displayName,
+                                    team2: isArabic
+                                        ? 'نادي منافس'
+                                        : 'Opponent FC',
                                     score1: '0',
                                     score2: '0',
-                                    status: 'Upcoming',
-                                    time: '20:00',
-                                    leagueTitle: 'Premier League',
+                                    status: 'لم تبدأ',
+                                    time: '22:00:00',
                                   ),
                                 ),
                               ),

@@ -72,14 +72,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                             brightness == Brightness.dark);
                     return isDarkBrightness
                         ? const ShimmerEffect(
-                            baseColor: Color(0xFF16202C),
-                            highlightColor: Color(0xFF26364A),
-                            duration: Duration(milliseconds: 1200),
+                            baseColor: Color(0xFF243242),
+                            highlightColor: Color(0xFF3B4E68),
+                            duration: Duration(milliseconds: 1400),
                           )
                         : const ShimmerEffect(
                             baseColor: Color(0xFFE2E8F0),
                             highlightColor: Color(0xFFF1F5F9),
-                            duration: Duration(milliseconds: 1200),
+                            duration: Duration(milliseconds: 1400),
                           );
                   },
                 ),

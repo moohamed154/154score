@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/url_helper.dart';
@@ -12,18 +13,21 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
+import '../../../standings/domain/entities/standings_entity.dart';
 import '../../domain/entities/team_entity.dart';
 
 class TeamHeaderCard extends StatelessWidget {
   final TeamProfileEntity? profile;
   final String fallbackName;
   final String? fallbackLogo;
+  final bool isLoading;
 
   const TeamHeaderCard({
     super.key,
     this.profile,
     required this.fallbackName,
     this.fallbackLogo,
+    this.isLoading = false,
   });
 
   @override
@@ -34,6 +38,7 @@ class TeamHeaderCard extends StatelessWidget {
     final isSmall = AppDimensions.isSmallScreen(context);
     final hMargin = AppDimensions.getHorizontalMargin(context);
 
+    final isSkeleton = isLoading || profile == null;
     final name = (profile?.teamName != null && profile!.teamName.isNotEmpty)
         ? profile!.teamName
         : fallbackName;
@@ -43,12 +48,32 @@ class TeamHeaderCard extends StatelessWidget {
               (profile?.teamId != null && int.tryParse(profile!.teamId) != null
                   ? UrlHelper.resolveTeamLogo(profile!.teamId)
                   : null));
-    final leagueName = profile?.leagueName;
+    final leagueName = profile?.leagueName ??
+        (isSkeleton ? (isArabic ? 'الدوري الإسباني' : 'League Competition') : null);
     final leagueId = profile?.leagueId;
-    final row = profile?.standingsRow;
-    final form = profile?.form ?? [];
+    final country = (profile?.country != null && profile!.country!.isNotEmpty)
+        ? profile!.country
+        : (isSkeleton ? (isArabic ? 'إسبانيا' : 'Country') : null);
+    final row = profile?.standingsRow ??
+        (isSkeleton
+            ? const StandingRowEntity(
+                position: 4,
+                points: 15,
+                teamName: '',
+                played: 7,
+                wins: 5,
+                draws: 0,
+                losses: 2,
+                goalsFor: 12,
+                goalsAgainst: 5,
+                goalDiff: 7,
+              )
+            : null);
+    final form = (profile?.form != null && profile!.form.isNotEmpty)
+        ? profile!.form
+        : (isSkeleton ? const ['L', 'W', 'W', 'W', 'L'] : const <String>[]);
 
-    return Container(
+    final card = Container(
       margin: EdgeInsets.all(hMargin),
       padding: EdgeInsets.all(isSmall ? 12 : 16),
       decoration: BoxDecoration(
@@ -63,13 +88,16 @@ class TeamHeaderCard extends StatelessWidget {
           Row(
             children: [
               // Team Logo
-              AppImage(
-                imageUrl: logo,
-                width: isSmall ? 52 : 64,
-                height: isSmall ? 52 : 64,
-                borderRadius: (isSmall ? 52 : 64) / 2,
-                fit: BoxFit.contain,
-                placeholderIcon: Icons.shield_outlined,
+              Skeleton.keep(
+                keep: logo != null && logo.isNotEmpty,
+                child: AppImage(
+                  imageUrl: logo,
+                  width: isSmall ? 52 : 64,
+                  height: isSmall ? 52 : 64,
+                  borderRadius: (isSmall ? 52 : 64) / 2,
+                  fit: BoxFit.contain,
+                  placeholderIcon: Icons.shield_outlined,
+                ),
               ),
               const SizedBox(width: 14),
 
@@ -78,18 +106,20 @@ class TeamHeaderCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      name,
-                      style:
-                          AppTypography.getHeadingMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w800,
-                            fontSize: isSmall ? 16 : 18,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    Skeleton.keep(
+                      keep: name.isNotEmpty && name != 'Team',
+                      child: Text(
+                        name,
+                        style: AppTypography.getHeadingMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: isSmall ? 16 : 18,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(height: 6),
 
@@ -105,7 +135,7 @@ class TeamHeaderCard extends StatelessWidget {
                               AppDimensions.radiusSm,
                             ),
                             onTap: () {
-                              if (leagueId != null) {
+                              if (leagueId != null && !isSkeleton) {
                                 context.push(
                                   '/league/$leagueId',
                                   extra: {'title': leagueName},
@@ -137,14 +167,13 @@ class TeamHeaderCard extends StatelessWidget {
                                   Flexible(
                                     child: Text(
                                       leagueName,
-                                      style:
-                                          AppTypography.getBodySmall(
-                                            isDark: isDark,
-                                            isArabic: isArabic,
-                                          ).copyWith(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                      style: AppTypography.getBodySmall(
+                                        isDark: isDark,
+                                        isArabic: isArabic,
+                                      ).copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -153,8 +182,7 @@ class TeamHeaderCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                        if (profile?.country != null &&
-                            profile!.country!.isNotEmpty)
+                        if (country != null && country.isNotEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
@@ -189,18 +217,17 @@ class TeamHeaderCard extends StatelessWidget {
                                 ],
                                 Flexible(
                                   child: Text(
-                                    profile!.country!,
-                                    style:
-                                        AppTypography.getBodySmall(
-                                          isDark: isDark,
-                                          isArabic: isArabic,
-                                        ).copyWith(
-                                          fontSize: 11,
-                                          color: isDark
-                                              ? AppColors.darkTextMuted
-                                              : AppColors.lightTextMuted,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                    country,
+                                    style: AppTypography.getBodySmall(
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                    ).copyWith(
+                                      fontSize: 11,
+                                      color: isDark
+                                          ? AppColors.darkTextMuted
+                                          : AppColors.lightTextMuted,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -216,41 +243,43 @@ class TeamHeaderCard extends StatelessWidget {
               const SizedBox(width: 8),
 
               // Favorite Star Button
-              BlocBuilder<FavoritesCubit, FavoritesState>(
-                builder: (context, favState) {
-                  final isFav = favState.isFavoriteTeam(
-                    id: profile?.teamId,
-                    name: name,
-                  );
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusFull,
-                    ),
-                    onTap: () {
-                      context.read<FavoritesCubit>().toggleTeam(
-                        name,
-                        id: profile?.teamId,
-                      );
-                      try {
-                        context.read<MatchesBloc>().add(
-                          const RefreshFavoritesEvent(),
-                        );
-                      } catch (_) {}
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Icon(
-                        isFav ? Icons.star_rounded : Icons.star_border_rounded,
-                        color: isFav
-                            ? AppColors.yellowCard
-                            : (isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted),
-                        size: isSmall ? 22 : 26,
+              Skeleton.ignore(
+                child: BlocBuilder<FavoritesCubit, FavoritesState>(
+                  builder: (context, favState) {
+                    final isFav = favState.isFavoriteTeam(
+                      id: profile?.teamId,
+                      name: name,
+                    );
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusFull,
                       ),
-                    ),
-                  );
-                },
+                      onTap: () {
+                        context.read<FavoritesCubit>().toggleTeam(
+                          name,
+                          id: profile?.teamId,
+                        );
+                        try {
+                          context.read<MatchesBloc>().add(
+                            const RefreshFavoritesEvent(),
+                          );
+                        } catch (_) {}
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: Icon(
+                          isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                          color: isFav
+                              ? AppColors.yellowCard
+                              : (isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted),
+                          size: isSmall ? 22 : 26,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -280,16 +309,15 @@ class TeamHeaderCard extends StatelessWidget {
                       ),
                       Text(
                         '#${row.position} (${row.points} ${isArabic ? "نقطة" : "pts"})',
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                            ),
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
                       ),
                     ],
                   ),
@@ -345,5 +373,13 @@ class TeamHeaderCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (isSkeleton) {
+      return Skeletonizer(
+        enabled: true,
+        child: card,
+      );
+    }
+    return card;
   }
 }
