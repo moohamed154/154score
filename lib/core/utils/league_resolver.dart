@@ -304,4 +304,175 @@ class LeagueResolver {
 
     return null;
   }
+
+  static const Map<String, ({String ar, String en})> _idToTitles = {
+    '943876': (
+      ar: 'تصفيات كأس أمم أفريقيا',
+      en: 'Africa Cup of Nations Qualification',
+    ),
+    '937599': (ar: 'الدوري الإنجليزي الممتاز', en: 'Premier League'),
+    '6811': (ar: 'الدوري الإنجليزي الممتاز', en: 'Premier League'),
+    '938652': (ar: 'الدوري الإسباني', en: 'LaLiga'),
+    '1933': (ar: 'الدوري الإسباني', en: 'LaLiga'),
+    '936357': (ar: 'الدوري الإيطالي', en: 'Serie A'),
+    '3734': (ar: 'الدوري الإيطالي', en: 'Serie A'),
+    '938769': (ar: 'الدوري الألماني', en: 'Bundesliga'),
+    '2606': (ar: 'الدوري الألماني', en: 'Bundesliga'),
+    '937873': (ar: 'الدوري الفرنسي', en: 'Ligue 1'),
+    '1985': (ar: 'الدوري الفرنسي', en: 'Ligue 1'),
+    '904988': (ar: 'دوري أبطال أوروبا', en: 'UEFA Champions League'),
+    '12048': (ar: 'دوري أبطال أوروبا', en: 'UEFA Champions League'),
+    '937603': (ar: 'الدوري الأوروبي', en: 'UEFA Europa League'),
+    '937604': (ar: 'دوري المؤتمر الأوروبي', en: 'UEFA Conference League'),
+    '941825': (ar: 'دوري روشن السعودي', en: 'Saudi Pro League'),
+    '7167': (ar: 'دوري روشن السعودي', en: 'Saudi Pro League'),
+    '943009': (ar: 'الدوري المصري الممتاز', en: 'Egyptian Premier League'),
+    '894789': (ar: 'كأس العالم', en: 'FIFA World Cup'),
+    '943487': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
+    '943601': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
+    '943602': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
+    '88013': (ar: 'كأس السوبر الإسباني', en: 'Spanish Super Cup'),
+    '938653': (ar: 'كأس ملك إسبانيا', en: 'Copa del Rey'),
+  };
+
+  static const Map<String, String> _arToEn = {
+    // African & International
+    'تصفيات كأس أمم إفريقيا': 'Africa Cup of Nations Qualification',
+    'تصفيات كأس أمم أفريقيا': 'Africa Cup of Nations Qualification',
+    'كأس أمم إفريقيا': 'Africa Cup of Nations',
+    'كأس أمم أفريقيا': 'Africa Cup of Nations',
+    'كأس الأمم الإفريقية': 'Africa Cup of Nations',
+    'كأس الأمم الأفريقية': 'Africa Cup of Nations',
+    'دوري أبطال أفريقيا': 'CAF Champions League',
+    'دوري أبطال إفريقيا': 'CAF Champions League',
+    'كأس الكونفيدرالية الإفريقية': 'CAF Confederation Cup',
+    'كأس الكونفدرالية الإفريقية': 'CAF Confederation Cup',
+    'كأس السوبر الأفريقي': 'CAF Super Cup',
+    'كأس السوبر الإفريقي': 'CAF Super Cup',
+    'كأس العرب': 'Arab Cup',
+    'تصفيات كأس العالم': 'World Cup Qualification',
+    'تصفيات كأس العالم - أفريقيا': 'World Cup Qualification - Africa',
+    'تصفيات كأس العالم - أوروبا': 'World Cup Qualification - Europe',
+    'تصفيات كأس العالم - آسيا': 'World Cup Qualification - Asia',
+    'كأس العالم': 'FIFA World Cup',
+    'دوري أبطال أوروبا': 'UEFA Champions League',
+    'الدوري الأوروبي': 'UEFA Europa League',
+    'دوري المؤتمر الأوروبي': 'UEFA Conference League',
+    'كأس السوبر الأوروبي': 'UEFA Super Cup',
+    'دوري الأمم الأوروبية': 'UEFA Nations League',
+    'كأس أمم أوروبا': 'UEFA Euro',
+    'يورو': 'UEFA Euro',
+
+    // Domestic Leagues
+    'الدوري الإنجليزي الممتاز': 'Premier League',
+    'الدوري الإنجليزي': 'Premier League',
+    'البريميرليج': 'Premier League',
+    'كأس الاتحاد الإنجليزي': 'FA Cup',
+    'كأس الرابطة الإنجليزية': 'Carabao Cup',
+    'كأس كاراباو': 'Carabao Cup',
+    'درع المجتمع الإنجليزي': 'Community Shield',
+
+    'الدوري الإسباني': 'LaLiga',
+    'الدوري الإسباني - الدرجة الأولى': 'LaLiga',
+    'لا ليغا': 'LaLiga',
+    'كأس ملك إسبانيا': 'Copa del Rey',
+    'كأس السوبر الإسباني': 'Spanish Super Cup',
+
+    'الدوري الإيطالي': 'Serie A',
+    'الدوري الإيطالي الدرجة الأولى': 'Serie A',
+    'الكالتشيو': 'Serie A',
+    'كأس إيطاليا': 'Coppa Italia',
+    'كأس السوبر الإيطالي': 'Italian Super Cup',
+
+    'الدوري الألماني': 'Bundesliga',
+    'البوندسليجا': 'Bundesliga',
+    'كأس ألمانيا': 'DFB Pokal',
+    'كأس السوبر الألماني': 'DFB Supercup',
+
+    'الدوري الفرنسي': 'Ligue 1',
+    'ليج 1': 'Ligue 1',
+    'كأس فرنسا': 'Coupe de France',
+    'كأس السوبر الفرنسي': 'Trophée des Champions',
+
+    'دوري روشن السعودي': 'Saudi Pro League',
+    'الدوري السعودي للمحترفين': 'Saudi Pro League',
+    'الدوري السعودي': 'Saudi Pro League',
+    'كأس خادم الحرمين الشريفين': 'King Cup',
+    'كأس الملك': 'King Cup',
+    'كأس السوبر السعودي': 'Saudi Super Cup',
+
+    'الدوري المصري الممتاز': 'Egyptian Premier League',
+    'الدوري المصري': 'Egyptian Premier League',
+    'كأس مصر': 'Egypt Cup',
+    'كأس رابطة الأندية المصرية': 'Egyptian League Cup',
+    'كأس السوبر المصري': 'Egyptian Super Cup',
+  };
+
+  static final Map<String, String> _enToAr = {
+    for (final entry in _arToEn.entries) entry.value.toLowerCase(): entry.key,
+  };
+
+  static String resolveTitle(
+    String? titleOrId, {
+    required bool isArabic,
+    String? id,
+  }) {
+    if (titleOrId == null || titleOrId.trim().isEmpty) {
+      if (id != null && _idToTitles.containsKey(id.trim())) {
+        final pair = _idToTitles[id.trim()]!;
+        return isArabic ? pair.ar : pair.en;
+      }
+      return '';
+    }
+
+    final trimmed = titleOrId.trim();
+
+    // 1. Check if titleOrId is an ID
+    if (_idToTitles.containsKey(trimmed)) {
+      final pair = _idToTitles[trimmed]!;
+      return isArabic ? pair.ar : pair.en;
+    }
+
+    if (id != null && _idToTitles.containsKey(id.trim())) {
+      final pair = _idToTitles[id.trim()]!;
+      return isArabic ? pair.ar : pair.en;
+    }
+
+    // 2. Localization from Arabic to English
+    if (!isArabic) {
+      if (_arToEn.containsKey(trimmed)) {
+        return _arToEn[trimmed]!;
+      }
+      final normInput = normalize(trimmed);
+      for (final entry in _arToEn.entries) {
+        if (normalize(entry.key) == normInput) {
+          return entry.value;
+        }
+      }
+      if (!RegExp(r'[\u0600-\u06FF]').hasMatch(trimmed)) {
+        return trimmed;
+      }
+      for (final entry in _arToEn.entries) {
+        final normKey = normalize(entry.key);
+        if (normInput.contains(normKey) || normKey.contains(normInput)) {
+          return entry.value;
+        }
+      }
+    } else {
+      final lower = trimmed.toLowerCase();
+      if (_enToAr.containsKey(lower)) {
+        return _enToAr[lower]!;
+      }
+      if (RegExp(r'[\u0600-\u06FF]').hasMatch(trimmed)) {
+        return trimmed;
+      }
+      for (final entry in _enToAr.entries) {
+        if (lower.contains(entry.key) || entry.key.contains(lower)) {
+          return entry.value;
+        }
+      }
+    }
+
+    return trimmed;
+  }
 }

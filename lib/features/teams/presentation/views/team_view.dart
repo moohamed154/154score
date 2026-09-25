@@ -942,20 +942,29 @@ class _TeamViewState extends State<TeamView>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Cup / Trophy image
-                        if (cup.cupImage != null || cup.logo != null)
-                          AppImage(
-                            imageUrl: cup.cupImage ?? cup.logo,
-                            width: 44,
-                            height: 44,
-                            fit: BoxFit.contain,
-                            placeholderIcon: Icons.emoji_events_rounded,
-                          )
-                        else
-                          const Icon(
-                            Icons.emoji_events_rounded,
-                            size: 40,
-                            color: Color(0xFFEAB308),
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final trophyUrl = (cup.logo != null && cup.logo!.isNotEmpty)
+                                ? cup.logo
+                                : (cup.cupImage != null && !cup.cupImage!.contains('/cups/')
+                                    ? cup.cupImage
+                                    : null);
+                            if (trophyUrl != null && trophyUrl.isNotEmpty) {
+                              return AppImage(
+                                imageUrl: trophyUrl,
+                                width: 44,
+                                height: 44,
+                                fit: BoxFit.contain,
+                                placeholderIcon: Icons.emoji_events_rounded,
+                              );
+                            }
+                            return const Icon(
+                              Icons.emoji_events_rounded,
+                              size: 40,
+                              color: Color(0xFFEAB308),
+                            );
+                          },
+                        ),
                         const SizedBox(height: 6),
 
                         Text(
@@ -1154,14 +1163,35 @@ class _TeamViewState extends State<TeamView>
             children: [
               Row(
                 children: [
-                  if (cup.cupImage != null || cup.logo != null)
-                    AppImage(
-                      imageUrl: cup.cupImage ?? cup.logo,
-                      width: 32,
-                      height: 32,
-                      fit: BoxFit.contain,
-                    ),
-                  const SizedBox(width: 10),
+                  Builder(
+                    builder: (context) {
+                      final trophyUrl = (cup.logo != null && cup.logo!.isNotEmpty)
+                          ? cup.logo
+                          : (cup.cupImage != null && !cup.cupImage!.contains('/cups/')
+                              ? cup.cupImage
+                              : null);
+                      if (trophyUrl != null && trophyUrl.isNotEmpty) {
+                        return Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 10),
+                          child: AppImage(
+                            imageUrl: trophyUrl,
+                            width: 32,
+                            height: 32,
+                            fit: BoxFit.contain,
+                            placeholderIcon: Icons.emoji_events_rounded,
+                          ),
+                        );
+                      }
+                      return const Padding(
+                        padding: EdgeInsetsDirectional.only(end: 10),
+                        child: Icon(
+                          Icons.emoji_events_rounded,
+                          size: 30,
+                          color: Color(0xFFEAB308),
+                        ),
+                      );
+                    },
+                  ),
                   Expanded(
                     child: Text(
                       '${cup.title} (${cup.count} ${isArabic ? "ألقاب" : "titles"})',

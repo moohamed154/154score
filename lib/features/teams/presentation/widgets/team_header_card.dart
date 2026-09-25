@@ -9,6 +9,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
@@ -48,8 +49,13 @@ class TeamHeaderCard extends StatelessWidget {
               (profile?.teamId != null && int.tryParse(profile!.teamId) != null
                   ? UrlHelper.resolveTeamLogo(profile!.teamId)
                   : null));
-    final leagueName = profile?.leagueName ??
+    final rawLeagueName = profile?.leagueName ??
         (isSkeleton ? (isArabic ? 'الدوري الإسباني' : 'League Competition') : null);
+    final leagueName = LeagueResolver.resolveTitle(
+      rawLeagueName,
+      isArabic: isArabic,
+      id: profile?.leagueId,
+    );
     final leagueId = profile?.leagueId;
     final country = (profile?.country != null && profile!.country!.isNotEmpty)
         ? profile!.country
@@ -129,7 +135,7 @@ class TeamHeaderCard extends StatelessWidget {
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        if (leagueName != null && leagueName.isNotEmpty)
+                        if (leagueName.isNotEmpty)
                           InkWell(
                             borderRadius: BorderRadius.circular(
                               AppDimensions.radiusSm,

@@ -1,5 +1,6 @@
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../matches/data/models/match_dto.dart';
 import '../../../matches/domain/entities/match_entity.dart';
@@ -286,13 +287,19 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
                     yearsList.add(y.toString());
                   }
                 }
+                final cupLogo = UrlHelper.normalizeImageUrl(cup['logo']?.toString());
+                final rawCupImg = UrlHelper.normalizeImageUrl(
+                  cup['cup_image']?.toString(),
+                );
+                // Avoid broken /cups/ URLs on CDN (returns 404), prioritize championship logo
+                final validCupImg = (rawCupImg != null && !rawCupImg.contains('/cups/'))
+                    ? rawCupImg
+                    : cupLogo;
                 cups.add(
                   TeamCupEntity(
                     title: cup['title']?.toString() ?? '',
-                    logo: UrlHelper.normalizeImageUrl(cup['logo']?.toString()),
-                    cupImage: UrlHelper.normalizeImageUrl(
-                      cup['cup_image']?.toString(),
-                    ),
+                    logo: cupLogo ?? validCupImg,
+                    cupImage: validCupImg ?? cupLogo,
                     count: cup['count'] is num
                         ? (cup['count'] as num).toInt()
                         : 0,
@@ -603,14 +610,43 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
             } catch (_) {}
           }
 
+          final primaryChampionshipTitle =
+              championships.isNotEmpty ? championships.first.title : null;
+          String? resolvedLeagueName;
+          if (lang == 'en') {
+            if (primaryChampionshipTitle != null &&
+                !RegExp(r'[\u0600-\u06FF]').hasMatch(primaryChampionshipTitle)) {
+              resolvedLeagueName = primaryChampionshipTitle;
+            } else if (effectiveLeagueTitle != null &&
+                !RegExp(r'[\u0600-\u06FF]').hasMatch(effectiveLeagueTitle)) {
+              resolvedLeagueName = effectiveLeagueTitle;
+            } else {
+              final raw = primaryChampionshipTitle ?? effectiveLeagueTitle;
+              final res = LeagueResolver.resolveTitle(
+                raw,
+                isArabic: false,
+                id: targetLeagueId,
+              );
+              resolvedLeagueName = res.isNotEmpty ? res : raw;
+            }
+          } else {
+            final raw = effectiveLeagueTitle ?? primaryChampionshipTitle;
+            final res = LeagueResolver.resolveTitle(
+              raw,
+              isArabic: true,
+              id: targetLeagueId,
+            );
+            resolvedLeagueName = res.isNotEmpty ? res : raw;
+          }
+
           return TeamProfileEntity(
             teamId: resolvedId,
             teamName: effectiveName,
             teamLogo: effectiveLogo,
             leagueId: targetLeagueId,
-            leagueName:
-                effectiveLeagueTitle ??
-                (championships.isNotEmpty ? championships.first.title : null),
+            leagueName: (resolvedLeagueName != null && resolvedLeagueName.isNotEmpty)
+                ? resolvedLeagueName
+                : null,
             country: country,
             countryFlag: countryFlag,
             countryCode: countryCode,

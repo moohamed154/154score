@@ -87,108 +87,75 @@ class MatchCard extends StatelessWidget {
             );
           },
           onLongPress: () => _showMatchOptionsBottomSheet(context),
-          child: Stack(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmall ? 10 : 14,
-                  vertical: isLive ? (isSmall ? 10 : 12) : (isSmall ? 8 : 10),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (showLeague &&
-                        match.leagueTitle != null &&
-                        match.leagueTitle!.trim().isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (match.leagueLogo != null &&
-                                match.leagueLogo!.trim().isNotEmpty) ...[
-                              AppImage(
-                                imageUrl: match.leagueLogo,
-                                width: 14,
-                                height: 14,
-                                fit: BoxFit.contain,
-                                placeholderIcon: Icons.emoji_events_outlined,
-                              ),
-                              const SizedBox(width: 4),
-                            ],
-                            Flexible(
-                              child: Text(
-                                match.leagueTitle!,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    isLive
-                        ? _buildLiveContent(
-                            context,
-                            isDark: isDark,
-                            isArabic: isArabic,
-                            isSmall: isSmall,
-                            score1Str: score1Str,
-                            score2Str: score2Str,
-                            hasPenalties: hasPenalties,
-                          )
-                        : _buildDefaultContent(
-                            context,
-                            isDark: isDark,
-                            isArabic: isArabic,
-                            isSmall: isSmall,
-                            isUpcoming: isUpcoming,
-                            isFinished: isFinished,
-                            hasScores: hasScores,
-                            score1Str: score1Str,
-                            score2Str: score2Str,
-                            hasPenalties: hasPenalties,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmall ? 10 : 14,
+              vertical: isLive ? (isSmall ? 10 : 12) : (isSmall ? 8 : 10),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showLeague &&
+                    match.leagueTitle != null &&
+                    match.leagueTitle!.trim().isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (match.leagueLogo != null &&
+                            match.leagueLogo!.trim().isNotEmpty) ...[
+                          AppImage(
+                            imageUrl: match.leagueLogo,
+                            width: 14,
+                            height: 14,
+                            fit: BoxFit.contain,
+                            placeholderIcon: Icons.emoji_events_outlined,
                           ),
-                  ],
-                ),
-              ),
-              if (onFavoriteTap != null)
-                PositionedDirectional(
-                  top: 4,
-                  end: 4,
-                  child: InkWell(
-                    onTap: onFavoriteTap,
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusFull,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Icon(
-                        match.isFavorite
-                            ? Icons.star_rounded
-                            : Icons.star_border_rounded,
-                        size: isSmall ? 16 : 18,
-                        color: match.isFavorite
-                            ? AppColors.yellowCard
-                            : (isDark
-                                  ? AppColors.darkTextMuted.withValues(
-                                      alpha: 0.4,
-                                    )
-                                  : AppColors.lightTextMuted.withValues(
-                                      alpha: 0.4,
-                                    )),
-                      ),
+                          const SizedBox(width: 4),
+                        ],
+                        Flexible(
+                          child: Text(
+                            match.leagueTitle!,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-            ],
+                ],
+                isLive
+                    ? _buildLiveContent(
+                        context,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                        isSmall: isSmall,
+                        score1Str: score1Str,
+                        score2Str: score2Str,
+                        hasPenalties: hasPenalties,
+                      )
+                    : _buildDefaultContent(
+                        context,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                        isSmall: isSmall,
+                        isUpcoming: isUpcoming,
+                        isFinished: isFinished,
+                        hasScores: hasScores,
+                        score1Str: score1Str,
+                        score2Str: score2Str,
+                        hasPenalties: hasPenalties,
+                      ),
+              ],
+            ),
           ),
         ),
       ),
