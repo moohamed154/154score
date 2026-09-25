@@ -166,6 +166,8 @@ class MatchNewsItemEntity extends Equatable {
   final String? link;
   final String? date;
   final String? description;
+  final String? articleId;
+  final String? slug;
 
   const MatchNewsItemEntity({
     required this.title,
@@ -173,10 +175,20 @@ class MatchNewsItemEntity extends Equatable {
     this.link,
     this.date,
     this.description,
+    this.articleId,
+    this.slug,
   });
 
   @override
-  List<Object?> get props => [title, image, link, date, description];
+  List<Object?> get props => [
+    title,
+    image,
+    link,
+    date,
+    description,
+    articleId,
+    slug,
+  ];
 }
 
 class MatchLineupEntity extends Equatable {

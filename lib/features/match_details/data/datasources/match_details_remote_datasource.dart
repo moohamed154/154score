@@ -1309,6 +1309,13 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           item['summary']?.toString() ??
           item['news_desc']?.toString();
 
+      final rawArticleId =
+          item['article_id']?.toString() ?? item['id']?.toString();
+      final rawSlug = item['slug']?.toString();
+      final parsed = UrlHelper.parseNewsUrl(rawArticleId ?? link);
+      final articleId = rawArticleId ?? parsed.id;
+      final slug = rawSlug ?? parsed.slug;
+
       newsList.add(
         MatchNewsItemEntity(
           title: title,
@@ -1316,6 +1323,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           link: link,
           date: date,
           description: description,
+          articleId: articleId,
+          slug: slug,
         ),
       );
     }

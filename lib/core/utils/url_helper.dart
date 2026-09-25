@@ -378,7 +378,29 @@ class UrlHelper {
     );
   }
 
+  /// Extracts the article ID and optional slug from a news URL or ID string.
+  static ({String? id, String? slug}) parseNewsUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return (id: null, slug: null);
+    final trimmed = url.trim();
+
+    // Pattern 1: .../news/{id}/{slug} or .../news/{id}
+    final regex = RegExp(r'/news/(\d+)(?:/([^/?#]+))?');
+    final match = regex.firstMatch(trimmed);
+    if (match != null) {
+      return (id: match.group(1), slug: match.group(2));
+    }
+
+    // Pattern 2: Pure digits string (e.g. "14055246")
+    if (RegExp(r'^\d+$').hasMatch(trimmed)) {
+      return (id: trimmed, slug: null);
+    }
+
+    return (id: null, slug: null);
+  }
+
   /// Safely launches any external URL in the browser or external application.
+  /// If the URL corresponds to an internal news article and a BuildContext is provided,
+  /// it navigates inside the app instead of opening an external browser.
   static Future<bool> launchExternalUrl(
     String? url, {
     BuildContext? context,
@@ -386,6 +408,16 @@ class UrlHelper {
   }) async {
     if (url == null || url.trim().isEmpty) return false;
     final trimmed = url.trim();
+
+    // Intercept news URLs and navigate within the app
+    if (context != null && context.mounted) {
+      final news = parseNewsUrl(trimmed);
+      if (news.id != null && news.id!.isNotEmpty) {
+        await context.push('/news/${news.id}', extra: {'slug': news.slug});
+        return true;
+      }
+    }
+
     final uri = Uri.tryParse(
       trimmed.startsWith('http://') || trimmed.startsWith('https://')
           ? trimmed

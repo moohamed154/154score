@@ -2510,9 +2510,14 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                     )
                   : null,
               onTap: () {
-                final link = item.link;
-                if (link != null && link.isNotEmpty) {
-                  UrlHelper.launchExternalUrl(link, context: context);
+                final articleId =
+                    item.articleId ?? UrlHelper.parseNewsUrl(item.link).id;
+                final slug =
+                    item.slug ?? UrlHelper.parseNewsUrl(item.link).slug;
+                if (articleId != null && articleId.isNotEmpty) {
+                  context.push('/news/$articleId', extra: {'slug': slug});
+                } else if (item.link != null && item.link!.isNotEmpty) {
+                  UrlHelper.launchExternalUrl(item.link, context: context);
                 }
               },
             ),
