@@ -1,6 +1,10 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:score154/features/news/presentation/bloc/news_bloc.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -11,7 +15,9 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../domain/entities/news_entity.dart';
 import '../../domain/repositories/news_repository.dart';
+import '../bloc/news_bloc.dart';
 
 class NewsDetailView extends StatelessWidget {
   final String articleId;
@@ -42,9 +48,11 @@ class _NewsDetailBody extends StatefulWidget {
 }
 
 class _NewsDetailBodyState extends State<_NewsDetailBody> {
+  final ScreenshotController _screenshotController = ScreenshotController();
   _DetailState _state = _DetailState.loading;
-  dynamic _detail;
+  NewsDetailEntity? _detail;
   String? _error;
+  bool _isSharing = false;
 
   @override
   void initState() {
@@ -79,6 +87,254 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
           });
         }
       },
+    );
+  }
+
+  Future<void> _shareNews(
+    NewsDetailEntity detail,
+    bool isDark,
+    bool isArabic,
+  ) async {
+    if (_isSharing) return;
+
+    final box = context.findRenderObject() as RenderBox?;
+    final origin =
+        box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+    final parentContext = context;
+
+    setState(() => _isSharing = true);
+
+    try {
+      // 1. Resolve cached image file if available for instant offline capture
+      File? imageFile;
+      if (detail.image != null && detail.image!.isNotEmpty) {
+        try {
+          final cacheManager = DefaultCacheManager();
+          final fileInfo = await cacheManager.getFileFromCache(detail.image!);
+          if (fileInfo != null && await fileInfo.file.exists()) {
+            imageFile = fileInfo.file;
+          } else {
+            imageFile = await cacheManager.getSingleFile(detail.image!);
+          }
+        } catch (e) {
+          debugPrint('Error getting image from cache: $e');
+        }
+      }
+
+      // 2. Build the top-part share card (image + title + date + app branding)
+      final shareCard = _buildShareCard(
+        detail: detail,
+        imageFile: imageFile,
+        isDark: isDark,
+        isArabic: isArabic,
+      );
+
+      // 3. Capture widget to high-resolution PNG
+      final Uint8List imageBytes = await _screenshotController.captureFromWidget(
+        shareCard,
+        delay: const Duration(milliseconds: 250),
+        context: mounted ? parentContext : null,
+        pixelRatio: 2.5,
+      );
+
+      // 4. Save PNG to temporary file
+      final tempDir = await getTemporaryDirectory();
+      final filePath =
+          '${tempDir.path}/news_${widget.articleId}_${DateTime.now().millisecondsSinceEpoch}.png';
+      final file = File(filePath);
+      await file.writeAsBytes(imageBytes);
+
+      // 5. Build share text message
+      final shareMessage = _buildShareMessage(detail);
+
+      // 6. Share screenshot file and caption text
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path, mimeType: 'image/png')],
+          text: shareMessage,
+          subject: detail.title,
+          sharePositionOrigin: origin,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error capturing news screenshot: $e');
+      final shareMessage = _buildShareMessage(detail);
+      await SharePlus.instance.share(
+        ShareParams(
+          text: shareMessage,
+          subject: detail.title,
+          sharePositionOrigin: origin,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
+    }
+  }
+
+  String _buildShareMessage(NewsDetailEntity detail) {
+    final buffer = StringBuffer();
+    if (detail.title.trim().isNotEmpty) {
+      buffer.writeln(detail.title.trim());
+      buffer.writeln();
+    }
+    buffer.writeln('📲 تابع آخر الأخبار عبر تطبيق 154 SCORE');
+    buffer.writeln('📲 Follow the latest news on 154 SCORE');
+    if (detail.url != null && detail.url!.trim().isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln(detail.url!.trim());
+    }
+    return buffer.toString().trim();
+  }
+
+  Widget _buildShareCard({
+    required NewsDetailEntity detail,
+    required File? imageFile,
+    required bool isDark,
+    required bool isArabic,
+  }) {
+    final formattedDate = _formatDate(detail.publishedAt);
+    final cardBg = isDark ? const Color(0xFF0F172A) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final mutedColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final borderColor =
+        isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: 440,
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 1. News Image
+            if (imageFile != null)
+              Image.file(
+                imageFile,
+                height: 240,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              )
+            else if (detail.image != null && detail.image!.isNotEmpty)
+              AppImage(
+                imageUrl: detail.image,
+                height: 240,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                borderRadius: 0,
+                placeholderIcon: Icons.article_outlined,
+              )
+            else
+              Container(
+                height: 180,
+                color: AppColors.primary.withValues(alpha: 0.1),
+                child: const Center(
+                  child: Icon(
+                    Icons.sports_soccer_rounded,
+                    size: 64,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+
+            // 2. Title & Date & Branding Content
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    detail.title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                      height: 1.35,
+                    ),
+                    textDirection:
+                        isArabic ? TextDirection.rtl : TextDirection.ltr,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 14),
+
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: 13,
+                        color: mutedColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        formattedDate,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: mutedColor,
+                        ),
+                      ),
+                      const Spacer(),
+                      // 154 SCORE Branding Capsule
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.35),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.sports_soccer_rounded,
+                              size: 12,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              '154 SCORE',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -158,13 +414,30 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
 
     return CustomScrollView(
       slivers: [
-        // Hero image + back button
+        // Hero image + back button & share button
         SliverAppBar(
           expandedHeight: 240,
           pinned: true,
           backgroundColor: isDark
               ? AppColors.darkBackground
               : AppColors.lightBackground,
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.35),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
+            ),
+          ),
           flexibleSpace: FlexibleSpaceBar(
             background: AppImage(
               imageUrl: detail.image,
@@ -173,14 +446,40 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
             ),
           ),
           actions: [
-            if (detail.url != null)
-              IconButton(
-                icon: const Icon(Icons.share_rounded),
-                tooltip: l10n.translate('share_news'),
-                onPressed: () =>
-                    SharePlus.instance.share(ShareParams(text: detail.url!)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  shape: BoxShape.circle,
+                ),
+                child: _isSharing
+                    ? const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : IconButton(
+                        icon: const Icon(
+                          Icons.share_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        tooltip: l10n.translate('share_news'),
+                        onPressed: () => _shareNews(
+                          detail,
+                          isDark,
+                          isArabic,
+                        ),
+                      ),
               ),
-            const SizedBox(width: AppDimensions.xs),
+            ),
           ],
         ),
 
@@ -193,7 +492,7 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
               children: [
                 // Title
                 Text(
-                  detail.title ?? '',
+                  detail.title,
                   style: AppTypography.getHeadingMedium(
                     isDark: isDark,
                     isArabic: isArabic,
@@ -212,7 +511,6 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
                             : AppColors.lightTextMuted,
                       ),
                       const SizedBox(width: AppDimensions.xs),
-                      // Use the relative time widget
                       _buildTimestamp(detail.publishedAt, isDark, isArabic),
                     ],
                   ),
@@ -225,10 +523,8 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
                 const SizedBox(height: AppDimensions.md),
 
                 // Paragraphs
-                ...List<Widget>.generate((detail.paragraphs as List).length, (
-                  i,
-                ) {
-                  final para = (detail.paragraphs as List)[i] as String;
+                ...List<Widget>.generate(detail.paragraphs.length, (i) {
+                  final para = detail.paragraphs[i];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: AppDimensions.md),
                     child: Text(
@@ -237,9 +533,8 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
                         isDark: isDark,
                         isArabic: isArabic,
                       ).copyWith(height: 1.8),
-                      textDirection: isArabic
-                          ? TextDirection.rtl
-                          : TextDirection.ltr,
+                      textDirection:
+                          isArabic ? TextDirection.rtl : TextDirection.ltr,
                     ),
                   );
                 }),
@@ -253,23 +548,25 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
     );
   }
 
-  Widget _buildTimestamp(String? raw, bool isDark, bool isArabic) {
-    if (raw == null) return const SizedBox.shrink();
+  String _formatDate(String? raw) {
+    if (raw == null || raw.isEmpty) return '';
     try {
       final dt = DateTime.parse(raw.replaceAll('.000000', ''));
       final month = dt.month.toString().padLeft(2, '0');
       final day = dt.day.toString().padLeft(2, '0');
-      final formatted = '${dt.year}-$month-$day';
-      return Text(
-        formatted,
-        style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic),
-      );
+      return '${dt.year}-$month-$day';
     } catch (_) {
-      return Text(
-        raw,
-        style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic),
-      );
+      return raw;
     }
+  }
+
+  Widget _buildTimestamp(String? raw, bool isDark, bool isArabic) {
+    final formatted = _formatDate(raw);
+    if (formatted.isEmpty) return const SizedBox.shrink();
+    return Text(
+      formatted,
+      style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic),
+    );
   }
 }
 
