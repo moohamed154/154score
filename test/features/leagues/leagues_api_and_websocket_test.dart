@@ -100,6 +100,10 @@ class MockLocalStorageService implements LocalStorageService {
   String? getMatchesSortOrder() => null;
   @override
   Future<bool> setMatchesSortOrder(String sortOrder) async => true;
+  @override
+  bool isTeamNotificationEnabled(String teamIdOrName) => false;
+  @override
+  Future<bool> toggleTeamNotification(String teamIdOrName) async => true;
 }
 
 class FakeWebSocketService extends Mock implements WebSocketService {

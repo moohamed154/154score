@@ -103,6 +103,10 @@ class _MockStorageForLiveScore implements LocalStorageService {
   Future<bool> setMatchesSortOrder(String sortOrder) async => true;
   @override
   bool hasCustomFavoriteCompetitions() => false;
+  @override
+  bool isTeamNotificationEnabled(String teamIdOrName) => false;
+  @override
+  Future<bool> toggleTeamNotification(String teamIdOrName) async => true;
 }
 
 Widget createTestApp(Widget child, {Locale locale = const Locale('ar')}) {

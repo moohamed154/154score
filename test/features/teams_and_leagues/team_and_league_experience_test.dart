@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:score154/core/localization/app_localizations.dart';
 import 'package:score154/core/network/api_result.dart';
 import 'package:score154/core/storage/local_storage_service.dart';
@@ -146,6 +147,12 @@ class MockLocalStorageService implements LocalStorageService {
 
   @override
   bool hasCustomFavoriteCompetitions() => false;
+
+  @override
+  bool isTeamNotificationEnabled(String teamIdOrName) => false;
+
+  @override
+  Future<bool> toggleTeamNotification(String teamIdOrName) async => true;
 }
 
 class MockLeaguesRepository implements LeaguesRepository {
@@ -696,17 +703,45 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(
-        createTestApp(
-          const Scaffold(
-            body: SingleChildScrollView(
-              child: Column(
-                children: [
-                  MatchCard(match: match),
-                  StandingsTable(rows: rows),
-                ],
+      String? pushedRoute;
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const Scaffold(
+              body: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    MatchCard(match: match),
+                    StandingsTable(rows: rows),
+                  ],
+                ),
               ),
             ),
+          ),
+          GoRoute(
+            path: '/team/:id',
+            builder: (context, state) {
+              pushedRoute = state.uri.toString();
+              return const Scaffold(body: Text('Team Details'));
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        BlocProvider<FavoritesCubit>(
+          create: (_) => FavoritesCubit(MockLocalStorageService()),
+          child: MaterialApp.router(
+            routerConfig: router,
+            locale: const Locale('ar'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            theme: ThemeData.dark(),
           ),
         ),
       );
@@ -715,10 +750,17 @@ void main() {
       // Tap team 1 in MatchCard
       await tester.tap(find.text('ريال مدريد').first);
       await tester.pumpAndSettle();
+      expect(pushedRoute, contains('/team/8633'));
+
+      // Pop back to table view
+      router.pop();
+      await tester.pumpAndSettle();
 
       // Tap team in StandingsTable
+      pushedRoute = null;
       await tester.tap(find.text('ريال مدريد').last);
       await tester.pumpAndSettle();
+      expect(pushedRoute, contains('/team/8633'));
 
       expect(tester.takeException(), isNull);
     });

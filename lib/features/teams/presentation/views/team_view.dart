@@ -20,9 +20,8 @@ import '../../domain/entities/team_entity.dart';
 import '../bloc/team_bloc.dart';
 import '../bloc/team_event.dart';
 import '../bloc/team_state.dart';
-import '../../../matches/presentation/bloc/matches_bloc.dart';
-import '../../../matches/presentation/bloc/matches_event.dart';
-import '../../../favorites/presentation/cubit/favorites_cubit.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../widgets/team_header_card.dart';
 
 class TeamView extends StatefulWidget {
@@ -74,6 +73,56 @@ class _TeamViewState extends State<TeamView>
     super.dispose();
   }
 
+  bool _isNotificationActive(String? id, String? name) {
+    try {
+      final storage = sl<LocalStorageService>();
+      if (id != null && id.trim().isNotEmpty && storage.isTeamNotificationEnabled(id.trim())) {
+        return true;
+      }
+      if (name != null && name.trim().isNotEmpty && storage.isTeamNotificationEnabled(name.trim())) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  Future<void> _toggleNotification(String? id, String name, bool isArabic) async {
+    try {
+      final storage = sl<LocalStorageService>();
+      final keyToToggle = (id != null && id.trim().isNotEmpty) ? id.trim() : name.trim();
+      if (keyToToggle.isEmpty) return;
+
+      final newStatus = await storage.toggleTeamNotification(keyToToggle);
+      if (name.trim().isNotEmpty && name.trim().toLowerCase() != keyToToggle.toLowerCase()) {
+        if (newStatus && !storage.isTeamNotificationEnabled(name.trim())) {
+          await storage.toggleTeamNotification(name.trim());
+        } else if (!newStatus && storage.isTeamNotificationEnabled(name.trim())) {
+          await storage.toggleTeamNotification(name.trim());
+        }
+      }
+
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              newStatus
+                  ? (isArabic
+                      ? 'تم تفعيل إشعارات مباريات $name'
+                      : 'Match notifications enabled for $name')
+                  : (isArabic
+                      ? 'تم إيقاف إشعارات مباريات $name'
+                      : 'Match notifications disabled for $name'),
+            ),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -98,31 +147,33 @@ class _TeamViewState extends State<TeamView>
               ).copyWith(fontWeight: FontWeight.w700),
             ),
             actions: [
-              BlocBuilder<FavoritesCubit, FavoritesState>(
-                builder: (context, favState) {
+              Builder(
+                builder: (context) {
                   final effectiveTeamId = state.profile?.teamId ?? state.teamId;
-                  final isFav = favState.isFavoriteTeam(
-                    id: effectiveTeamId,
-                    name: displayName,
+                  final isNotifActive = _isNotificationActive(
+                    effectiveTeamId,
+                    displayName,
                   );
                   return IconButton(
                     icon: Icon(
-                      isFav ? Icons.star_rounded : Icons.star_border_rounded,
-                      color: isFav ? AppColors.yellowCard : null,
+                      isNotifActive
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_none_rounded,
+                      color: isNotifActive ? AppColors.primary : null,
                       size: 24,
                     ),
-                    tooltip: isArabic ? 'تفضيل الفريق' : 'Favorite Team',
-                    onPressed: () {
-                      context.read<FavoritesCubit>().toggleTeam(
-                            displayName,
-                            id: effectiveTeamId,
-                          );
-                      try {
-                        context.read<MatchesBloc>().add(
-                          const RefreshFavoritesEvent(),
-                        );
-                      } catch (_) {}
-                    },
+                    tooltip: isArabic
+                        ? (isNotifActive
+                            ? 'إيقاف إشعارات المباريات'
+                            : 'تفعيل إشعارات المباريات')
+                        : (isNotifActive
+                            ? 'Mute match notifications'
+                            : 'Enable match notifications'),
+                    onPressed: () => _toggleNotification(
+                      effectiveTeamId,
+                      displayName,
+                      isArabic,
+                    ),
                   );
                 },
               ),

@@ -71,6 +71,10 @@ abstract class LocalStorageService {
   Future<bool> setMatchesFilter(String filter);
   String? getMatchesSortOrder();
   Future<bool> setMatchesSortOrder(String sortOrder);
+
+  // Team Notifications
+  bool isTeamNotificationEnabled(String teamIdOrName) => false;
+  Future<bool> toggleTeamNotification(String teamIdOrName) async => false;
 }
 
 class LocalStorageServiceImpl implements LocalStorageService {
@@ -642,5 +646,29 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setMatchesSortOrder(String sortOrder) {
     return _prefs.setString(_keyMatchesSortOrder, sortOrder);
+  }
+
+  static const String _keyTeamNotifications = 'team_notifications';
+
+  @override
+  bool isTeamNotificationEnabled(String teamIdOrName) {
+    if (teamIdOrName.trim().isEmpty) return false;
+    final list = _prefs.getStringList(_keyTeamNotifications) ?? [];
+    return list.contains(teamIdOrName.trim().toLowerCase());
+  }
+
+  @override
+  Future<bool> toggleTeamNotification(String teamIdOrName) async {
+    final key = teamIdOrName.trim().toLowerCase();
+    if (key.isEmpty) return false;
+    final list = (_prefs.getStringList(_keyTeamNotifications) ?? []).toList();
+    final enabled = !list.contains(key);
+    if (enabled) {
+      list.add(key);
+    } else {
+      list.remove(key);
+    }
+    await _prefs.setStringList(_keyTeamNotifications, list);
+    return enabled;
   }
 }
