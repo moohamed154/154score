@@ -16,7 +16,12 @@ class TimelineEventItem extends StatelessWidget {
 
   const TimelineEventItem({super.key, required this.event});
 
-  void _navigateToPlayer(BuildContext context, String? name) {
+  void _navigateToPlayer(
+    BuildContext context,
+    String? name, {
+    String? id,
+    String? photo,
+  }) {
     if (name == null ||
         name.trim().isEmpty ||
         name.trim() == '-' ||
@@ -25,7 +30,14 @@ class TimelineEventItem extends StatelessWidget {
     }
     final cleanName = name.trim();
     final slug = Uri.encodeComponent(cleanName.replaceAll(RegExp(r'\s+'), '-'));
-    context.push('/player/0/$slug');
+    final effectiveId = (id != null && id.isNotEmpty && id != '0') ? id : '0';
+    context.push(
+      '/player/$effectiveId/$slug',
+      extra: {
+        'name': cleanName,
+        if (photo != null && photo.isNotEmpty) 'photo': photo,
+      },
+    );
   }
 
   @override
@@ -260,7 +272,12 @@ class TimelineEventItem extends StatelessWidget {
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
-                        onTap: () => _navigateToPlayer(context, mainPlayerName),
+                        onTap: () => _navigateToPlayer(
+                          context,
+                          mainPlayerName,
+                          id: event.playerId,
+                          photo: event.playerPhoto,
+                        ),
                         child: Text(
                           mainPlayerName,
                           style:
@@ -295,7 +312,12 @@ class TimelineEventItem extends StatelessWidget {
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
-                        onTap: () => _navigateToPlayer(context, mainPlayerName),
+                        onTap: () => _navigateToPlayer(
+                          context,
+                          mainPlayerName,
+                          id: event.playerId,
+                          photo: event.playerPhoto,
+                        ),
                         child: Text(
                           mainPlayerName,
                           style:
@@ -336,8 +358,12 @@ class TimelineEventItem extends StatelessWidget {
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
-                        onTap: () =>
-                            _navigateToPlayer(context, subPlayerOutName),
+                        onTap: () => _navigateToPlayer(
+                          context,
+                          subPlayerOutName,
+                          id: event.secondaryPlayerId,
+                          photo: event.secondaryPlayerPhoto,
+                        ),
                         child: Text(
                           subPlayerOutName,
                           style: TextStyle(
@@ -380,8 +406,12 @@ class TimelineEventItem extends StatelessWidget {
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
-                        onTap: () =>
-                            _navigateToPlayer(context, subPlayerOutName),
+                        onTap: () => _navigateToPlayer(
+                          context,
+                          subPlayerOutName,
+                          id: event.secondaryPlayerId,
+                          photo: event.secondaryPlayerPhoto,
+                        ),
                         child: Text(
                           subPlayerOutName,
                           style: TextStyle(
@@ -452,7 +482,12 @@ class TimelineEventItem extends StatelessWidget {
                   Flexible(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(4),
-                      onTap: () => _navigateToPlayer(context, mainPlayerName),
+                      onTap: () => _navigateToPlayer(
+                        context,
+                        mainPlayerName,
+                        id: event.playerId,
+                        photo: event.playerPhoto,
+                      ),
                       child: Text(
                         mainPlayerName,
                         style:
@@ -477,7 +512,12 @@ class TimelineEventItem extends StatelessWidget {
                   Flexible(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(4),
-                      onTap: () => _navigateToPlayer(context, mainPlayerName),
+                      onTap: () => _navigateToPlayer(
+                        context,
+                        mainPlayerName,
+                        id: event.playerId,
+                        photo: event.playerPhoto,
+                      ),
                       child: Text(
                         mainPlayerName,
                         style:
@@ -514,7 +554,12 @@ class TimelineEventItem extends StatelessWidget {
           const SizedBox(height: 1),
           InkWell(
             borderRadius: BorderRadius.circular(4),
-            onTap: () => _navigateToPlayer(context, event.secondaryPlayerName),
+            onTap: () => _navigateToPlayer(
+              context,
+              event.secondaryPlayerName,
+              id: event.secondaryPlayerId,
+              photo: event.secondaryPlayerPhoto,
+            ),
             child: Text(
               event.secondaryPlayerName!,
               style:

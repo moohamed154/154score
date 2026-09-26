@@ -246,6 +246,27 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             ? rawVideoUrl.trim()
             : null;
 
+        final rawPlayerId =
+            e['player_id']?.toString() ??
+            e['pid']?.toString() ??
+            e['substitute_in_id']?.toString() ??
+            (rawPlayer is Map ? rawPlayer['id']?.toString() : null);
+        final parsedPlayerId = (rawPlayerId != null &&
+                rawPlayerId.trim().isNotEmpty &&
+                rawPlayerId.trim() != '0')
+            ? rawPlayerId.trim()
+            : null;
+
+        final rawSecondaryId =
+            e['assist_player_id']?.toString() ??
+            e['substitute_out_id']?.toString() ??
+            (rawAssist is Map ? rawAssist['id']?.toString() : null);
+        final parsedSecondaryId = (rawSecondaryId != null &&
+                rawSecondaryId.trim().isNotEmpty &&
+                rawSecondaryId.trim() != '0')
+            ? rawSecondaryId.trim()
+            : null;
+
         events.add(
           MatchEventEntity(
             minute: parsedMinute.formatted,
@@ -258,9 +279,11 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
             isHomeTeam: isHome,
             score: scoreStr,
             videoUrl: videoUrl,
+            playerId: parsedPlayerId,
             playerNumber: playerNum,
             playerPhoto: playerPhoto,
             playerShortName: playerShortName,
+            secondaryPlayerId: parsedSecondaryId,
             secondaryPlayerNumber: secondaryNum,
             secondaryPlayerPhoto: secondaryPhoto,
             secondaryPlayerShortName: secondaryShortName,

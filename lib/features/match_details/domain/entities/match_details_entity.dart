@@ -9,9 +9,11 @@ class MatchEventEntity extends Equatable {
   final bool isHomeTeam;
   final String? score;
   final String? videoUrl;
+  final String? playerId;
   final int? playerNumber;
   final String? playerPhoto;
   final String? playerShortName;
+  final String? secondaryPlayerId;
   final int? secondaryPlayerNumber;
   final String? secondaryPlayerPhoto;
   final String? secondaryPlayerShortName;
@@ -25,9 +27,11 @@ class MatchEventEntity extends Equatable {
     this.isHomeTeam = true,
     this.score,
     this.videoUrl,
+    this.playerId,
     this.playerNumber,
     this.playerPhoto,
     this.playerShortName,
+    this.secondaryPlayerId,
     this.secondaryPlayerNumber,
     this.secondaryPlayerPhoto,
     this.secondaryPlayerShortName,
@@ -45,9 +49,11 @@ class MatchEventEntity extends Equatable {
     bool? isHomeTeam,
     String? score,
     String? videoUrl,
+    String? playerId,
     int? playerNumber,
     String? playerPhoto,
     String? playerShortName,
+    String? secondaryPlayerId,
     int? secondaryPlayerNumber,
     String? secondaryPlayerPhoto,
     String? secondaryPlayerShortName,
@@ -61,9 +67,11 @@ class MatchEventEntity extends Equatable {
       isHomeTeam: isHomeTeam ?? this.isHomeTeam,
       score: score ?? this.score,
       videoUrl: videoUrl ?? this.videoUrl,
+      playerId: playerId ?? this.playerId,
       playerNumber: playerNumber ?? this.playerNumber,
       playerPhoto: playerPhoto ?? this.playerPhoto,
       playerShortName: playerShortName ?? this.playerShortName,
+      secondaryPlayerId: secondaryPlayerId ?? this.secondaryPlayerId,
       secondaryPlayerNumber:
           secondaryPlayerNumber ?? this.secondaryPlayerNumber,
       secondaryPlayerPhoto: secondaryPlayerPhoto ?? this.secondaryPlayerPhoto,
@@ -82,9 +90,11 @@ class MatchEventEntity extends Equatable {
     isHomeTeam,
     score,
     videoUrl,
+    playerId,
     playerNumber,
     playerPhoto,
     playerShortName,
+    secondaryPlayerId,
     secondaryPlayerNumber,
     secondaryPlayerPhoto,
     secondaryPlayerShortName,

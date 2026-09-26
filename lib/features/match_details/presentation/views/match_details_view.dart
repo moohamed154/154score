@@ -40,8 +40,25 @@ import '../widgets/match_return_leg_card.dart';
 import '../widgets/stat_comparison_bar.dart';
 import '../widgets/timeline_event_item.dart';
 
+import '../../../leagues/presentation/bloc/league_bloc.dart';
+import '../../../leagues/presentation/bloc/league_event.dart';
+import '../../../leagues/presentation/bloc/league_state.dart';
+import '../../../leagues/presentation/widgets/top_scorers_table.dart';
+
 // Filter for Events tab: الأبرز (Highlights) vs كل الأحداث (All Events)
 enum _EventFilter { highlights, all }
+
+// Dynamic tabs available in Match Details screen
+enum _MatchTabType {
+  events,
+  details,
+  lineups,
+  stats,
+  standings,
+  scorers,
+  assists,
+  news,
+}
 
 class MatchDetailsView extends StatefulWidget {
   final String matchId;
@@ -55,8 +72,103 @@ class MatchDetailsView extends StatefulWidget {
 
 class _MatchDetailsViewState extends State<MatchDetailsView>
     with SingleTickerProviderStateMixin {
-  // Main tabs: الأحداث | التفاصيل | التشكيلة | الإحصائيات | الترتيب | الأخبار
+  // Dynamic tabs: Events & Stats only when started or ended, plus League Scorers & Assists
   late TabController _tabController;
+  List<_MatchTabType> _currentTabs = const [];
+  LeagueBloc? _leagueBloc;
+  String? _currentLeagueId;
+
+  bool _computeHasFinishedEvent(MatchDetailsState state) {
+    return state.events.any((e) {
+      if (!e.isPeriodMarker) return false;
+      final name = e.playerName.trim().toLowerCase();
+      if (name.contains('الأول') ||
+          name.contains('اول') ||
+          name.contains('1st') ||
+          name.contains('half time') ||
+          name.contains('halftime') ||
+          name.contains('ht') ||
+          name.contains('استراحة') ||
+          name.contains('بداية')) {
+        return false;
+      }
+      return name == 'نهاية المباراة' ||
+          name == 'نهاية اللقاء' ||
+          name.contains('نهاية المباراة') ||
+          name.contains('نهاية اللقاء') ||
+          name.contains('نهاية الوقت الأصلي واللقاء') ||
+          name.contains('نهاية الشوط الإضافي الثاني') ||
+          name == 'full time' ||
+          name == 'ft' ||
+          name.contains('full time') ||
+          name.contains('full-time') ||
+          name == 'match finished' ||
+          name.contains('match finished');
+    });
+  }
+
+  bool _computeIsStartedOrEnded({
+    MatchEntity? match,
+    MatchDetailsState? state,
+    bool hasFinishedEvent = false,
+  }) {
+    if (state != null && state.events.isNotEmpty) return true;
+    final effectiveMatch = match ?? widget.initialMatch;
+    if (effectiveMatch == null && state == null) return false;
+
+    final phase = effectiveMatch != null
+        ? MatchStatusHelper.parseMatch(effectiveMatch)
+        : MatchPhase.unknown;
+    final isLive = MatchStatusHelper.isLive(phase) ||
+        (effectiveMatch?.status != null &&
+            ScoreHelper.isLiveStatus(effectiveMatch!.status)) ||
+        (state?.liveStatus != null &&
+            ScoreHelper.isLiveStatus(state!.liveStatus));
+    final isFinished = phase == MatchPhase.finished ||
+        (effectiveMatch?.status != null &&
+            ScoreHelper.isFinishedStatus(effectiveMatch!.status)) ||
+        (state?.liveStatus != null &&
+            ScoreHelper.isFinishedStatus(state!.liveStatus)) ||
+        hasFinishedEvent;
+
+    return isLive || isFinished;
+  }
+
+  List<_MatchTabType> _getTabsForStatus(bool isStartedOrEnded) {
+    if (isStartedOrEnded) {
+      return const [
+        _MatchTabType.events,
+        _MatchTabType.details,
+        _MatchTabType.lineups,
+        _MatchTabType.stats,
+        _MatchTabType.standings,
+        _MatchTabType.scorers,
+        _MatchTabType.assists,
+        _MatchTabType.news,
+      ];
+    } else {
+      return const [
+        _MatchTabType.details,
+        _MatchTabType.lineups,
+        _MatchTabType.standings,
+        _MatchTabType.scorers,
+        _MatchTabType.assists,
+        _MatchTabType.news,
+      ];
+    }
+  }
+
+  void _ensureLeagueBloc(String? leagueId, String? title, String? logo) {
+    if (leagueId == null || leagueId.isEmpty) return;
+    if (_leagueBloc == null || _currentLeagueId != leagueId) {
+      _leagueBloc?.close();
+      _currentLeagueId = leagueId;
+      _leagueBloc = sl<LeagueBloc>(
+        param1: leagueId,
+        param2: {'title': title, 'logo': logo},
+      )..add(LoadLeagueDetailsEvent(leagueId));
+    }
+  }
 
   // Events tab inner filter
   _EventFilter _eventFilter = _EventFilter.highlights;
@@ -429,6 +541,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         completer: completer,
       ),
     );
+    if (_leagueBloc != null && _currentLeagueId != null) {
+      _leagueBloc!.add(
+        LoadLeagueDetailsEvent(_currentLeagueId!, isRefresh: true),
+      );
+    }
     try {
       await completer.future.timeout(const Duration(seconds: 3));
     } catch (_) {}
@@ -510,13 +627,20 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    final initialIsStarted = _computeIsStartedOrEnded(
+      match: widget.initialMatch,
+      state: null,
+      hasFinishedEvent: false,
+    );
+    _currentTabs = _getTabsForStatus(initialIsStarted);
+    _tabController = TabController(length: _currentTabs.length, vsync: this);
     context.read<MatchDetailsBloc>().add(LoadMatchDetailsEvent(widget.matchId));
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _leagueBloc?.close();
     super.dispose();
   }
 
@@ -616,13 +740,72 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         key: _screenBoundaryKey,
         child: Container(
           color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-          child: BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
+          child: BlocConsumer<MatchDetailsBloc, MatchDetailsState>(
+            listener: (context, state) {
+              final activeMatch = _resolveActiveMatch(
+                fallbackMatch: fallbackMatch,
+                liveFromMatches: liveFromMatches,
+                state: state,
+              );
+              final hasFinishedEvent = _computeHasFinishedEvent(state);
+              final isStartedOrEnded = _computeIsStartedOrEnded(
+                match: activeMatch,
+                state: state,
+                hasFinishedEvent: hasFinishedEvent,
+              );
+              final newTabs = _getTabsForStatus(isStartedOrEnded);
+              if (_tabController.length != newTabs.length) {
+                setState(() {
+                  final oldIndex = _tabController.index;
+                  _tabController.dispose();
+                  _tabController = TabController(
+                    length: newTabs.length,
+                    vsync: this,
+                    initialIndex: oldIndex.clamp(0, newTabs.length - 1),
+                  );
+                  _currentTabs = newTabs;
+                });
+              }
+            },
             builder: (context, state) {
               final activeMatch = _resolveActiveMatch(
                 fallbackMatch: fallbackMatch,
                 liveFromMatches: liveFromMatches,
                 state: state,
               );
+
+              final hasFinishedEvent = _computeHasFinishedEvent(state);
+              final isStartedOrEnded = _computeIsStartedOrEnded(
+                match: activeMatch,
+                state: state,
+                hasFinishedEvent: hasFinishedEvent,
+              );
+              final activeTabs = _getTabsForStatus(isStartedOrEnded);
+              _currentTabs = activeTabs;
+
+              if (_tabController.length != activeTabs.length) {
+                final oldIndex = _tabController.index;
+                _tabController.dispose();
+                _tabController = TabController(
+                  length: activeTabs.length,
+                  vsync: this,
+                  initialIndex: oldIndex.clamp(0, activeTabs.length - 1),
+                );
+              }
+
+              final effectiveLeagueId =
+                  state.championshipId ??
+                  state.overview?.championshipId ??
+                  activeMatch.leagueId ??
+                  LeagueResolver.resolveId(activeMatch.leagueTitle ?? '') ??
+                  _resolveLeagueId(activeMatch);
+
+              _ensureLeagueBloc(
+                effectiveLeagueId,
+                activeMatch.leagueTitle,
+                activeMatch.leagueLogo,
+              );
+
               return Column(
                 children: [
                   // ── Top Score Hero Banner ──────────────────────────────────
@@ -682,14 +865,26 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                         isDark: isDark,
                         isArabic: isArabic,
                       ).copyWith(fontWeight: FontWeight.w700),
-                      tabs: [
-                        Tab(text: isArabic ? 'الأحداث' : 'Events'),
-                        Tab(text: isArabic ? 'التفاصيل' : 'Details'),
-                        Tab(text: isArabic ? 'التشكيلة' : 'Lineups'),
-                        Tab(text: isArabic ? 'الإحصائيات' : 'Stats'),
-                        Tab(text: isArabic ? 'الترتيب' : 'Standings'),
-                        Tab(text: isArabic ? 'الأخبار' : 'News'),
-                      ],
+                      tabs: activeTabs.map((tab) {
+                        switch (tab) {
+                          case _MatchTabType.events:
+                            return Tab(text: isArabic ? 'الأحداث' : 'Events');
+                          case _MatchTabType.details:
+                            return Tab(text: isArabic ? 'التفاصيل' : 'Details');
+                          case _MatchTabType.lineups:
+                            return Tab(text: isArabic ? 'التشكيلة' : 'Lineups');
+                          case _MatchTabType.stats:
+                            return Tab(text: isArabic ? 'الإحصائيات' : 'Stats');
+                          case _MatchTabType.standings:
+                            return Tab(text: isArabic ? 'الترتيب' : 'Standings');
+                          case _MatchTabType.scorers:
+                            return Tab(text: isArabic ? 'الهدافون' : 'Scorers');
+                          case _MatchTabType.assists:
+                            return Tab(text: isArabic ? 'صناع اللعب' : 'Assists');
+                          case _MatchTabType.news:
+                            return Tab(text: isArabic ? 'الأخبار' : 'News');
+                        }
+                      }).toList(),
                     ),
                   ),
 
@@ -710,49 +905,65 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                         : TabBarView(
                             controller: _tabController,
                             physics: const NeverScrollableScrollPhysics(),
-                            children: [
-                              // 1. الأحداث (Events with Video chips, Highlights/All filter, Timeline & Stats Preview)
-                              _buildEventsTab(
-                                context,
-                                state,
-                                activeMatch,
-                                isDark,
-                                isArabic,
-                              ),
-
-                              // 2. التفاصيل (Details / Match Info)
-                              _buildDetailsTab(
-                                context,
-                                state,
-                                activeMatch,
-                                isDark,
-                                isArabic,
-                              ),
-
-                              // 3. التشكيلة (Lineup)
-                              LineupTabView(matchId: widget.matchId),
-
-                              // 4. الإحصائيات (Full Statistics)
-                              _buildStatsTab(
-                                context,
-                                state,
-                                activeMatch,
-                                isDark,
-                                isArabic,
-                              ),
-
-                              // 5. الترتيب (Standings)
-                              _buildStandingsTab(
-                                context,
-                                state,
-                                activeMatch,
-                                isDark,
-                                isArabic,
-                              ),
-
-                              // 6. الأخبار (News)
-                              _buildNewsTab(context, state, isDark, isArabic),
-                            ],
+                            children: activeTabs.map((tab) {
+                              switch (tab) {
+                                case _MatchTabType.events:
+                                  return _buildEventsTab(
+                                    context,
+                                    state,
+                                    activeMatch,
+                                    isDark,
+                                    isArabic,
+                                  );
+                                case _MatchTabType.details:
+                                  return _buildDetailsTab(
+                                    context,
+                                    state,
+                                    activeMatch,
+                                    isDark,
+                                    isArabic,
+                                  );
+                                case _MatchTabType.lineups:
+                                  return LineupTabView(matchId: widget.matchId);
+                                case _MatchTabType.stats:
+                                  return _buildStatsTab(
+                                    context,
+                                    state,
+                                    activeMatch,
+                                    isDark,
+                                    isArabic,
+                                  );
+                                case _MatchTabType.standings:
+                                  return _buildStandingsTab(
+                                    context,
+                                    state,
+                                    activeMatch,
+                                    isDark,
+                                    isArabic,
+                                  );
+                                case _MatchTabType.scorers:
+                                  return _buildScorersTab(
+                                    context,
+                                    effectiveLeagueId,
+                                    isDark,
+                                    isArabic,
+                                  );
+                                case _MatchTabType.assists:
+                                  return _buildAssistsTab(
+                                    context,
+                                    effectiveLeagueId,
+                                    isDark,
+                                    isArabic,
+                                  );
+                                case _MatchTabType.news:
+                                  return _buildNewsTab(
+                                    context,
+                                    state,
+                                    isDark,
+                                    isArabic,
+                                  );
+                              }
+                            }).toList(),
                           ),
                   ),
                 ],
@@ -1524,8 +1735,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           InkWell(
             borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
             onTap: () {
-              // Animate to Statistics tab (Index 3)
-              _tabController.animateTo(3);
+              // Animate to Statistics tab
+              final statsIndex = _currentTabs.indexOf(_MatchTabType.stats);
+              if (statsIndex != -1) {
+                _tabController.animateTo(statsIndex);
+              }
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
@@ -2385,7 +2599,213 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     );
   }
 
-  // ── Tab 6: الأخبار (News) ──────────────────────────────────────────────────
+  // ── Tab: الهدافون (Scorers) ────────────────────────────────────────────────
+  Widget _buildScorersTab(
+    BuildContext context,
+    String? leagueId,
+    bool isDark,
+    bool isArabic,
+  ) {
+    if (leagueId == null || leagueId.isEmpty) {
+      return _buildNoLeagueDataView(
+        isDark: isDark,
+        isArabic: isArabic,
+        message: isArabic
+            ? 'بيانات الهدافين غير متوفرة لهذه البطولة حالياً'
+            : 'Top scorers not available for this competition',
+      );
+    }
+
+    final bloc = _leagueBloc;
+    if (bloc == null) {
+      return _buildScorersSkeleton(isDark, isArabic);
+    }
+
+    return BlocBuilder<LeagueBloc, LeagueState>(
+      bloc: bloc,
+      builder: (context, state) {
+        if (state.status == LeagueStatus.loading && state.topScorers.isEmpty) {
+          return _buildScorersSkeleton(isDark, isArabic);
+        }
+
+        if (state.status == LeagueStatus.error && state.topScorers.isEmpty) {
+          return ErrorView(
+            message: state.errorMessage,
+            onRetry: () => bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true)),
+          );
+        }
+
+        if (state.topScorers.isEmpty) {
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true));
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                EmptyView(
+                  titleKey: 'tab_overview',
+                  customMessage: isArabic
+                      ? 'لا توجد بيانات للهدافين حالياً'
+                      : 'No top scorers available for this competition',
+                  icon: Icons.emoji_events_outlined,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true));
+          },
+          child: ListView(
+            key: const PageStorageKey('match_scorers_tab_list'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            children: [
+              TopScorersTable(scorers: state.topScorers, isAssists: false),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Tab: صناع اللعب (Assists) ──────────────────────────────────────────────
+  Widget _buildAssistsTab(
+    BuildContext context,
+    String? leagueId,
+    bool isDark,
+    bool isArabic,
+  ) {
+    if (leagueId == null || leagueId.isEmpty) {
+      return _buildNoLeagueDataView(
+        isDark: isDark,
+        isArabic: isArabic,
+        message: isArabic
+            ? 'بيانات صناع اللعب غير متوفرة لهذه البطولة حالياً'
+            : 'Top assists not available for this competition',
+      );
+    }
+
+    final bloc = _leagueBloc;
+    if (bloc == null) {
+      return _buildScorersSkeleton(isDark, isArabic);
+    }
+
+    return BlocBuilder<LeagueBloc, LeagueState>(
+      bloc: bloc,
+      builder: (context, state) {
+        if (state.status == LeagueStatus.loading && state.topAssists.isEmpty) {
+          return _buildScorersSkeleton(isDark, isArabic);
+        }
+
+        if (state.status == LeagueStatus.error && state.topAssists.isEmpty) {
+          return ErrorView(
+            message: state.errorMessage,
+            onRetry: () => bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true)),
+          );
+        }
+
+        if (state.topAssists.isEmpty) {
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true));
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                EmptyView(
+                  titleKey: 'tab_overview',
+                  customMessage: isArabic
+                      ? 'لا توجد بيانات لصناع اللعب حالياً'
+                      : 'No top assists available for this competition',
+                  icon: Icons.emoji_events_outlined,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true));
+          },
+          child: ListView(
+            key: const PageStorageKey('match_assists_tab_list'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            children: [
+              TopScorersTable(scorers: state.topAssists, isAssists: true),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildScorersSkeleton(bool isDark, bool isArabic) {
+    return Skeletonizer(
+      enabled: true,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: 8,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            height: 48,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildNoLeagueDataView({
+    required bool isDark,
+    required bool isArabic,
+    required String message,
+  }) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.emoji_events_outlined,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  style: AppTypography.getBodyLarge(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Tab: الأخبار (News) ────────────────────────────────────────────────────
   Widget _buildNewsTab(
     BuildContext context,
     MatchDetailsState state,
