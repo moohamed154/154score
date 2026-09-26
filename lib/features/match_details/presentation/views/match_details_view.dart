@@ -880,7 +880,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                           case _MatchTabType.scorers:
                             return Tab(text: isArabic ? 'الهدافون' : 'Scorers');
                           case _MatchTabType.assists:
-                            return Tab(text: isArabic ? 'صناع اللعب' : 'Assists');
+                            return Tab(text: isArabic ? 'الصناع' : 'Assists');
                           case _MatchTabType.news:
                             return Tab(text: isArabic ? 'الأخبار' : 'News');
                         }
@@ -2674,7 +2674,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     );
   }
 
-  // ── Tab: صناع اللعب (Assists) ──────────────────────────────────────────────
+  // ── Tab: الصناع (Assists) ──────────────────────────────────────────────
   Widget _buildAssistsTab(
     BuildContext context,
     String? leagueId,
@@ -2686,7 +2686,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         isDark: isDark,
         isArabic: isArabic,
         message: isArabic
-            ? 'بيانات صناع اللعب غير متوفرة لهذه البطولة حالياً'
+            ? 'بيانات الصناع غير متوفرة لهذه البطولة حالياً'
             : 'Top assists not available for this competition',
       );
     }
@@ -2722,7 +2722,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                 EmptyView(
                   titleKey: 'tab_overview',
                   customMessage: isArabic
-                      ? 'لا توجد بيانات لصناع اللعب حالياً'
+                      ? 'لا توجد بيانات للصناع حالياً'
                       : 'No top assists available for this competition',
                   icon: Icons.emoji_events_outlined,
                 ),

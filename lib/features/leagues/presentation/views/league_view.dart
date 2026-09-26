@@ -134,7 +134,7 @@ class _LeagueViewState extends State<LeagueView>
                     Tab(text: isArabic ? 'المباريات' : 'Matches'),
                     Tab(text: isArabic ? 'الترتيب' : 'Standings'),
                     Tab(text: isArabic ? 'الهدافون' : 'Top Scorers'),
-                    Tab(text: isArabic ? 'صناع اللعب' : 'Assists'),
+                    Tab(text: isArabic ? 'الصناع' : 'Assists'),
                   ],
                 ),
               ),
@@ -720,7 +720,7 @@ class _LeagueViewState extends State<LeagueView>
       return EmptyView(
         titleKey: 'tab_overview',
         customMessage: isArabic
-            ? 'لا توجد بيانات لصناع اللعب حاليًا'
+            ? 'لا توجد بيانات للصناع حاليًا'
             : 'No top assists available for this competition',
         icon: Icons.emoji_events_outlined,
       );

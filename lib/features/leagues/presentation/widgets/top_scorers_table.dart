@@ -34,7 +34,7 @@ class TopScorersTable extends StatelessWidget {
         titleKey: 'tab_overview',
         customMessage: isAssists
             ? (isArabic
-                  ? 'لا توجد بيانات لصناع اللعب'
+                  ? 'لا توجد بيانات للصناع'
                   : 'No top assists data available')
             : (isArabic
                   ? 'لا توجد بيانات للهدافين'
