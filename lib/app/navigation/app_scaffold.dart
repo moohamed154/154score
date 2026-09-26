@@ -139,13 +139,8 @@ class AppScaffold extends StatelessWidget {
               );
             }
 
-            // Map shell branch index → bottom nav display index
-            // Branch 7 (Settings) → nav item 5; branches 5/6 not shown → fallback 0
-            final navIndex = switch (navigationShell.currentIndex) {
-              >= 0 && <= 4 => navigationShell.currentIndex,
-              7 => 5,
-              _ => 0,
-            };
+            // Shell branches are 0: Home, 1: News, 2: Standings, 3: Transfers, 4: Videos, 5: Settings
+            final navIndex = navigationShell.currentIndex.clamp(0, 5);
 
             return Scaffold(
               body: contentWithIndicator(),
@@ -194,11 +189,9 @@ class AppScaffold extends StatelessWidget {
   }
 
   void _onTap(BuildContext context, int index) {
-    // Map bottom nav index 5 (Settings) to shell branch 7
-    final branchIndex = index == 5 ? 7 : index;
     navigationShell.goBranch(
-      branchIndex,
-      initialLocation: branchIndex == navigationShell.currentIndex,
+      index,
+      initialLocation: index == navigationShell.currentIndex,
     );
   }
 
@@ -233,14 +226,9 @@ class AppScaffold extends StatelessWidget {
         label: Text(l10n.translate('nav_videos')),
       ),
       NavigationRailDestination(
-        icon: const Icon(Icons.favorite_border_rounded),
-        selectedIcon: const Icon(Icons.favorite_rounded),
-        label: Text(l10n.translate('nav_favorites')),
-      ),
-      NavigationRailDestination(
-        icon: const Icon(Icons.search_outlined),
-        selectedIcon: const Icon(Icons.search_rounded),
-        label: Text(l10n.translate('nav_search')),
+        icon: const Icon(Icons.more_horiz_outlined),
+        selectedIcon: const Icon(Icons.more_horiz_rounded),
+        label: Text(l10n.translate('nav_settings')),
       ),
     ];
   }
@@ -259,8 +247,7 @@ class AppScaffold extends StatelessWidget {
       (Icons.table_chart_rounded, l10n.translate('nav_standings'), 2),
       (Icons.swap_horiz_rounded, l10n.translate('nav_transfers'), 3),
       (Icons.video_library_rounded, l10n.translate('nav_videos'), 4),
-      (Icons.favorite_rounded, l10n.translate('nav_favorites'), 5),
-      (Icons.search_rounded, l10n.translate('nav_search'), 6),
+      (Icons.more_horiz_rounded, l10n.translate('nav_settings'), 5),
     ];
 
     return Container(
@@ -325,14 +312,22 @@ class AppScaffold extends StatelessWidget {
 
           const Spacer(),
 
-          // Bottom Shortcut
+          // Bottom Shortcuts
           ListTile(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
             ),
-            leading: const Icon(Icons.settings_outlined),
-            title: Text(l10n.translate('nav_settings')),
-            onTap: () => context.push('/settings'),
+            leading: const Icon(Icons.favorite_border_rounded),
+            title: Text(l10n.translate('nav_favorites')),
+            onTap: () => context.push('/favorites'),
+          ),
+          ListTile(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            ),
+            leading: const Icon(Icons.search_rounded),
+            title: Text(l10n.translate('nav_search')),
+            onTap: () => context.push('/search'),
           ),
         ],
       ),

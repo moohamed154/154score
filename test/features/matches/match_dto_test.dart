@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/features/matches/data/models/match_dto.dart';
 import 'package:score154/core/utils/url_helper.dart';
 
@@ -20,6 +20,18 @@ void main() {
           'https://imgs.ysscores.com/teams/64/123.png',
         ),
         'https://imgs.ysscores.com/teams/64/123.png',
+      );
+      expect(
+        UrlHelper.normalizeImageUrl('https://imgs..com/teams/64/123.png'),
+        'https://imgs.ysscores.com/teams/64/123.png',
+      );
+      expect(
+        UrlHelper.normalizePlayerPhotoUrl('https://imgs..com/player/150/456.png'),
+        'https://imgs.ysscores.com/player/150/456.png',
+      );
+      expect(
+        UrlHelper.normalizeImageUrl('https://imgs..com/championship/64/789.png'),
+        'https://imgs.ysscores.com/championship/64/789.png',
       );
       expect(UrlHelper.normalizeImageUrl('   '), isNull);
       expect(UrlHelper.normalizeImageUrl('null'), isNull);

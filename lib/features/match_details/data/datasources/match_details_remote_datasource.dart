@@ -982,10 +982,37 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           ) ??
           UrlHelper.resolveChampionshipLogo(champId);
 
-      final score1 =
-          map['home_scores']?.toString() ?? map['score1']?.toString();
-      final score2 =
-          map['away_scores']?.toString() ?? map['score2']?.toString();
+      String? score1;
+      String? score2;
+      if (map['score'] is Map) {
+        final sMap = map['score'] as Map;
+        score1 = sMap['home']?.toString();
+        score2 = sMap['away']?.toString();
+      }
+      score1 ??= map['home_scores']?.toString() ??
+          map['home_score']?.toString() ??
+          map['score1']?.toString() ??
+          map['score_1']?.toString() ??
+          map['team1_score']?.toString();
+      score2 ??= map['away_scores']?.toString() ??
+          map['away_score']?.toString() ??
+          map['score2']?.toString() ??
+          map['score_2']?.toString() ??
+          map['team2_score']?.toString();
+      if (score1 == null || score2 == null) {
+        final res = map['result']?.toString() ?? map['score']?.toString();
+        if (res != null && res.contains('-')) {
+          final parts = res.split('-');
+          if (parts.length == 2) {
+            final p0 = parts[0].trim();
+            final p1 = parts[1].trim();
+            if (int.tryParse(p0) != null && int.tryParse(p1) != null) {
+              score1 ??= p0;
+              score2 ??= p1;
+            }
+          }
+        }
+      }
       final status = map['status']?.toString();
       final time = map['time']?.toString();
       final date = map['date']?.toString();
@@ -1157,6 +1184,27 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       }
     }
 
+    String? score1;
+    String? score2;
+    for (final sec in sections) {
+      for (final item in sec.items) {
+        final itemId = item.id ?? item.entityId;
+        if (itemId != null && itemId.trim() == matchId.trim() && item.content.contains('-')) {
+          final parts = item.content.split('-');
+          if (parts.length == 2) {
+            final p0 = parts[0].trim();
+            final p1 = parts[1].trim();
+            if (int.tryParse(p0) != null && int.tryParse(p1) != null) {
+              score1 = p0;
+              score2 = p1;
+              break;
+            }
+          }
+        }
+      }
+      if (score1 != null && score2 != null) break;
+    }
+
     return MatchOverviewDataEntity(
       matchId: matchId,
       homeTeamName: secHome,
@@ -1165,6 +1213,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       returnLeg: returnLeg,
       time: time,
       date: date,
+      score1: score1,
+      score2: score2,
       championshipTitle: champTitle,
       championshipId: champId,
       championshipLogo: champId != null

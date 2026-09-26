@@ -22,7 +22,6 @@ import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/match_filter_bottom_sheet.dart';
 import '../../../matches/presentation/widgets/swipe_date_detector.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
-import '../../../notifications/presentation/bloc/notifications_bloc.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -96,34 +95,11 @@ class _HomeViewState extends State<HomeView> {
                               ),
                         ),
                         const Spacer(),
-                        // Actions row ordered: Notification -> Filter -> Search -> Date Navigation (<, 📅, >)
+                        // Actions row ordered: Filter -> Search -> Date Navigation (<, 📅, >)
                         Row(
                           textDirection: TextDirection.ltr,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Notifications Icon with unread badge
-                            BlocBuilder<NotificationsBloc, NotificationsState>(
-                              builder: (context, notifState) {
-                                final unreadCount = notifState.unreadCount;
-                                return IconButton(
-                                  icon: Badge(
-                                    isLabelVisible: unreadCount > 0,
-                                    label: Text(
-                                      unreadCount > 99 ? '99+' : '$unreadCount',
-                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                    ),
-                                    backgroundColor: AppColors.primary,
-                                    child: Icon(
-                                      unreadCount > 0
-                                          ? Icons.notifications_active_rounded
-                                          : Icons.notifications_none_rounded,
-                                    ),
-                                  ),
-                                  tooltip: l10n.translate('notifications_title'),
-                                  onPressed: () => context.push('/notifications'),
-                                );
-                              },
-                            ),
                             // Filter Icon with active badge indicator
                             IconButton(
                               icon: Badge(

@@ -130,33 +130,7 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 5: Favorites
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/favorites',
-                pageBuilder: (context, state) => _buildCupertinoPage(
-                  state: state,
-                  child: const FavoritesView(),
-                ),
-              ),
-            ],
-          ),
-
-          // Branch 6: Search
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/search',
-                pageBuilder: (context, state) => _buildCupertinoPage(
-                  state: state,
-                  child: const GlobalSearchView(),
-                ),
-              ),
-            ],
-          ),
-
-          // Branch 7: Settings
+          // Branch 5: Settings
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -194,6 +168,26 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/splash',
         builder: (context, state) => const SplashView(),
+      ),
+
+      // Favorites
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/favorites',
+        pageBuilder: (context, state) => _buildCupertinoPage(
+          state: state,
+          child: const FavoritesView(),
+        ),
+      ),
+
+      // Search
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/search',
+        pageBuilder: (context, state) => _buildCupertinoPage(
+          state: state,
+          child: const GlobalSearchView(),
+        ),
       ),
 
       // Notifications

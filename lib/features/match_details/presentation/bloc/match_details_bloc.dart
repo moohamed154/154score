@@ -195,30 +195,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           resolvedOverview?.championshipId ??
           state.championshipId;
 
-      String? calculatedScore1 = state.liveScore1;
-      String? calculatedScore2 = state.liveScore2;
-      if ((calculatedScore1 == null || calculatedScore2 == null) &&
-          resolvedEvents.isNotEmpty) {
-        int g1 = 0;
-        int g2 = 0;
-        bool hasGoals = false;
-        for (final ev in resolvedEvents) {
-          if (ev.type.toLowerCase().contains('goal')) {
-            hasGoals = true;
-            if (ev.isHomeTeam) {
-              g1++;
-            } else {
-              g2++;
-            }
-          }
-        }
-        if (hasGoals) {
-          calculatedScore1 ??= g1.toString();
-          calculatedScore2 ??= g2.toString();
-        }
-      }
-      calculatedScore1 ??= resolvedOverview?.score1;
-      calculatedScore2 ??= resolvedOverview?.score2;
+      final knownScore1 = state.liveScore1 ?? resolvedOverview?.score1;
+      final knownScore2 = state.liveScore2 ?? resolvedOverview?.score2;
 
       String? resolvedStatus = state.liveStatus ?? resolvedOverview?.status;
       String? resolvedStatusCode = state.liveStatusCode;
@@ -274,7 +252,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       if (!isCurrentlyLive &&
           (hasFinishedEvent ||
               (isPastMatch &&
-                  (calculatedScore1 != null || resolvedEvents.isNotEmpty)))) {
+                  (knownScore1 != null || resolvedEvents.isNotEmpty)))) {
         if (resolvedStatus == null ||
             resolvedStatus.isEmpty ||
             !ScoreHelper.isFinishedStatus(resolvedStatus)) {
@@ -294,8 +272,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           overview: resolvedOverview,
           championshipId: resolvedChampionshipId,
           halfScores: resolvedHalfScores,
-          liveScore1: calculatedScore1,
-          liveScore2: calculatedScore2,
+          liveScore1: state.liveScore1,
+          liveScore2: state.liveScore2,
           liveStatus: resolvedStatus,
           liveStatusCode: resolvedStatusCode,
           errorMessage: null,

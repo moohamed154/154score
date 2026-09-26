@@ -20,6 +20,17 @@ class UrlHelper {
       return null;
     }
 
+    // 1. Repair broken double-dot domains from API (e.g. 'imgs..com' -> 'imgs.ysscores.com' or 'https://..com')
+    if (trimmed.contains('imgs..com')) {
+      trimmed = trimmed.replaceAll('imgs..com', 'imgs.ysscores.com');
+    } else if (trimmed.contains('://..com')) {
+      trimmed = trimmed.replaceAll('://..com', '://imgs.ysscores.com');
+    } else if (trimmed.contains('//..com')) {
+      trimmed = trimmed.replaceAll('//..com', '//imgs.ysscores.com');
+    } else if (trimmed.contains('..com')) {
+      trimmed = trimmed.replaceAll('..com', '.ysscores.com');
+    }
+
     // Fix broken stadium 820/800 CDN paths to canonical 600
     if (trimmed.contains('/stadium/820/') ||
         trimmed.contains('/stadium/800/')) {
@@ -123,9 +134,10 @@ class UrlHelper {
     }
 
     // If it's already a full CDN URL pointing to /teams/, redirect to /player/
-    if (trimmed.contains('imgs.ysscores.com/teams/')) {
+    if (trimmed.contains('imgs.ysscores.com/teams/') ||
+        trimmed.contains('imgs..com/teams/')) {
       final fixed = trimmed.replaceAll(
-        RegExp(r'imgs\.ysscores\.com/teams/\d+/'),
+        RegExp(r'imgs(?:\.ysscores|\.)\.com/teams/\d+/'),
         'imgs.ysscores.com/player/$size/',
       );
       return normalizeImageUrl(fixed);
