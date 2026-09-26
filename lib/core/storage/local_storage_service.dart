@@ -86,6 +86,18 @@ abstract class LocalStorageService {
   bool isMatchStartEndNotificationEnabled();
   Future<bool> setMatchStartEndNotificationEnabled(bool enabled);
 
+  // Match Notification Scope: 'starred_only' vs 'all_matches'
+  static const String matchNotifScopeStarred = 'starred_only';
+  static const String matchNotifScopeAll = 'all_matches';
+  String getMatchNotificationScope();
+  Future<bool> setMatchNotificationScope(String scope);
+  bool isNotificationMatchingStarredTeams({
+    required String title,
+    required String body,
+    String? matchId,
+    Map<String, dynamic>? data,
+  });
+
   // Read Notifications IDs
   List<String> getReadNotificationIds();
   Future<bool> markNotificationAsRead(String id);
@@ -668,6 +680,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyNotifLineup = 'notif_lineup_enabled';
   static const String _keyNotifGoals = 'notif_goals_enabled';
   static const String _keyNotifStartEnd = 'notif_start_end_enabled';
+  static const String _keyMatchNotifScope = 'app_notif_match_scope';
   static const String _keyReadNotifications = 'read_notifications_ids';
 
   @override
@@ -722,6 +735,96 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setMatchStartEndNotificationEnabled(bool enabled) =>
       _prefs.setBool(_keyNotifStartEnd, enabled);
+
+  @override
+  String getMatchNotificationScope() =>
+      _prefs.getString(_keyMatchNotifScope) ??
+      LocalStorageService.matchNotifScopeStarred;
+
+  @override
+  Future<bool> setMatchNotificationScope(String scope) =>
+      _prefs.setString(_keyMatchNotifScope, scope);
+
+  @override
+  bool isNotificationMatchingStarredTeams({
+    required String title,
+    required String body,
+    String? matchId,
+    Map<String, dynamic>? data,
+  }) {
+    // 1. If the match ID itself is favorited
+    if (matchId != null && matchId.isNotEmpty) {
+      final favMatches = getFavoriteMatches();
+      if (favMatches.contains(matchId)) return true;
+    }
+
+    // 2. Collect all starred / subscribed team tokens (IDs & titles)
+    final favTeams = getFavoriteTeams();
+    final favTitles = getFavoriteTeamTitles();
+    final teamNotifs = _prefs.getStringList(_keyTeamNotifications) ?? [];
+
+    final Set<String> targetNames = {};
+    for (final t in favTitles.values) {
+      final trimmed = t.trim().toLowerCase();
+      if (trimmed.isNotEmpty) targetNames.add(trimmed);
+    }
+    for (final t in favTitles.keys) {
+      final trimmed = t.trim().toLowerCase();
+      if (trimmed.isNotEmpty) targetNames.add(trimmed);
+    }
+    for (final t in teamNotifs) {
+      final trimmed = t.trim().toLowerCase();
+      if (trimmed.isNotEmpty) targetNames.add(trimmed);
+    }
+
+    final Set<String> targetIds = {};
+    for (final id in favTeams) {
+      final trimmed = id.trim();
+      if (trimmed.isNotEmpty) targetIds.add(trimmed);
+    }
+    for (final id in teamNotifs) {
+      final trimmed = id.trim();
+      if (trimmed.isNotEmpty) targetIds.add(trimmed);
+    }
+
+    // If user hasn't starred or subscribed to any teams at all, don't filter out everything
+    // but in starred_only mode without any stars, no match alerts
+    if (targetNames.isEmpty && targetIds.isEmpty) {
+      return false;
+    }
+
+    // 3. Check data payload fields if present
+    if (data != null) {
+      final homeId = data['home_team_id']?.toString() ?? data['home_id']?.toString();
+      final awayId = data['away_team_id']?.toString() ?? data['away_id']?.toString();
+      final teamId = data['team_id']?.toString();
+      if ((homeId != null && targetIds.contains(homeId)) ||
+          (awayId != null && targetIds.contains(awayId)) ||
+          (teamId != null && targetIds.contains(teamId))) {
+        return true;
+      }
+
+      final homeName = data['home_team']?.toString().toLowerCase();
+      final awayName = data['away_team']?.toString().toLowerCase();
+      if (homeName != null && targetNames.any((n) => homeName.contains(n) || n.contains(homeName))) {
+        return true;
+      }
+      if (awayName != null && targetNames.any((n) => awayName.contains(n) || n.contains(awayName))) {
+        return true;
+      }
+    }
+
+    // 4. Check notification title and body text against starred team names
+    final lowerTitle = title.toLowerCase();
+    final lowerBody = body.toLowerCase();
+    for (final name in targetNames) {
+      if (lowerTitle.contains(name) || lowerBody.contains(name)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   @override
   List<String> getReadNotificationIds() =>

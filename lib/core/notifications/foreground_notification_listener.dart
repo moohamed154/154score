@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/notifications/domain/entities/notification_entity.dart';
 import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
+import '../di/injection_container.dart';
+import '../storage/local_storage_service.dart';
 import 'notification_service.dart';
 
 const _prefSeenIds = '154score_seen_notif_ids';
@@ -65,6 +67,24 @@ class _ForegroundNotificationListenerState
 
       final matchId = notif.data['match_id']?.toString() ?? '';
       final articleId = notif.data['article_id']?.toString() ?? '';
+
+      // Check match notification scope (starred vs all)
+      if (notif.type != NotificationType.news) {
+        final storage = sl<LocalStorageService>();
+        final scope = storage.getMatchNotificationScope();
+        if (scope == LocalStorageService.matchNotifScopeStarred) {
+          final isStarred = storage.isNotificationMatchingStarredTeams(
+            title: notif.title,
+            body: notif.body,
+            matchId: matchId,
+            data: notif.data,
+          );
+          if (!isStarred) {
+            await _persistSeenId(notif.id);
+            continue;
+          }
+        }
+      }
 
       switch (notif.type) {
         case NotificationType.news:

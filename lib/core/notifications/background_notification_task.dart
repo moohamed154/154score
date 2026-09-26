@@ -70,6 +70,7 @@ Future<void> _runNotificationPoll() async {
     final lineupEnabled = prefs.getBool(_prefLineupEnabled) ?? true;
     final goalsEnabled = prefs.getBool(_prefGoalsEnabled) ?? true;
     final startEndEnabled = prefs.getBool(_prefStartEndEnabled) ?? true;
+    final matchScope = prefs.getString('app_notif_match_scope') ?? 'starred_only';
 
     // Read already-seen notification IDs (persist cross-session)
     final seenSet = (prefs.getStringList(_prefSeenIds) ?? []).toSet();
@@ -97,6 +98,21 @@ Future<void> _runNotificationPoll() async {
       if (_containsBrandWord(title) || _containsBrandWord(notifBody)) {
         newlySeenIds.add(id);
         continue;
+      }
+
+      // Check match notification scope (starred vs all)
+      if (type != 'news' && matchScope == 'starred_only') {
+        final matchesStarred = _isStarredMatchEvent(
+          prefs: prefs,
+          title: title,
+          body: notifBody,
+          matchId: matchId,
+          data: raw['data'] as Map?,
+        );
+        if (!matchesStarred) {
+          newlySeenIds.add(id);
+          continue;
+        }
       }
 
       final payload = jsonEncode({
@@ -178,6 +194,87 @@ bool _containsBrandWord(String text) {
       lower.contains('يلا شوت') ||
       lower.contains('يلاشوت') ||
       lower.contains('ysscores');
+}
+
+bool _isStarredMatchEvent({
+  required SharedPreferences prefs,
+  required String title,
+  required String body,
+  required String matchId,
+  Map? data,
+}) {
+  if (matchId.isNotEmpty) {
+    final favMatches = prefs.getStringList('app_favorite_matches') ?? [];
+    if (favMatches.contains(matchId)) return true;
+  }
+
+  final favTeams = prefs.getStringList('app_favorite_teams') ?? [];
+  final teamNotifs = prefs.getStringList('team_notifications') ?? [];
+
+  final Set<String> targetNames = {};
+  final rawTitles = prefs.getString('app_favorite_team_titles');
+  if (rawTitles != null && rawTitles.isNotEmpty) {
+    try {
+      final decoded = jsonDecode(rawTitles);
+      if (decoded is Map) {
+        for (final entry in decoded.entries) {
+          final k = entry.key.toString().trim().toLowerCase();
+          final v = entry.value.toString().trim().toLowerCase();
+          if (k.isNotEmpty) targetNames.add(k);
+          if (v.isNotEmpty) targetNames.add(v);
+        }
+      }
+    } catch (_) {}
+  }
+
+  for (final t in teamNotifs) {
+    final trimmed = t.trim().toLowerCase();
+    if (trimmed.isNotEmpty) targetNames.add(trimmed);
+  }
+
+  final Set<String> targetIds = {};
+  for (final id in favTeams) {
+    final trimmed = id.trim();
+    if (trimmed.isNotEmpty) targetIds.add(trimmed);
+  }
+  for (final id in teamNotifs) {
+    final trimmed = id.trim();
+    if (trimmed.isNotEmpty) targetIds.add(trimmed);
+  }
+
+  if (targetNames.isEmpty && targetIds.isEmpty) {
+    return false;
+  }
+
+  if (data != null) {
+    final homeId = data['home_team_id']?.toString() ?? data['home_id']?.toString();
+    final awayId = data['away_team_id']?.toString() ?? data['away_id']?.toString();
+    final teamId = data['team_id']?.toString();
+    if ((homeId != null && targetIds.contains(homeId)) ||
+        (awayId != null && targetIds.contains(awayId)) ||
+        (teamId != null && targetIds.contains(teamId))) {
+      return true;
+    }
+
+    final homeName = data['home_team']?.toString().toLowerCase();
+    final awayName = data['away_team']?.toString().toLowerCase();
+    if (homeName != null && targetNames.any((n) => homeName.contains(n) || n.contains(homeName))) {
+      return true;
+    }
+    if (awayName != null && targetNames.any((n) => awayName.contains(n) || n.contains(awayName))) {
+      return true;
+    }
+  }
+
+  final lowerTitle = title.toLowerCase();
+  final lowerBody = body.toLowerCase();
+  for (final name in targetNames) {
+    if (lowerTitle.contains(name) || lowerBody.contains(name)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // ── Service Registration ───────────────────────────────────────────────────

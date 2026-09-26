@@ -94,7 +94,7 @@ class _NotificationsViewState extends State<NotificationsView> {
     } else if (item.category == 'match') {
       final matchId = item.data['match_id'] ?? item.matchId;
       if (matchId != null && matchId.toString().isNotEmpty) {
-        context.push('/matches/$matchId/details');
+        context.push('/match/$matchId');
       }
     }
   }
@@ -128,6 +128,11 @@ class _NotificationsViewState extends State<NotificationsView> {
                 },
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.tune_rounded),
+            tooltip: l10n.translate('settings_notifications'),
+            onPressed: () => context.push('/settings/notifications'),
           ),
         ],
       ),

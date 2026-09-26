@@ -225,6 +225,24 @@ class AppLocalizations {
       'mark_all_read': 'Mark all as read',
       'clear_all': 'Clear all',
 
+      // Notification Settings & Scope
+      'notif_scope_title': 'Match Notification Scope',
+      'notif_scope_subtitle': 'Choose which matches trigger push alerts',
+      'notif_scope_starred_title': 'Starred & Subscribed Teams Only',
+      'notif_scope_starred_desc': 'Only receive alerts for matches involving your favorite clubs (recommended to avoid excessive notifications).',
+      'notif_scope_all_title': 'All Matches',
+      'notif_scope_all_desc': 'Receive alerts for all matches across all tracked leagues and tournaments.',
+      'notif_scope_recommended_badge': 'Recommended',
+      'notif_events_title': 'Alert Types',
+      'notif_favorite_teams_section': 'Favorite Teams',
+      'notif_manage_favorites': 'Manage Starred Teams',
+      'notif_starred_teams_count': 'You are following {count} teams',
+      'notif_test_title': 'Test Push Notification',
+      'notif_test_subtitle': 'Send a test alert to verify notification sounds and banner appearance on your device.',
+      'notif_test_button': 'Send Test Alert',
+      'notif_test_sent': 'Test notification sent! Check your notification bar.',
+      'notif_settings_header_desc': 'Customize your match alerts and news notifications to never miss crucial moments.',
+
       // Diagnostics & Status
       'diag_title': 'System Diagnostics',
       'diag_api_health': 'REST API Health',
@@ -507,6 +525,24 @@ class AppLocalizations {
       'no_notifications_desc': 'ستظهر هنا إشعارات الأهداف والتشكيلات والأخبار العاجلة فور صدورها.',
       'mark_all_read': 'تحديد الكل كمقروء',
       'clear_all': 'مسح الكل',
+
+      // Notification Settings & Scope
+      'notif_scope_title': 'نطاق إشعارات المباريات',
+      'notif_scope_subtitle': 'حدد المباريات التي ترغب في تلقي تنبيهات فورية لها',
+      'notif_scope_starred_title': 'الفرق المفضلة والمتابعة فقط',
+      'notif_scope_starred_desc': 'استلام تنبيهات (الأهداف والتشكيلة وصافرة البداية والنهاية) لمباريات أنديتك المفضلة فقط لتجنب كثرة الإشعارات.',
+      'notif_scope_all_title': 'جميع المباريات',
+      'notif_scope_all_desc': 'استلام تنبيهات لكافة المباريات في جميع البطولات والدوريات المتاحة.',
+      'notif_scope_recommended_badge': 'موصى به',
+      'notif_events_title': 'أنواع التنبيهات المفعّلة',
+      'notif_favorite_teams_section': 'الفرق المفضلة',
+      'notif_manage_favorites': 'إدارة الفرق المفضلة',
+      'notif_starred_teams_count': 'أنت تتابع حالياً {count} فرق',
+      'notif_test_title': 'تجربة الإشعارات',
+      'notif_test_subtitle': 'أرسل إشعاراً تجريبياً للتأكد من وصول التنبيهات وصوت الإشعار على هاتفك.',
+      'notif_test_button': 'إرسال إشعار تجريبي',
+      'notif_test_sent': 'تم إرسال الإشعار التجريبي! تفقّد شريط الإشعارات بالأعلى.',
+      'notif_settings_header_desc': 'خصص تنبيهات المباريات والأخبار العاجلة لتواكب كل ما يهمك لحظة بلحظة.',
 
       // Diagnostics & Status
       'diag_title': 'فحص وتشخيص الاتصال',

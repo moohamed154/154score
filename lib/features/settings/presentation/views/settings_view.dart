@@ -281,6 +281,47 @@ class _SettingsViewState extends State<SettingsView> {
 
           const SizedBox(height: 24),
 
+          // Section: Notifications
+          _buildSectionHeader(
+            l10n.translate('settings_notifications'),
+            isDark,
+            isArabic,
+          ),
+          _buildCard(
+            isDark: isDark,
+            child: ListTile(
+              leading: const Icon(
+                Icons.notifications_active_rounded,
+                color: AppColors.primary,
+              ),
+              title: Text(l10n.translate('settings_notifications')),
+              subtitle: Text(
+                storage.getMatchNotificationScope() == LocalStorageService.matchNotifScopeStarred
+                    ? l10n.translate('notif_scope_starred_title')
+                    : l10n.translate('notif_scope_all_title'),
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+              trailing: Icon(
+                isArabic
+                    ? Icons.chevron_left_rounded
+                    : Icons.chevron_right_rounded,
+              ),
+              onTap: () async {
+                await context.push('/settings/notifications');
+                if (mounted) setState(() {});
+              },
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
           // Section: Diagnostics & Health
           _buildSectionHeader(
             l10n.translate('settings_diagnostics'),

@@ -22,6 +22,7 @@ import '../../features/players/presentation/views/player_view.dart';
 import '../../features/profiles/presentation/views/generic_profile_view.dart';
 import '../../features/notifications/presentation/views/notifications_view.dart';
 import '../../features/search/presentation/views/search_view.dart';
+import '../../features/settings/presentation/views/notification_settings_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
 import '../../features/settings/presentation/views/timezone_selection_view.dart';
 import '../../features/standings/presentation/views/standings_view.dart';
@@ -171,6 +172,14 @@ class AppRouter {
                     pageBuilder: (context, state) => _buildCupertinoPage(
                       state: state,
                       child: const TimezoneSelectionView(),
+                    ),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: 'notifications',
+                    pageBuilder: (context, state) => _buildCupertinoPage(
+                      state: state,
+                      child: const NotificationSettingsView(),
                     ),
                   ),
                 ],
