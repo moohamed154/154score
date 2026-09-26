@@ -14,7 +14,7 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   flutter_local_notifications: ^18.0.1
-  workmanager: ^0.5.2
+  workmanager: ^0.10.10
   flutter_bloc: ^8.1.6
   dio: ^5.7.0
   socket_io_client: ^2.0.3+1

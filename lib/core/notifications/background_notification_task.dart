@@ -283,7 +283,6 @@ bool _isStarredMatchEvent({
 Future<void> initBackgroundNotifications() async {
   await Workmanager().initialize(
     workmanagerCallback,
-    isInDebugMode: false,
   );
 
   // Register a periodic poll every 15 minutes (minimum on Android)
@@ -294,7 +293,7 @@ Future<void> initBackgroundNotifications() async {
     constraints: Constraints(
       networkType: NetworkType.connected,
     ),
-    existingWorkPolicy: ExistingWorkPolicy.keep,
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
     backoffPolicy: BackoffPolicy.linear,
     backoffPolicyDelay: const Duration(minutes: 5),
   );
