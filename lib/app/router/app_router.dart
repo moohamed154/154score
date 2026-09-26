@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +20,7 @@ import '../../features/news/presentation/views/news_view.dart';
 import '../../features/players/presentation/bloc/player_bloc.dart';
 import '../../features/players/presentation/views/player_view.dart';
 import '../../features/profiles/presentation/views/generic_profile_view.dart';
+import '../../features/notifications/presentation/views/notifications_view.dart';
 import '../../features/search/presentation/views/search_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
 import '../../features/settings/presentation/views/timezone_selection_view.dart';
@@ -48,6 +50,28 @@ Page<dynamic> _buildCupertinoPage({
 
 class AppRouter {
   AppRouter._();
+
+  /// Called when the user taps a notification.
+  /// Parses the JSON payload and navigates to the right screen.
+  static void handleNotificationPayload(String payload) {
+    try {
+      final data = jsonDecode(payload) as Map<String, dynamic>;
+      final type = data['type']?.toString() ?? '';
+      if (type == 'news') {
+        final articleId = data['article_id']?.toString() ?? '';
+        if (articleId.isNotEmpty) {
+          router.push('/news/$articleId');
+        }
+      } else if (type == 'match') {
+        final matchId = data['match_id']?.toString() ?? '';
+        if (matchId.isNotEmpty) {
+          router.push('/match/$matchId');
+        }
+      } else if (type == 'notifications') {
+        router.push('/notifications');
+      }
+    } catch (_) {}
+  }
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -161,6 +185,16 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/splash',
         builder: (context, state) => const SplashView(),
+      ),
+
+      // Notifications
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/notifications',
+        pageBuilder: (context, state) => _buildCupertinoPage(
+          state: state,
+          child: const NotificationsView(),
+        ),
       ),
 
       // News Detail

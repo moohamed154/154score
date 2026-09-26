@@ -4,11 +4,14 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../core/di/injection_container.dart';
 import '../core/localization/app_localizations.dart';
+import '../core/notifications/foreground_notification_listener.dart';
+import '../core/notifications/notification_service.dart';
 import '../core/theme/app_theme.dart';
 import '../features/favorites/presentation/cubit/favorites_cubit.dart';
 import '../features/home/presentation/cubit/home_cubit.dart';
 import '../features/matches/presentation/bloc/matches_bloc.dart';
 import '../features/news/presentation/bloc/news_bloc.dart';
+import '../features/notifications/presentation/bloc/notifications_bloc.dart';
 import '../features/settings/presentation/cubit/settings_cubits.dart';
 import '../features/standings/presentation/bloc/standings_bloc.dart';
 import '../features/transfers/presentation/bloc/transfers_bloc.dart';
@@ -32,6 +35,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     try {
       sl<WebSocketService>().connect();
     } catch (_) {}
+    // Handle notification tap that launched the app from terminated state
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final payload = await NotificationService.instance.getLaunchPayload();
+      if (payload != null && payload.isNotEmpty) {
+        AppRouter.handleNotificationPayload(payload);
+      }
+    });
   }
 
   @override
@@ -53,6 +63,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<LocaleCubit>(create: (_) => sl<LocaleCubit>()),
         BlocProvider<MatchesBloc>(create: (_) => sl<MatchesBloc>()),
         BlocProvider<NewsBloc>(create: (_) => sl<NewsBloc>()),
+        BlocProvider<NotificationsBloc>(
+          create: (_) => sl<NotificationsBloc>()..add(const LoadNotificationsEvent()),
+        ),
         BlocProvider<HomeCubit>(create: (_) => sl<HomeCubit>()),
         BlocProvider<StandingsBloc>(create: (_) => sl<StandingsBloc>()),
         BlocProvider<TransfersBloc>(create: (_) => sl<TransfersBloc>()),
@@ -60,49 +73,51 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<FavoritesCubit>(create: (_) => sl<FavoritesCubit>()),
         BlocProvider<TimezoneCubit>(create: (_) => sl<TimezoneCubit>()),
       ],
-      child: BlocBuilder<ThemeCubit, ThemeMode>(
-        builder: (context, themeMode) {
-          return BlocBuilder<LocaleCubit, LocaleState>(
-            buildWhen: (prev, curr) => prev.locale != curr.locale,
-            builder: (context, localeState) {
-              return SkeletonizerConfig(
-                data: SkeletonizerConfigData(
-                  effectResolver: (brightness) {
-                    final isDarkBrightness =
-                        themeMode == ThemeMode.dark ||
-                        (themeMode == ThemeMode.system &&
-                            brightness == Brightness.dark);
-                    return isDarkBrightness
-                        ? const ShimmerEffect(
-                            baseColor: Color(0xFF243242),
-                            highlightColor: Color(0xFF3B4E68),
-                            duration: Duration(milliseconds: 1400),
-                          )
-                        : const ShimmerEffect(
-                            baseColor: Color(0xFFE2E8F0),
-                            highlightColor: Color(0xFFF1F5F9),
-                            duration: Duration(milliseconds: 1400),
-                          );
-                  },
-                ),
-                child: MaterialApp.router(
-                  title: '154 SCORE',
-                  debugShowCheckedModeBanner: false,
-                  routerConfig: AppRouter.router,
-                  theme: AppTheme.lightTheme,
-                  darkTheme: AppTheme.darkTheme,
-                  themeMode: themeMode,
-                  locale: localeState.locale,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  localizationsDelegates: const [
-                    AppLocalizations.delegate,
-                    ...GlobalMaterialLocalizations.delegates,
-                  ],
-                ),
-              );
-            },
-          );
-        },
+      child: ForegroundNotificationListener(
+        child: BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, themeMode) {
+            return BlocBuilder<LocaleCubit, LocaleState>(
+              buildWhen: (prev, curr) => prev.locale != curr.locale,
+              builder: (context, localeState) {
+                return SkeletonizerConfig(
+                  data: SkeletonizerConfigData(
+                    effectResolver: (brightness) {
+                      final isDarkBrightness =
+                          themeMode == ThemeMode.dark ||
+                          (themeMode == ThemeMode.system &&
+                              brightness == Brightness.dark);
+                      return isDarkBrightness
+                          ? const ShimmerEffect(
+                              baseColor: Color(0xFF243242),
+                              highlightColor: Color(0xFF3B4E68),
+                              duration: Duration(milliseconds: 1400),
+                            )
+                          : const ShimmerEffect(
+                              baseColor: Color(0xFFE2E8F0),
+                              highlightColor: Color(0xFFF1F5F9),
+                              duration: Duration(milliseconds: 1400),
+                            );
+                    },
+                  ),
+                  child: MaterialApp.router(
+                    title: '154 SCORE',
+                    debugShowCheckedModeBanner: false,
+                    routerConfig: AppRouter.router,
+                    theme: AppTheme.lightTheme,
+                    darkTheme: AppTheme.darkTheme,
+                    themeMode: themeMode,
+                    locale: localeState.locale,
+                    supportedLocales: AppLocalizations.supportedLocales,
+                    localizationsDelegates: const [
+                      AppLocalizations.delegate,
+                      ...GlobalMaterialLocalizations.delegates,
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

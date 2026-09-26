@@ -62,6 +62,10 @@ import '../../features/news/data/repositories/news_repository_impl.dart';
 import '../../features/news/domain/repositories/news_repository.dart';
 import '../../features/news/presentation/bloc/news_bloc.dart';
 
+import '../../features/notifications/data/repositories/notifications_repository_impl.dart';
+import '../../features/notifications/domain/repositories/notifications_repository.dart';
+import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -140,6 +144,9 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton<PlayerRepository>(() => PlayerRepositoryImpl(sl()));
   sl.registerLazySingleton<SearchRepository>(() => SearchRepository(sl()));
+  sl.registerLazySingleton<NotificationsRepository>(
+    () => NotificationsRepositoryImpl(apiClient: sl(), localStorage: sl()),
+  );
 
   // 4. ViewModels / Blocs / Cubits
   sl.registerFactory<MatchesBloc>(
@@ -209,6 +216,10 @@ Future<void> initDependencies() async {
 
   sl.registerFactory<NewsBloc>(
     () => NewsBloc(repository: sl(), localStorageService: sl()),
+  );
+
+  sl.registerFactory<NotificationsBloc>(
+    () => NotificationsBloc(repository: sl()),
   );
 
   sl.registerFactory<HomeCubit>(

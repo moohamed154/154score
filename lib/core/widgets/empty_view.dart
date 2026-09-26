@@ -8,6 +8,8 @@ import '../localization/app_localizations.dart';
 class EmptyView extends StatelessWidget {
   final String titleKey;
   final String? customMessage;
+  final String? subtitleKey;
+  final String? customSubtitle;
   final IconData icon;
   final Widget? actionWidget;
 
@@ -15,6 +17,8 @@ class EmptyView extends StatelessWidget {
     super.key,
     required this.titleKey,
     this.customMessage,
+    this.subtitleKey,
+    this.customSubtitle,
     this.icon = Icons.sports_soccer_rounded,
     this.actionWidget,
   });
@@ -57,6 +61,17 @@ class EmptyView extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+            if (customSubtitle != null || subtitleKey != null) ...[
+              const SizedBox(height: AppDimensions.sm),
+              Text(
+                customSubtitle ?? l10n.translate(subtitleKey!),
+                style: AppTypography.getBodyMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
             if (actionWidget != null) ...[
               const SizedBox(height: AppDimensions.lg),
               actionWidget!,

@@ -138,4 +138,7 @@ class ApiEndpoints {
       (slug != null && slug.isNotEmpty)
       ? '/api/leagues/$id/$slug/assists'
       : '/api/leagues/$id/assists';
+
+  // 8. Notifications Operations
+  static const String notifications = '/api/notifications';
 }

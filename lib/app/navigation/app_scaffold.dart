@@ -15,6 +15,7 @@ import '../../features/matches/presentation/bloc/matches_event.dart';
 import '../../features/matches/presentation/bloc/matches_state.dart';
 import '../../features/news/presentation/bloc/news_bloc.dart';
 import '../../features/settings/presentation/cubit/settings_cubits.dart';
+import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
 import '../../features/standings/presentation/bloc/standings_bloc.dart';
 import '../../features/transfers/presentation/bloc/transfers_bloc.dart';
 import '../../features/videos/presentation/bloc/videos_bloc.dart';
@@ -43,6 +44,7 @@ class AppScaffold extends StatelessWidget {
         final videosCompleter = Completer<void>();
         final homeCompleter = Completer<void>();
         final newsCompleter = Completer<void>();
+        final notificationsCompleter = Completer<void>();
 
         context.read<MatchesBloc>().add(
           ChangeMatchesLanguageEvent(lang, completer: matchesCompleter),
@@ -59,6 +61,9 @@ class AppScaffold extends StatelessWidget {
         context.read<NewsBloc>().add(
           ChangeNewsLanguageEvent(lang, completer: newsCompleter),
         );
+        context.read<NotificationsBloc>().add(
+          LoadNotificationsEvent(lang: lang, isRefresh: true, completer: notificationsCompleter),
+        );
         context.read<HomeCubit>().changeLanguage(
           lang,
           completer: homeCompleter,
@@ -72,6 +77,7 @@ class AppScaffold extends StatelessWidget {
           videosCompleter.future,
           homeCompleter.future,
           newsCompleter.future,
+          notificationsCompleter.future,
         ]).timeout(const Duration(seconds: 5), onTimeout: () => []).then((_) {
           if (context.mounted) {
             context.read<LocaleCubit>().notifyRefreshCompleted(token: token);

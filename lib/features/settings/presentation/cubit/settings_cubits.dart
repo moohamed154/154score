@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/websocket/websocket_service.dart';
+import '../../../../core/notifications/background_notification_task.dart';
 import '../../domain/models/utc_offset_info.dart';
 
 // Theme Cubit
@@ -98,7 +99,10 @@ class LocaleCubit extends Cubit<LocaleState> {
     // 1. Persist asynchronously in background (do NOT await before emitting)
     unawaited(_storage.setLanguage(langCode));
 
-    // 2. Switch WebSocket channel seamlessly on existing connection
+    // 2. Persist language for background notification task
+    unawaited(saveNotificationLang(langCode));
+
+    // 3. Switch WebSocket channel seamlessly on existing connection
     _webSocketService.switchLanguageChannel(langCode);
 
     // 3. Cancel any existing indicator timer

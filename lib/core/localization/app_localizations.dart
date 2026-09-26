@@ -210,6 +210,21 @@ class AppLocalizations {
       'settings_about': 'About 154Score',
       'about_description': '154Score is a high-performance football center powered by 154score API and real-time WebSockets.',
 
+      'settings_notifications': 'Notifications & Alerts',
+      'notif_news': 'News Notifications',
+      'notif_news_desc': 'Breaking sports news & transfer updates',
+      'notif_match_lineup': 'Lineups Announcements',
+      'notif_match_lineup_desc': 'Official starting 11 confirmed alerts',
+      'notif_match_goals': 'Goals & Cards',
+      'notif_match_goals_desc': 'Instant goal alerts, penalties and red cards',
+      'notif_match_start_end': 'Match Start & End',
+      'notif_match_start_end_desc': 'Kick-off, half-time and full-time whistle',
+      'notifications_title': 'Notifications',
+      'no_notifications': 'No notifications right now',
+      'no_notifications_desc': 'You will receive updates about goals, lineups, and breaking news here.',
+      'mark_all_read': 'Mark all as read',
+      'clear_all': 'Clear all',
+
       // Diagnostics & Status
       'diag_title': 'System Diagnostics',
       'diag_api_health': 'REST API Health',
@@ -477,6 +492,21 @@ class AppLocalizations {
       'settings_diagnostics': 'فحص الخادم والويب سوكت',
       'settings_about': 'حول 154Score',
       'about_description': 'تطبيق 154Score الرياضي الاحترافي لمتابعة نتائج المباريات لحظة بلحظة عبر 154score API والويب سوكت المباشر.',
+
+      'settings_notifications': 'الإشعارات والتنبيهات',
+      'notif_news': 'إشعارات الأخبار',
+      'notif_news_desc': 'الأخبار الرياضية العاجلة والانتقالات المهمة',
+      'notif_match_lineup': 'إشعارات التشكيلة',
+      'notif_match_lineup_desc': 'تنبيه عند إعلان التشكيلة الرسمية للمباراة',
+      'notif_match_goals': 'الأهداف والبطاقات',
+      'notif_match_goals_desc': 'تنبيه فوري عند تسجيل الأهداف والبطاقات الحمراء',
+      'notif_match_start_end': 'بداية ونهاية المباراة',
+      'notif_match_start_end_desc': 'تنبيه عند صافرة البداية والشوطين وصافرة النهاية',
+      'notifications_title': 'الإشعارات والتنبيهات',
+      'no_notifications': 'لا توجد إشعارات حالياً',
+      'no_notifications_desc': 'ستظهر هنا إشعارات الأهداف والتشكيلات والأخبار العاجلة فور صدورها.',
+      'mark_all_read': 'تحديد الكل كمقروء',
+      'clear_all': 'مسح الكل',
 
       // Diagnostics & Status
       'diag_title': 'فحص وتشخيص الاتصال',

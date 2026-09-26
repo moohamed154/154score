@@ -72,9 +72,24 @@ abstract class LocalStorageService {
   String? getMatchesSortOrder();
   Future<bool> setMatchesSortOrder(String sortOrder);
 
-  // Team Notifications
+  // Team & Match Notifications
   bool isTeamNotificationEnabled(String teamIdOrName) => false;
   Future<bool> toggleTeamNotification(String teamIdOrName) async => false;
+
+  // Granular Notification Toggles
+  bool isNewsNotificationEnabled();
+  Future<bool> setNewsNotificationEnabled(bool enabled);
+  bool isMatchLineupNotificationEnabled();
+  Future<bool> setMatchLineupNotificationEnabled(bool enabled);
+  bool isMatchGoalsNotificationEnabled();
+  Future<bool> setMatchGoalsNotificationEnabled(bool enabled);
+  bool isMatchStartEndNotificationEnabled();
+  Future<bool> setMatchStartEndNotificationEnabled(bool enabled);
+
+  // Read Notifications IDs
+  List<String> getReadNotificationIds();
+  Future<bool> markNotificationAsRead(String id);
+  Future<bool> markAllNotificationsAsRead(List<String> ids);
 }
 
 class LocalStorageServiceImpl implements LocalStorageService {
@@ -649,6 +664,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   static const String _keyTeamNotifications = 'team_notifications';
+  static const String _keyNotifNews = 'notif_news_enabled';
+  static const String _keyNotifLineup = 'notif_lineup_enabled';
+  static const String _keyNotifGoals = 'notif_goals_enabled';
+  static const String _keyNotifStartEnd = 'notif_start_end_enabled';
+  static const String _keyReadNotifications = 'read_notifications_ids';
 
   @override
   bool isTeamNotificationEnabled(String teamIdOrName) {
@@ -670,5 +690,58 @@ class LocalStorageServiceImpl implements LocalStorageService {
     }
     await _prefs.setStringList(_keyTeamNotifications, list);
     return enabled;
+  }
+
+  @override
+  bool isNewsNotificationEnabled() => _prefs.getBool(_keyNotifNews) ?? true;
+
+  @override
+  Future<bool> setNewsNotificationEnabled(bool enabled) =>
+      _prefs.setBool(_keyNotifNews, enabled);
+
+  @override
+  bool isMatchLineupNotificationEnabled() =>
+      _prefs.getBool(_keyNotifLineup) ?? true;
+
+  @override
+  Future<bool> setMatchLineupNotificationEnabled(bool enabled) =>
+      _prefs.setBool(_keyNotifLineup, enabled);
+
+  @override
+  bool isMatchGoalsNotificationEnabled() =>
+      _prefs.getBool(_keyNotifGoals) ?? true;
+
+  @override
+  Future<bool> setMatchGoalsNotificationEnabled(bool enabled) =>
+      _prefs.setBool(_keyNotifGoals, enabled);
+
+  @override
+  bool isMatchStartEndNotificationEnabled() =>
+      _prefs.getBool(_keyNotifStartEnd) ?? true;
+
+  @override
+  Future<bool> setMatchStartEndNotificationEnabled(bool enabled) =>
+      _prefs.setBool(_keyNotifStartEnd, enabled);
+
+  @override
+  List<String> getReadNotificationIds() =>
+      _prefs.getStringList(_keyReadNotifications) ?? [];
+
+  @override
+  Future<bool> markNotificationAsRead(String id) async {
+    if (id.isEmpty) return false;
+    final list = (_prefs.getStringList(_keyReadNotifications) ?? []).toList();
+    if (!list.contains(id)) {
+      list.add(id);
+      return _prefs.setStringList(_keyReadNotifications, list);
+    }
+    return true;
+  }
+
+  @override
+  Future<bool> markAllNotificationsAsRead(List<String> ids) async {
+    final list = (_prefs.getStringList(_keyReadNotifications) ?? []).toSet();
+    list.addAll(ids);
+    return _prefs.setStringList(_keyReadNotifications, list.toList());
   }
 }
