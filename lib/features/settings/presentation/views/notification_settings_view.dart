@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -50,21 +51,25 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
   Future<void> _toggleGoals(bool val) async {
     setState(() => _goalsEnabled = val);
     await _storage.setMatchGoalsNotificationEnabled(val);
+    if (val) unawaited(NotificationService.instance.requestPermissions());
   }
 
   Future<void> _toggleLineup(bool val) async {
     setState(() => _lineupEnabled = val);
     await _storage.setMatchLineupNotificationEnabled(val);
+    if (val) unawaited(NotificationService.instance.requestPermissions());
   }
 
   Future<void> _toggleStartEnd(bool val) async {
     setState(() => _startEndEnabled = val);
     await _storage.setMatchStartEndNotificationEnabled(val);
+    if (val) unawaited(NotificationService.instance.requestPermissions());
   }
 
   Future<void> _toggleNews(bool val) async {
     setState(() => _newsEnabled = val);
     await _storage.setNewsNotificationEnabled(val);
+    if (val) unawaited(NotificationService.instance.requestPermissions());
   }
 
   Future<void> _sendTestAlert(BuildContext context) async {
@@ -75,6 +80,32 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
     final isArabic = l10n.isArabic;
 
     try {
+      final granted = await NotificationService.instance.requestPermissions();
+      if (!granted && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.notifications_off_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    isArabic
+                        ? 'يرجى تفعيل إذن الإشعارات من إعدادات الهاتف لتلقي التنبيهات'
+                        : 'Please enable notifications in device settings to receive alerts',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.amber.shade900,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
       await NotificationService.instance.showGoalNotification(
         matchId: 'preview_demo',
         title: isArabic

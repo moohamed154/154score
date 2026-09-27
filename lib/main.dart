@@ -23,7 +23,11 @@ void main() async {
   );
 
   // 3. Register Workmanager background poll (every 15 min, survives app kill)
-  await initBackgroundNotifications();
+  try {
+    await initBackgroundNotifications();
+  } catch (e) {
+    debugPrint('[main] initBackgroundNotifications error: $e');
+  }
 
   runApp(const App());
 }

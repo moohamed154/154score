@@ -21,6 +21,7 @@ import '../bloc/team_bloc.dart';
 import '../bloc/team_event.dart';
 import '../bloc/team_state.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../widgets/team_header_card.dart';
 
@@ -93,6 +94,9 @@ class _TeamViewState extends State<TeamView>
       if (keyToToggle.isEmpty) return;
 
       final newStatus = await storage.toggleTeamNotification(keyToToggle);
+      if (newStatus) {
+        unawaited(NotificationService.instance.requestPermissions());
+      }
       if (name.trim().isNotEmpty && name.trim().toLowerCase() != keyToToggle.toLowerCase()) {
         if (newStatus && !storage.isTeamNotificationEnabled(name.trim())) {
           await storage.toggleTeamNotification(name.trim());
