@@ -16,6 +16,9 @@ import 'package:score154/features/standings/data/datasources/standings_remote_da
 
 class MockLocalStorageService implements LocalStorageService {
   @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
   Future<void> init() async {}
   @override
   String getLanguage() => 'ar';

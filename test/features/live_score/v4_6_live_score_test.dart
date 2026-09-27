@@ -19,6 +19,9 @@ import 'package:score154/features/favorites/presentation/cubit/favorites_cubit.d
 
 class _MockStorageForLiveScore implements LocalStorageService {
   @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
   Future<void> init() async {}
   @override
   String getLanguage() => 'ar';

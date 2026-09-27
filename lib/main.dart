@@ -1,13 +1,19 @@
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'app/app.dart';
-import 'core/di/injection_container.dart';
-import 'core/notifications/background_notification_task.dart';
-import 'core/notifications/notification_service.dart';
 import 'app/router/app_router.dart';
+import 'core/di/injection_container.dart';
+import 'core/notifications/apns_notification_service.dart';
+import 'core/notifications/background_notification_task.dart';
+import 'core/notifications/live_match_foreground_service.dart';
+import 'core/notifications/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 0. Initialize foreground task communication port (Android/iOS)
+  FlutterForegroundTask.initCommunicationPort();
 
   // 1. DI
   await initDependencies();
@@ -22,7 +28,21 @@ void main() async {
     },
   );
 
-  // 3. Register Workmanager background poll (every 15 min, survives app kill)
+  // 3. Android Zero-Delay Live Match Foreground Service
+  try {
+    await LiveMatchForegroundService.init();
+  } catch (e) {
+    debugPrint('[main] LiveMatchForegroundService.init error: $e');
+  }
+
+  // 4. iOS Direct APNs registration (without Firebase)
+  try {
+    await ApnsNotificationService.instance.initialize();
+  } catch (e) {
+    debugPrint('[main] ApnsNotificationService.initialize error: $e');
+  }
+
+  // 5. Register Workmanager background poll (survives app kill)
   try {
     await initBackgroundNotifications();
   } catch (e) {

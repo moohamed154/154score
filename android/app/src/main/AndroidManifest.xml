@@ -16,7 +16,11 @@
 
     <!-- Workmanager: wake lock -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Foreground Service (Android 14+ typed services) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <application
         android:label="154 SCORE"
@@ -45,6 +49,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- flutter_foreground_task: Live Match Zero-Delay Tracking Service -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
 
         <!-- Workmanager background task service -->
         <service

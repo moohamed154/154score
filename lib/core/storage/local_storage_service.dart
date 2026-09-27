@@ -98,6 +98,10 @@ abstract class LocalStorageService {
   static const String matchNotifScopeAll = 'all_matches';
   String getMatchNotificationScope();
   Future<bool> setMatchNotificationScope(String scope);
+
+  // Live Match Mode (Zero Delay Foreground Service on Android / APNs on iOS)
+  bool isLiveMatchModeEnabled() => true;
+  Future<bool> setLiveMatchModeEnabled(bool enabled) async => true;
   bool isNotificationMatchingStarredTeams({
     required String title,
     required String body,
@@ -843,6 +847,15 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setMatchNotificationScope(String scope) =>
       _prefs.setString(_keyMatchNotifScope, scope);
+
+  static const String _keyLiveMatchMode = 'live_match_mode_enabled';
+
+  @override
+  bool isLiveMatchModeEnabled() => _prefs.getBool(_keyLiveMatchMode) ?? true;
+
+  @override
+  Future<bool> setLiveMatchModeEnabled(bool enabled) =>
+      _prefs.setBool(_keyLiveMatchMode, enabled);
 
   @override
   bool isNotificationMatchingStarredTeams({

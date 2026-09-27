@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -8,6 +9,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/notifications/live_match_foreground_service.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
@@ -23,6 +25,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
   final LocalStorageService _storage = sl<LocalStorageService>();
 
   late String _matchScope;
+  late bool _liveMatchModeEnabled;
   late bool _goalsEnabled;
   late bool _lineupEnabled;
   late bool _startEndEnabled;
@@ -37,10 +40,23 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
 
   void _loadSettings() {
     _matchScope = _storage.getMatchNotificationScope();
+    _liveMatchModeEnabled = _storage.isLiveMatchModeEnabled();
     _goalsEnabled = _storage.isMatchGoalsNotificationEnabled();
     _lineupEnabled = _storage.isMatchLineupNotificationEnabled();
     _startEndEnabled = _storage.isMatchStartEndNotificationEnabled();
     _newsEnabled = _storage.isNewsNotificationEnabled();
+  }
+
+  Future<void> _toggleLiveMatchMode(bool val) async {
+    setState(() => _liveMatchModeEnabled = val);
+    await _storage.setLiveMatchModeEnabled(val);
+    if (Platform.isAndroid) {
+      if (val) {
+        await LiveMatchForegroundService.startService();
+      } else {
+        await LiveMatchForegroundService.stopService();
+      }
+    }
   }
 
   Future<void> _setScope(String scope) async {
@@ -228,6 +244,105 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                     ],
                   ),
                 ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Section 0: Zero-Delay Live Match Mode ────────────────────────
+          _buildSectionHeader(l10n.translate('notif_live_match_mode_title'), isDark, isArabic),
+          Text(
+            l10n.translate('notif_live_match_mode_subtitle'),
+            style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildCard(
+            isDark: isDark,
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.bolt_rounded, color: AppColors.primary, size: 24),
+                  ),
+                  title: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          l10n.translate('notif_live_match_service_status'),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _liveMatchModeEnabled
+                              ? Colors.green.withValues(alpha: 0.15)
+                              : Colors.grey.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _liveMatchModeEnabled
+                                ? Colors.green.withValues(alpha: 0.5)
+                                : Colors.grey.withValues(alpha: 0.5),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          _liveMatchModeEnabled ? 'Zero Delay' : 'OFF',
+                          style: TextStyle(
+                            color: _liveMatchModeEnabled ? Colors.green : Colors.grey,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      Platform.isIOS
+                          ? l10n.translate('notif_live_match_service_desc_ios')
+                          : l10n.translate('notif_live_match_service_desc_android'),
+                      style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                  ),
+                  value: _liveMatchModeEnabled,
+                  activeThumbColor: AppColors.primary,
+                  onChanged: _toggleLiveMatchMode,
+                ),
+                if (Platform.isAndroid && _liveMatchModeEnabled) ...[
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.battery_charging_full_rounded, color: Colors.teal, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l10n.translate('notif_battery_opt_button'),
+                            style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => LiveMatchForegroundService.requestBatteryExemption(),
+                          child: const Text('تفعيل / Allow'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

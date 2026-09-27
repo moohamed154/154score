@@ -27,6 +27,9 @@ import 'package:score154/features/transfers/presentation/widgets/transfer_card.d
 
 class MockLocalStorageService implements LocalStorageService {
   @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
   Future<void> init() async {}
 
   @override

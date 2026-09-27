@@ -70,11 +70,13 @@
 	<array>
 		<string>fetch</string>
 		<string>processing</string>
+		<string>remote-notification</string>
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>154score_notif_poll</string>
 		<string>notifPollTask</string>
+		<string>com.pravera.flutter_foreground_task.refresh</string>
 	</array>
 </dict>
 </plist>

@@ -239,9 +239,15 @@ class AppLocalizations {
       'notif_starred_teams_count': 'You are following {count} teams',
       'notif_test_title': 'Test Push Notification',
       'notif_test_subtitle': 'Send a test alert to verify notification sounds and banner appearance on your device.',
-      'notif_test_button': 'Send Test Alert',
       'notif_test_sent': 'Test notification sent! Check your notification bar.',
       'notif_settings_header_desc': 'Customize your match alerts and news notifications to never miss crucial moments.',
+      'notif_live_match_mode_title': 'Zero-Delay Live Match Mode',
+      'notif_live_match_mode_subtitle': 'Real-time background tracking during live matches for instant goal alerts (0-1s delay).',
+      'notif_live_match_service_status': 'Live Match Tracking Service',
+      'notif_live_match_service_desc_android': 'Runs a persistent low-power background service on Android to bypass Doze mode and deliver goal alerts immediately.',
+      'notif_live_match_service_desc_ios': 'Direct Apple APNs integration delivers instant goal notifications directly through Apple servers without Firebase.',
+      'notif_battery_opt_button': 'Exempt from Battery Optimization',
+      'notif_battery_opt_granted': 'Battery optimization exemption active',
 
       // Diagnostics & Status
       'diag_title': 'System Diagnostics',
@@ -543,6 +549,13 @@ class AppLocalizations {
       'notif_test_button': 'إرسال إشعار تجريبي',
       'notif_test_sent': 'تم إرسال الإشعار التجريبي! تفقّد شريط الإشعارات بالأعلى.',
       'notif_settings_header_desc': 'خصص تنبيهات المباريات والأخبار العاجلة لتواكب كل ما يهمك لحظة بلحظة.',
+      'notif_live_match_mode_title': 'وضع المتابعة المباشرة الفورية (Zero-Delay)',
+      'notif_live_match_mode_subtitle': 'متابعة حية في الخلفية أثناء المباريات لتصلك تنبيهات الأهداف فور تسجيلها بدون تأخير.',
+      'notif_live_match_service_status': 'خدمة المتابعة المباشرة',
+      'notif_live_match_service_desc_android': 'تعمل في الخلفية على أندرويد لتفادي وضع توفير الطاقة (Doze) وضمان وصول الأهداف فور تسجيلها.',
+      'notif_live_match_service_desc_ios': 'تعتمد على خدمة Apple APNs الفورية المباشرة بدون فايربيس لتصلك الأهداف في أجزاء من الثانية.',
+      'notif_battery_opt_button': 'استثناء التطبيق من تحسين البطارية',
+      'notif_battery_opt_granted': 'تم تفعيل الاستثناء من توفير البطارية',
 
       // Diagnostics & Status
       'diag_title': 'فحص وتشخيص الاتصال',

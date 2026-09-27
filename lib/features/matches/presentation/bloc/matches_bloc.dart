@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:score154/core/utils/score_helper.dart';
 
+import '../../../../core/notifications/live_match_foreground_service.dart';
 import '../../../../core/notifications/match_notification_tracker.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -729,6 +730,17 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     // Always process live matches through notification tracker so goal alerts
     // fire immediately regardless of whether the UI state needed an overlay update.
     MatchNotificationTracker.instance.processMatches(liveMatches);
+
+    // Sync active matches with Android Foreground Service for zero-delay delivery
+    LiveMatchForegroundService.syncWithMatches(
+      matches: liveMatches,
+      isLiveMatchModeEnabled: localStorageService.isLiveMatchModeEnabled(),
+      favoriteTeamIds: localStorageService.getFavoriteTeams(),
+      favoriteMatchIds: [
+        ...localStorageService.getFavoriteMatches(),
+        ...localStorageService.getMatchNotificationIds(),
+      ],
+    );
   }
 
   void _onLivePollTick() async {
