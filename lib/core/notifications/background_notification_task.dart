@@ -205,11 +205,13 @@ bool _isStarredMatchEvent({
 }) {
   if (matchId.isNotEmpty) {
     final favMatches = prefs.getStringList('app_favorite_matches') ?? [];
-    if (favMatches.contains(matchId)) return true;
+    final matchNotifs = prefs.getStringList('match_notifications') ?? [];
+    if (favMatches.contains(matchId) || matchNotifs.contains(matchId)) return true;
   }
 
   final favTeams = prefs.getStringList('app_favorite_teams') ?? [];
   final teamNotifs = prefs.getStringList('team_notifications') ?? [];
+  final mutedTeams = (prefs.getStringList('team_notifications_muted') ?? []).toSet();
 
   final Set<String> targetNames = {};
   final rawTitles = prefs.getString('app_favorite_team_titles');
@@ -220,8 +222,8 @@ bool _isStarredMatchEvent({
         for (final entry in decoded.entries) {
           final k = entry.key.toString().trim().toLowerCase();
           final v = entry.value.toString().trim().toLowerCase();
-          if (k.isNotEmpty) targetNames.add(k);
-          if (v.isNotEmpty) targetNames.add(v);
+          if (k.isNotEmpty && !mutedTeams.contains(k)) targetNames.add(k);
+          if (v.isNotEmpty && !mutedTeams.contains(v)) targetNames.add(v);
         }
       }
     } catch (_) {}
@@ -229,17 +231,17 @@ bool _isStarredMatchEvent({
 
   for (final t in teamNotifs) {
     final trimmed = t.trim().toLowerCase();
-    if (trimmed.isNotEmpty) targetNames.add(trimmed);
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) targetNames.add(trimmed);
   }
 
   final Set<String> targetIds = {};
   for (final id in favTeams) {
     final trimmed = id.trim();
-    if (trimmed.isNotEmpty) targetIds.add(trimmed);
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) targetIds.add(trimmed);
   }
   for (final id in teamNotifs) {
     final trimmed = id.trim();
-    if (trimmed.isNotEmpty) targetIds.add(trimmed);
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) targetIds.add(trimmed);
   }
 
   if (targetNames.isEmpty && targetIds.isEmpty) {

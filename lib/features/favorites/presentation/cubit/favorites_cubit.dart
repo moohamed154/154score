@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/team_resolver.dart';
 
@@ -196,8 +198,18 @@ class FavoritesCubit extends Cubit<FavoritesState> {
   }
 
   Future<void> toggleTeam(String teamName, {String? id}) async {
+    final wasFav = isTeamFavorite(id: id, name: teamName);
     await _storage.toggleFavoriteTeam(teamName, id: id);
     loadFavorites();
+    final isFavNow = isTeamFavorite(id: id, name: teamName);
+    if (!wasFav && isFavNow) {
+      final key = (id != null && id.trim().isNotEmpty) ? id.trim() : teamName.trim();
+      await _storage.setTeamNotificationMuted(key, false);
+      if (!_storage.isTeamNotificationEnabled(key)) {
+        await _storage.toggleTeamNotification(key);
+      }
+      unawaited(NotificationService.instance.requestPermissions());
+    }
   }
 
   Future<void> registerTeamTitles(Map<String, String> titles) async {

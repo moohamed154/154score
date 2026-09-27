@@ -75,6 +75,13 @@ abstract class LocalStorageService {
   // Team & Match Notifications
   bool isTeamNotificationEnabled(String teamIdOrName) => false;
   Future<bool> toggleTeamNotification(String teamIdOrName) async => false;
+  bool isTeamNotificationMuted(String teamIdOrName) => false;
+  Future<bool> setTeamNotificationMuted(String teamIdOrName, bool muted) async => false;
+
+  bool isMatchNotificationEnabled(String matchId) => false;
+  Future<bool> toggleMatchNotification(String matchId) async => false;
+  Future<bool> setMatchNotificationEnabled(String matchId, bool enabled) async => false;
+  List<String> getMatchNotificationIds() => [];
 
   // Granular Notification Toggles
   bool isNewsNotificationEnabled();
@@ -676,6 +683,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   static const String _keyTeamNotifications = 'team_notifications';
+  static const String _keyTeamNotificationsMuted = 'team_notifications_muted';
+  static const String _keyMatchNotifications = 'match_notifications';
   static const String _keyNotifNews = 'notif_news_enabled';
   static const String _keyNotifLineup = 'notif_lineup_enabled';
   static const String _keyNotifGoals = 'notif_goals_enabled';
@@ -686,8 +695,35 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   bool isTeamNotificationEnabled(String teamIdOrName) {
     if (teamIdOrName.trim().isEmpty) return false;
+    final key = teamIdOrName.trim().toLowerCase();
+    if (isTeamNotificationMuted(key)) return false;
     final list = _prefs.getStringList(_keyTeamNotifications) ?? [];
-    return list.contains(teamIdOrName.trim().toLowerCase());
+    if (list.contains(key)) return true;
+    if (isFavoriteTeam(teamIdOrName, id: teamIdOrName)) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  bool isTeamNotificationMuted(String teamIdOrName) {
+    if (teamIdOrName.trim().isEmpty) return false;
+    final key = teamIdOrName.trim().toLowerCase();
+    final list = _prefs.getStringList(_keyTeamNotificationsMuted) ?? [];
+    return list.contains(key);
+  }
+
+  @override
+  Future<bool> setTeamNotificationMuted(String teamIdOrName, bool muted) async {
+    final key = teamIdOrName.trim().toLowerCase();
+    if (key.isEmpty) return false;
+    final list = (_prefs.getStringList(_keyTeamNotificationsMuted) ?? []).toList();
+    if (muted) {
+      if (!list.contains(key)) list.add(key);
+    } else {
+      list.remove(key);
+    }
+    return _prefs.setStringList(_keyTeamNotificationsMuted, list);
   }
 
   @override
@@ -695,14 +731,66 @@ class LocalStorageServiceImpl implements LocalStorageService {
     final key = teamIdOrName.trim().toLowerCase();
     if (key.isEmpty) return false;
     final list = (_prefs.getStringList(_keyTeamNotifications) ?? []).toList();
-    final enabled = !list.contains(key);
-    if (enabled) {
-      list.add(key);
+    final isCurrentlyActive = isTeamNotificationEnabled(key);
+    final nextStatus = !isCurrentlyActive;
+
+    if (nextStatus) {
+      if (!list.contains(key)) list.add(key);
+      await setTeamNotificationMuted(key, false);
     } else {
       list.remove(key);
+      await setTeamNotificationMuted(key, true);
     }
     await _prefs.setStringList(_keyTeamNotifications, list);
-    return enabled;
+    return nextStatus;
+  }
+
+  @override
+  List<String> getMatchNotificationIds() {
+    return _prefs.getStringList(_keyMatchNotifications) ?? [];
+  }
+
+  @override
+  bool isMatchNotificationEnabled(String matchId) {
+    if (matchId.trim().isEmpty) return false;
+    final id = matchId.trim();
+    final list = _prefs.getStringList(_keyMatchNotifications) ?? [];
+    if (list.contains(id)) return true;
+    return isFavoriteMatch(id);
+  }
+
+  @override
+  Future<bool> toggleMatchNotification(String matchId) async {
+    final id = matchId.trim();
+    if (id.isEmpty) return false;
+    final list = (_prefs.getStringList(_keyMatchNotifications) ?? []).toList();
+    final isCurrentlyEnabled = isMatchNotificationEnabled(id);
+    final nextState = !isCurrentlyEnabled;
+
+    if (nextState) {
+      if (!list.contains(id)) list.add(id);
+      if (!isFavoriteMatch(id)) await toggleFavoriteMatch(id);
+    } else {
+      list.remove(id);
+      if (isFavoriteMatch(id)) await toggleFavoriteMatch(id);
+    }
+    await _prefs.setStringList(_keyMatchNotifications, list);
+    return nextState;
+  }
+
+  @override
+  Future<bool> setMatchNotificationEnabled(String matchId, bool enabled) async {
+    final id = matchId.trim();
+    if (id.isEmpty) return false;
+    final list = (_prefs.getStringList(_keyMatchNotifications) ?? []).toList();
+    if (enabled) {
+      if (!list.contains(id)) list.add(id);
+      if (!isFavoriteMatch(id)) await toggleFavoriteMatch(id);
+    } else {
+      list.remove(id);
+      if (isFavoriteMatch(id)) await toggleFavoriteMatch(id);
+    }
+    return _prefs.setStringList(_keyMatchNotifications, list);
   }
 
   @override
@@ -752,39 +840,41 @@ class LocalStorageServiceImpl implements LocalStorageService {
     String? matchId,
     Map<String, dynamic>? data,
   }) {
-    // 1. If the match ID itself is favorited
+    // 1. If the match ID itself is favorited or has notification enabled
     if (matchId != null && matchId.isNotEmpty) {
       final favMatches = getFavoriteMatches();
-      if (favMatches.contains(matchId)) return true;
+      final matchNotifs = getMatchNotificationIds();
+      if (favMatches.contains(matchId) || matchNotifs.contains(matchId)) return true;
     }
 
-    // 2. Collect all starred / subscribed team tokens (IDs & titles)
+    // 2. Collect all starred / subscribed team tokens (IDs & titles, excluding muted)
     final favTeams = getFavoriteTeams();
     final favTitles = getFavoriteTeamTitles();
     final teamNotifs = _prefs.getStringList(_keyTeamNotifications) ?? [];
+    final mutedTeams = (_prefs.getStringList(_keyTeamNotificationsMuted) ?? []).toSet();
 
     final Set<String> targetNames = {};
     for (final t in favTitles.values) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty) targetNames.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) targetNames.add(trimmed);
     }
     for (final t in favTitles.keys) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty) targetNames.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) targetNames.add(trimmed);
     }
     for (final t in teamNotifs) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty) targetNames.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) targetNames.add(trimmed);
     }
 
     final Set<String> targetIds = {};
     for (final id in favTeams) {
       final trimmed = id.trim();
-      if (trimmed.isNotEmpty) targetIds.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) targetIds.add(trimmed);
     }
     for (final id in teamNotifs) {
       final trimmed = id.trim();
-      if (trimmed.isNotEmpty) targetIds.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) targetIds.add(trimmed);
     }
 
     // If user hasn't starred or subscribed to any teams at all, don't filter out everything

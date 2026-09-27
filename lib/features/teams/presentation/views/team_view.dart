@@ -23,6 +23,7 @@ import '../bloc/team_state.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../widgets/team_header_card.dart';
 
 class TeamView extends StatefulWidget {
@@ -74,13 +75,31 @@ class _TeamViewState extends State<TeamView>
     super.dispose();
   }
 
-  bool _isNotificationActive(String? id, String? name) {
+  bool _isNotificationActive(String? id, String? name, [FavoritesState? favState]) {
     try {
       final storage = sl<LocalStorageService>();
-      if (id != null && id.trim().isNotEmpty && storage.isTeamNotificationEnabled(id.trim())) {
+      final cleanId = id?.trim();
+      final cleanName = name?.trim();
+
+      if (cleanId != null && cleanId.isNotEmpty && storage.isTeamNotificationMuted(cleanId)) {
+        return false;
+      }
+      if (cleanName != null && cleanName.isNotEmpty && storage.isTeamNotificationMuted(cleanName)) {
+        return false;
+      }
+
+      // If team is starred, notification is enabled!
+      final isStarred = favState != null
+          ? favState.isFavoriteTeam(id: cleanId, name: cleanName)
+          : storage.isFavoriteTeam(cleanName ?? '', id: cleanId);
+      if (isStarred) {
         return true;
       }
-      if (name != null && name.trim().isNotEmpty && storage.isTeamNotificationEnabled(name.trim())) {
+
+      if (cleanId != null && cleanId.isNotEmpty && storage.isTeamNotificationEnabled(cleanId)) {
+        return true;
+      }
+      if (cleanName != null && cleanName.isNotEmpty && storage.isTeamNotificationEnabled(cleanName)) {
         return true;
       }
     } catch (_) {}
@@ -93,15 +112,51 @@ class _TeamViewState extends State<TeamView>
       final keyToToggle = (id != null && id.trim().isNotEmpty) ? id.trim() : name.trim();
       if (keyToToggle.isEmpty) return;
 
-      final newStatus = await storage.toggleTeamNotification(keyToToggle);
+      final isCurrentlyActive = _isNotificationActive(id, name);
+      final newStatus = !isCurrentlyActive;
+
       if (newStatus) {
-        unawaited(NotificationService.instance.requestPermissions());
+        await storage.setTeamNotificationMuted(keyToToggle, false);
+        if (!storage.isTeamNotificationEnabled(keyToToggle)) {
+          await storage.toggleTeamNotification(keyToToggle);
+        }
+        final granted = await NotificationService.instance.requestPermissions();
+        if (!granted && mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.notifications_off_rounded, color: Colors.white, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      isArabic
+                          ? 'يرجى تفعيل إذن الإشعارات من إعدادات الهاتف لتلقي التنبيهات'
+                          : 'Please enable notifications in device settings to receive alerts',
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.amber.shade900,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        await storage.setTeamNotificationMuted(keyToToggle, true);
+        if (storage.isTeamNotificationEnabled(keyToToggle)) {
+          await storage.toggleTeamNotification(keyToToggle);
+        }
       }
+
       if (name.trim().isNotEmpty && name.trim().toLowerCase() != keyToToggle.toLowerCase()) {
-        if (newStatus && !storage.isTeamNotificationEnabled(name.trim())) {
-          await storage.toggleTeamNotification(name.trim());
-        } else if (!newStatus && storage.isTeamNotificationEnabled(name.trim())) {
-          await storage.toggleTeamNotification(name.trim());
+        if (newStatus) {
+          await storage.setTeamNotificationMuted(name.trim(), false);
+        } else {
+          await storage.setTeamNotificationMuted(name.trim(), true);
         }
       }
 
@@ -110,17 +165,31 @@ class _TeamViewState extends State<TeamView>
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              newStatus
-                  ? (isArabic
-                      ? 'تم تفعيل إشعارات مباريات $name'
-                      : 'Match notifications enabled for $name')
-                  : (isArabic
-                      ? 'تم إيقاف إشعارات مباريات $name'
-                      : 'Match notifications disabled for $name'),
+            content: Row(
+              children: [
+                Icon(
+                  newStatus ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    newStatus
+                        ? (isArabic
+                            ? 'تم تفعيل إشعارات مباريات $name'
+                            : 'Match notifications enabled for $name')
+                        : (isArabic
+                            ? 'تم إيقاف إشعارات مباريات $name'
+                            : 'Match notifications disabled for $name'),
+                  ),
+                ),
+              ],
             ),
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            backgroundColor: newStatus ? AppColors.primary : Colors.grey.shade800,
           ),
         );
       }
@@ -151,12 +220,13 @@ class _TeamViewState extends State<TeamView>
               ).copyWith(fontWeight: FontWeight.w700),
             ),
             actions: [
-              Builder(
-                builder: (context) {
+              BlocBuilder<FavoritesCubit, FavoritesState>(
+                builder: (context, favState) {
                   final effectiveTeamId = state.profile?.teamId ?? state.teamId;
                   final isNotifActive = _isNotificationActive(
                     effectiveTeamId,
                     displayName,
+                    favState,
                   );
                   return IconButton(
                     icon: Icon(

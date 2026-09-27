@@ -22,10 +22,14 @@ import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/storage/local_storage_service.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../standings/presentation/bloc/standings_bloc.dart';
 import '../../../standings/presentation/widgets/standings_table.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
+import '../../../matches/presentation/bloc/matches_event.dart';
 import '../bloc/match_details_bloc.dart';
 import '../bloc/match_details_event.dart';
 import '../bloc/match_details_state.dart';
@@ -244,6 +248,135 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           _isSharing = false;
         });
       }
+    }
+  }
+
+  bool _isMatchNotificationActive(MatchEntity match, [FavoritesState? favState]) {
+    if (match.id.isEmpty) return false;
+    try {
+      final storage = sl<LocalStorageService>();
+      if (storage.isMatchNotificationEnabled(match.id)) {
+        return true;
+      }
+      if (favState != null && favState.isFavoriteMatch(match.id)) {
+        return true;
+      }
+
+      final homeId = match.team1Id;
+      final homeName = match.team1;
+      if (_isTeamNotificationActive(storage, homeId, homeName, favState)) {
+        return true;
+      }
+
+      final awayId = match.team2Id;
+      final awayName = match.team2;
+      if (_isTeamNotificationActive(storage, awayId, awayName, favState)) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  bool _isTeamNotificationActive(
+    LocalStorageService storage,
+    String? id,
+    String? name,
+    FavoritesState? favState,
+  ) {
+    final key = (id != null && id.trim().isNotEmpty) ? id.trim() : (name?.trim() ?? '');
+    if (key.isEmpty) return false;
+    if (storage.isTeamNotificationMuted(key)) return false;
+    if (storage.isTeamNotificationEnabled(key)) return true;
+    final isFav = favState != null
+        ? favState.isFavoriteTeam(id: id, name: name)
+        : storage.isFavoriteTeam(name ?? '', id: id);
+    return isFav;
+  }
+
+  Future<void> _toggleMatchNotification(MatchEntity match, AppLocalizations l10n) async {
+    final matchId = match.id;
+    if (matchId.isEmpty) return;
+
+    final storage = sl<LocalStorageService>();
+    final isCurrentlyActive = _isMatchNotificationActive(match);
+
+    try {
+      final nextStatus = !isCurrentlyActive;
+      if (nextStatus) {
+        final granted = await NotificationService.instance.requestPermissions();
+        if (!granted && mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.notifications_off_rounded, color: Colors.white, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.isArabic
+                          ? 'يرجى تفعيل إذن الإشعارات من إعدادات الهاتف لتلقي التنبيهات'
+                          : 'Please enable notifications in device settings to receive alerts',
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.amber.shade900,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          return;
+        }
+      }
+
+      await storage.setMatchNotificationEnabled(matchId, nextStatus);
+
+      if (mounted) {
+        try {
+          context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
+        } catch (_) {}
+        try {
+          context.read<FavoritesCubit>().loadFavorites();
+        } catch (_) {}
+      }
+
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  nextStatus ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    nextStatus
+                        ? (l10n.isArabic
+                            ? 'تم تفعيل إشعارات المباراة'
+                            : 'Match notifications enabled')
+                        : (l10n.isArabic
+                            ? 'تم إيقاف إشعارات المباراة'
+                            : 'Match notifications disabled'),
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            backgroundColor: nextStatus ? AppColors.primary : Colors.grey.shade800,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[MatchDetailsView] _toggleMatchNotification error: $e');
     }
   }
 
@@ -706,6 +839,37 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           },
         ),
         actions: [
+          BlocBuilder<FavoritesCubit, FavoritesState>(
+            builder: (context, favState) {
+              return BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
+                builder: (context, state) {
+                  final activeMatch = _resolveActiveMatch(
+                    fallbackMatch: fallbackMatch,
+                    liveFromMatches: liveFromMatches,
+                    state: state,
+                  );
+                  final isNotifActive = _isMatchNotificationActive(activeMatch, favState);
+                  return IconButton(
+                    icon: Icon(
+                      isNotifActive
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_none_rounded,
+                      color: isNotifActive ? AppColors.primary : null,
+                      size: 24,
+                    ),
+                    tooltip: isArabic
+                        ? (isNotifActive
+                            ? 'إيقاف إشعارات المباراة'
+                            : 'تفعيل إشعارات المباراة')
+                        : (isNotifActive
+                            ? 'Mute match notifications'
+                            : 'Enable match notifications'),
+                    onPressed: () => _toggleMatchNotification(activeMatch, l10n),
+                  );
+                },
+              );
+            },
+          ),
           _isSharing
               ? const Center(
                   child: Padding(
@@ -734,6 +898,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                     );
                   },
                 ),
+          const SizedBox(width: 4),
         ],
       ),
       body: RepaintBoundary(
