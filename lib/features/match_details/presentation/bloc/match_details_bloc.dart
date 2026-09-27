@@ -252,7 +252,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       if (!isCurrentlyLive &&
           (hasFinishedEvent ||
               (isPastMatch &&
-                  (knownScore1 != null || resolvedEvents.isNotEmpty)))) {
+                  (knownScore1 != null || knownScore2 != null || resolvedEvents.isNotEmpty)))) {
         if (resolvedStatus == null ||
             resolvedStatus.isEmpty ||
             !ScoreHelper.isFinishedStatus(resolvedStatus)) {

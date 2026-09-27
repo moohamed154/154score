@@ -725,8 +725,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         ),
       );
       _syncLiveRoomsAndPoller();
-      MatchNotificationTracker.instance.processMatches(liveMatches);
     }
+    // Always process live matches through notification tracker so goal alerts
+    // fire immediately regardless of whether the UI state needed an overlay update.
+    MatchNotificationTracker.instance.processMatches(liveMatches);
   }
 
   void _onLivePollTick() async {

@@ -44,15 +44,21 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       final list = response['data'] as List;
       final responseDate = response['date']?.toString() ?? defaultDate;
       return list.map((item) {
-        if (item is Map<String, dynamic>) {
-          return LeagueGroupDto.fromJson(item, date: responseDate);
+        if (item is Map) {
+          return LeagueGroupDto.fromJson(
+            Map<String, dynamic>.from(item),
+            date: responseDate,
+          );
         }
         return const LeagueGroupDto(leagueTitle: 'League', matches: []);
       }).toList();
     } else if (response is List) {
       return response.map((item) {
-        if (item is Map<String, dynamic>) {
-          return LeagueGroupDto.fromJson(item, date: defaultDate);
+        if (item is Map) {
+          return LeagueGroupDto.fromJson(
+            Map<String, dynamic>.from(item),
+            date: defaultDate,
+          );
         }
         return const LeagueGroupDto(leagueTitle: 'League', matches: []);
       }).toList();

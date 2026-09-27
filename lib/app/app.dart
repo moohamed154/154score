@@ -35,8 +35,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     try {
       sl<WebSocketService>().connect();
     } catch (_) {}
-    // Handle notification tap that launched the app from terminated state
+    // Handle notification permissions and launch payload on startup
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await NotificationService.instance.requestPermissions();
+      } catch (e) {
+        debugPrint('[App] requestPermissions error: $e');
+      }
+
       final payload = await NotificationService.instance.getLaunchPayload();
       if (payload != null && payload.isNotEmpty) {
         AppRouter.handleNotificationPayload(payload);

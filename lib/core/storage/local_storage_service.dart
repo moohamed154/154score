@@ -631,7 +631,13 @@ class LocalStorageServiceImpl implements LocalStorageService {
 
   @override
   bool isFavoriteMatch(String matchId) {
-    return getFavoriteMatches().contains(matchId);
+    if (matchId.trim().isEmpty) return false;
+    final clean = matchId.replaceAll('match:', '').trim();
+    final list = getFavoriteMatches();
+    return list.any((item) {
+      final c = item.replaceAll('match:', '').trim();
+      return c == clean || item == matchId;
+    });
   }
 
   @override
@@ -753,10 +759,15 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   bool isMatchNotificationEnabled(String matchId) {
     if (matchId.trim().isEmpty) return false;
-    final id = matchId.trim();
+    final clean = matchId.replaceAll('match:', '').trim();
     final list = _prefs.getStringList(_keyMatchNotifications) ?? [];
-    if (list.contains(id)) return true;
-    return isFavoriteMatch(id);
+    if (list.any((item) {
+      final c = item.replaceAll('match:', '').trim();
+      return c == clean || item == matchId;
+    })) {
+      return true;
+    }
+    return isFavoriteMatch(matchId);
   }
 
   @override

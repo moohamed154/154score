@@ -30,7 +30,9 @@ class RealtimeMergeEngine {
       bool leagueHasMatch = false;
 
       final updatedMatches = league.matches.map((m) {
-        final matchesId = update.matchId != null && m.id == update.matchId;
+        final cleanMId = m.id.replaceAll('match:', '').trim();
+        final cleanUId = (update.matchId ?? '').replaceAll('match:', '').trim();
+        final matchesId = cleanUId.isNotEmpty && (m.id == update.matchId || cleanMId == cleanUId);
         final matchesTeams =
             (update.team1 != null &&
             update.team2 != null &&

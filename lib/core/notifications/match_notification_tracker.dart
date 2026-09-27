@@ -287,8 +287,9 @@ class MatchNotificationTracker {
 
     final favMatches = (_prefs!.getStringList('app_favorite_matches') ??
         _prefs!.getStringList('favorite_matches') ??
-        []);
-    final matchNotifs = _prefs!.getStringList('match_notifications') ?? [];
+        []).map((s) => s.replaceAll('match:', '').trim()).toSet();
+    final matchNotifs = (_prefs!.getStringList('match_notifications') ?? [])
+        .map((s) => s.replaceAll('match:', '').trim()).toSet();
     if (favMatches.contains(cleanId) || matchNotifs.contains(cleanId)) return true;
 
     final mutedTeams = (_prefs!.getStringList('team_notifications_muted') ?? [])

@@ -12,9 +12,9 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   // ── Android Notification Channels ──────────────────────────────────────────
-  static const _channelMatchId = 'match_notifications';
+  static const _channelMatchId = 'match_notifications_v2';
   static const _channelMatchName = 'Match Events';
-  static const _channelMatchDesc = 'Goals, lineups, match start & end';
+  static const _channelMatchDesc = 'Instant goal alerts, match start and end';
 
   static const _channelNewsId = 'news_notifications';
   static const _channelNewsName = 'News';
@@ -31,7 +31,7 @@ class NotificationService {
     _initialized = true;
 
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher', // use app icon; replace with custom later
+      '@mipmap/ic_launcher',
     );
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -57,18 +57,18 @@ class NotificationService {
       onDidReceiveBackgroundNotificationResponse: _backgroundHandler,
     );
 
-    // Create Android channels
+    // Create Android channels with highest importance for heads-up alerts
     await _createChannel(
       id: _channelMatchId,
       name: _channelMatchName,
       description: _channelMatchDesc,
-      importance: Importance.high,
+      importance: Importance.max,
     );
     await _createChannel(
       id: _channelNewsId,
       name: _channelNewsName,
       description: _channelNewsDesc,
-      importance: Importance.defaultImportance,
+      importance: Importance.high,
     );
 
     // Request permission on Android 13+
@@ -249,16 +249,23 @@ class NotificationService {
     required String body,
     required String channelId,
     String? payload,
-    Priority priority = Priority.defaultPriority,
-    Importance importance = Importance.defaultImportance,
+    Priority priority = Priority.max,
+    Importance importance = Importance.max,
   }) async {
+    final isMatch = channelId == _channelMatchId;
     final androidDetails = AndroidNotificationDetails(
       channelId,
-      channelId == _channelMatchId ? _channelMatchName : _channelNewsName,
+      isMatch ? _channelMatchName : _channelNewsName,
       importance: importance,
       priority: priority,
+      playSound: true,
+      enableVibration: true,
       ticker: body,
-      styleInformation: BigTextStyleInformation(body),
+      styleInformation: BigTextStyleInformation(
+        body,
+        contentTitle: title,
+        summaryText: isMatch ? '154Score' : 'News',
+      ),
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -266,7 +273,7 @@ class NotificationService {
       presentSound: true,
       presentBanner: true,
       presentList: true,
-      interruptionLevel: InterruptionLevel.active,
+      interruptionLevel: InterruptionLevel.timeSensitive,
     );
     final details = NotificationDetails(
       android: androidDetails,
