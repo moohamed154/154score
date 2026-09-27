@@ -47,10 +47,16 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
     final aTeam = m['away_team']?.toString() ?? '';
     final hLogo = UrlHelper.normalizeImageUrl(m['home_logo']?.toString());
     final aLogo = UrlHelper.normalizeImageUrl(m['away_logo']?.toString());
-    final mStatus = m['status']?.toString() ?? '';
+    final rawStatus = m['status']?.toString().trim();
+    final mStatus = (rawStatus != null && rawStatus.isNotEmpty) ? rawStatus : 'لم تبدأ';
     final mStatusCode = m['status_code']?.toString();
     final mDate = m['date']?.toString();
-    final mTime = m['time']?.toString();
+    final rawTime = m['time']?.toString().trim();
+    String? mTime = rawTime;
+    if (mTime != null && RegExp(r'^\d{1,2}:\d{2}:\d{2}').hasMatch(mTime)) {
+      final parts = mTime.split(':');
+      mTime = '${parts[0]}:${parts[1]}';
+    }
     final champId = m['championship_id']?.toString() ?? leagueId;
     final champName = m['championship_name']?.toString();
     final champLogo = UrlHelper.normalizeImageUrl(

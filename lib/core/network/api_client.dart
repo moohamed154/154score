@@ -63,7 +63,10 @@ class ApiClient {
             final path = options.path;
             final isMatchEndpoint =
                 path.startsWith('/api/matches') ||
-                path.startsWith(ApiEndpoints.matches);
+                path.startsWith(ApiEndpoints.matches) ||
+                path.contains('/matches') ||
+                path.contains('/teams') ||
+                path.contains('/leagues');
             if (isMatchEndpoint) {
               options.queryParameters['utc-offset'] = offset.toString();
             }

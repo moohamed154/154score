@@ -15,6 +15,7 @@ import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/widgets/match_card.dart';
+import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../standings/presentation/widgets/standings_table.dart';
 import '../../domain/entities/team_entity.dart';
 import '../bloc/team_bloc.dart';
@@ -344,7 +345,7 @@ class _TeamViewState extends State<TeamView>
                                     score1: '0',
                                     score2: '0',
                                     status: 'لم تبدأ',
-                                    time: '22:00:00',
+                                    time: '22:00',
                                   ),
                                 ),
                               ),
@@ -408,6 +409,17 @@ class _TeamViewState extends State<TeamView>
     bool isDark,
     bool isArabic,
   ) {
+    String? timeFormat;
+    try {
+      timeFormat = context.watch<MatchesBloc>().state.timeFormat;
+    } catch (_) {
+      try {
+        if (sl.isRegistered<LocalStorageService>()) {
+          timeFormat = sl<LocalStorageService>().getTimeFormat();
+        }
+      } catch (_) {}
+    }
+
     final profile = state.profile;
     final online = profile?.onlineMatches ?? [];
     final upcoming = profile?.upcomingMatches ?? [];
@@ -431,7 +443,7 @@ class _TeamViewState extends State<TeamView>
           SectionHeader(
             title: isArabic ? 'مباريات جارية الآن' : 'Live Matches',
           ),
-          ...online.map((m) => MatchCard(match: m)),
+          ...online.map((m) => MatchCard(match: m, timeFormat: timeFormat)),
           const SizedBox(height: 12),
         ],
 
@@ -440,14 +452,14 @@ class _TeamViewState extends State<TeamView>
           SectionHeader(
             title: isArabic ? 'المباريات القادمة' : 'Upcoming Fixtures',
           ),
-          ...upcoming.map((m) => MatchCard(match: m)),
+          ...upcoming.map((m) => MatchCard(match: m, timeFormat: timeFormat)),
           const SizedBox(height: 12),
         ],
 
         // 3. Finished Results
         if (recent.isNotEmpty) ...[
           SectionHeader(title: isArabic ? 'النتائج السابقة' : 'Past Results'),
-          ...recent.map((m) => MatchCard(match: m)),
+          ...recent.map((m) => MatchCard(match: m, timeFormat: timeFormat)),
           const SizedBox(height: 12),
         ],
       ],

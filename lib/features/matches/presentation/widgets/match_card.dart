@@ -547,13 +547,18 @@ class MatchCard extends StatelessWidget {
         ],
       );
     } else if (isUpcoming) {
-      String activeFormat = timeFormat ?? '12h';
+      String activeFormat = timeFormat ?? '24h';
       if (timeFormat == null) {
         try {
-          if (sl.isRegistered<LocalStorageService>()) {
-            activeFormat = sl<LocalStorageService>().getTimeFormat();
-          }
-        } catch (_) {}
+          activeFormat =
+              context.select<MatchesBloc, String>((b) => b.state.timeFormat);
+        } catch (_) {
+          try {
+            if (sl.isRegistered<LocalStorageService>()) {
+              activeFormat = sl<LocalStorageService>().getTimeFormat();
+            }
+          } catch (_) {}
+        }
       }
       final timeStr =
           (match.time != null && match.time!.isNotEmpty && match.time != '-')
@@ -575,7 +580,32 @@ class MatchCard extends StatelessWidget {
       );
     } else {
       // Other state (e.g. postponed, cancelled)
-      final statusStr = match.status ?? (match.time ?? 'VS');
+      String activeFormat = timeFormat ?? '24h';
+      if (timeFormat == null) {
+        try {
+          activeFormat =
+              context.select<MatchesBloc, String>((b) => b.state.timeFormat);
+        } catch (_) {
+          try {
+            if (sl.isRegistered<LocalStorageService>()) {
+              activeFormat = sl<LocalStorageService>().getTimeFormat();
+            }
+          } catch (_) {}
+        }
+      }
+      String statusStr = match.status ?? (match.time ?? 'VS');
+      if (match.status == null ||
+          match.status!.trim().isEmpty ||
+          match.status == match.time ||
+          match.status == 'لم تبدأ') {
+        if (match.time != null && match.time!.isNotEmpty && match.time != '-') {
+          statusStr = DateFormatter.formatDisplayTime(
+            match.time!,
+            timeFormat: activeFormat,
+            isArabic: isArabic,
+          );
+        }
+      }
       content = Text(
         statusStr,
         style: TextStyle(

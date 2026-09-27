@@ -43,11 +43,26 @@ class DateFormatter {
 
     final trimmed = timeStr.trim();
 
-    // Regex matching "20:30", "8:30 pm", "08:30 م", "8:30", "08:30"
-    final regExp = RegExp(r'^(\d{1,2}):(\d{2})(?:\s*([صم]|AM|PM|am|pm))?$');
+    // Regex matching "20:30", "20:30:00", "8:30 pm", "08:30 م", "8:30", "08:30"
+    final regExp = RegExp(
+      r'^(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*([صم]|AM|PM|am|pm))?$',
+      caseSensitive: false,
+    );
     final match = regExp.firstMatch(trimmed);
 
     if (match == null) {
+      // Fallback for full DateTime strings like "2026-09-27 21:45:00"
+      final parsedDate = DateTime.tryParse(trimmed);
+      if (parsedDate != null) {
+        final hour = parsedDate.hour;
+        final minuteStr = parsedDate.minute.toString().padLeft(2, '0');
+        return _formatHourMinute(
+          hour,
+          minuteStr,
+          timeFormat: timeFormat,
+          isArabic: isArabic,
+        );
+      }
       return trimmed;
     }
 
@@ -64,6 +79,20 @@ class DateFormatter {
       }
     }
 
+    return _formatHourMinute(
+      hour,
+      minuteStr,
+      timeFormat: timeFormat,
+      isArabic: isArabic,
+    );
+  }
+
+  static String _formatHourMinute(
+    int hour,
+    String minuteStr, {
+    required String timeFormat,
+    required bool isArabic,
+  }) {
     if (timeFormat == '12h') {
       final isPm = hour >= 12;
       var h12 = hour % 12;

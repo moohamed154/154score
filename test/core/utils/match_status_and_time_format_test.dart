@@ -129,6 +129,49 @@ void main() {
       );
     });
 
+    test('formats time strings with seconds (HH:mm:ss) correctly in 24h and 12h', () {
+      expect(
+        DateFormatter.formatDisplayTime(
+          '21:45:00',
+          timeFormat: '24h',
+          isArabic: true,
+        ),
+        '21:45',
+      );
+      expect(
+        DateFormatter.formatDisplayTime(
+          '21:45:00',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
+        '09:45 م',
+      );
+      expect(
+        DateFormatter.formatDisplayTime(
+          '21:45:00',
+          timeFormat: '12h',
+          isArabic: false,
+        ),
+        '09:45 PM',
+      );
+      expect(
+        DateFormatter.formatDisplayTime(
+          '22:45:00',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
+        '10:45 م',
+      );
+      expect(
+        DateFormatter.formatDisplayTime(
+          '2026-09-27 21:45:00',
+          timeFormat: '24h',
+          isArabic: true,
+        ),
+        '21:45',
+      );
+    });
+
     test('handles empty and dash strings', () {
       expect(
         DateFormatter.formatDisplayTime('-', timeFormat: '12h', isArabic: true),
