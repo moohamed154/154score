@@ -24,6 +24,17 @@ class MatchNotificationTracker {
     try {
       await _prefs?.reload();
     } catch (_) {}
+    final savedKeys = _prefs?.getStringList('154score_sent_alert_keys') ?? [];
+    _sentAlertKeys.addAll(savedKeys);
+  }
+
+  Future<void> _recordAlert(String key) async {
+    _sentAlertKeys.add(key);
+    final list = _sentAlertKeys.toList();
+    if (list.length > 300) {
+      list.removeRange(0, list.length - 300);
+    }
+    await _prefs?.setStringList('154score_sent_alert_keys', list);
   }
 
   /// Processes leagues from MatchesBloc
@@ -109,7 +120,7 @@ class MatchNotificationTracker {
           // Team 1 scored!
           final alertKey = 'goal_${cleanId}_1_$s1';
           if (!_sentAlertKeys.contains(alertKey)) {
-            _sentAlertKeys.add(alertKey);
+            await _recordAlert(alertKey);
             await _sendGoalNotification(
               match: match,
               scoringTeam: match.team1,
@@ -122,7 +133,7 @@ class MatchNotificationTracker {
           // Team 2 scored!
           final alertKey = 'goal_${cleanId}_2_$s2';
           if (!_sentAlertKeys.contains(alertKey)) {
-            _sentAlertKeys.add(alertKey);
+            await _recordAlert(alertKey);
             await _sendGoalNotification(
               match: match,
               scoringTeam: match.team2,
@@ -147,7 +158,7 @@ class MatchNotificationTracker {
         if (wasUpcoming && isLiveNow) {
           final alertKey = 'start_$cleanId';
           if (!_sentAlertKeys.contains(alertKey)) {
-            _sentAlertKeys.add(alertKey);
+            await _recordAlert(alertKey);
             await _sendMatchStartNotification(match);
           }
         }
@@ -164,7 +175,7 @@ class MatchNotificationTracker {
         if (wasLive && isFinishedNow) {
           final alertKey = 'end_$cleanId';
           if (!_sentAlertKeys.contains(alertKey)) {
-            _sentAlertKeys.add(alertKey);
+            await _recordAlert(alertKey);
             await _sendMatchEndNotification(
               match: match,
               s1: s1 ?? previous.score1,
@@ -287,6 +298,10 @@ class MatchNotificationTracker {
   bool _isMatchTrackedFromPrefs(MatchEntity match) {
     if (_prefs == null) return false;
     final cleanId = match.id.replaceAll('match:', '').trim();
+
+    // Global scope check
+    final scope = _prefs!.getString('app_notif_match_scope') ?? 'starred_only';
+    if (scope == 'all_matches') return true;
 
     final favMatches = (_prefs!.getStringList('app_favorite_matches') ??
         _prefs!.getStringList('favorite_matches') ??

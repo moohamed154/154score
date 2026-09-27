@@ -8,6 +8,7 @@ import 'core/notifications/apns_notification_service.dart';
 import 'core/notifications/background_notification_task.dart';
 import 'core/notifications/live_match_foreground_service.dart';
 import 'core/notifications/notification_service.dart';
+import 'core/storage/local_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,8 +32,12 @@ void main() async {
   // 3. Android Zero-Delay Live Match Foreground Service
   try {
     await LiveMatchForegroundService.init();
+    final storage = sl<LocalStorageService>();
+    if (storage.isLiveMatchModeEnabled()) {
+      await LiveMatchForegroundService.startService();
+    }
   } catch (e) {
-    debugPrint('[main] LiveMatchForegroundService.init error: $e');
+    debugPrint('[main] LiveMatchForegroundService.init/start error: $e');
   }
 
   // 4. iOS Direct APNs registration (without Firebase)

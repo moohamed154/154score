@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../core/di/injection_container.dart';
 import '../core/localization/app_localizations.dart';
+import '../core/notifications/background_notification_task.dart';
 import '../core/notifications/foreground_notification_listener.dart';
 import '../core/notifications/live_match_foreground_service.dart';
 import '../core/notifications/notification_service.dart';
@@ -71,6 +73,25 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     sl<WebSocketService>().handleAppLifecycleState(state);
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      if (Platform.isAndroid) {
+        try {
+          final storage = sl<LocalStorageService>();
+          if (storage.isLiveMatchModeEnabled()) {
+            LiveMatchForegroundService.isRunning().then((running) {
+              if (!running) {
+                LiveMatchForegroundService.startService();
+              }
+            });
+          }
+        } catch (_) {}
+      }
+      try {
+        scheduleBackupNotificationPoll();
+      } catch (_) {}
+    }
   }
 
   @override

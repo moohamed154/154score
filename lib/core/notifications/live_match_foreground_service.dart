@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -40,9 +41,13 @@ class LiveMatchTaskHandler extends TaskHandler {
   Dio? _dio;
   SharedPreferences? _prefs;
   int _newsTickCount = 0;
+  int _todayPollTickCount = 0;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    DartPluginRegistrant.ensureInitialized();
+
     try {
       _dio = Dio(BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
@@ -97,15 +102,36 @@ class LiveMatchTaskHandler extends TaskHandler {
         queryParameters: {'lang': lang},
       );
 
+      List<MatchEntity> matches = [];
       if (res.statusCode == 200 && res.data != null) {
-        final matches = _parseMatches(res.data);
-        if (matches.isNotEmpty) {
-          // Process events (goals, match start/finish, red cards) with instant alerts
-          await MatchNotificationTracker.instance.processMatches(matches);
+        matches = _parseMatches(res.data);
+      }
 
-          // Update foreground notification display
-          _updateNotificationStatus(matches, lang);
-        }
+      // Periodically (every ~30s) or when no live matches, check today's fixtures
+      // so upcoming matches that kick off or finish are instantly detected
+      _todayPollTickCount++;
+      if (matches.isEmpty || _todayPollTickCount >= 6) {
+        _todayPollTickCount = 0;
+        final now = DateTime.now();
+        final dateStr =
+            '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+        try {
+          final todayRes = await _dio!.get(
+            ApiEndpoints.matchesByDate(dateStr),
+            queryParameters: {'lang': lang},
+          );
+          if (todayRes.statusCode == 200 && todayRes.data != null) {
+            final todayMatches = _parseMatches(todayRes.data);
+            if (todayMatches.isNotEmpty) {
+              await MatchNotificationTracker.instance.processMatches(todayMatches);
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (matches.isNotEmpty) {
+        await MatchNotificationTracker.instance.processMatches(matches);
+        _updateNotificationStatus(matches, lang);
       }
     } catch (e) {
       debugPrint('[LiveMatchTaskHandler] checkLiveMatches error: $e');
@@ -384,6 +410,8 @@ class LiveMatchForegroundService {
         autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
         allowWifiLock: true,
+        allowAutoRestart: true,
+        stopWithTask: false,
       ),
     );
     _isInitialized = true;
@@ -399,6 +427,10 @@ class LiveMatchForegroundService {
 
     final result = await FlutterForegroundTask.startService(
       serviceId: 154,
+      serviceTypes: [
+        ForegroundServiceTypes.dataSync,
+        ForegroundServiceTypes.remoteMessaging,
+      ],
       notificationTitle: customTitle ?? '154Score • خدمة التنبيهات والأخبار نشطة',
       notificationText: customText ?? 'متابعة حية للأهداف والأخبار العاجلة لحظة بلحظة',
       notificationButtons: [

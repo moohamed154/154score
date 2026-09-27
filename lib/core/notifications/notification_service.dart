@@ -12,21 +12,25 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   // ── Android Notification Channels ──────────────────────────────────────────
-  static const _channelMatchId = 'match_notifications_v2';
+  static const _channelMatchId = 'match_notifications_v3';
   static const _channelMatchName = 'Match Events';
   static const _channelMatchDesc = 'Instant goal alerts, match start and end';
 
-  static const _channelNewsId = 'news_notifications';
+  static const _channelNewsId = 'news_notifications_v2';
   static const _channelNewsName = 'News';
   static const _channelNewsDesc = 'Breaking news alerts';
 
   bool _initialized = false;
+  void Function(String? payload)? _onNotificationTap;
 
   /// Call once in [main] before [runApp].
   Future<void> initialize({
     /// Called when user taps a notification while app is running / background.
     void Function(String? payload)? onNotificationTap,
   }) async {
+    if (onNotificationTap != null) {
+      _onNotificationTap = onNotificationTap;
+    }
     if (_initialized) return;
     _initialized = true;
 
@@ -49,27 +53,31 @@ class NotificationService {
       iOS: darwinSettings,
     );
 
-    await _plugin.initialize(
-      settings,
-      onDidReceiveNotificationResponse: (response) {
-        onNotificationTap?.call(response.payload);
-      },
-      onDidReceiveBackgroundNotificationResponse: _backgroundHandler,
-    );
+    try {
+      await _plugin.initialize(
+        settings,
+        onDidReceiveNotificationResponse: (response) {
+          _onNotificationTap?.call(response.payload);
+        },
+        onDidReceiveBackgroundNotificationResponse: _backgroundHandler,
+      );
 
-    // Create Android channels with highest importance for heads-up alerts
-    await _createChannel(
-      id: _channelMatchId,
-      name: _channelMatchName,
-      description: _channelMatchDesc,
-      importance: Importance.max,
-    );
-    await _createChannel(
-      id: _channelNewsId,
-      name: _channelNewsName,
-      description: _channelNewsDesc,
-      importance: Importance.max,
-    );
+      // Create Android channels with highest importance for heads-up alerts
+      await _createChannel(
+        id: _channelMatchId,
+        name: _channelMatchName,
+        description: _channelMatchDesc,
+        importance: Importance.max,
+      );
+      await _createChannel(
+        id: _channelNewsId,
+        name: _channelNewsName,
+        description: _channelNewsDesc,
+        importance: Importance.max,
+      );
+    } catch (e) {
+      debugPrint('[NotificationService] initialize platform error: $e');
+    }
 
     // Request permission on Android 13+ (safe in background isolates)
     try {
@@ -155,6 +163,7 @@ class NotificationService {
       description: description,
       importance: importance,
       playSound: true,
+      enableVibration: true,
     );
     await _plugin
         .resolvePlatformSpecificImplementation<
@@ -178,8 +187,8 @@ class NotificationService {
       body: body,
       channelId: _channelMatchId,
       payload: payload,
-      priority: Priority.high,
-      importance: Importance.high,
+      priority: Priority.max,
+      importance: Importance.max,
     );
   }
 
@@ -195,6 +204,8 @@ class NotificationService {
       body: body,
       channelId: _channelMatchId,
       payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
     );
   }
 
@@ -210,8 +221,8 @@ class NotificationService {
       body: body,
       channelId: _channelMatchId,
       payload: payload,
-      priority: Priority.high,
-      importance: Importance.high,
+      priority: Priority.max,
+      importance: Importance.max,
     );
   }
 
@@ -227,6 +238,8 @@ class NotificationService {
       body: body,
       channelId: _channelMatchId,
       payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
     );
   }
 
@@ -242,6 +255,8 @@ class NotificationService {
       body: body,
       channelId: _channelNewsId,
       payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
     );
   }
 
@@ -263,11 +278,13 @@ class NotificationService {
     final androidDetails = AndroidNotificationDetails(
       channelId,
       isMatch ? _channelMatchName : _channelNewsName,
+      channelDescription: isMatch ? _channelMatchDesc : _channelNewsDesc,
       importance: importance,
       priority: priority,
       playSound: true,
       enableVibration: true,
       ticker: body,
+      icon: '@mipmap/ic_launcher',
       styleInformation: BigTextStyleInformation(
         body,
         contentTitle: title,

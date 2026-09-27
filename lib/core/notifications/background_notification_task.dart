@@ -1,6 +1,7 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -27,8 +28,19 @@ const _prefStartEndEnabled = 'notif_start_end_enabled';
 @pragma('vm:entry-point')
 void workmanagerCallback() {
   Workmanager().executeTask((task, inputData) async {
-    if (task == _taskName) {
-      await _runNotificationPoll();
+    WidgetsFlutterBinding.ensureInitialized();
+    DartPluginRegistrant.ensureInitialized();
+
+    try {
+      if (task == _taskName ||
+          task == _taskTag ||
+          task == Workmanager.iOSBackgroundTask ||
+          task.contains('notif') ||
+          task == 'iOSBackgroundTask') {
+        await _runNotificationPoll();
+      }
+    } catch (e) {
+      debugPrint('[workmanagerCallback] error executing $task: $e');
     }
     return Future.value(true);
   });
@@ -95,6 +107,15 @@ Future<void> _runNotificationPoll() async {
 
     // Read already-seen notification IDs (persist cross-session)
     final seenSet = (prefs.getStringList(_prefSeenIds) ?? []).toSet();
+    final isFirstRun = !prefs.containsKey(_prefSeenIds);
+    if (isFirstRun) {
+      final initialIds = items
+          .map((r) => r is Map ? r['id']?.toString() ?? '' : '')
+          .where((id) => id.isNotEmpty)
+          .toList();
+      await prefs.setStringList(_prefSeenIds, initialIds);
+      return;
+    }
     final List<String> newlySeenIds = [];
 
     for (final raw in items) {
@@ -387,10 +408,28 @@ Future<void> initBackgroundNotifications() async {
     constraints: Constraints(
       networkType: NetworkType.connected,
     ),
-    existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
     backoffPolicy: BackoffPolicy.linear,
     backoffPolicyDelay: const Duration(minutes: 5),
   );
+}
+
+/// Schedules an immediate one-off background task to poll notifications
+/// as a safety net when the app is backgrounded or closed.
+Future<void> scheduleBackupNotificationPoll() async {
+  try {
+    await Workmanager().registerOneOffTask(
+      'notif_oneoff_${DateTime.now().millisecondsSinceEpoch}',
+      _taskName,
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+      initialDelay: const Duration(seconds: 15),
+      existingWorkPolicy: ExistingWorkPolicy.replace,
+    );
+  } catch (e) {
+    debugPrint('[BackgroundNotifTask] scheduleBackupNotificationPoll error: $e');
+  }
 }
 
 /// Persists the current language so the background task uses the right locale.
