@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:score154/core/utils/score_helper.dart';
 
+import '../../../../core/notifications/match_notification_tracker.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/match_status_helper.dart';
@@ -225,6 +226,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             ),
           );
           _syncLiveRoomsAndPoller();
+          MatchNotificationTracker.instance.processLeagues(reconciledLeagues);
         },
         onFailure: (failure) {
           // If we already have cached data displayed, don't clobber it with an error screen on silent revalidation
@@ -532,6 +534,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         ),
       );
       _syncLiveRoomsAndPoller();
+      MatchNotificationTracker.instance.processLeagues(mergeResult.data);
     }
   }
 
@@ -722,6 +725,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         ),
       );
       _syncLiveRoomsAndPoller();
+      MatchNotificationTracker.instance.processMatches(liveMatches);
     }
   }
 

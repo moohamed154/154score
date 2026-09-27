@@ -166,9 +166,10 @@ class NotificationService {
     required String title,
     required String body,
     String? payload,
+    int? notificationId,
   }) async {
     await _show(
-      id: _stableId('goal_$matchId'),
+      id: notificationId ?? _stableId('goal_$matchId'),
       title: title,
       body: body,
       channelId: _channelMatchId,
@@ -271,13 +272,19 @@ class NotificationService {
       android: androidDetails,
       iOS: iosDetails,
     );
-    await _plugin.show(id, title, body, details, payload: payload);
+    try {
+      await _plugin.show(id, title, body, details, payload: payload);
+    } catch (e) {
+      debugPrint('[NotificationService] _show error: $e');
+    }
   }
 
   /// Converts a string key to a stable int ID (avoids duplicates for same event).
-  int _stableId(String key) {
+  static int stableId(String key) {
     return key.hashCode.abs() % 100000;
   }
+
+  int _stableId(String key) => stableId(key);
 
   /// Returns the launch payload if the app was opened from a tapped notification.
   Future<String?> getLaunchPayload() async {

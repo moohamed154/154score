@@ -1,10 +1,14 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../../features/matches/data/models/match_dto.dart';
+import '../../features/matches/domain/entities/match_entity.dart';
 import '../constants/api_endpoints.dart';
 import '../notifications/notification_service.dart';
+import 'match_notification_tracker.dart';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const _taskName = 'notifPollTask';
@@ -42,12 +46,22 @@ Future<void> _runNotificationPoll() async {
       receiveTimeout: const Duration(seconds: 20),
     ));
 
-    final response = await dio.get(
-      ApiEndpoints.notifications,
-      queryParameters: {'lang': lang},
-    );
+    final notifService = NotificationService.instance;
+    await notifService.initialize();
 
-    if (response.statusCode != 200 || response.data == null) return;
+    // 1. Poll live match events (goals, start, end) for tracked/starred matches & teams
+    await _pollLiveMatches(dio, prefs, lang, notifService);
+
+    // 2. Poll news / article notifications feed
+    Response? response;
+    try {
+      response = await dio.get(
+        ApiEndpoints.notifications,
+        queryParameters: {'lang': lang},
+      );
+    } catch (_) {}
+
+    if (response == null || response.statusCode != 200 || response.data == null) return;
 
     // Parse notifications
     final body = response.data;
@@ -75,10 +89,6 @@ Future<void> _runNotificationPoll() async {
     // Read already-seen notification IDs (persist cross-session)
     final seenSet = (prefs.getStringList(_prefSeenIds) ?? []).toSet();
     final List<String> newlySeenIds = [];
-
-    final notifService = NotificationService.instance;
-    // Ensure channels are created (lightweight if already done)
-    await notifService.initialize();
 
     for (final raw in items) {
       if (raw is! Map<String, dynamic>) continue;
@@ -185,6 +195,81 @@ Future<void> _runNotificationPoll() async {
     // ignore: avoid_print
     print('[BackgroundNotifTask] error: $e');
   }
+}
+
+Future<void> _pollLiveMatches(
+  Dio dio,
+  SharedPreferences prefs,
+  String lang,
+  NotificationService notifService,
+) async {
+  try {
+    dynamic matchesData;
+    try {
+      final liveRes = await dio.get(
+        ApiEndpoints.matchesLive,
+        queryParameters: {'lang': lang},
+      );
+      if (liveRes.statusCode == 200 && liveRes.data != null) {
+        matchesData = liveRes.data;
+      }
+    } catch (_) {}
+
+    if (matchesData == null) {
+      final now = DateTime.now();
+      final dateStr =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      try {
+        final res = await dio.get(
+          ApiEndpoints.matchesByDate(dateStr),
+          queryParameters: {'lang': lang},
+        );
+        if (res.statusCode == 200 && res.data != null) {
+          matchesData = res.data;
+        }
+      } catch (_) {}
+    }
+
+    if (matchesData == null) return;
+
+    final matches = _extractMatchesFromPayload(matchesData);
+    if (matches.isNotEmpty) {
+      await MatchNotificationTracker.instance.processMatches(matches);
+    }
+  } catch (e) {
+    debugPrint('[background_notification_task] _pollLiveMatches error: $e');
+  }
+}
+
+List<MatchEntity> _extractMatchesFromPayload(dynamic data) {
+  final result = <MatchEntity>[];
+  if (data is Map && data['data'] != null) {
+    final inner = data['data'];
+    if (inner is List) {
+      for (final item in inner) {
+        if (item is Map) {
+          if (item['matches'] is List) {
+            for (final m in item['matches']) {
+              if (m is Map) {
+                try {
+                  result.add(
+                    MatchDto.fromJson(Map<String, dynamic>.from(m)).toEntity(),
+                  );
+                } catch (_) {}
+              }
+            }
+          } else {
+            try {
+              result.add(
+                MatchDto.fromJson(Map<String, dynamic>.from(item)).toEntity(),
+              );
+            } catch (_) {}
+          }
+        }
+      }
+    }
+  }
+  return result;
 }
 
 bool _containsBrandWord(String text) {
