@@ -5,7 +5,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../core/di/injection_container.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/notifications/foreground_notification_listener.dart';
+import '../core/notifications/live_match_foreground_service.dart';
 import '../core/notifications/notification_service.dart';
+import '../core/storage/local_storage_service.dart';
 import '../core/theme/app_theme.dart';
 import '../features/favorites/presentation/cubit/favorites_cubit.dart';
 import '../features/home/presentation/cubit/home_cubit.dart';
@@ -41,6 +43,16 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         await NotificationService.instance.requestPermissions();
       } catch (e) {
         debugPrint('[App] requestPermissions error: $e');
+      }
+
+      // Always-on zero-delay foreground service for matches & news on Android
+      try {
+        final storage = sl<LocalStorageService>();
+        if (storage.isLiveMatchModeEnabled()) {
+          await LiveMatchForegroundService.startService();
+        }
+      } catch (e) {
+        debugPrint('[App] LiveMatchForegroundService start error: $e');
       }
 
       final payload = await NotificationService.instance.getLaunchPayload();
