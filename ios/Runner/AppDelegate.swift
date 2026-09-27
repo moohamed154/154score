@@ -36,8 +36,9 @@ import flutter_foreground_task
     }
 
     // Setup APNs MethodChannel for zero-delay notifications without Firebase
-    let controller = window?.rootViewController as? FlutterViewController
-    if let controller = controller {
+    if let registrar = self.registrar(forPlugin: "ApnsNotificationPlugin") {
+      setupApnsChannel(binaryMessenger: registrar.messenger())
+    } else if let controller = window?.rootViewController as? FlutterViewController {
       setupApnsChannel(binaryMessenger: controller.binaryMessenger)
     }
 

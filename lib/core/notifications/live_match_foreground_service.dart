@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/matches/data/models/match_dto.dart';
 import '../../features/matches/domain/entities/match_entity.dart';
 import '../constants/api_endpoints.dart';
+import '../storage/local_storage_service.dart';
 import '../utils/match_status_helper.dart';
 import 'match_notification_tracker.dart';
 import 'notification_service.dart';
@@ -45,24 +46,32 @@ class LiveMatchTaskHandler extends TaskHandler {
     try {
       _dio = Dio(BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: const {
+          'Accept': 'application/json',
+          'User-Agent': '154Score-Flutter/1.0',
+        },
       ));
       _prefs = await SharedPreferences.getInstance();
+      try {
+        await _prefs?.reload();
+      } catch (_) {}
       await NotificationService.instance.initialize();
+      debugPrint('[LiveMatchTaskHandler] onStart initialized successfully');
     } catch (e) {
       debugPrint('[LiveMatchTaskHandler] onStart error: $e');
     }
   }
 
   @override
-  void onRepeatEvent(DateTime timestamp) {
-    _checkLiveMatches();
+  void onRepeatEvent(DateTime timestamp) async {
+    await _checkLiveMatches();
     _newsTickCount++;
     if (_newsTickCount >= 2) {
-      // Check for breaking news every ~10 seconds for always zero delay!
+      // Check for breaking news & backend notifications every ~10 seconds
       _newsTickCount = 0;
-      _checkNewsNotifications();
+      await _checkNotificationsFeed();
     }
   }
 
@@ -70,10 +79,17 @@ class LiveMatchTaskHandler extends TaskHandler {
     try {
       _dio ??= Dio(BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: const {
+          'Accept': 'application/json',
+          'User-Agent': '154Score-Flutter/1.0',
+        },
       ));
       _prefs ??= await SharedPreferences.getInstance();
+      try {
+        await _prefs?.reload();
+      } catch (_) {}
 
       final lang = _prefs?.getString('154score_notif_lang') ?? 'ar';
       final res = await _dio!.get(
@@ -92,7 +108,7 @@ class LiveMatchTaskHandler extends TaskHandler {
         }
       }
     } catch (e) {
-      debugPrint('[LiveMatchTaskHandler] repeat check error: $e');
+      debugPrint('[LiveMatchTaskHandler] checkLiveMatches error: $e');
     }
   }
 
@@ -118,17 +134,21 @@ class LiveMatchTaskHandler extends TaskHandler {
     }
   }
 
-  Future<void> _checkNewsNotifications() async {
+  Future<void> _checkNotificationsFeed() async {
     try {
       _dio ??= Dio(BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: const {
+          'Accept': 'application/json',
+          'User-Agent': '154Score-Flutter/1.0',
+        },
       ));
       _prefs ??= await SharedPreferences.getInstance();
-
-      final newsEnabled = _prefs?.getBool('notif_news_enabled') ?? true;
-      if (!newsEnabled) return;
+      try {
+        await _prefs?.reload();
+      } catch (_) {}
 
       final lang = _prefs?.getString('154score_notif_lang') ?? 'ar';
       final res = await _dio!.get(
@@ -153,6 +173,25 @@ class LiveMatchTaskHandler extends TaskHandler {
         if (items.isEmpty) return;
 
         final seenSet = (_prefs?.getStringList('154score_seen_notif_ids') ?? []).toSet();
+        final isFirstRun = !(_prefs?.containsKey('154score_seen_notif_ids') ?? false);
+
+        // On cold first launch, seed existing IDs so we only alert on NEW incoming items
+        if (isFirstRun) {
+          final initialIds = items
+              .map((r) => r is Map ? r['id']?.toString() ?? '' : '')
+              .where((id) => id.isNotEmpty)
+              .toList();
+          await _prefs?.setStringList('154score_seen_notif_ids', initialIds);
+          return;
+        }
+
+        final storage = LocalStorageServiceImpl(_prefs!);
+        final newsEnabled = storage.isNewsNotificationEnabled();
+        final goalsEnabled = storage.isMatchGoalsNotificationEnabled();
+        final startEndEnabled = storage.isMatchStartEndNotificationEnabled();
+        final lineupEnabled = storage.isMatchLineupNotificationEnabled();
+
+        final notifService = NotificationService.instance;
         final List<String> newlySeenIds = [];
 
         for (final raw in items) {
@@ -160,24 +199,86 @@ class LiveMatchTaskHandler extends TaskHandler {
           final id = raw['id']?.toString() ?? '';
           if (id.isEmpty || seenSet.contains(id)) continue;
 
-          final type = raw['type']?.toString() ?? '';
-          if (type != 'news') continue;
-
           final title = raw['title']?.toString() ?? '';
           final notifBody = raw['body']?.toString() ?? '';
-          final articleId = (raw['data'] as Map?)?['article_id']?.toString() ?? '';
+          final type = raw['type']?.toString() ?? '';
+          final matchId = raw['match_id']?.toString() ?? '';
+          final data = raw['data'] as Map<String, dynamic>?;
+          final articleId = data?['article_id']?.toString() ?? '';
+
+          // Brand safety
+          if (_containsBrandWord(title) || _containsBrandWord(notifBody)) {
+            newlySeenIds.add(id);
+            continue;
+          }
 
           final payload = jsonEncode({
-            'type': 'news',
+            'type': type == 'news' ? 'news' : 'match',
+            if (matchId.isNotEmpty) 'match_id': matchId,
             if (articleId.isNotEmpty) 'article_id': articleId,
           });
 
-          await NotificationService.instance.showNewsNotification(
-            articleId: articleId.isNotEmpty ? articleId : id,
-            title: title,
-            body: notifBody,
-            payload: payload,
-          );
+          // Check if match event is tracked
+          bool isTrackedEvent() {
+            final scope = storage.getMatchNotificationScope();
+            if (scope == LocalStorageService.matchNotifScopeAll) return true;
+            return storage.isNotificationMatchingStarredTeams(
+              title: title,
+              body: notifBody,
+              matchId: matchId.isNotEmpty ? matchId : null,
+              data: data,
+            );
+          }
+
+          switch (type) {
+            case 'news':
+              if (newsEnabled) {
+                await notifService.showNewsNotification(
+                  articleId: articleId.isNotEmpty ? articleId : id,
+                  title: title,
+                  body: notifBody,
+                  payload: payload,
+                );
+              }
+            case 'goal':
+              if (goalsEnabled && isTrackedEvent()) {
+                await notifService.showGoalNotification(
+                  matchId: matchId.isNotEmpty ? matchId : id,
+                  title: title,
+                  body: notifBody,
+                  payload: payload,
+                );
+              }
+            case 'match_start':
+              if (startEndEnabled && isTrackedEvent()) {
+                await notifService.showMatchStartNotification(
+                  matchId: matchId.isNotEmpty ? matchId : id,
+                  title: title,
+                  body: notifBody,
+                  payload: payload,
+                );
+              }
+            case 'match_end':
+              if (startEndEnabled && isTrackedEvent()) {
+                await notifService.showMatchEndNotification(
+                  matchId: matchId.isNotEmpty ? matchId : id,
+                  title: title,
+                  body: notifBody,
+                  payload: payload,
+                );
+              }
+            case 'lineup':
+              if (lineupEnabled && isTrackedEvent()) {
+                await notifService.showLineupNotification(
+                  matchId: matchId.isNotEmpty ? matchId : id,
+                  title: title,
+                  body: notifBody,
+                  payload: payload,
+                );
+              }
+            default:
+              break;
+          }
 
           newlySeenIds.add(id);
         }
@@ -192,8 +293,17 @@ class LiveMatchTaskHandler extends TaskHandler {
         }
       }
     } catch (e) {
-      debugPrint('[LiveMatchTaskHandler] checkNewsNotifications error: $e');
+      debugPrint('[LiveMatchTaskHandler] checkNotificationsFeed error: $e');
     }
+  }
+
+  bool _containsBrandWord(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('yallashoot') ||
+        lower.contains('yalla shoot') ||
+        lower.contains('يلا شوت') ||
+        lower.contains('يلاشوت') ||
+        lower.contains('ysscores');
   }
 
   @override

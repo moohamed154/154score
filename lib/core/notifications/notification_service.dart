@@ -68,7 +68,7 @@ class NotificationService {
       id: _channelNewsId,
       name: _channelNewsName,
       description: _channelNewsDesc,
-      importance: Importance.high,
+      importance: Importance.max,
     );
 
     // Request permission on Android 13+ (safe in background isolates)
@@ -256,6 +256,9 @@ class NotificationService {
     Priority priority = Priority.max,
     Importance importance = Importance.max,
   }) async {
+    if (!_initialized) {
+      await initialize();
+    }
     final isMatch = channelId == _channelMatchId;
     final androidDetails = AndroidNotificationDetails(
       channelId,

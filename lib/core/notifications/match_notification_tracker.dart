@@ -21,6 +21,9 @@ class MatchNotificationTracker {
 
   Future<void> _ensurePrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
+    try {
+      await _prefs?.reload();
+    } catch (_) {}
   }
 
   /// Processes leagues from MatchesBloc
@@ -95,7 +98,7 @@ class MatchNotificationTracker {
     if (isTracked) {
       final storage = sl.isRegistered<LocalStorageService>()
           ? sl<LocalStorageService>()
-          : null;
+          : (_prefs != null ? LocalStorageServiceImpl(_prefs!) : null);
 
       // ── A. Goal Event Detection ───────────────────────────────────────────
       final goalsEnabled = storage?.isMatchGoalsNotificationEnabled() ??
@@ -193,7 +196,7 @@ class MatchNotificationTracker {
     try {
       final storage = sl.isRegistered<LocalStorageService>()
           ? sl<LocalStorageService>()
-          : null;
+          : (_prefs != null ? LocalStorageServiceImpl(_prefs!) : null);
       if (storage != null) {
         // 1. Single match notification or favorited match
         if (match.id.isNotEmpty) {
