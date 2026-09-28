@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
+import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
+import '../errors/exceptions.dart';
 import '../network/network_info.dart';
 import 'websocket_event.dart';
 
@@ -223,6 +225,7 @@ class WebSocketServiceImpl implements WebSocketService {
     if (_socket != null) return;
 
     try {
+      final apiKey = AppConfig.validateApiKey();
       _updateStatus(SocketConnectionState.connecting);
 
       if (kDebugMode) {
@@ -237,7 +240,8 @@ class WebSocketServiceImpl implements WebSocketService {
         ApiEndpoints.websocketUrl,
         io.OptionBuilder()
             .setPath('/socket.io/')
-            .setTransports(['websocket', 'polling'])
+            .setTransports(['websocket'])
+            .setAuth({'apiKey': apiKey})
             .disableAutoConnect()
             .enableReconnection()
             .setReconnectionAttempts(15)
@@ -248,6 +252,12 @@ class WebSocketServiceImpl implements WebSocketService {
       );
 
       _setupSocketListeners(startTime);
+    } on ConfigurationException catch (e) {
+      _lastError = 'API_CONFIGURATION_ERROR';
+      if (kDebugMode) {
+        debugPrint('[WS] API configuration error: ${e.message}');
+      }
+      _updateStatus(SocketConnectionState.error);
     } catch (e) {
       _lastError = e.toString();
       if (kDebugMode) {
@@ -285,7 +295,19 @@ class WebSocketServiceImpl implements WebSocketService {
 
     socket.onConnectError((data) {
       _isConnecting = false;
-      _lastError = data?.toString() ?? 'Connection error';
+      final rawError = data?.toString() ?? 'Connection error';
+      final lowered = rawError.toLowerCase();
+      if (lowered.contains('auth') || lowered.contains('forbidden')) {
+        _lastError = 'WEBSOCKET_AUTH_FAILED';
+        // socket.io is a Manager; do not keep retrying on an invalid API key.
+        final options = socket.io.options;
+        if (options != null) {
+          options['reconnection'] = false;
+        }
+        socket.disconnect();
+      } else {
+        _lastError = rawError;
+      }
       if (kDebugMode) {
         debugPrint('[WS] Connect error: $_lastError');
       }

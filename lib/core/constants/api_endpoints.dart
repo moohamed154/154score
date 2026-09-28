@@ -1,9 +1,10 @@
+import '../config/app_config.dart';
+
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const String baseUrl = 'https://moohamed154-154score-api.hf.space';
-  static const String websocketUrl =
-      'https://moohamed154-154score-api.hf.space';
+  static String get baseUrl => AppConfig.apiBaseUrl;
+  static String get websocketUrl => AppConfig.apiBaseUrl;
 
   // WebSocket Channels / Rooms
   static const String wsChannelAr = 'live_matches_ar';

@@ -135,7 +135,7 @@ class DebugConsole {
       queryParameters: response.requestOptions.queryParameters.isNotEmpty
           ? Map<String, dynamic>.from(response.requestOptions.queryParameters)
           : null,
-      headers: Map<String, dynamic>.from(response.requestOptions.headers),
+      headers: _redactHeaders(response.requestOptions.headers),
       requestData: response.requestOptions.data,
       statusCode: response.statusCode,
       statusMessage: response.statusMessage,
@@ -163,7 +163,7 @@ class DebugConsole {
       queryParameters: error.requestOptions.queryParameters.isNotEmpty
           ? Map<String, dynamic>.from(error.requestOptions.queryParameters)
           : null,
-      headers: Map<String, dynamic>.from(error.requestOptions.headers),
+      headers: _redactHeaders(error.requestOptions.headers),
       requestData: error.requestOptions.data,
       statusCode: error.response?.statusCode,
       statusMessage: error.response?.statusMessage,
@@ -218,6 +218,9 @@ class DebugConsole {
 
     if (record.isError && record.errorMessage != null) {
       buf.writeln('│ Error: ${record.errorMessage}');
+    }
+    if (record.headers != null && record.headers!.isNotEmpty) {
+      buf.writeln('│ Headers: ${_redactHeaders(record.headers!)}');
     }
 
     buf.writeln('│ Response Body:');
@@ -300,6 +303,27 @@ class DebugConsole {
       }
     }
   }
+
+  static Map<String, dynamic> _redactHeaders(Map<String, dynamic>? headers) {
+    if (headers == null || headers.isEmpty) {
+      return <String, dynamic>{};
+    }
+
+    final safeHeaders = <String, dynamic>{};
+    for (final entry in headers.entries) {
+      final key = entry.key.toString();
+      final normalized = key.toLowerCase();
+      if (normalized == 'x-api-key' ||
+          normalized == 'authorization' ||
+          normalized == 'cookie' ||
+          normalized == 'set-cookie') {
+        safeHeaders[key] = '[REDACTED]';
+      } else {
+        safeHeaders[key] = entry.value;
+      }
+    }
+    return safeHeaders;
+  }
 }
 
 /// NavigatorObserver that tracks active pages and logs navigation events.
@@ -344,6 +368,7 @@ class DebugConsoleInterceptor extends Interceptor {
     options.extra[_startTimeKey] = DateTime.now().millisecondsSinceEpoch;
 
     if (DebugConsole.enabled && DebugConsole.autoPrintRequests) {
+      final safeHeaders = DebugConsole._redactHeaders(options.headers);
       final buf = StringBuffer()
         ..writeln(
           '┌─────────────────────────────────────────────────────────────────────────────',
@@ -351,7 +376,7 @@ class DebugConsoleInterceptor extends Interceptor {
         ..writeln(
           '│ 🌐 [API REQUEST] ${options.method.toUpperCase()} ${options.uri}',
         )
-        ..writeln('│ Headers: ${options.headers}');
+        ..writeln('│ Headers: $safeHeaders');
       if (options.data != null) {
         buf.writeln('│ Body: ${options.data}');
       }

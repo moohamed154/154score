@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -9,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/matches/data/models/match_dto.dart';
 import '../../features/matches/domain/entities/match_entity.dart';
+import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 import '../storage/local_storage_service.dart';
 import '../utils/match_status_helper.dart';
@@ -49,15 +51,18 @@ class LiveMatchTaskHandler extends TaskHandler {
     DartPluginRegistrant.ensureInitialized();
 
     try {
-      _dio = Dio(BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: const {
-          'Accept': 'application/json',
-          'User-Agent': '154Score-Flutter/1.0',
-        },
-      ));
+      _dio = Dio(
+        BaseOptions(
+          baseUrl: ApiEndpoints.baseUrl,
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': '154Score-Flutter/1.0',
+            'X-API-Key': AppConfig.validateApiKey(),
+          },
+        ),
+      );
       _prefs = await SharedPreferences.getInstance();
       try {
         await _prefs?.reload();
@@ -82,15 +87,18 @@ class LiveMatchTaskHandler extends TaskHandler {
 
   Future<void> _checkLiveMatches() async {
     try {
-      _dio ??= Dio(BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: const {
-          'Accept': 'application/json',
-          'User-Agent': '154Score-Flutter/1.0',
-        },
-      ));
+      _dio ??= Dio(
+        BaseOptions(
+          baseUrl: ApiEndpoints.baseUrl,
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': '154Score-Flutter/1.0',
+            'X-API-Key': AppConfig.validateApiKey(),
+          },
+        ),
+      );
       _prefs ??= await SharedPreferences.getInstance();
       try {
         await _prefs?.reload();
@@ -123,7 +131,9 @@ class LiveMatchTaskHandler extends TaskHandler {
           if (todayRes.statusCode == 200 && todayRes.data != null) {
             final todayMatches = _parseMatches(todayRes.data);
             if (todayMatches.isNotEmpty) {
-              await MatchNotificationTracker.instance.processMatches(todayMatches);
+              await MatchNotificationTracker.instance.processMatches(
+                todayMatches,
+              );
             }
           }
         } catch (_) {}
@@ -146,7 +156,9 @@ class LiveMatchTaskHandler extends TaskHandler {
           ? 'جارٍ متابعة ${liveMatches.length} مباريات مباشرة بدون أي تأخير...'
           : 'Tracking ${liveMatches.length} live matches with zero delay...';
       FlutterForegroundTask.updateService(
-        notificationTitle: isAr ? '154Score • المتابعة المباشرة نشطة' : '154Score • Live Alerts Active',
+        notificationTitle: isAr
+            ? '154Score • المتابعة المباشرة نشطة'
+            : '154Score • Live Alerts Active',
         notificationText: text,
       );
     } else {
@@ -154,7 +166,9 @@ class LiveMatchTaskHandler extends TaskHandler {
           ? 'متابعة حية للأهداف والأخبار العاجلة لحظياً'
           : 'Live tracking of goals & breaking news in real-time';
       FlutterForegroundTask.updateService(
-        notificationTitle: isAr ? '154Score • خدمة التنبيهات الفورية نشطة' : '154Score • Instant Alerts Active',
+        notificationTitle: isAr
+            ? '154Score • خدمة التنبيهات الفورية نشطة'
+            : '154Score • Instant Alerts Active',
         notificationText: text,
       );
     }
@@ -162,15 +176,18 @@ class LiveMatchTaskHandler extends TaskHandler {
 
   Future<void> _checkNotificationsFeed() async {
     try {
-      _dio ??= Dio(BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: const {
-          'Accept': 'application/json',
-          'User-Agent': '154Score-Flutter/1.0',
-        },
-      ));
+      _dio ??= Dio(
+        BaseOptions(
+          baseUrl: ApiEndpoints.baseUrl,
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': '154Score-Flutter/1.0',
+            'X-API-Key': AppConfig.validateApiKey(),
+          },
+        ),
+      );
       _prefs ??= await SharedPreferences.getInstance();
       try {
         await _prefs?.reload();
@@ -198,8 +215,10 @@ class LiveMatchTaskHandler extends TaskHandler {
 
         if (items.isEmpty) return;
 
-        final seenSet = (_prefs?.getStringList('154score_seen_notif_ids') ?? []).toSet();
-        final isFirstRun = !(_prefs?.containsKey('154score_seen_notif_ids') ?? false);
+        final seenSet = (_prefs?.getStringList('154score_seen_notif_ids') ?? [])
+            .toSet();
+        final isFirstRun =
+            !(_prefs?.containsKey('154score_seen_notif_ids') ?? false);
 
         // On cold first launch, seed existing IDs so we only alert on NEW incoming items
         if (isFirstRun) {
@@ -364,13 +383,18 @@ class LiveMatchTaskHandler extends TaskHandler {
               for (final m in item['matches']) {
                 if (m is Map) {
                   try {
-                    result.add(MatchDto.fromJson(Map<String, dynamic>.from(m)).toEntity());
+                    result.add(
+                      MatchDto.fromJson(Map<String, dynamic>.from(m))
+                          .toEntity(),
+                    );
                   } catch (_) {}
                 }
               }
             } else {
               try {
-                result.add(MatchDto.fromJson(Map<String, dynamic>.from(item)).toEntity());
+                result.add(
+                  MatchDto.fromJson(Map<String, dynamic>.from(item)).toEntity(),
+                );
               } catch (_) {}
             }
           }
@@ -405,7 +429,9 @@ class LiveMatchForegroundService {
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(5000), // Poll every 5s for zero-delay
+        eventAction: ForegroundTaskEventAction.repeat(
+          5000,
+        ), // Poll every 5s for zero-delay
         autoRunOnBoot: true,
         autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
@@ -417,7 +443,10 @@ class LiveMatchForegroundService {
     _isInitialized = true;
   }
 
-  static Future<bool> startService({String? customTitle, String? customText}) async {
+  static Future<bool> startService({
+    String? customTitle,
+    String? customText,
+  }) async {
     if (!Platform.isAndroid) return false;
     await init();
 
@@ -431,10 +460,15 @@ class LiveMatchForegroundService {
         ForegroundServiceTypes.dataSync,
         ForegroundServiceTypes.remoteMessaging,
       ],
-      notificationTitle: customTitle ?? '154Score • خدمة التنبيهات والأخبار نشطة',
-      notificationText: customText ?? 'متابعة حية للأهداف والأخبار العاجلة لحظة بلحظة',
+      notificationTitle:
+          customTitle ?? '154Score • خدمة التنبيهات والأخبار نشطة',
+      notificationText:
+          customText ?? 'متابعة حية للأهداف والأخبار العاجلة لحظة بلحظة',
       notificationButtons: [
-        const NotificationButton(id: 'btn_stop_tracking', text: 'إيقاف المتابعة'),
+        const NotificationButton(
+          id: 'btn_stop_tracking',
+          text: 'إيقاف المتابعة',
+        ),
       ],
       notificationInitialRoute: '/',
       callback: startLiveMatchCallback,

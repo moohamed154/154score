@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,7 @@ import 'package:workmanager/workmanager.dart';
 
 import '../../features/matches/data/models/match_dto.dart';
 import '../../features/matches/domain/entities/match_entity.dart';
+import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 import '../notifications/notification_service.dart';
 import 'match_notification_tracker.dart';
@@ -55,15 +57,18 @@ Future<void> _runNotificationPoll() async {
     } catch (_) {}
     final lang = prefs.getString(_prefLastLang) ?? 'ar';
 
-    final dio = Dio(BaseOptions(
-      baseUrl: ApiEndpoints.baseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      headers: const {
-        'Accept': 'application/json',
-        'User-Agent': '154Score-Flutter/1.0',
-      },
-    ));
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiEndpoints.baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': '154Score-Flutter/1.0',
+          'X-API-Key': AppConfig.validateApiKey(),
+        },
+      ),
+    );
 
     final notifService = NotificationService.instance;
     await notifService.initialize();
@@ -80,7 +85,8 @@ Future<void> _runNotificationPoll() async {
       );
     } catch (_) {}
 
-    if (response == null || response.statusCode != 200 || response.data == null) return;
+    if (response == null || response.statusCode != 200 || response.data == null)
+      return;
 
     // Parse notifications
     final body = response.data;
@@ -103,7 +109,8 @@ Future<void> _runNotificationPoll() async {
     final lineupEnabled = prefs.getBool(_prefLineupEnabled) ?? true;
     final goalsEnabled = prefs.getBool(_prefGoalsEnabled) ?? true;
     final startEndEnabled = prefs.getBool(_prefStartEndEnabled) ?? true;
-    final matchScope = prefs.getString('app_notif_match_scope') ?? 'starred_only';
+    final matchScope =
+        prefs.getString('app_notif_match_scope') ?? 'starred_only';
 
     // Read already-seen notification IDs (persist cross-session)
     final seenSet = (prefs.getStringList(_prefSeenIds) ?? []).toSet();
@@ -127,10 +134,7 @@ Future<void> _runNotificationPoll() async {
       final title = raw['title']?.toString() ?? '';
       final notifBody = raw['body']?.toString() ?? '';
       final matchId = raw['match_id']?.toString() ?? '';
-      final articleId = (raw['data'] as Map?)
-              ?['article_id']
-              ?.toString() ??
-          '';
+      final articleId = (raw['data'] as Map?)?['article_id']?.toString() ?? '';
 
       // Sanitize – should already be done by the API, but double-check
       if (_containsBrandWord(title) || _containsBrandWord(notifBody)) {
@@ -319,12 +323,14 @@ bool _isStarredMatchEvent({
   if (matchId.isNotEmpty) {
     final favMatches = prefs.getStringList('app_favorite_matches') ?? [];
     final matchNotifs = prefs.getStringList('match_notifications') ?? [];
-    if (favMatches.contains(matchId) || matchNotifs.contains(matchId)) return true;
+    if (favMatches.contains(matchId) || matchNotifs.contains(matchId))
+      return true;
   }
 
   final favTeams = prefs.getStringList('app_favorite_teams') ?? [];
   final teamNotifs = prefs.getStringList('team_notifications') ?? [];
-  final mutedTeams = (prefs.getStringList('team_notifications_muted') ?? []).toSet();
+  final mutedTeams = (prefs.getStringList('team_notifications_muted') ?? [])
+      .toSet();
 
   final Set<String> targetNames = {};
   final rawTitles = prefs.getString('app_favorite_team_titles');
@@ -344,17 +350,20 @@ bool _isStarredMatchEvent({
 
   for (final t in teamNotifs) {
     final trimmed = t.trim().toLowerCase();
-    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) targetNames.add(trimmed);
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed))
+      targetNames.add(trimmed);
   }
 
   final Set<String> targetIds = {};
   for (final id in favTeams) {
     final trimmed = id.trim();
-    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) targetIds.add(trimmed);
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase()))
+      targetIds.add(trimmed);
   }
   for (final id in teamNotifs) {
     final trimmed = id.trim();
-    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) targetIds.add(trimmed);
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase()))
+      targetIds.add(trimmed);
   }
 
   if (targetNames.isEmpty && targetIds.isEmpty) {
@@ -362,8 +371,10 @@ bool _isStarredMatchEvent({
   }
 
   if (data != null) {
-    final homeId = data['home_team_id']?.toString() ?? data['home_id']?.toString();
-    final awayId = data['away_team_id']?.toString() ?? data['away_id']?.toString();
+    final homeId =
+        data['home_team_id']?.toString() ?? data['home_id']?.toString();
+    final awayId =
+        data['away_team_id']?.toString() ?? data['away_id']?.toString();
     final teamId = data['team_id']?.toString();
     if ((homeId != null && targetIds.contains(homeId)) ||
         (awayId != null && targetIds.contains(awayId)) ||
@@ -373,10 +384,12 @@ bool _isStarredMatchEvent({
 
     final homeName = data['home_team']?.toString().toLowerCase();
     final awayName = data['away_team']?.toString().toLowerCase();
-    if (homeName != null && targetNames.any((n) => homeName.contains(n) || n.contains(homeName))) {
+    if (homeName != null &&
+        targetNames.any((n) => homeName.contains(n) || n.contains(homeName))) {
       return true;
     }
-    if (awayName != null && targetNames.any((n) => awayName.contains(n) || n.contains(awayName))) {
+    if (awayName != null &&
+        targetNames.any((n) => awayName.contains(n) || n.contains(awayName))) {
       return true;
     }
   }
@@ -396,18 +409,14 @@ bool _isStarredMatchEvent({
 
 /// Call once in [main] after [WidgetsFlutterBinding.ensureInitialized].
 Future<void> initBackgroundNotifications() async {
-  await Workmanager().initialize(
-    workmanagerCallback,
-  );
+  await Workmanager().initialize(workmanagerCallback);
 
   // Register a periodic poll every 15 minutes (minimum on Android)
   await Workmanager().registerPeriodicTask(
     _taskTag,
     _taskName,
     frequency: const Duration(minutes: 15),
-    constraints: Constraints(
-      networkType: NetworkType.connected,
-    ),
+    constraints: Constraints(networkType: NetworkType.connected),
     existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
     backoffPolicy: BackoffPolicy.linear,
     backoffPolicyDelay: const Duration(minutes: 5),
@@ -421,14 +430,14 @@ Future<void> scheduleBackupNotificationPoll() async {
     await Workmanager().registerOneOffTask(
       'notif_oneoff_${DateTime.now().millisecondsSinceEpoch}',
       _taskName,
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
+      constraints: Constraints(networkType: NetworkType.connected),
       initialDelay: const Duration(seconds: 15),
       existingWorkPolicy: ExistingWorkPolicy.replace,
     );
   } catch (e) {
-    debugPrint('[BackgroundNotifTask] scheduleBackupNotificationPoll error: $e');
+    debugPrint(
+      '[BackgroundNotifTask] scheduleBackupNotificationPoll error: $e',
+    );
   }
 }
 

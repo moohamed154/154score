@@ -1,9 +1,11 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 
 /// Service responsible for managing Apple Push Notification service (APNs)
@@ -18,7 +20,9 @@ import '../constants/api_endpoints.dart';
 ///    using your Apple Developer Team ID, Key ID, and .p8 private key.
 ///    Result: ZERO-DELAY (< 1s) delivery directly to iOS devices with NO Firebase SDK!
 class ApnsNotificationService {
-  static const MethodChannel _channel = MethodChannel('com.hamdy.app154score/apns');
+  static const MethodChannel _channel = MethodChannel(
+    'com.hamdy.app154score/apns',
+  );
   static const String _prefApnsTokenKey = 'apns_device_token';
 
   static final ApnsNotificationService instance = ApnsNotificationService._();
@@ -62,7 +66,9 @@ class ApnsNotificationService {
         _cachedToken = token;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_prefApnsTokenKey, token);
-        debugPrint('[ApnsNotificationService] Received native APNs token: $token');
+        debugPrint(
+          '[ApnsNotificationService] Received native APNs token: $token',
+        );
         await syncWithBackend();
       }
     }
@@ -76,14 +82,18 @@ class ApnsNotificationService {
     if (!Platform.isIOS) return false;
     final token = _cachedToken;
     if (token == null || token.isEmpty) {
-      debugPrint('[ApnsNotificationService] Token not available yet, skipping backend sync.');
+      debugPrint(
+        '[ApnsNotificationService] Token not available yet, skipping backend sync.',
+      );
       return false;
     }
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final teams = favoriteTeamIds ?? prefs.getStringList('app_favorite_teams') ?? [];
-      final matches = favoriteMatchIds ?? prefs.getStringList('app_favorite_matches') ?? [];
+      final teams =
+          favoriteTeamIds ?? prefs.getStringList('app_favorite_teams') ?? [];
+      final matches =
+          favoriteMatchIds ?? prefs.getStringList('app_favorite_matches') ?? [];
       final lang = prefs.getString('154score_notif_lang') ?? 'ar';
 
       final payload = {
@@ -95,11 +105,18 @@ class ApnsNotificationService {
         'lang': lang,
       };
 
-      final dio = Dio(BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-      ));
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: ApiEndpoints.baseUrl,
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': '154Score-Flutter/1.0',
+            'X-API-Key': AppConfig.validateApiKey(),
+          },
+        ),
+      );
 
       // Attempt to register token with backend endpoint
       final response = await dio.post(
@@ -108,12 +125,16 @@ class ApnsNotificationService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('[ApnsNotificationService] Successfully registered APNs token with backend.');
+        debugPrint(
+          '[ApnsNotificationService] Successfully registered APNs token with backend.',
+        );
         return true;
       }
     } catch (e) {
       // Backend may not have implemented the endpoint yet; non-blocking
-      debugPrint('[ApnsNotificationService] Backend sync note (endpoint may be pending): $e');
+      debugPrint(
+        '[ApnsNotificationService] Backend sync note (endpoint may be pending): $e',
+      );
     }
     return false;
   }

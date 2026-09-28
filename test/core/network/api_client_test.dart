@@ -1,5 +1,8 @@
 ﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:score154/core/config/app_config.dart';
+import 'package:score154/core/errors/exceptions.dart';
 import 'package:score154/core/errors/failures.dart';
+import 'package:score154/core/network/api_client.dart';
 import 'package:score154/core/network/api_result.dart';
 
 void main() {
@@ -31,6 +34,27 @@ void main() {
         onFailure: (fail) => 'fail: ${fail.message}',
       );
       expect(folded, 'fail: Server not reachable');
+    });
+  });
+
+  group('ApiClient auth config', () {
+    test('missing API key throws a clear configuration error', () {
+      expect(
+        () => AppConfig.validateApiKey(''),
+        throwsA(isA<ConfigurationException>()),
+      );
+    });
+
+    test('request id stays attached to a mapped authentication error', () {
+      final exception = ApiAuthenticationException(
+        'INVALID_API_KEY',
+        statusCode: 401,
+        requestId: 'req_123',
+      );
+
+      expect(exception.code, 'INVALID_API_KEY');
+      expect(exception.requestId, 'req_123');
+      expect(exception.statusCode, 401);
     });
   });
 }
