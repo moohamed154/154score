@@ -11,7 +11,10 @@ class AppConfig {
     defaultValue: defaultApiBaseUrl,
   );
 
-  static const String apiKey = String.fromEnvironment('API_KEY');
+  static const String apiKey = String.fromEnvironment(
+    'API_KEY',
+    defaultValue: '154s_75ace672eb9e465c5097c06818226447',
+  );
 
   static String validateApiKey([String? providedKey]) {
     final key = (providedKey ?? apiKey).trim();

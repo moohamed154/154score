@@ -17,7 +17,7 @@ class VideoDto {
   });
 
   factory VideoDto.fromJson(Map<String, dynamic> json) {
-    final rawLink = json['link']?.toString();
+    final rawLink = json['link']?.toString() ?? json['url']?.toString();
     String id = json['id']?.toString() ?? '';
     if (id.isEmpty && rawLink != null) {
       final segments = rawLink.split('/');
@@ -33,7 +33,7 @@ class VideoDto {
       title: json['title']?.toString() ?? 'Football Highlight',
       image: UrlHelper.normalizeImageUrl(rawImage),
       link: rawLink,
-      date: json['date']?.toString(),
+      date: json['date']?.toString() ?? json['published_at']?.toString(),
     );
   }
 

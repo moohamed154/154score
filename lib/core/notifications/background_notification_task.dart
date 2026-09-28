@@ -85,8 +85,9 @@ Future<void> _runNotificationPoll() async {
       );
     } catch (_) {}
 
-    if (response == null || response.statusCode != 200 || response.data == null)
+    if (response == null || response.statusCode != 200 || response.data == null) {
       return;
+    }
 
     // Parse notifications
     final body = response.data;
@@ -323,8 +324,9 @@ bool _isStarredMatchEvent({
   if (matchId.isNotEmpty) {
     final favMatches = prefs.getStringList('app_favorite_matches') ?? [];
     final matchNotifs = prefs.getStringList('match_notifications') ?? [];
-    if (favMatches.contains(matchId) || matchNotifs.contains(matchId))
+    if (favMatches.contains(matchId) || matchNotifs.contains(matchId)) {
       return true;
+    }
   }
 
   final favTeams = prefs.getStringList('app_favorite_teams') ?? [];
@@ -350,20 +352,23 @@ bool _isStarredMatchEvent({
 
   for (final t in teamNotifs) {
     final trimmed = t.trim().toLowerCase();
-    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed))
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) {
       targetNames.add(trimmed);
+    }
   }
 
   final Set<String> targetIds = {};
   for (final id in favTeams) {
     final trimmed = id.trim();
-    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase()))
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) {
       targetIds.add(trimmed);
+    }
   }
   for (final id in teamNotifs) {
     final trimmed = id.trim();
-    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase()))
+    if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) {
       targetIds.add(trimmed);
+    }
   }
 
   if (targetNames.isEmpty && targetIds.isEmpty) {

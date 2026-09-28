@@ -199,10 +199,12 @@ class LiveMatchUpdate extends Equatable {
     Map? homeTeamMap;
     Map? awayTeamMap;
     if (json['teams'] is Map) {
-      if (json['teams']['home'] is Map)
+      if (json['teams']['home'] is Map) {
         homeTeamMap = json['teams']['home'] as Map;
-      if (json['teams']['away'] is Map)
+      }
+      if (json['teams']['away'] is Map) {
         awayTeamMap = json['teams']['away'] as Map;
+      }
     }
 
     final t1 =

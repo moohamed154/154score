@@ -1,8 +1,7 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/config/app_config.dart';
 import 'package:score154/core/errors/exceptions.dart';
 import 'package:score154/core/errors/failures.dart';
-import 'package:score154/core/network/api_client.dart';
 import 'package:score154/core/network/api_result.dart';
 
 void main() {

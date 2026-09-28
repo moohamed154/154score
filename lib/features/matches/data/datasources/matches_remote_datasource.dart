@@ -79,8 +79,9 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     if (date != null && date.isNotEmpty) queryParams['date'] = date;
     if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
-    if (leagueId != null && leagueId.isNotEmpty)
+    if (leagueId != null && leagueId.isNotEmpty) {
       queryParams['league_id'] = leagueId;
+    }
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
     final response = await _client.get(
@@ -105,8 +106,9 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     final queryParams = <String, dynamic>{'lang': lang};
     if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (date != null && date.isNotEmpty) queryParams['date'] = date;
-    if (leagueId != null && leagueId.isNotEmpty)
+    if (leagueId != null && leagueId.isNotEmpty) {
       queryParams['league_id'] = leagueId;
+    }
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
     final response = await _client.get(
@@ -129,8 +131,9 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     final queryParams = <String, dynamic>{'lang': lang};
     if (utcOffset != null) queryParams['utc-offset'] = utcOffset.toString();
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
-    if (leagueId != null && leagueId.isNotEmpty)
+    if (leagueId != null && leagueId.isNotEmpty) {
       queryParams['league_id'] = leagueId;
+    }
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
     final response = await _client.get(

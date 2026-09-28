@@ -23,12 +23,11 @@ class ApiAuthenticationException extends ServerException {
   final String? _code;
 
   ApiAuthenticationException(
-    String message, {
+    super.message, {
     String? code,
-    String? requestId,
-    int? statusCode,
-  }) : _code = code ?? _inferCodeFromMessage(message),
-       super(message, requestId: requestId, statusCode: statusCode);
+    super.requestId,
+    super.statusCode,
+  }) : _code = code ?? _inferCodeFromMessage(message);
 
   String? get code => _code;
 
@@ -50,21 +49,21 @@ class ApiAuthenticationException extends ServerException {
 
 class ForbiddenException extends ServerException {
   const ForbiddenException(
-    String message, {
-    String? requestId,
-    int? statusCode = 403,
-  }) : super(message, requestId: requestId, statusCode: statusCode);
+    super.message, {
+    super.requestId,
+    super.statusCode = 403,
+  });
 }
 
 class RateLimitException extends ServerException {
   final Duration? retryAfter;
 
   const RateLimitException(
-    String message, {
-    String? requestId,
-    int? statusCode = 429,
+    super.message, {
+    super.requestId,
+    super.statusCode = 429,
     this.retryAfter,
-  }) : super(message, requestId: requestId, statusCode: statusCode);
+  });
 }
 
 class CacheException implements Exception {

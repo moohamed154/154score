@@ -22,44 +22,61 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
     required String champId,
     required String lang,
   }) async {
+    final queryParameters = <String, dynamic>{'lang': lang};
+    if (champId.isNotEmpty && champId != 'all') {
+      queryParameters['champ_id'] = champId;
+    }
+
     final response = await _client.get(
       ApiEndpoints.videos,
-      queryParameters: {'champ_id': champId, 'lang': lang},
+      queryParameters: queryParameters,
     );
 
     final videos = <VideoItemEntity>[];
     final categories = <VideoCategoryEntity>[];
 
     if (response is Map && response['data'] is List) {
-      final sections = response['data'] as List;
-      for (final sec in sections) {
-        if (sec is Map) {
-          final sectionName = sec['section']?.toString() ?? '';
-          final items = sec['items'] as List? ?? [];
+      final data = response['data'] as List;
+      for (final rawItem in data) {
+        if (rawItem is! Map) continue;
 
-          if (sectionName.toLowerCase().contains('championship') ||
-              sectionName.toLowerCase().contains('بطول') ||
-              sectionName.toLowerCase().contains('appearances')) {
-            for (final item in items) {
-              if (item is Map) {
-                categories.add(
-                  VideoCategoryEntity(
-                    id: item['id']?.toString() ?? 'all',
-                    title: item['title']?.toString() ?? 'Category',
-                  ),
-                );
-              }
+        final item = Map<String, dynamic>.from(rawItem);
+        final sectionName = item['section']?.toString().toLowerCase() ?? '';
+        final sectionItems = item['items'];
+
+        // Current API shape: data is a flat list of video objects.
+        if (item['title'] != null && sectionItems is! List) {
+          videos.add(
+            VideoDto.fromJson(item)
+                .toEntity(championship: item['championship']?.toString()),
+          );
+          continue;
+        }
+
+        if (sectionItems is! List) continue;
+
+        if (sectionName.contains('championship') ||
+            sectionName.contains('بطول') ||
+            sectionName.contains('appearances')) {
+          for (final rawCategory in sectionItems) {
+            if (rawCategory is Map) {
+              categories.add(
+                VideoCategoryEntity(
+                  id: rawCategory['id']?.toString() ?? 'all',
+                  title: rawCategory['title']?.toString() ?? 'Category',
+                ),
+              );
             }
-          } else if (sectionName.toLowerCase().contains('video') ||
-              sectionName.toLowerCase().contains('فيديو')) {
-            for (final item in items) {
-              if (item is Map<String, dynamic>) {
-                videos.add(VideoDto.fromJson(item).toEntity());
-              } else if (item is Map) {
-                videos.add(
-                  VideoDto.fromJson(Map<String, dynamic>.from(item)).toEntity(),
-                );
-              }
+          }
+        } else if (sectionName.contains('video') ||
+            sectionName.contains('فيديو')) {
+          for (final rawVideo in sectionItems) {
+            if (rawVideo is Map) {
+              final video = Map<String, dynamic>.from(rawVideo);
+              videos.add(
+                VideoDto.fromJson(video)
+                    .toEntity(championship: video['championship']?.toString()),
+              );
             }
           }
         }

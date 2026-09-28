@@ -252,18 +252,21 @@ class _GenericProfileViewState extends State<GenericProfileView> {
               if (t.contains('القناة') || t.contains('channel')) return false;
               if (t.contains('الدولة') ||
                   t.contains('country') ||
-                  t.contains('جنسية'))
+                  t.contains('جنسية')) {
                 return false;
+              }
               if (t.contains('الميلاد') ||
                   t.contains('birth') ||
                   t.contains('عمر') ||
-                  t.contains('age'))
+                  t.contains('age')) {
                 return false;
+              }
               if (t.contains('لغة') || t.contains('language')) return false;
               if (t.contains('النادي') ||
                   t.contains('club') ||
-                  t.contains('فريق'))
+                  t.contains('فريق')) {
                 return false;
+              }
               if (t.contains('المنصب') || t.contains('role')) return false;
             }
             if (p.voiceUrl != null &&
@@ -712,8 +715,9 @@ class _GenericProfileViewState extends State<GenericProfileView> {
     if (p.channel != null && p.channel!.isNotEmpty) count++;
     if (p.country != null && p.country!.isNotEmpty) count++;
     if (p.birthDate != null && p.birthDate!.isNotEmpty) count++;
-    if (p.commentaryLanguage != null && p.commentaryLanguage!.isNotEmpty)
+    if (p.commentaryLanguage != null && p.commentaryLanguage!.isNotEmpty) {
       count++;
+    }
     return count >= 2;
   }
 

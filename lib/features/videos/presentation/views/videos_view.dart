@@ -157,6 +157,7 @@ class _VideosViewState extends State<VideosView> {
       return Skeletonizer(
         enabled: true,
         child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
           itemCount: 6,
           itemBuilder: (_, __) => const VideoCard(
@@ -172,22 +173,39 @@ class _VideosViewState extends State<VideosView> {
     }
 
     if (state.status == VideosStatus.error) {
-      return ErrorView(
-        message: state.errorMessage,
-        onRetry: () => context.read<VideosBloc>().add(
-          LoadVideosEvent(champId: state.selectedCategory),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: 320,
+            child: ErrorView(
+              message: state.errorMessage,
+              onRetry: () => context.read<VideosBloc>().add(
+                LoadVideosEvent(champId: state.selectedCategory),
+              ),
+            ),
+          ),
+        ],
       );
     }
 
     if (state.videos.isEmpty) {
-      return const EmptyView(
-        titleKey: 'no_videos',
-        icon: Icons.video_library_rounded,
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          SizedBox(
+            height: 320,
+            child: EmptyView(
+              titleKey: 'no_videos',
+              icon: Icons.video_library_rounded,
+            ),
+          ),
+        ],
       );
     }
 
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
       itemCount: state.videos.length,
       itemBuilder: (context, index) {

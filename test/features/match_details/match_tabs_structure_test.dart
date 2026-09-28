@@ -12,6 +12,7 @@ import 'package:score154/features/match_details/presentation/bloc/match_details_
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 import 'package:score154/features/match_details/presentation/views/match_details_view.dart';
 import 'package:score154/features/matches/domain/entities/match_entity.dart';
+import 'package:score154/features/favorites/presentation/cubit/favorites_cubit.dart';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,13 @@ class MockLocalStorageService extends Mock implements LocalStorageService {}
 // ── Helper ─────────────────────────────────────────────────────────────────
 
 Widget buildTestApp(Widget child, {double width = 390, double height = 844}) {
+  final storage = MockLocalStorageService();
+  when(() => storage.getFavoriteTeams()).thenReturn(const []);
+  when(() => storage.getFavoriteCompetitions()).thenReturn(const []);
+  when(() => storage.getFavoriteMatches()).thenReturn(const []);
+  when(() => storage.getFavoriteTeamTitles()).thenReturn(const {});
+  when(() => storage.getFavoriteCompetitionTitles()).thenReturn(const {});
+
   return MaterialApp(
     locale: const Locale('ar'),
     supportedLocales: AppLocalizations.supportedLocales,
@@ -35,7 +43,7 @@ Widget buildTestApp(Widget child, {double width = 390, double height = 844}) {
     theme: AppTheme.darkTheme,
     home: MediaQuery(
       data: MediaQueryData(size: Size(width, height)),
-      child: child,
+      child: BlocProvider(create: (_) => FavoritesCubit(storage), child: child),
     ),
   );
 }
