@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../notifications/notification_sync_service.dart';
 import '../utils/team_resolver.dart';
 
 abstract class LocalStorageService {
@@ -431,7 +432,17 @@ class LocalStorageServiceImpl implements LocalStorageService {
         unawaited(registerTeamTitles({cleanId: cleanName}));
       }
     }
-    return _prefs.setStringList(_keyFavoriteTeams, list);
+    final saved = await _prefs.setStringList(_keyFavoriteTeams, list);
+    if (!isFav) {
+      if (cleanId != null && cleanId.isNotEmpty) {
+        unawaited(NotificationSyncService.instance.subscribeToTeam(cleanId));
+      }
+    } else {
+      if (cleanId != null && cleanId.isNotEmpty) {
+        unawaited(NotificationSyncService.instance.unsubscribeFromTeam(cleanId));
+      }
+    }
+    return saved;
   }
 
   @override
@@ -752,6 +763,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
       await setTeamNotificationMuted(key, true);
     }
     await _prefs.setStringList(_keyTeamNotifications, list);
+    if (nextStatus) {
+      unawaited(NotificationSyncService.instance.subscribeToTeam(key));
+    } else {
+      unawaited(NotificationSyncService.instance.unsubscribeFromTeam(key));
+    }
     return nextStatus;
   }
 
@@ -790,6 +806,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
       if (isFavoriteMatch(id)) await toggleFavoriteMatch(id);
     }
     await _prefs.setStringList(_keyMatchNotifications, list);
+    if (nextState) {
+      unawaited(NotificationSyncService.instance.subscribeToMatch(id));
+    } else {
+      unawaited(NotificationSyncService.instance.unsubscribeFromMatch(id));
+    }
     return nextState;
   }
 
@@ -805,7 +826,13 @@ class LocalStorageServiceImpl implements LocalStorageService {
       list.remove(id);
       if (isFavoriteMatch(id)) await toggleFavoriteMatch(id);
     }
-    return _prefs.setStringList(_keyMatchNotifications, list);
+    final saved = await _prefs.setStringList(_keyMatchNotifications, list);
+    if (enabled) {
+      unawaited(NotificationSyncService.instance.subscribeToMatch(id));
+    } else {
+      unawaited(NotificationSyncService.instance.unsubscribeFromMatch(id));
+    }
+    return saved;
   }
 
   @override

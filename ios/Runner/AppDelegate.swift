@@ -4,6 +4,8 @@ import UserNotifications
 import flutter_local_notifications
 import workmanager_apple
 import flutter_foreground_task
+import FirebaseCore
+import FirebaseMessaging
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -14,35 +16,49 @@ import flutter_foreground_task
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Required for foreground notification presentation and user interaction on iOS
-    if #available(iOS 10.0, *) {
-      UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+    // 1. Configure Firebase App
+    if FirebaseApp.app() == nil {
+      FirebaseApp.configure()
     }
 
-    // Required for background action isolate execution
+    // 2. Set Messaging delegate for FCM token callbacks
+    Messaging.messaging().delegate = self
+
+    // 3. Required for foreground notification presentation and user interaction on iOS
+    if #available(iOS 10.0, *) {
+      UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+      let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
+      UNUserNotificationCenter.current().requestAuthorization(
+        options: authOptions,
+        completionHandler: { _, _ in }
+      )
+    }
+
+    // 4. Register for remote notifications on APNs
+    application.registerForRemoteNotifications()
+
+    // 5. Required for background action isolate execution
     FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
       GeneratedPluginRegistrant.register(with: registry)
     }
 
-    // Required for flutter_foreground_task background isolate execution on iOS
+    // 6. Required for flutter_foreground_task background isolate execution on iOS
     SwiftFlutterForegroundTaskPlugin.setPluginRegistrantCallback { (registry) in
       GeneratedPluginRegistrant.register(with: registry)
     }
 
-    // Required for workmanager background task re-registration (UIScene lifecycle)
+    // 7. Workmanager background handlers
     if #available(iOS 13.0, *) {
       WorkmanagerPlugin.registerLaunchHandlers()
       WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "154score_notif_poll")
     }
 
-    // Setup APNs MethodChannel for zero-delay notifications without Firebase
+    // 8. Setup APNs MethodChannel fallback
     if let registrar = self.registrar(forPlugin: "ApnsNotificationPlugin") {
       setupApnsChannel(binaryMessenger: registrar.messenger())
     } else if let controller = window?.rootViewController as? FlutterViewController {
       setupApnsChannel(binaryMessenger: controller.binaryMessenger)
     }
-
-    application.registerForRemoteNotifications()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -70,6 +86,10 @@ import flutter_foreground_task
     let token = tokenParts.joined()
     self.apnsToken = token
     apnsChannel?.invokeMethod("onTokenReceived", arguments: token)
+
+    // Forward to Firebase Messaging so APNs device token maps to FCM token
+    Messaging.messaging().apnsToken = deviceToken
+
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 
@@ -94,4 +114,10 @@ import flutter_foreground_task
   }
 }
 
-
+extension AppDelegate: MessagingDelegate {
+  func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+    if let token = fcmToken {
+      print("[FCM] Received iOS registration token: \(token)")
+    }
+  }
+}

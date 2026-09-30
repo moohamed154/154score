@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "154000154000",
+    "project_id": "score154-app",
+    "storage_bucket": "score154-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:154000154000:android:154score154score154",
+        "android_client_info": {
+          "package_name": "com.hamdy.app154score"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDummyKeyFor154ScorePushNotification"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

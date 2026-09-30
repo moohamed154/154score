@@ -74,6 +74,22 @@ class AppRouter {
     } catch (_) {}
   }
 
+  /// Explicit navigation helper for match details
+  static void navigateToMatch(String matchId) {
+    final clean = matchId.replaceAll('match:', '').trim();
+    if (clean.isNotEmpty) {
+      router.push('/match/$clean');
+    }
+  }
+
+  /// Explicit navigation helper for news articles
+  static void navigateToNews(String articleId) {
+    final clean = articleId.trim();
+    if (clean.isNotEmpty) {
+      router.push('/news/$clean');
+    }
+  }
+
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     observers: [DebugConsoleRouteObserver()],
