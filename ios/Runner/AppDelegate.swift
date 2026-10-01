@@ -102,7 +102,7 @@ import FirebaseCore
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    setupApnsChannel(binaryMessenger: engineBridge.engine.binaryMessenger)
+    setupApnsChannel(binaryMessenger: engineBridge.applicationRegistrar.messenger())
   }
 }
 
