@@ -15,23 +15,6 @@ import FirebaseCore
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // 0. Ensure Firebase is configured natively before any APNs or FCM callbacks occur
-    if FirebaseApp.app() == nil {
-      if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
-         let options = FirebaseOptions(contentsOfFile: path) {
-        FirebaseApp.configure(options: options)
-      } else {
-        let options = FirebaseOptions(
-          googleAppID: "1:154000154000:ios:154score154score154",
-          gcmSenderID: "154000154000"
-        )
-        options.apiKey = "AIzaSyDummyKeyFor154ScorePushNotification"
-        options.projectID = "score154-app"
-        options.bundleID = "com.hamdy.app154score"
-        FirebaseApp.configure(options: options)
-      }
-    }
-
     // 1. Required for foreground notification presentation and user interaction on iOS
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
@@ -61,17 +44,20 @@ import FirebaseCore
       WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "154score_notif_poll")
     }
 
-    // 6. Setup APNs MethodChannel fallback
-    if let registrar = self.registrar(forPlugin: "ApnsNotificationPlugin") {
-      setupApnsChannel(binaryMessenger: registrar.messenger())
-    } else if let controller = window?.rootViewController as? FlutterViewController {
+    let didLaunch = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+
+    // 6. Setup APNs MethodChannel fallback safely after super launch
+    if let controller = window?.rootViewController as? FlutterViewController {
       setupApnsChannel(binaryMessenger: controller.binaryMessenger)
+    } else if let registrar = self.registrar(forPlugin: "ApnsNotificationPlugin") {
+      setupApnsChannel(binaryMessenger: registrar.messenger())
     }
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    return didLaunch
   }
 
   private func setupApnsChannel(binaryMessenger: FlutterBinaryMessenger) {
+    guard apnsChannel == nil else { return }
     apnsChannel = FlutterMethodChannel(name: "com.hamdy.app154score/apns", binaryMessenger: binaryMessenger)
     apnsChannel?.setMethodCallHandler { [weak self] (call, result) in
       switch call.method {
@@ -95,20 +81,13 @@ import FirebaseCore
     self.apnsToken = token
     apnsChannel?.invokeMethod("onTokenReceived", arguments: token)
 
-    // Ensure Firebase is configured before passing to Flutter plugins
-    if FirebaseApp.app() == nil {
-      let options = FirebaseOptions(
-        googleAppID: "1:154000154000:ios:154score154score154",
-        gcmSenderID: "154000154000"
-      )
-      options.apiKey = "AIzaSyDummyKeyFor154ScorePushNotification"
-      options.projectID = "score154-app"
-      options.bundleID = "com.hamdy.app154score"
-      FirebaseApp.configure(options: options)
+    // Forward to FlutterAppDelegate plugins (including Firebase Messaging) ONLY if Firebase has been initialized.
+    // This strictly prevents FIRAppNotConfiguredException crash when Firebase is not yet ready.
+    if FirebaseApp.app() != nil {
+      super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+    } else {
+      print("[AppDelegate] APNs device token received (\(token.prefix(8))...); Firebase not yet configured natively, deferring plugin forwarding to prevent FIRAppNotConfiguredException.")
     }
-
-    // Forward to FlutterAppDelegate plugins including FlutterFire firebase_messaging
-    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 
   override func application(
@@ -123,6 +102,7 @@ import FirebaseCore
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    setupApnsChannel(binaryMessenger: engineBridge.engine.binaryMessenger)
   }
 }
 
