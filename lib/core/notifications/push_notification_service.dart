@@ -113,6 +113,14 @@ class PushNotificationService {
   /// Obtains current token and registers with the canonical 154Score backend.
   Future<void> _retrieveAndRegisterToken() async {
     try {
+      if (Platform.isIOS) {
+        // On iOS, FCM requires the APNs device token. Allow APNs token negotiation if needed.
+        final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        if (apnsToken == null) {
+          debugPrint('[PushNotificationService] Waiting briefly for iOS APNs token...');
+          await Future.delayed(const Duration(milliseconds: 1500));
+        }
+      }
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null && token.isNotEmpty) {
         _fcmToken = token;
