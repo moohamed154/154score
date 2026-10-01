@@ -66,11 +66,20 @@ import FirebaseCore
       case "registerForRemoteNotifications":
         UIApplication.shared.registerForRemoteNotifications()
         result(true)
+      case "syncApnsToken":
+        if let tokenData = self?.apnsDeviceTokenData, FirebaseApp.app() != nil {
+          super.application(UIApplication.shared, didRegisterForRemoteNotificationsWithDeviceToken: tokenData)
+          result(true)
+        } else {
+          result(false)
+        }
       default:
         result(FlutterMethodNotImplemented)
       }
     }
   }
+
+  private var apnsDeviceTokenData: Data?
 
   override func application(
     _ application: UIApplication,
@@ -79,6 +88,7 @@ import FirebaseCore
     let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
     let token = tokenParts.joined()
     self.apnsToken = token
+    self.apnsDeviceTokenData = deviceToken
     apnsChannel?.invokeMethod("onTokenReceived", arguments: token)
 
     // Forward to FlutterAppDelegate plugins (including Firebase Messaging) ONLY if Firebase has been initialized.
@@ -86,7 +96,13 @@ import FirebaseCore
     if FirebaseApp.app() != nil {
       super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
     } else {
-      print("[AppDelegate] APNs device token received (\(token.prefix(8))...); Firebase not yet configured natively, deferring plugin forwarding to prevent FIRAppNotConfiguredException.")
+      print("[AppDelegate] APNs device token received; Firebase not yet configured natively, deferring plugin forwarding to prevent FIRAppNotConfiguredException.")
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self, weak application] in
+        guard let self = self, let app = application, let tokenData = self.apnsDeviceTokenData else { return }
+        if FirebaseApp.app() != nil {
+          super.application(app, didRegisterForRemoteNotificationsWithDeviceToken: tokenData)
+        }
+      }
     }
   }
 
@@ -102,8 +118,11 @@ import FirebaseCore
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    setupApnsChannel(binaryMessenger: engineBridge.applicationRegistrar.messenger())
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "ApnsNotificationPlugin") {
+      setupApnsChannel(binaryMessenger: registrar.messenger())
+    }
   }
 }
+
 
 

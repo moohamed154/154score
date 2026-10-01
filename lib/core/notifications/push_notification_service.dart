@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/router/app_router.dart';
@@ -53,6 +54,14 @@ class PushNotificationService {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
+      }
+
+      // Sync APNs token with Firebase on iOS if it was buffered prior to Firebase initialization
+      if (Platform.isIOS) {
+        try {
+          const apnsChannel = MethodChannel('com.hamdy.app154score/apns');
+          await apnsChannel.invokeMethod('syncApnsToken');
+        } catch (_) {}
       }
 
       // 2. Set Background Handler
