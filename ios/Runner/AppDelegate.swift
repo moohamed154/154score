@@ -4,6 +4,7 @@ import UserNotifications
 import flutter_local_notifications
 import workmanager_apple
 import flutter_foreground_task
+import FirebaseCore
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -14,6 +15,23 @@ import flutter_foreground_task
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // 0. Ensure Firebase is configured natively before any APNs or FCM callbacks occur
+    if FirebaseApp.app() == nil {
+      if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+         let options = FirebaseOptions(contentsOfFile: path) {
+        FirebaseApp.configure(options: options)
+      } else {
+        let options = FirebaseOptions(
+          googleAppID: "1:154000154000:ios:154score154score154",
+          gcmSenderID: "154000154000"
+        )
+        options.apiKey = "AIzaSyDummyKeyFor154ScorePushNotification"
+        options.projectID = "score154-app"
+        options.bundleID = "com.hamdy.app154score"
+        FirebaseApp.configure(options: options)
+      }
+    }
+
     // 1. Required for foreground notification presentation and user interaction on iOS
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
@@ -77,6 +95,18 @@ import flutter_foreground_task
     self.apnsToken = token
     apnsChannel?.invokeMethod("onTokenReceived", arguments: token)
 
+    // Ensure Firebase is configured before passing to Flutter plugins
+    if FirebaseApp.app() == nil {
+      let options = FirebaseOptions(
+        googleAppID: "1:154000154000:ios:154score154score154",
+        gcmSenderID: "154000154000"
+      )
+      options.apiKey = "AIzaSyDummyKeyFor154ScorePushNotification"
+      options.projectID = "score154-app"
+      options.bundleID = "com.hamdy.app154score"
+      FirebaseApp.configure(options: options)
+    }
+
     // Forward to FlutterAppDelegate plugins including FlutterFire firebase_messaging
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
@@ -86,11 +116,14 @@ import flutter_foreground_task
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
     print("Failed to register for APNs: \(error.localizedDescription)")
-    super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
+    if FirebaseApp.app() != nil {
+      super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
+    }
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 }
+
 

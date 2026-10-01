@@ -114,11 +114,20 @@ class PushNotificationService {
   Future<void> _retrieveAndRegisterToken() async {
     try {
       if (Platform.isIOS) {
-        // On iOS, FCM requires the APNs device token. Allow APNs token negotiation if needed.
-        final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
         if (apnsToken == null) {
-          debugPrint('[PushNotificationService] Waiting briefly for iOS APNs token...');
-          await Future.delayed(const Duration(milliseconds: 1500));
+          debugPrint('[PushNotificationService] Waiting for iOS APNs token...');
+          for (int i = 0; i < 4; i++) {
+            await Future.delayed(const Duration(milliseconds: 1000));
+            apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+            if (apnsToken != null) break;
+          }
+        }
+        if (apnsToken == null) {
+          debugPrint(
+            '[PushNotificationService] APNs token not yet available. Registration will proceed via onTokenRefresh.',
+          );
+          return;
         }
       }
       final token = await FirebaseMessaging.instance.getToken();
