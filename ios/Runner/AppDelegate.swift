@@ -68,7 +68,7 @@ import FirebaseCore
         result(true)
       case "syncApnsToken":
         if let tokenData = self?.apnsDeviceTokenData, FirebaseApp.app() != nil {
-          super.application(UIApplication.shared, didRegisterForRemoteNotificationsWithDeviceToken: tokenData)
+          self?.forwardDeviceTokenToPlugins(tokenData)
           result(true)
         } else {
           result(false)
@@ -80,6 +80,10 @@ import FirebaseCore
   }
 
   private var apnsDeviceTokenData: Data?
+
+  private func forwardDeviceTokenToPlugins(_ deviceToken: Data, application: UIApplication = UIApplication.shared) {
+    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
 
   override func application(
     _ application: UIApplication,
@@ -100,7 +104,7 @@ import FirebaseCore
       DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self, weak application] in
         guard let self = self, let app = application, let tokenData = self.apnsDeviceTokenData else { return }
         if FirebaseApp.app() != nil {
-          super.application(app, didRegisterForRemoteNotificationsWithDeviceToken: tokenData)
+          self.forwardDeviceTokenToPlugins(tokenData, application: app)
         }
       }
     }
