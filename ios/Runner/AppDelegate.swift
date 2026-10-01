@@ -68,7 +68,7 @@ import FirebaseCore
         result(true)
       case "syncApnsToken":
         if let tokenData = self?.apnsDeviceTokenData, FirebaseApp.app() != nil {
-          self?.forwardDeviceTokenToPlugins(tokenData)
+          self?.forwardDeviceTokenToPlugins(tokenData, application: UIApplication.shared)
           result(true)
         } else {
           result(false)
@@ -81,8 +81,29 @@ import FirebaseCore
 
   private var apnsDeviceTokenData: Data?
 
-  private func forwardDeviceTokenToPlugins(_ deviceToken: Data, application: UIApplication = UIApplication.shared) {
-    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  private func forwardDeviceTokenToPlugins(
+    _ deviceToken: Data,
+    application: UIApplication
+  ) {
+    super.application(
+      application,
+      didRegisterForRemoteNotificationsWithDeviceToken: deviceToken
+    )
+  }
+
+  private func retryForwardingDeviceToken(
+    _ deviceToken: Data,
+    application: UIApplication
+  ) {
+    guard FirebaseApp.app() != nil else {
+      print("[AppDelegate] Firebase is still not configured; APNs token forwarding skipped.")
+      return
+    }
+
+    forwardDeviceTokenToPlugins(
+      deviceToken,
+      application: application
+    )
   }
 
   override func application(
@@ -101,11 +122,16 @@ import FirebaseCore
       super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
     } else {
       print("[AppDelegate] APNs device token received; Firebase not yet configured natively, deferring plugin forwarding to prevent FIRAppNotConfiguredException.")
-      DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self, weak application] in
-        guard let self = self, let app = application, let tokenData = self.apnsDeviceTokenData else { return }
-        if FirebaseApp.app() != nil {
-          self.forwardDeviceTokenToPlugins(tokenData, application: app)
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+        guard let self = self,
+              let tokenData = self.apnsDeviceTokenData else {
+          return
         }
+
+        self.retryForwardingDeviceToken(
+          tokenData,
+          application: UIApplication.shared
+        )
       }
     }
   }
