@@ -15,6 +15,16 @@ import FirebaseCore
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // 0. Ensure Firebase is configured natively before any APNs or plugin callbacks
+    if (FirebaseApp.allApps?.count ?? 0) == 0 {
+      if let filePath = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+         let options = FirebaseOptions(contentsOfFile: filePath) {
+        FirebaseApp.configure(options: options)
+      } else {
+        FirebaseApp.configure()
+      }
+    }
+
     // 1. Required for foreground notification presentation and user interaction on iOS
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
@@ -41,7 +51,6 @@ import FirebaseCore
     // 5. Workmanager background handlers
     if #available(iOS 13.0, *) {
       WorkmanagerPlugin.registerLaunchHandlers()
-      WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "154score_notif_poll")
     }
 
     let didLaunch = super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -67,7 +76,7 @@ import FirebaseCore
         UIApplication.shared.registerForRemoteNotifications()
         result(true)
       case "syncApnsToken":
-        if let tokenData = self?.apnsDeviceTokenData, FirebaseApp.app() != nil {
+        if let tokenData = self?.apnsDeviceTokenData, self?.isFirebaseConfigured == true {
           self?.forwardDeviceTokenToPlugins(tokenData, application: UIApplication.shared)
           result(true)
         } else {
@@ -80,6 +89,10 @@ import FirebaseCore
   }
 
   private var apnsDeviceTokenData: Data?
+
+  private var isFirebaseConfigured: Bool {
+    return (FirebaseApp.allApps?.count ?? 0) > 0
+  }
 
   private func forwardDeviceTokenToPlugins(
     _ deviceToken: Data,
@@ -95,7 +108,7 @@ import FirebaseCore
     _ deviceToken: Data,
     application: UIApplication
   ) {
-    guard FirebaseApp.app() != nil else {
+    guard isFirebaseConfigured else {
       print("[AppDelegate] Firebase is still not configured; APNs token forwarding skipped.")
       return
     }
@@ -118,7 +131,7 @@ import FirebaseCore
 
     // Forward to FlutterAppDelegate plugins (including Firebase Messaging) ONLY if Firebase has been initialized.
     // This strictly prevents FIRAppNotConfiguredException crash when Firebase is not yet ready.
-    if FirebaseApp.app() != nil {
+    if isFirebaseConfigured {
       super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
     } else {
       print("[AppDelegate] APNs device token received; Firebase not yet configured natively, deferring plugin forwarding to prevent FIRAppNotConfiguredException.")
@@ -141,7 +154,7 @@ import FirebaseCore
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
     print("Failed to register for APNs: \(error.localizedDescription)")
-    if FirebaseApp.app() != nil {
+    if isFirebaseConfigured {
       super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
     }
   }
