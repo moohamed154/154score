@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:dio/dio.dart';
@@ -493,9 +494,10 @@ bool _isStarredMatchEvent({
 /// - Background execution runs in an isolated Dart environment and strictly avoids any Flutter UI
 ///   widgets, BuildContext, or unavailable UI APIs.
 Future<void> initBackgroundNotifications() async {
+  if (!Platform.isAndroid) return;
   await Workmanager().initialize(workmanagerCallback);
 
-  // Register a periodic poll every 15 minutes (minimum on Android; opportunistic on iOS)
+  // Register a periodic poll every 15 minutes (minimum on Android)
   await Workmanager().registerPeriodicTask(
     _taskTag,
     _taskName,

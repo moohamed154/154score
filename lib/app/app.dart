@@ -89,7 +89,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         } catch (_) {}
       }
       try {
-        scheduleBackupNotificationPoll();
+        if (Platform.isAndroid) {
+          scheduleBackupNotificationPoll();
+        }
       } catch (_) {}
     }
   }

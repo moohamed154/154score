@@ -2,8 +2,6 @@ import Flutter
 import UIKit
 import UserNotifications
 import flutter_local_notifications
-import workmanager_apple
-import flutter_foreground_task
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -14,7 +12,10 @@ import flutter_foreground_task
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // 1. Required for foreground notification presentation and user interaction on iOS
+    // 1. Register Flutter plugins with AppDelegate first
+    GeneratedPluginRegistrant.register(with: self)
+
+    // 2. Set delegate for foreground notification presentation
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
       let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
@@ -24,30 +25,17 @@ import flutter_foreground_task
       )
     }
 
-    // 2. Register for remote notifications on APNs
+    // 3. Register for remote notifications directly on Apple APNs
     application.registerForRemoteNotifications()
 
-    // 3. Register Flutter plugins with AppDelegate
-    GeneratedPluginRegistrant.register(with: self)
-
-    // 4. Required for background action isolate execution
+    // 4. Required for local notifications background action isolate execution
     FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
       GeneratedPluginRegistrant.register(with: registry)
     }
 
-    // 5. Required for flutter_foreground_task background isolate execution on iOS
-    SwiftFlutterForegroundTaskPlugin.setPluginRegistrantCallback { (registry) in
-      GeneratedPluginRegistrant.register(with: registry)
-    }
-
-    // 6. Workmanager background handlers
-    if #available(iOS 13.0, *) {
-      WorkmanagerPlugin.registerLaunchHandlers()
-    }
-
     let didLaunch = super.application(application, didFinishLaunchingWithOptions: launchOptions)
 
-    // 7. Setup native APNs MethodChannel directly on root FlutterViewController
+    // 5. Setup native APNs MethodChannel directly on root FlutterViewController
     if let controller = window?.rootViewController as? FlutterViewController {
       setupApnsChannel(binaryMessenger: controller.binaryMessenger)
     } else if let registrar = self.registrar(forPlugin: "ApnsNotificationPlugin") {
@@ -90,7 +78,7 @@ import flutter_foreground_task
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
-    print("[AppDelegate] Failed to register for remote notifications: \(error.localizedDescription)")
+    print("[AppDelegate] Remote notification registration note: \(error.localizedDescription)")
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
 }
