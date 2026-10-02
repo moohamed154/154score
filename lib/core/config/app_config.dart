@@ -16,6 +16,11 @@ class AppConfig {
     defaultValue: '154s_75ace672eb9e465c5097c06818226447',
   );
 
+  static const String appVersion = String.fromEnvironment(
+    'APP_VERSION',
+    defaultValue: '1.0.0+1',
+  );
+
   static String validateApiKey([String? providedKey]) {
     final key = (providedKey ?? apiKey).trim();
     if (key.isEmpty || key == 'null') {

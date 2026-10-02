@@ -146,8 +146,16 @@ class ApiEndpoints {
   // 9. Push Notifications & Background Workers (Section 4.7)
   static const String pushNotificationsProviders =
       '/notifications/push_notifications_providers';
+  static const String pushNotificationsProvidersFallback =
+      '/api/notifications/push_notifications_providers';
+
   static const String notificationPostService =
       '/notifications/notification_post_service';
+  static const String notificationPostServiceFallback =
+      '/api/notifications/notification_post_service';
+
   static const String matchReminderBackgroundTask =
       '/notifications/match_reminder_background_task';
+  static const String matchReminderBackgroundTaskFallback =
+      '/api/notifications/match_reminder_background_task';
 }

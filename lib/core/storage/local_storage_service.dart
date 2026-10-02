@@ -839,32 +839,44 @@ class LocalStorageServiceImpl implements LocalStorageService {
   bool isNewsNotificationEnabled() => _prefs.getBool(_keyNotifNews) ?? true;
 
   @override
-  Future<bool> setNewsNotificationEnabled(bool enabled) =>
-      _prefs.setBool(_keyNotifNews, enabled);
+  Future<bool> setNewsNotificationEnabled(bool enabled) async {
+    final res = await _prefs.setBool(_keyNotifNews, enabled);
+    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
+    return res;
+  }
 
   @override
   bool isMatchLineupNotificationEnabled() =>
       _prefs.getBool(_keyNotifLineup) ?? true;
 
   @override
-  Future<bool> setMatchLineupNotificationEnabled(bool enabled) =>
-      _prefs.setBool(_keyNotifLineup, enabled);
+  Future<bool> setMatchLineupNotificationEnabled(bool enabled) async {
+    final res = await _prefs.setBool(_keyNotifLineup, enabled);
+    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
+    return res;
+  }
 
   @override
   bool isMatchGoalsNotificationEnabled() =>
       _prefs.getBool(_keyNotifGoals) ?? true;
 
   @override
-  Future<bool> setMatchGoalsNotificationEnabled(bool enabled) =>
-      _prefs.setBool(_keyNotifGoals, enabled);
+  Future<bool> setMatchGoalsNotificationEnabled(bool enabled) async {
+    final res = await _prefs.setBool(_keyNotifGoals, enabled);
+    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
+    return res;
+  }
 
   @override
   bool isMatchStartEndNotificationEnabled() =>
       _prefs.getBool(_keyNotifStartEnd) ?? true;
 
   @override
-  Future<bool> setMatchStartEndNotificationEnabled(bool enabled) =>
-      _prefs.setBool(_keyNotifStartEnd, enabled);
+  Future<bool> setMatchStartEndNotificationEnabled(bool enabled) async {
+    final res = await _prefs.setBool(_keyNotifStartEnd, enabled);
+    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
+    return res;
+  }
 
   @override
   String getMatchNotificationScope() =>
@@ -872,8 +884,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
       LocalStorageService.matchNotifScopeStarred;
 
   @override
-  Future<bool> setMatchNotificationScope(String scope) =>
-      _prefs.setString(_keyMatchNotifScope, scope);
+  Future<bool> setMatchNotificationScope(String scope) async {
+    final res = await _prefs.setString(_keyMatchNotifScope, scope);
+    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
+    return res;
+  }
 
   static const String _keyLiveMatchMode = 'live_match_mode_enabled';
 

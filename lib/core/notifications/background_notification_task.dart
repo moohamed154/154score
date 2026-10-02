@@ -39,7 +39,7 @@ void workmanagerCallback() {
           task == Workmanager.iOSBackgroundTask ||
           task.contains('notif') ||
           task == 'iOSBackgroundTask') {
-        await _runNotificationPoll();
+        await runNotificationPoll();
       }
     } catch (e) {
       debugPrint('[workmanagerCallback] error executing $task: $e');
@@ -48,8 +48,67 @@ void workmanagerCallback() {
   });
 }
 
+/// Section 4.7 Mobile Endpoint: POST /notifications/match_reminder_background_task
+/// Falls back to /api/notifications/... ONLY on HTTP 404 (Route Not Found).
+/// Does not send duplicate requests when the first request succeeds.
+/// Handles authentication, timeout, retry, and network failures safely.
+Future<bool> triggerMatchReminderBackgroundTask({Dio? dioClient}) async {
+  final requestHeaders = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'User-Agent': '154Score-Flutter/1.0',
+    'X-API-Key': AppConfig.validateApiKey(),
+  };
+
+  final dio = dioClient ??
+      Dio(
+        BaseOptions(
+          baseUrl: ApiEndpoints.baseUrl,
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+          headers: requestHeaders,
+        ),
+      );
+
+  final payload = {
+    'source': 'mobile_background_task',
+    'timestamp': DateTime.now().toUtc().toIso8601String(),
+  };
+
+  try {
+    Response? response;
+    try {
+      response = await dio.post(
+        ApiEndpoints.matchReminderBackgroundTask,
+        data: payload,
+        options: Options(headers: requestHeaders),
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        debugPrint(
+          '[BackgroundNotifTask] 404 on ${ApiEndpoints.matchReminderBackgroundTask}, falling back to ${ApiEndpoints.matchReminderBackgroundTaskFallback}',
+        );
+        response = await dio.post(
+          ApiEndpoints.matchReminderBackgroundTaskFallback,
+          data: payload,
+          options: Options(headers: requestHeaders),
+        );
+      } else {
+        debugPrint('[BackgroundNotifTask] matchReminderBackgroundTask error: $e');
+        return false;
+      }
+    }
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  } catch (e) {
+    debugPrint('[BackgroundNotifTask] matchReminderBackgroundTask safe failure: $e');
+    return false;
+  }
+}
+
 /// Performs the actual HTTP poll and fires OS notifications for new items.
-Future<void> _runNotificationPoll() async {
+@visibleForTesting
+Future<void> runNotificationPoll({Dio? dioClient}) async {
   try {
     final prefs = await SharedPreferences.getInstance();
     try {
@@ -57,35 +116,31 @@ Future<void> _runNotificationPoll() async {
     } catch (_) {}
     final lang = prefs.getString(_prefLastLang) ?? 'ar';
 
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': '154Score-Flutter/1.0',
-          'X-API-Key': AppConfig.validateApiKey(),
-        },
-      ),
-    );
+    final dio = dioClient ??
+        Dio(
+          BaseOptions(
+            baseUrl: ApiEndpoints.baseUrl,
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 30),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'User-Agent': '154Score-Flutter/1.0',
+              'X-API-Key': AppConfig.validateApiKey(),
+            },
+          ),
+        );
 
     final notifService = NotificationService.instance;
     await notifService.initialize();
 
     // 0. Trigger backend match reminder background worker (Section 4.7)
     try {
-      await dio.post(
-        ApiEndpoints.matchReminderBackgroundTask,
-        data: {'source': 'mobile_background_task'},
+      await triggerMatchReminderBackgroundTask(dioClient: dio);
+    } catch (e) {
+      debugPrint(
+        '[BackgroundNotifTask] triggerMatchReminderBackgroundTask safe failure: $e',
       );
-    } catch (_) {
-      try {
-        await dio.post(
-          '/api${ApiEndpoints.matchReminderBackgroundTask}',
-          data: {'source': 'mobile_background_task'},
-        );
-      } catch (_) {}
     }
 
     // 1. Poll live match events (goals, start, end) for tracked/starred matches & teams
@@ -428,10 +483,19 @@ bool _isStarredMatchEvent({
 // ── Service Registration ───────────────────────────────────────────────────
 
 /// Call once in [main] after [WidgetsFlutterBinding.ensureInitialized].
+///
+/// Architecture & System Constraints:
+/// - Background polling execution is guaranteed every ~15 minutes ONLY on Android via WorkManager.
+/// - On iOS, background execution delegates to BGAppRefreshTask. iOS opportunistically schedules
+///   execution depending on battery level, network state, charging status, and app usage patterns.
+///   The app does NOT claim or assume that background polling is guaranteed every 15 minutes on iOS.
+/// - Local notifications are handled natively by flutter_local_notifications and do NOT require Firebase.
+/// - Background execution runs in an isolated Dart environment and strictly avoids any Flutter UI
+///   widgets, BuildContext, or unavailable UI APIs.
 Future<void> initBackgroundNotifications() async {
   await Workmanager().initialize(workmanagerCallback);
 
-  // Register a periodic poll every 15 minutes (minimum on Android)
+  // Register a periodic poll every 15 minutes (minimum on Android; opportunistic on iOS)
   await Workmanager().registerPeriodicTask(
     _taskTag,
     _taskName,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -49,6 +50,17 @@ class PushNotificationService {
     _initialized = true;
 
     try {
+      // 0. Startup Trigger: If valid token exists in storage, register immediately
+      final prefs = await SharedPreferences.getInstance();
+      final existingToken = prefs.getString(_prefFcmTokenKey);
+      if (existingToken != null && existingToken.trim().isNotEmpty) {
+        _fcmToken = existingToken.trim();
+        debugPrint(
+          '[PushNotificationService] Valid token exists on startup, registering with backend.',
+        );
+        unawaited(registerTokenWithBackend(_fcmToken!));
+      }
+
       final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
       if (apiKey.contains('Dummy') || apiKey.contains('154000')) {
         debugPrint(
@@ -88,10 +100,10 @@ class PushNotificationService {
       // 5. Retrieve and Register FCM Device Token
       await _retrieveAndRegisterToken();
 
-      // 6. Listen for Token Refreshes
+      // 6. Listen for Token Refreshes (Token refresh trigger)
       FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
         debugPrint('[FCM_TOKEN_REFRESHED] New token received from Firebase');
-        _registerTokenWithBackend(newToken);
+        registerTokenWithBackend(newToken);
       });
 
       // 7. Setup Message Listeners (Foreground, Background Tap, Terminated Launch)
@@ -148,12 +160,12 @@ class PushNotificationService {
         }
       }
       final token = await FirebaseMessaging.instance.getToken();
-      if (token != null && token.isNotEmpty) {
-        _fcmToken = token;
+      if (token != null && token.trim().isNotEmpty) {
+        _fcmToken = token.trim();
         debugPrint(
           '[FCM_TOKEN_RECEIVED] FCM Token: ${token.substring(0, token.length > 12 ? 12 : token.length)}...',
         );
-        await _registerTokenWithBackend(token);
+        await registerTokenWithBackend(token);
       }
     } catch (e) {
       debugPrint('[PushNotificationService] getToken error: $e');
@@ -161,55 +173,84 @@ class PushNotificationService {
   }
 
   /// Sends the device token to: POST /notifications/push_notifications_providers
-  Future<bool> _registerTokenWithBackend(String token) async {
+  /// Expected payload: { "token": "...", "platform": "android|ios", "app_version": "...", "language": "..." }
+  /// Triggers: token obtained, token refreshed, app startup.
+  /// Rejects empty/null tokens. Falls back to /api/notifications/... ONLY on 404.
+  Future<bool> registerTokenWithBackend(
+    String token, {
+    Dio? dioClient,
+    String? platformOverride,
+  }) async {
+    final cleanToken = token.trim();
+    if (cleanToken.isEmpty) {
+      debugPrint('[PushNotificationService] Rejecting empty or whitespace token registration.');
+      return false;
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final oldToken = prefs.getString(_prefFcmTokenKey);
       final lang = prefs.getString('154score_notif_lang') ?? 'ar';
+      final platform = platformOverride ??
+          (defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android');
+      const appVersion = AppConfig.appVersion;
 
       final payload = {
-        'token': token,
-        'platform': Platform.isIOS ? 'ios' : 'android',
+        'token': cleanToken,
+        'platform': platform,
+        'app_version': appVersion,
+        'language': lang,
         'lang': lang,
         'bundle_id': 'com.hamdy.app154score',
-        if (oldToken != null && oldToken != token) 'old_token': oldToken,
+        if (oldToken != null && oldToken != cleanToken) 'old_token': oldToken,
       };
 
-      final dio = Dio(
-        BaseOptions(
-          baseUrl: ApiEndpoints.baseUrl,
-          connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(seconds: 15),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'User-Agent': '154Score-Flutter/1.0',
-            'X-API-Key': AppConfig.validateApiKey(),
-          },
-        ),
-      );
+      final requestHeaders = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'User-Agent': '154Score-Flutter/1.0',
+        'X-API-Key': AppConfig.validateApiKey(),
+      };
 
-      // Support canonical endpoint (try with and without /api prefix)
-      Response? response;
+      final dio = dioClient ??
+          Dio(
+            BaseOptions(
+              baseUrl: ApiEndpoints.baseUrl,
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 15),
+              headers: requestHeaders,
+            ),
+          );
+
+      // Attempt primary route; fallback to /api prefix ONLY on HTTP 404 (Route Not Found)
+      Response response;
       try {
         response = await dio.post(
-          '/notifications/push_notifications_providers',
+          ApiEndpoints.pushNotificationsProviders,
           data: payload,
+          options: Options(headers: requestHeaders),
         );
-      } catch (_) {
-        try {
-          response = await dio.post(
-            '/api/notifications/push_notifications_providers',
-            data: payload,
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 404) {
+          debugPrint(
+            '[PushNotificationService] 404 on ${ApiEndpoints.pushNotificationsProviders}, falling back to ${ApiEndpoints.pushNotificationsProvidersFallback}',
           );
-        } catch (_) {}
+          response = await dio.post(
+            ApiEndpoints.pushNotificationsProvidersFallback,
+            data: payload,
+            options: Options(headers: requestHeaders),
+          );
+        } else {
+          rethrow;
+        }
       }
 
-      final status = response?.statusCode;
+      final status = response.statusCode;
       if (status == 200 || status == 201) {
-        await prefs.setString(_prefFcmTokenKey, token);
+        await prefs.setString(_prefFcmTokenKey, cleanToken);
+        _fcmToken = cleanToken;
         debugPrint(
-          '[FCM_TOKEN_REGISTERED] Registered with backend: ${token.substring(0, 10)}...',
+          '[FCM_TOKEN_REGISTERED] Registered with backend: ${cleanToken.substring(0, cleanToken.length > 10 ? 10 : cleanToken.length)}...',
         );
         return true;
       }
