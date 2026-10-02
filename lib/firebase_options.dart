@@ -32,8 +32,8 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDummyKeyFor154ScorePushNotification',
-    appId: '1:154000154000:web:154score154score154',
+    apiKey: 'AIzaSyB0154000154000154000154000154000',
+    appId: '1:154000154000:web:a154000154000154000154',
     messagingSenderId: '154000154000',
     projectId: 'score154-app',
     authDomain: 'score154-app.firebaseapp.com',
@@ -41,16 +41,16 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDummyKeyFor154ScorePushNotification',
-    appId: '1:154000154000:android:154score154score154',
+    apiKey: 'AIzaSyB0154000154000154000154000154000',
+    appId: '1:154000154000:android:a154000154000154000154',
     messagingSenderId: '154000154000',
     projectId: 'score154-app',
     storageBucket: 'score154-app.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDummyKeyFor154ScorePushNotification',
-    appId: '1:154000154000:ios:154score154score154',
+    apiKey: 'AIzaSyB0154000154000154000154000154000',
+    appId: '1:154000154000:ios:a154000154000154000154',
     messagingSenderId: '154000154000',
     projectId: 'score154-app',
     storageBucket: 'score154-app.appspot.com',

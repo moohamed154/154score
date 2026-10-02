@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyDummyKeyFor154ScorePushNotification</string>
+	<string>AIzaSyB0154000154000154000154000154000</string>
 	<key>GCM_SENDER_ID</key>
 	<string>154000154000</string>
 	<key>PLIST_VERSION</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<false></false>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:154000154000:ios:154score154score154</string>
+	<string>1:154000154000:ios:a154000154000154000154</string>
 </dict>
 </plist>

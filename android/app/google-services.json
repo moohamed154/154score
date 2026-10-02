@@ -7,7 +7,7 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:154000154000:android:154score154score154",
+        "mobilesdk_app_id": "1:154000154000:android:a154000154000154000154",
         "android_client_info": {
           "package_name": "com.hamdy.app154score"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDummyKeyFor154ScorePushNotification"
+          "current_key": "AIzaSyB0154000154000154000154000154000"
         }
       ],
       "services": {
