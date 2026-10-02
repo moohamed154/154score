@@ -6,7 +6,7 @@ import workmanager_apple
 import flutter_foreground_task
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate {
   private var apnsToken: String?
   private var apnsChannel: FlutterMethodChannel?
 
@@ -27,24 +27,27 @@ import flutter_foreground_task
     // 2. Register for remote notifications on APNs
     application.registerForRemoteNotifications()
 
-    // 3. Required for background action isolate execution
+    // 3. Register Flutter plugins with AppDelegate
+    GeneratedPluginRegistrant.register(with: self)
+
+    // 4. Required for background action isolate execution
     FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
       GeneratedPluginRegistrant.register(with: registry)
     }
 
-    // 4. Required for flutter_foreground_task background isolate execution on iOS
+    // 5. Required for flutter_foreground_task background isolate execution on iOS
     SwiftFlutterForegroundTaskPlugin.setPluginRegistrantCallback { (registry) in
       GeneratedPluginRegistrant.register(with: registry)
     }
 
-    // 5. Workmanager background handlers
+    // 6. Workmanager background handlers
     if #available(iOS 13.0, *) {
       WorkmanagerPlugin.registerLaunchHandlers()
     }
 
     let didLaunch = super.application(application, didFinishLaunchingWithOptions: launchOptions)
 
-    // 6. Setup APNs MethodChannel fallback safely after super launch
+    // 7. Setup native APNs MethodChannel directly on root FlutterViewController
     if let controller = window?.rootViewController as? FlutterViewController {
       setupApnsChannel(binaryMessenger: controller.binaryMessenger)
     } else if let registrar = self.registrar(forPlugin: "ApnsNotificationPlugin") {
@@ -89,10 +92,5 @@ import flutter_foreground_task
   ) {
     print("[AppDelegate] Failed to register for remote notifications: \(error.localizedDescription)")
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
-  }
-
-  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
-    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    setupApnsChannel(binaryMessenger: engineBridge.applicationRegistrar.messenger())
   }
 }

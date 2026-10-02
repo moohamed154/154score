@@ -1,37 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/router/app_router.dart';
-import '../../firebase_options.dart';
 import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 import 'notification_service.dart';
 
-/// Top-level background message handler required by Firebase Messaging.
-/// Executes when a notification / data message arrives while app is terminated or in background.
-@pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (_) {}
-
-  debugPrint(
-    '[PushNotificationService] Background message received: ${message.messageId} | ${message.data}',
-  );
-}
-
-/// Central service managing Firebase Cloud Messaging (FCM), OS permissions,
-/// backend device token registration, foreground heads-up alerts, and notification tap routing.
+/// Central service managing push notifications, OS permissions,
+/// backend device token registration (Section 4.7), and notification tap routing.
+/// Native APNs on iOS and native local notifications operate directly without Firebase SDK.
 class PushNotificationService {
   PushNotificationService._();
   static final PushNotificationService instance = PushNotificationService._();
@@ -43,8 +24,8 @@ class PushNotificationService {
 
   String? get fcmToken => _fcmToken;
 
-  /// Initialize Firebase Messaging, request OS permissions, obtain FCM token,
-  /// register with backend, and attach message listeners.
+  /// Initialize notification permissions, register any stored token,
+  /// and prepare routing listeners.
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
@@ -52,7 +33,8 @@ class PushNotificationService {
     try {
       // 0. Startup Trigger: If valid token exists in storage, register immediately
       final prefs = await SharedPreferences.getInstance();
-      final existingToken = prefs.getString(_prefFcmTokenKey);
+      final existingToken = prefs.getString(_prefFcmTokenKey) ??
+          prefs.getString('apns_device_token');
       if (existingToken != null && existingToken.trim().isNotEmpty) {
         _fcmToken = existingToken.trim();
         debugPrint(
@@ -61,114 +43,16 @@ class PushNotificationService {
         unawaited(registerTokenWithBackend(_fcmToken!));
       }
 
-      final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
-      if (apiKey.contains('Dummy') || apiKey.contains('154000')) {
-        debugPrint(
-          '[PushNotificationService] Notice: No Google Cloud account linked for this package. FCM initialization skipped; using local notifications & WebSockets.',
-        );
-        return;
-      }
-
-      // 1. Initialize Firebase Core
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-      }
-
-      // Sync APNs token with Firebase on iOS if it was buffered prior to Firebase initialization
-      if (Platform.isIOS) {
-        try {
-          const apnsChannel = MethodChannel('com.hamdy.app154score/apns');
-          await apnsChannel.invokeMethod('syncApnsToken');
-        } catch (_) {}
-      }
-
-      // 2. Set Background Handler
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-      // 3. Foreground Presentation Options (iOS / macOS)
-      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
+      // Initialize local notifications service
+      await NotificationService.instance.initialize(
+        onNotificationTap: (payload) {
+          if (payload != null && payload.isNotEmpty) {
+            AppRouter.handleNotificationPayload(payload);
+          }
+        },
       );
-
-      // 4. Request OS Permissions
-      await requestPermissions();
-
-      // 5. Retrieve and Register FCM Device Token
-      await _retrieveAndRegisterToken();
-
-      // 6. Listen for Token Refreshes (Token refresh trigger)
-      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-        debugPrint('[FCM_TOKEN_REFRESHED] New token received from Firebase');
-        registerTokenWithBackend(newToken);
-      });
-
-      // 7. Setup Message Listeners (Foreground, Background Tap, Terminated Launch)
-      _setupMessageListeners();
     } catch (e) {
       debugPrint('[PushNotificationService] Initialization error: $e');
-    }
-  }
-
-  /// Explicitly requests notification permissions on Android 13+ and iOS.
-  Future<bool> requestPermissions() async {
-    try {
-      final settings = await FirebaseMessaging.instance.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-        provisional: false,
-        criticalAlert: false,
-        announcement: false,
-      );
-
-      final isAuthorized =
-          settings.authorizationStatus == AuthorizationStatus.authorized ||
-          settings.authorizationStatus == AuthorizationStatus.provisional;
-
-      debugPrint(
-        '[PushNotificationService] Notification permission status: ${settings.authorizationStatus}',
-      );
-      return isAuthorized;
-    } catch (e) {
-      debugPrint('[PushNotificationService] requestPermissions error: $e');
-      return false;
-    }
-  }
-
-  /// Obtains current token and registers with the canonical 154Score backend.
-  Future<void> _retrieveAndRegisterToken() async {
-    try {
-      if (Platform.isIOS) {
-        String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-        if (apnsToken == null) {
-          debugPrint('[PushNotificationService] Waiting for iOS APNs token...');
-          for (int i = 0; i < 4; i++) {
-            await Future.delayed(const Duration(milliseconds: 1000));
-            apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-            if (apnsToken != null) break;
-          }
-        }
-        if (apnsToken == null) {
-          debugPrint(
-            '[PushNotificationService] APNs token not yet available. Registration will proceed via onTokenRefresh.',
-          );
-          return;
-        }
-      }
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token != null && token.trim().isNotEmpty) {
-        _fcmToken = token.trim();
-        debugPrint(
-          '[FCM_TOKEN_RECEIVED] FCM Token: ${token.substring(0, token.length > 12 ? 12 : token.length)}...',
-        );
-        await registerTokenWithBackend(token);
-      }
-    } catch (e) {
-      debugPrint('[PushNotificationService] getToken error: $e');
     }
   }
 
@@ -260,46 +144,17 @@ class PushNotificationService {
     return false;
   }
 
-  /// Configures message streams: Foreground, Background Tap, and Terminated App Launch.
-  void _setupMessageListeners() {
-    // A. Foreground Messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint(
-        '[NOTIFICATION_RECEIVED_FOREGROUND] Message: ${message.messageId} | ${message.notification?.title}',
-      );
-      _handleForegroundMessage(message);
-    });
-
-    // B. Background App Open (User clicked notification from notification center)
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint(
-        '[NOTIFICATION_OPENED] User opened app from notification: ${message.data}',
-      );
-      _handleNotificationTap(message.data);
-    });
-
-    // C. Terminated App Launch (App opened from dead state via notification tap)
-    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
-      if (message != null) {
-        debugPrint(
-          '[INITIAL_NOTIFICATION_RECEIVED] Launched from terminated state via: ${message.data}',
-        );
-        _handleNotificationTap(message.data);
-      }
-    });
-  }
-
   /// Displays an in-app heads-up notification when received while the app is active in foreground.
-  Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    final title = message.notification?.title ?? message.data['title']?.toString();
-    final body = message.notification?.body ?? message.data['body']?.toString();
-    final matchId = message.data['match_id']?.toString();
-    final eventType = message.data['event_type']?.toString();
+  Future<void> handleForegroundPayload(Map<String, dynamic> data) async {
+    final title = data['title']?.toString();
+    final body = data['body']?.toString();
+    final matchId = data['match_id']?.toString();
+    final eventType = data['event_type']?.toString();
 
     if (title == null || body == null) return;
 
     // Cross-channel deduplication with in-app tracker
-    final score = message.data['score']?.toString() ?? '';
+    final score = data['score']?.toString() ?? '';
     final dedupKey = '${eventType}_${matchId}_$score';
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -315,10 +170,10 @@ class PushNotificationService {
     } catch (_) {}
 
     final payload = jsonEncode({
-      'type': message.data['type'] ?? 'match',
+      'type': data['type'] ?? 'match',
       if (matchId != null) 'match_id': matchId,
-      if (message.data['article_id'] != null)
-        'article_id': message.data['article_id'],
+      if (data['article_id'] != null)
+        'article_id': data['article_id'],
     });
 
     final notifService = NotificationService.instance;
@@ -353,7 +208,7 @@ class PushNotificationService {
       );
     } else {
       await notifService.showNewsNotification(
-        articleId: message.data['article_id']?.toString() ?? 'alert',
+        articleId: data['article_id']?.toString() ?? 'alert',
         title: title,
         body: body,
         payload: payload,
@@ -362,7 +217,7 @@ class PushNotificationService {
   }
 
   /// Handles payload navigation to Match Details or News Details.
-  void _handleNotificationTap(Map<String, dynamic> data) {
+  void handleNotificationTap(Map<String, dynamic> data) {
     final matchId = data['match_id']?.toString();
     if (matchId != null && matchId.isNotEmpty) {
       AppRouter.navigateToMatch(matchId);
