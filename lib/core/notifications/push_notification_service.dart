@@ -49,6 +49,14 @@ class PushNotificationService {
     _initialized = true;
 
     try {
+      final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
+      if (apiKey.contains('Dummy') || apiKey.contains('154000')) {
+        debugPrint(
+          '[PushNotificationService] Notice: No Google Cloud account linked for this package. FCM initialization skipped; using local notifications & WebSockets.',
+        );
+        return;
+      }
+
       // 1. Initialize Firebase Core
       if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp(

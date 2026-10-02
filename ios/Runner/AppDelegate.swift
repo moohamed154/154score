@@ -4,7 +4,6 @@ import UserNotifications
 import flutter_local_notifications
 import workmanager_apple
 import flutter_foreground_task
-import FirebaseCore
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -15,14 +14,6 @@ import FirebaseCore
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // 0. Ensure Firebase is configured natively before any APNs or plugin callbacks
-    if (FirebaseApp.allApps?.count ?? 0) == 0 {
-      if let filePath = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
-         let options = FirebaseOptions(contentsOfFile: filePath) {
-        FirebaseApp.configure(options: options)
-      }
-    }
-
     // 1. Required for foreground notification presentation and user interaction on iOS
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
@@ -74,47 +65,11 @@ import FirebaseCore
         UIApplication.shared.registerForRemoteNotifications()
         result(true)
       case "syncApnsToken":
-        if let tokenData = self?.apnsDeviceTokenData, self?.isFirebaseConfigured == true {
-          self?.forwardDeviceTokenToPlugins(tokenData, application: UIApplication.shared)
-          result(true)
-        } else {
-          result(false)
-        }
+        result(true)
       default:
         result(FlutterMethodNotImplemented)
       }
     }
-  }
-
-  private var apnsDeviceTokenData: Data?
-
-  private var isFirebaseConfigured: Bool {
-    return (FirebaseApp.allApps?.count ?? 0) > 0
-  }
-
-  private func forwardDeviceTokenToPlugins(
-    _ deviceToken: Data,
-    application: UIApplication
-  ) {
-    super.application(
-      application,
-      didRegisterForRemoteNotificationsWithDeviceToken: deviceToken
-    )
-  }
-
-  private func retryForwardingDeviceToken(
-    _ deviceToken: Data,
-    application: UIApplication
-  ) {
-    guard isFirebaseConfigured else {
-      print("[AppDelegate] Firebase is still not configured; APNs token forwarding skipped.")
-      return
-    }
-
-    forwardDeviceTokenToPlugins(
-      deviceToken,
-      application: application
-    )
   }
 
   override func application(
@@ -124,37 +79,16 @@ import FirebaseCore
     let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
     let token = tokenParts.joined()
     self.apnsToken = token
-    self.apnsDeviceTokenData = deviceToken
     apnsChannel?.invokeMethod("onTokenReceived", arguments: token)
-
-    // Forward to FlutterAppDelegate plugins (including Firebase Messaging) ONLY if Firebase has been initialized.
-    // This strictly prevents FIRAppNotConfiguredException crash when Firebase is not yet ready.
-    if isFirebaseConfigured {
-      super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
-    } else {
-      print("[AppDelegate] APNs device token received; Firebase not yet configured natively, deferring plugin forwarding to prevent FIRAppNotConfiguredException.")
-      DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-        guard let self = self,
-              let tokenData = self.apnsDeviceTokenData else {
-          return
-        }
-
-        self.retryForwardingDeviceToken(
-          tokenData,
-          application: UIApplication.shared
-        )
-      }
-    }
+    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 
   override func application(
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
-    print("Failed to register for APNs: \(error.localizedDescription)")
-    if isFirebaseConfigured {
-      super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
-    }
+    print("[AppDelegate] Failed to register for remote notifications: \(error.localizedDescription)")
+    super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
@@ -162,6 +96,3 @@ import FirebaseCore
     setupApnsChannel(binaryMessenger: engineBridge.applicationRegistrar.messenger())
   }
 }
-
-
-
