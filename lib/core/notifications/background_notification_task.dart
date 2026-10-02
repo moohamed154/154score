@@ -73,6 +73,21 @@ Future<void> _runNotificationPoll() async {
     final notifService = NotificationService.instance;
     await notifService.initialize();
 
+    // 0. Trigger backend match reminder background worker (Section 4.7)
+    try {
+      await dio.post(
+        ApiEndpoints.matchReminderBackgroundTask,
+        data: {'source': 'mobile_background_task'},
+      );
+    } catch (_) {
+      try {
+        await dio.post(
+          '/api${ApiEndpoints.matchReminderBackgroundTask}',
+          data: {'source': 'mobile_background_task'},
+        );
+      } catch (_) {}
+    }
+
     // 1. Poll live match events (goals, start, end) for tracked/starred matches & teams
     await _pollLiveMatches(dio, prefs, lang, notifService);
 

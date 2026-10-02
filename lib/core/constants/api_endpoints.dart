@@ -142,4 +142,12 @@ class ApiEndpoints {
 
   // 8. Notifications Operations
   static const String notifications = '/api/notifications';
+
+  // 9. Push Notifications & Background Workers (Section 4.7)
+  static const String pushNotificationsProviders =
+      '/notifications/push_notifications_providers';
+  static const String notificationPostService =
+      '/notifications/notification_post_service';
+  static const String matchReminderBackgroundTask =
+      '/notifications/match_reminder_background_task';
 }
