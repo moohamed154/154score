@@ -199,21 +199,48 @@ class FavoritesCubit extends Cubit<FavoritesState> {
 
   Future<void> toggleTeam(String teamName, {String? id}) async {
     final wasFav = isTeamFavorite(id: id, name: teamName);
-    final key = (id != null && id.trim().isNotEmpty) ? id.trim() : teamName.trim();
+    final cleanName = teamName.trim();
+    final cleanId = id?.trim();
+    final key = (cleanId != null && cleanId.isNotEmpty) ? cleanId : cleanName;
 
     // Optimistic UI update: 0ms lag
     final updatedList = List<String>.from(state.favoriteTeams);
+    final updatedTitles = Map<String, String>.from(state.teamTitles);
+
     if (wasFav) {
-      updatedList.removeWhere((item) =>
-          item.toLowerCase() == key.toLowerCase() ||
-          item.toLowerCase() == teamName.trim().toLowerCase() ||
-          (id != null && item.toLowerCase() == id.trim().toLowerCase()));
+      updatedList.removeWhere((item) {
+        final cleanItem = item.trim();
+        if (cleanName.isNotEmpty &&
+            cleanItem.toLowerCase() == cleanName.toLowerCase()) {
+          return true;
+        }
+        if (cleanId != null &&
+            cleanId.isNotEmpty &&
+            cleanItem.toLowerCase() == cleanId.toLowerCase()) {
+          return true;
+        }
+        if (cleanName.isNotEmpty &&
+            TeamResolver.areSameTeam(cleanItem, cleanName)) {
+          return true;
+        }
+        if (cleanId != null &&
+            cleanId.isNotEmpty &&
+            TeamResolver.areSameTeam(cleanItem, cleanId)) {
+          return true;
+        }
+        return false;
+      });
     } else {
-      if (!updatedList.any((item) => item.toLowerCase() == key.toLowerCase())) {
-        updatedList.add(key);
+      if (cleanName.isNotEmpty && !updatedList.contains(cleanName)) {
+        updatedList.add(cleanName);
+      } else if (cleanId != null && cleanId.isNotEmpty && !updatedList.contains(cleanId)) {
+        updatedList.add(cleanId);
+      }
+      if (cleanId != null && cleanId.isNotEmpty && cleanName.isNotEmpty) {
+        updatedTitles[cleanId] = cleanName;
       }
     }
-    emit(state.copyWith(favoriteTeams: updatedList));
+    emit(state.copyWith(favoriteTeams: updatedList, teamTitles: updatedTitles));
 
     await _storage.toggleFavoriteTeam(teamName, id: id);
     loadFavorites();
@@ -240,22 +267,60 @@ class FavoritesCubit extends Cubit<FavoritesState> {
   }) async {
     final effectiveName = name ?? compName;
     final wasFav = isCompetitionFavorite(id: id, name: effectiveName, slug: slug);
-    final target = id ?? effectiveName ?? slug ?? '';
+
+    final targets = <String>{};
+    void addTarget(String? s) {
+      if (s != null && s.trim().isNotEmpty) {
+        targets.add(s.trim().toLowerCase());
+      }
+    }
+    addTarget(compName);
+    addTarget(id);
+    addTarget(name);
+    addTarget(slug);
+
+    if (id != null && state.competitionTitles.containsKey(id.trim())) {
+      addTarget(state.competitionTitles[id.trim()]);
+    }
+    if (name != null && state.competitionTitles.containsKey(name.trim())) {
+      addTarget(state.competitionTitles[name.trim()]);
+    }
+    if (compName != null && state.competitionTitles.containsKey(compName.trim())) {
+      addTarget(state.competitionTitles[compName.trim()]);
+    }
 
     // Optimistic UI update: 0ms lag
     final updatedList = List<String>.from(state.favoriteCompetitions);
+    final updatedTitles = Map<String, String>.from(state.competitionTitles);
+
     if (wasFav) {
-      updatedList.removeWhere((c) =>
-          c.toLowerCase() == target.toLowerCase() ||
-          (effectiveName != null && c.toLowerCase() == effectiveName.toLowerCase()) ||
-          (id != null && c.toLowerCase() == id.toLowerCase()));
+      updatedList.removeWhere((item) {
+        final cleanItem = item.trim().toLowerCase();
+        if (targets.contains(cleanItem)) return true;
+        if (state.competitionTitles.containsKey(item.trim()) &&
+            targets.contains(state.competitionTitles[item.trim()]!.trim().toLowerCase())) {
+          return true;
+        }
+        return false;
+      });
     } else {
-      if (target.isNotEmpty &&
-          !updatedList.any((c) => c.toLowerCase() == target.toLowerCase())) {
-        updatedList.add(target);
+      final canonicalName = (name != null && name.trim().isNotEmpty)
+          ? name.trim()
+          : ((compName != null && compName.trim().isNotEmpty)
+                ? compName.trim()
+                : (id?.trim() ?? ''));
+
+      if (canonicalName.isNotEmpty && !updatedList.contains(canonicalName)) {
+        updatedList.add(canonicalName);
+      }
+      if (id != null && id.trim().isNotEmpty && canonicalName.isNotEmpty) {
+        updatedTitles[id.trim()] = canonicalName;
       }
     }
-    emit(state.copyWith(favoriteCompetitions: updatedList));
+    emit(state.copyWith(
+      favoriteCompetitions: updatedList,
+      competitionTitles: updatedTitles,
+    ));
 
     await _storage.toggleFavoriteCompetition(
       compName: effectiveName,

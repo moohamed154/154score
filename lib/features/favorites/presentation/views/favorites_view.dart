@@ -7,8 +7,6 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/team_resolver.dart';
 import '../../../../core/widgets/empty_view.dart';
-import '../../../matches/presentation/bloc/matches_bloc.dart';
-import '../../../matches/presentation/bloc/matches_event.dart';
 import '../cubit/favorites_cubit.dart';
 
 class FavoritesView extends StatelessWidget {
@@ -99,11 +97,6 @@ class FavoritesView extends StatelessWidget {
                       label: Text(team, style: const TextStyle(fontSize: 12)),
                       onPressed: () {
                         context.read<FavoritesCubit>().toggleTeam(team);
-                        try {
-                          context.read<MatchesBloc>().add(
-                            const RefreshFavoritesEvent(),
-                          );
-                        } catch (_) {}
                         Navigator.of(dialogContext).pop();
                       },
                     );
@@ -122,11 +115,6 @@ class FavoritesView extends StatelessWidget {
                 final text = controller.text.trim();
                 if (text.isNotEmpty) {
                   context.read<FavoritesCubit>().toggleTeam(text);
-                  try {
-                    context.read<MatchesBloc>().add(
-                      const RefreshFavoritesEvent(),
-                    );
-                  } catch (_) {}
                 }
                 Navigator.of(dialogContext).pop();
               },
@@ -201,11 +189,6 @@ class FavoritesView extends StatelessWidget {
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
                         context.read<FavoritesCubit>().toggleTeam(team);
-                        try {
-                          context.read<MatchesBloc>().add(
-                            const RefreshFavoritesEvent(),
-                          );
-                        } catch (_) {}
                       },
                     );
                   }).toList(),
@@ -254,11 +237,6 @@ class FavoritesView extends StatelessWidget {
                         context.read<FavoritesCubit>().toggleCompetition(
                           name: comp,
                         );
-                        try {
-                          context.read<MatchesBloc>().add(
-                            const RefreshFavoritesEvent(),
-                          );
-                        } catch (_) {}
                       },
                     );
                   }).toList(),

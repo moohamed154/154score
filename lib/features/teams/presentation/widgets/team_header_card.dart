@@ -13,8 +13,6 @@ import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/starred_button.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
-import '../../../matches/presentation/bloc/matches_bloc.dart';
-import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../standings/domain/entities/standings_entity.dart';
 import '../../domain/entities/team_entity.dart';
 
@@ -266,11 +264,6 @@ class TeamHeaderCard extends StatelessWidget {
                           name,
                           id: profile?.teamId,
                         );
-                        try {
-                          context.read<MatchesBloc>().add(
-                            const RefreshFavoritesEvent(),
-                          );
-                        } catch (_) {}
                       },
                     );
                   },

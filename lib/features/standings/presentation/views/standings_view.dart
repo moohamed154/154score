@@ -845,7 +845,12 @@ class _StandingsViewState extends State<StandingsView> {
                                   context: context,
                                   item: item,
                                   index: index,
-                                  isFavorite: isFavoritesTab,
+                                  isFavorite: isFavoritesTab ||
+                                      favState.isFavoriteCompetition(
+                                        id: item.id,
+                                        name: item.name,
+                                        slug: item.slug,
+                                      ),
                                   isDark: isDark,
                                   isArabic: isArabic,
                                   isSearching: searchQuery.isNotEmpty,
