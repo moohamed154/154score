@@ -1,11 +1,14 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
 import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 import '../errors/exceptions.dart';
+import '../security/security_signer.dart';
 import '../storage/local_storage_service.dart';
 import 'debug_console.dart';
 
@@ -35,6 +38,17 @@ class ApiClient {
       ),
     );
 
+    // Anti-Proxy / MITM defense: prevent Charles / Burp Suite WiFi proxies in production release builds
+    if (!kIsWeb && dio.httpClientAdapter is IOHttpClientAdapter) {
+      (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+        final client = HttpClient();
+        if (kReleaseMode) {
+          client.findProxy = (uri) => 'DIRECT';
+        }
+        return client;
+      };
+    }
+
     // Network Debug Console Interceptor: captures and prints responses
     dio.interceptors.add(DebugConsoleInterceptor());
 
@@ -56,6 +70,13 @@ class ApiClient {
             );
             return;
           }
+
+          // Anti-Tampering & Anti-Scraping: attach dynamic cryptographic signature (HMAC-SHA256, Nonce, Timestamp)
+          final securityHeaders = SecuritySigner.buildSecurityHeaders(
+            method: options.method,
+            path: options.path,
+          );
+          options.headers.addAll(securityHeaders);
 
           // Resolve current timezone offset from LocalStorageService (default to 3)
           int offset = 3;
