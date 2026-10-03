@@ -226,6 +226,40 @@ class NotificationService {
     );
   }
 
+  Future<void> showHalfTimeNotification({
+    required String matchId,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    await _show(
+      id: _stableId('halftime_$matchId'),
+      title: title,
+      body: body,
+      channelId: _channelMatchId,
+      payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
+    );
+  }
+
+  Future<void> showSecondHalfStartNotification({
+    required String matchId,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    await _show(
+      id: _stableId('secondhalf_$matchId'),
+      title: title,
+      body: body,
+      channelId: _channelMatchId,
+      payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
+    );
+  }
+
   Future<void> showMatchEndNotification({
     required String matchId,
     required String title,

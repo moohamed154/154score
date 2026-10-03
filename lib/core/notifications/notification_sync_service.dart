@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
+import '../security/security_signer.dart';
 import 'push_notification_service.dart';
 
 /// Service responsible for synchronizing user notification subscriptions
@@ -76,6 +77,8 @@ class NotificationSyncService {
           teams ?? prefs.getStringList('app_favorite_teams') ?? [];
       final targetMatches =
           matches ?? prefs.getStringList('app_favorite_matches') ?? [];
+      final scope = prefs.getString('app_notif_match_scope');
+      final isAllMatches = allMatches || scope == 'all_matches';
 
       final payload = {
         'device_token': cleanToken,
@@ -86,7 +89,7 @@ class NotificationSyncService {
             .where((m) => m.isNotEmpty)
             .toList(),
         'news': news,
-        'all_matches': allMatches,
+        'all_matches': isAllMatches,
       };
 
       final response = await _postWithFallback(
@@ -253,20 +256,28 @@ class NotificationSyncService {
       'X-API-Key': AppConfig.validateApiKey(),
     };
     try {
+      final sigHeaders = SecuritySigner.buildSecurityHeaders(
+        method: 'POST',
+        path: primaryRoute,
+      );
       return await dio.post(
         primaryRoute,
         data: payload,
-        options: Options(headers: requestHeaders),
+        options: Options(headers: {...requestHeaders, ...sigHeaders}),
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         debugPrint(
           '[NotificationSyncService] 404 on $primaryRoute, falling back to $fallbackRoute',
         );
+        final fallbackSig = SecuritySigner.buildSecurityHeaders(
+          method: 'POST',
+          path: fallbackRoute,
+        );
         return await dio.post(
           fallbackRoute,
           data: payload,
-          options: Options(headers: requestHeaders),
+          options: Options(headers: {...requestHeaders, ...fallbackSig}),
         );
       }
       rethrow;

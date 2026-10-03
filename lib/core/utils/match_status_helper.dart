@@ -333,6 +333,10 @@ class MatchStatusHelper {
         phase == MatchPhase.penalties;
   }
 
+  static bool isHalfTime(MatchPhase phase) {
+    return phase == MatchPhase.halfTime;
+  }
+
   /// Whether the match is actively in-play (clock is ticking)
   static bool isInPlay(MatchPhase phase) {
     return phase == MatchPhase.live || phase == MatchPhase.extraTime;

@@ -162,17 +162,51 @@ class MatchNotificationTracker {
             await _sendMatchStartNotification(match);
           }
         }
+
+        // ── B2. Halftime Detection ──────────────────────────────────────────
+        final wasNotHalfTime = !MatchStatusHelper.isHalfTime(
+          MatchStatusHelper.parseStatus(previous.status),
+        );
+        final isHalfTimeNow = MatchStatusHelper.isHalfTime(
+          MatchStatusHelper.parseStatus(status),
+        );
+        if (wasNotHalfTime && isHalfTimeNow) {
+          final alertKey = 'halftime_$cleanId';
+          if (!_sentAlertKeys.contains(alertKey)) {
+            await _recordAlert(alertKey);
+            await _sendHalfTimeNotification(
+              match: match,
+              s1: s1 ?? previous.score1,
+              s2: s2 ?? previous.score2,
+            );
+          }
+        }
+
+        // ── B3. Second Half Start Detection ────────────────────────────────
+        final wasHalfTime = MatchStatusHelper.isHalfTime(
+          MatchStatusHelper.parseStatus(previous.status),
+        );
+        final isSecondHalfNow = MatchStatusHelper.isInPlay(
+          MatchStatusHelper.parseStatus(status),
+        );
+        if (wasHalfTime && isSecondHalfNow) {
+          final alertKey = 'secondhalf_$cleanId';
+          if (!_sentAlertKeys.contains(alertKey)) {
+            await _recordAlert(alertKey);
+            await _sendSecondHalfStartNotification(match);
+          }
+        }
       }
 
       // ── C. Match End Detection ────────────────────────────────────────────
       if (startEndEnabled) {
-        final wasLive = MatchStatusHelper.isLive(
+        final wasLiveOrHT = MatchStatusHelper.isLive(
           MatchStatusHelper.parseStatus(previous.status),
         );
         final isFinishedNow = MatchStatusHelper.isFinished(
           MatchStatusHelper.parseStatus(status),
         );
-        if (wasLive && isFinishedNow) {
+        if (wasLiveOrHT && isFinishedNow) {
           final alertKey = 'end_$cleanId';
           if (!_sentAlertKeys.contains(alertKey)) {
             await _recordAlert(alertKey);
@@ -408,6 +442,60 @@ class MatchNotificationTracker {
     });
 
     await NotificationService.instance.showMatchStartNotification(
+      matchId: match.id,
+      title: title,
+      body: body,
+      payload: payload,
+    );
+  }
+
+  Future<void> _sendHalfTimeNotification({
+    required MatchEntity match,
+    required int s1,
+    required int s2,
+  }) async {
+    final lang = _prefs?.getString('154score_notif_lang') ?? 'ar';
+    final isArabic = lang == 'ar';
+
+    final title = isArabic
+        ? 'استراحة الشوطين ⏱️ [${match.team1}] $s1 - $s2 [${match.team2}]'
+        : 'Halftime ⏱️ [${match.team1}] $s1 - $s2 [${match.team2}]';
+    final body = isArabic
+        ? 'نهاية الشوط الأول بين ${match.team1} و ${match.team2} ($s1 - $s2)'
+        : 'First half concluded: ${match.team1} $s1 - $s2 ${match.team2}';
+
+    final payload = jsonEncode({
+      'type': 'match',
+      'match_id': match.id,
+      'event_type': 'half_time',
+    });
+
+    await NotificationService.instance.showHalfTimeNotification(
+      matchId: match.id,
+      title: title,
+      body: body,
+      payload: payload,
+    );
+  }
+
+  Future<void> _sendSecondHalfStartNotification(MatchEntity match) async {
+    final lang = _prefs?.getString('154score_notif_lang') ?? 'ar';
+    final isArabic = lang == 'ar';
+
+    final title = isArabic
+        ? 'صافرة الشوط الثاني ⏱️ ${match.team1} ضد ${match.team2}'
+        : 'Second Half ⏱️ ${match.team1} vs ${match.team2}';
+    final body = isArabic
+        ? 'انطلق الآن الشوط الثاني من مباراة ${match.team1} و ${match.team2}'
+        : 'Second half has kicked off: ${match.team1} vs ${match.team2}';
+
+    final payload = jsonEncode({
+      'type': 'match',
+      'match_id': match.id,
+      'event_type': 'second_half_start',
+    });
+
+    await NotificationService.instance.showSecondHalfStartNotification(
       matchId: match.id,
       title: title,
       body: body,

@@ -10,7 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/router/app_router.dart';
 import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
+import '../security/security_signer.dart';
 import 'notification_service.dart';
+import 'notification_sync_service.dart';
 
 /// Top-level background message handler for FCM
 @pragma('vm:entry-point')
@@ -191,20 +193,28 @@ class PushNotificationService {
       // Attempt primary route; fallback to /api prefix ONLY on HTTP 404 (Route Not Found)
       Response response;
       try {
+        final sigHeaders = SecuritySigner.buildSecurityHeaders(
+          method: 'POST',
+          path: ApiEndpoints.pushNotificationsProviders,
+        );
         response = await dio.post(
           ApiEndpoints.pushNotificationsProviders,
           data: payload,
-          options: Options(headers: requestHeaders),
+          options: Options(headers: {...requestHeaders, ...sigHeaders}),
         );
       } on DioException catch (e) {
         if (e.response?.statusCode == 404) {
           debugPrint(
             '[PushNotificationService] 404 on ${ApiEndpoints.pushNotificationsProviders}, falling back to ${ApiEndpoints.pushNotificationsProvidersFallback}',
           );
+          final fallbackSigHeaders = SecuritySigner.buildSecurityHeaders(
+            method: 'POST',
+            path: ApiEndpoints.pushNotificationsProvidersFallback,
+          );
           response = await dio.post(
             ApiEndpoints.pushNotificationsProvidersFallback,
             data: payload,
-            options: Options(headers: requestHeaders),
+            options: Options(headers: {...requestHeaders, ...fallbackSigHeaders}),
           );
         } else {
           rethrow;
@@ -217,6 +227,12 @@ class PushNotificationService {
         _fcmToken = cleanToken;
         debugPrint(
           '[FCM_TOKEN_REGISTERED] Registered with backend: ${cleanToken.substring(0, cleanToken.length > 10 ? 10 : cleanToken.length)}...',
+        );
+        // Automatically sync all current favorites with this registered token
+        unawaited(
+          NotificationSyncService.instance.syncAllSubscriptions(
+            tokenOverride: cleanToken,
+          ),
         );
         return true;
       }
