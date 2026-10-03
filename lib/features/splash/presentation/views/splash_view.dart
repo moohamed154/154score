@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -300,7 +301,14 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
     try {
       if (GoRouter.maybeOf(context) != null) {
-        context.go('/');
+        final router = GoRouter.of(context);
+        router.go('/');
+        final pending = AppRouter.consumePendingRoute();
+        if (pending != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            router.push(pending);
+          });
+        }
       } else if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }

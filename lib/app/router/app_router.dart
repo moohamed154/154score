@@ -53,41 +53,139 @@ Page<dynamic> _buildCupertinoPage({
 class AppRouter {
   AppRouter._();
 
-  /// Called when the user taps a notification.
-  /// Parses the JSON payload and navigates to the right screen.
-  static void handleNotificationPayload(String payload) {
+  static String? _pendingRoute;
+
+  /// Retrieves and clears any pending route queued during splash / launch.
+  static String? consumePendingRoute() {
+    final route = _pendingRoute;
+    _pendingRoute = null;
+    return route;
+  }
+
+  /// Checks if the splash screen is currently active.
+  static bool get isSplashActive {
     try {
-      final data = jsonDecode(payload) as Map<String, dynamic>;
-      final type = data['type']?.toString() ?? '';
-      if (type == 'news') {
-        final articleId = data['article_id']?.toString() ?? '';
-        if (articleId.isNotEmpty) {
-          router.push('/news/$articleId');
-        }
-      } else if (type == 'match') {
-        final matchId = data['match_id']?.toString() ?? '';
-        if (matchId.isNotEmpty) {
-          router.push('/match/$matchId');
-        }
-      } else if (type == 'notifications') {
-        router.push('/notifications');
-      }
-    } catch (_) {}
+      final loc = router.routerDelegate.currentConfiguration.uri.toString();
+      return loc.isEmpty || loc == '/splash' || loc.startsWith('/splash');
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Explicit navigation helper for match details
   static void navigateToMatch(String matchId) {
     final clean = matchId.replaceAll('match:', '').trim();
-    if (clean.isNotEmpty) {
-      router.push('/match/$clean');
+    if (clean.isEmpty) return;
+    final path = '/match/$clean';
+    if (isSplashActive) {
+      _pendingRoute = path;
+    } else {
+      router.push(path);
     }
   }
 
   /// Explicit navigation helper for news articles
   static void navigateToNews(String articleId) {
     final clean = articleId.trim();
-    if (clean.isNotEmpty) {
-      router.push('/news/$clean');
+    if (clean.isEmpty) return;
+    final path = '/news/$clean';
+    if (isSplashActive) {
+      _pendingRoute = path;
+    } else {
+      router.push(path);
+    }
+  }
+
+  /// Called when the user taps a notification.
+  /// Parses String (JSON, raw path, or ID) or Map, extracts match/news ID, and navigates.
+  static void handleNotificationPayload(dynamic payload) {
+    if (payload == null) return;
+    try {
+      Map<String, dynamic> data;
+      if (payload is Map<String, dynamic>) {
+        data = payload;
+      } else if (payload is Map) {
+        data = payload.cast<String, dynamic>();
+      } else if (payload is String) {
+        final str = payload.trim();
+        if (str.isEmpty) return;
+        if (str.startsWith('{') && str.endsWith('}')) {
+          data = (jsonDecode(str) as Map).cast<String, dynamic>();
+        } else if (str.contains('/match/')) {
+          final id = str.split('/match/').last.split('?').first.split('/').first;
+          navigateToMatch(id);
+          return;
+        } else if (str.contains('/news/')) {
+          final id = str.split('/news/').last.split('?').first.split('/').first;
+          navigateToNews(id);
+          return;
+        } else if (str.startsWith('match:')) {
+          navigateToMatch(str.replaceAll('match:', ''));
+          return;
+        } else if (int.tryParse(str) != null) {
+          navigateToMatch(str);
+          return;
+        } else {
+          return;
+        }
+      } else {
+        return;
+      }
+
+      // Check if data contains nested data or payload strings/maps
+      if (data['data'] is Map) {
+        data = {...data, ...(data['data'] as Map).cast<String, dynamic>()};
+      } else if (data['data'] is String && (data['data'] as String).trim().startsWith('{')) {
+        try {
+          final inner = (jsonDecode(data['data'] as String) as Map).cast<String, dynamic>();
+          data = {...data, ...inner};
+        } catch (_) {}
+      }
+
+      if (data['payload'] is String && (data['payload'] as String).trim().startsWith('{')) {
+        try {
+          final inner = (jsonDecode(data['payload'] as String) as Map).cast<String, dynamic>();
+          data = {...data, ...inner};
+        } catch (_) {}
+      }
+
+      final type = (data['type'] ?? data['event_type'] ?? '').toString().toLowerCase();
+
+      final rawMatchId = (data['match_id'] ?? data['matchId'] ?? data['matchID'] ?? data['match'])?.toString();
+      final rawArticleId = (data['article_id'] ?? data['articleId'] ?? data['news_id'] ?? data['newsId'] ?? data['article'])?.toString();
+      final genericId = data['id']?.toString();
+
+      if (type == 'news' || (rawArticleId != null && rawArticleId.isNotEmpty)) {
+        final targetNewsId = (rawArticleId != null && rawArticleId.isNotEmpty) ? rawArticleId : genericId;
+        if (targetNewsId != null && targetNewsId.isNotEmpty) {
+          navigateToNews(targetNewsId);
+          return;
+        }
+      }
+
+      if (rawMatchId != null && rawMatchId.isNotEmpty) {
+        navigateToMatch(rawMatchId);
+        return;
+      }
+
+      if (genericId != null && genericId.isNotEmpty && genericId != 'alert' && genericId != 'live') {
+        if (type == 'news') {
+          navigateToNews(genericId);
+        } else {
+          navigateToMatch(genericId);
+        }
+        return;
+      }
+
+      if (type == 'notifications') {
+        if (isSplashActive) {
+          _pendingRoute = '/notifications';
+        } else {
+          router.push('/notifications');
+        }
+      }
+    } catch (e) {
+      debugPrint('[AppRouter] handleNotificationPayload error: $e');
     }
   }
 
