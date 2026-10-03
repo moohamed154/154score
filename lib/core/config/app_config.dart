@@ -4,7 +4,7 @@ class AppConfig {
   AppConfig._();
 
   static const String defaultApiBaseUrl =
-      'https://moohamed154-154score-api.hf.space';
+      'https://154score-api.medohs770.workers.dev';
 
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
