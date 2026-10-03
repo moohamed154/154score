@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Base configuration: Enforce HTTPS only and reject user-installed MITM proxy certificates (Charles / Burp Suite) -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Only trust verified system CAs, ignore any rogue user-installed CA profiles -->
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Dedicated API domain security rules -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">hf.space</domain>
+        <domain includeSubdomains="true">ysscores.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

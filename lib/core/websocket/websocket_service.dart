@@ -9,6 +9,7 @@ import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 import '../errors/exceptions.dart';
 import '../network/network_info.dart';
+import '../security/security_signer.dart';
 import 'websocket_event.dart';
 
 abstract class WebSocketService {
@@ -235,13 +236,23 @@ class WebSocketServiceImpl implements WebSocketService {
       }
 
       final startTime = DateTime.now();
+      final secHeaders = SecuritySigner.buildSecurityHeaders(
+        method: 'GET',
+        path: '/socket.io/',
+      );
 
       _socket = io.io(
         ApiEndpoints.websocketUrl,
         io.OptionBuilder()
             .setPath('/socket.io/')
             .setTransports(['websocket'])
-            .setAuth({'apiKey': apiKey})
+            .setAuth({
+              'apiKey': apiKey,
+              'timestamp': secHeaders['X-Timestamp'],
+              'nonce': secHeaders['X-Nonce'],
+              'signature': secHeaders['X-Signature'],
+            })
+            .setExtraHeaders(secHeaders)
             .disableAutoConnect()
             .enableReconnection()
             .setReconnectionAttempts(15)
