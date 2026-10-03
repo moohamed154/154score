@@ -36,6 +36,8 @@ dependencies:
   screenshot: ^3.0.0
   flutter_cache_manager: ^3.4.5
   flutter_foreground_task: ^11.0.3
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
 
 dev_dependencies:
   flutter_test:

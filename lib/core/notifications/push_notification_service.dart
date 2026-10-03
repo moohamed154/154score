@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,9 +12,14 @@ import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 import 'notification_service.dart';
 
+/// Top-level background message handler for FCM
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  debugPrint('[FCM] Background push received: ${message.messageId}');
+}
+
 /// Central service managing push notifications, OS permissions,
 /// backend device token registration (Section 4.7), and notification tap routing.
-/// Native APNs on iOS and native local notifications operate directly without Firebase SDK.
 class PushNotificationService {
   PushNotificationService._();
   static final PushNotificationService instance = PushNotificationService._();
@@ -43,7 +50,82 @@ class PushNotificationService {
         unawaited(registerTokenWithBackend(_fcmToken!));
       }
 
-      // Initialize local notifications service
+      // 1. Firebase Cloud Messaging setup
+      bool firebaseReady = false;
+      try {
+        await Firebase.initializeApp();
+        FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+        firebaseReady = true;
+      } catch (e) {
+        debugPrint('[PushNotificationService] Firebase init skipped or pending config: $e');
+      }
+
+      if (firebaseReady) {
+        final messaging = FirebaseMessaging.instance;
+
+        // Request permissions (Android 13+ & iOS)
+        final settings = await messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+        );
+        debugPrint('[PushNotificationService] Permission status: ${settings.authorizationStatus}');
+
+        // iOS foreground presentation
+        await messaging.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+        // Fetch and register FCM token
+        try {
+          final token = await messaging.getToken();
+          if (token != null && token.isNotEmpty) {
+            _fcmToken = token;
+            debugPrint('[PushNotificationService] FCM token obtained: $token');
+            unawaited(registerTokenWithBackend(token));
+          }
+        } catch (e) {
+          debugPrint('[PushNotificationService] getToken error: $e');
+        }
+
+        // Token refresh listener
+        messaging.onTokenRefresh.listen((newToken) {
+          debugPrint('[PushNotificationService] FCM token refreshed: $newToken');
+          _fcmToken = newToken;
+          registerTokenWithBackend(newToken);
+        });
+
+        // Foreground messages listener
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+          debugPrint('[PushNotificationService] Foreground message: ${message.messageId}');
+          if (message.data.isNotEmpty) {
+            handleForegroundPayload(message.data);
+          } else if (message.notification != null) {
+            handleForegroundPayload({
+              'title': message.notification!.title,
+              'body': message.notification!.body,
+            });
+          }
+        });
+
+        // Notification clicked from background
+        FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+          debugPrint('[PushNotificationService] Notification opened app: ${message.data}');
+          handleNotificationTap(message.data);
+        });
+
+        // Notification clicked from terminated state
+        final initialMessage = await messaging.getInitialMessage();
+        if (initialMessage != null) {
+          debugPrint('[PushNotificationService] Initial message: ${initialMessage.data}');
+          handleNotificationTap(initialMessage.data);
+        }
+      }
+
+      // 2. Initialize local notifications service
       await NotificationService.instance.initialize(
         onNotificationTap: (payload) {
           if (payload != null && payload.isNotEmpty) {
