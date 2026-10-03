@@ -79,6 +79,9 @@ class NotificationSyncService {
           matches ?? prefs.getStringList('app_favorite_matches') ?? [];
       final scope = prefs.getString('app_notif_match_scope');
       final isAllMatches = allMatches || scope == 'all_matches';
+      final lang = prefs.getString('app_language') ??
+          prefs.getString('154score_notif_lang') ??
+          'ar';
 
       final payload = {
         'device_token': cleanToken,
@@ -90,6 +93,8 @@ class NotificationSyncService {
             .toList(),
         'news': news,
         'all_matches': isAllMatches,
+        'lang': lang,
+        'language': lang,
       };
 
       final response = await _postWithFallback(
@@ -205,6 +210,11 @@ class NotificationSyncService {
     }
     final cleanToken = token.trim();
 
+    final prefs = await SharedPreferences.getInstance();
+    final lang = prefs.getString('app_language') ??
+        prefs.getString('154score_notif_lang') ??
+        'ar';
+
     final payload = {
       'device_token': cleanToken,
       'token': cleanToken,
@@ -212,6 +222,8 @@ class NotificationSyncService {
       'target_type': targetType,
       'type': targetType,
       'target_id': cleanTargetId,
+      'lang': lang,
+      'language': lang,
     };
 
     final dio = dioClient ?? _getDio();

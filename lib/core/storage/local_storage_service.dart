@@ -229,8 +229,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
-  Future<bool> setLanguage(String langCode) {
-    return _prefs.setString(_keyLanguage, langCode);
+  Future<bool> setLanguage(String langCode) async {
+    final result = await _prefs.setString(_keyLanguage, langCode);
+    await _prefs.setString('154score_notif_lang', langCode);
+    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
+    return result;
   }
 
   @override

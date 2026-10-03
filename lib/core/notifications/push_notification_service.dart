@@ -158,7 +158,9 @@ class PushNotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final oldToken = prefs.getString(_prefFcmTokenKey);
-      final lang = prefs.getString('154score_notif_lang') ?? 'ar';
+      final lang = prefs.getString('app_language') ??
+          prefs.getString('154score_notif_lang') ??
+          'ar';
       final platform = platformOverride ??
           (defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android');
       const appVersion = AppConfig.appVersion;
@@ -244,8 +246,14 @@ class PushNotificationService {
 
   /// Displays an in-app heads-up notification when received while the app is active in foreground.
   Future<void> handleForegroundPayload(Map<String, dynamic> data) async {
-    final title = data['title']?.toString();
-    final body = data['body']?.toString();
+    final prefs = await SharedPreferences.getInstance();
+    final appLang = prefs.getString('app_language') ?? 'ar';
+    final localizedTitle =
+        (appLang == 'en' ? data['title_en'] : data['title_ar'])?.toString();
+    final localizedBody =
+        (appLang == 'en' ? data['body_en'] : data['body_ar'])?.toString();
+    final title = localizedTitle ?? data['title']?.toString();
+    final body = localizedBody ?? data['body']?.toString();
     final matchId = data['match_id']?.toString();
     final eventType = data['event_type']?.toString();
 
