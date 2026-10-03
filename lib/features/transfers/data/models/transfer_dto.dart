@@ -4,6 +4,7 @@ import '../../domain/entities/transfer_entity.dart';
 class TransferDto {
   final String id;
   final String playerName;
+  final String? playerId;
   final String? playerPosition;
   final String? playerImage;
   final String? playerLink;
@@ -18,6 +19,7 @@ class TransferDto {
   const TransferDto({
     required this.id,
     required this.playerName,
+    this.playerId,
     this.playerPosition,
     this.playerImage,
     this.playerLink,
@@ -35,6 +37,7 @@ class TransferDto {
     String? position;
     String? playerImg;
     String? pLink;
+    String? pId;
 
     if (json['player'] is Map) {
       final pMap = json['player'] as Map;
@@ -42,6 +45,22 @@ class TransferDto {
       position = pMap['position']?.toString();
       playerImg = pMap['image']?.toString();
       pLink = pMap['link']?.toString();
+      pId = pMap['id']?.toString() ?? pMap['player_id']?.toString();
+    }
+    pId ??= json['player_id']?.toString();
+
+    if (pId == null && pLink != null && pLink.isNotEmpty) {
+      final match = RegExp(r'/player(?:s)?/(\d+)').firstMatch(pLink);
+      if (match != null) {
+        pId = match.group(1);
+      }
+    }
+
+    if (pId == null && playerImg != null && playerImg.isNotEmpty) {
+      final match = RegExp(r'/player(?:s)?/\d+/(\d+)').firstMatch(playerImg);
+      if (match != null) {
+        pId = match.group(1);
+      }
     }
 
     String? fromImg = json['from_team_logo']?.toString();
@@ -73,6 +92,7 @@ class TransferDto {
     return TransferDto(
       id: json['id']?.toString() ?? name,
       playerName: name,
+      playerId: pId,
       playerPosition: position,
       playerImage: UrlHelper.normalizeImageUrl(playerImg),
       playerLink: pLink,
@@ -90,6 +110,7 @@ class TransferDto {
     return TransferEntity(
       id: id,
       playerName: playerName,
+      playerId: playerId,
       playerPosition: playerPosition,
       playerImage: playerImage,
       playerLink: playerLink,

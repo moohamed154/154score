@@ -767,5 +767,84 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('9. TransferCard player tap navigates to player profile and directional arrow points forward in Arabic', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390 * 2, 844 * 2);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      String? pushedRoute;
+      Map<String, dynamic>? pushedExtra;
+
+      final router = GoRouter(
+        initialLocation: '/transfers',
+        routes: [
+          GoRoute(
+            path: '/transfers',
+            builder: (context, state) {
+              const transfer = TransferEntity(
+                id: '971580',
+                playerId: '165823',
+                playerName: 'كول بالمر',
+                playerPosition: 'وسط مهاجم',
+                fromTeamName: 'مانشستر سيتي',
+                toTeamName: 'تشيلسي',
+                date: '2026-09-01',
+              );
+              return const Scaffold(
+                body: TransferCard(transfer: transfer),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/player/:id',
+            builder: (context, state) {
+              pushedRoute = state.uri.toString();
+              pushedExtra = state.extra as Map<String, dynamic>?;
+              return Scaffold(
+                body: Text('Player: ${state.pathParameters['id']}'),
+              );
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          locale: const Locale('ar'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          theme: ThemeData.dark(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Verify transfer arrow icon exists and points forward
+      final arrowFinder = find.byIcon(Icons.arrow_forward_rounded);
+      expect(arrowFinder, findsOneWidget);
+
+      // Verify player name is rendered
+      expect(find.text('كول بالمر'), findsOneWidget);
+
+      // Tap on player name / player row
+      await tester.tap(find.text('كول بالمر'));
+      await tester.pumpAndSettle();
+
+      // Verify navigated to player profile with correct id and slug
+      expect(pushedRoute, isNotNull);
+      expect(pushedRoute, contains('/player/165823'));
+      expect(pushedRoute, contains('slug='));
+      expect(pushedExtra?['name'], 'كول بالمر');
+      expect(find.text('Player: 165823'), findsOneWidget);
+
+      expect(tester.takeException(), isNull);
+    });
   });
 }
+
