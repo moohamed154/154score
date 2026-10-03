@@ -159,6 +159,9 @@ class _NewsBody extends StatelessWidget {
         (displayFeed.important.isNotEmpty &&
             TextDirectionHelper.isArabic(displayFeed.important.first.title));
 
+    final isTeamFilterLoading =
+        state.status == NewsStatus.loading && state.feed != null;
+
     return Directionality(
       textDirection: isNewsArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Skeletonizer(
@@ -297,25 +300,36 @@ class _NewsBody extends StatelessWidget {
                         isArabic: isNewsArabic,
                       ),
                     ),
-                    const Spacer(),
-                    // Loading indicator for team filter
-                    if (state.status == NewsStatus.loading &&
-                        state.feed != null)
-                      const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
-                      ),
                   ],
                 ),
               ),
             ),
 
-            // Latest news list
-            if (state.filteredLatest.isEmpty && !isLoading)
+            // Latest news list (with Skeletonizer for team filter loading)
+            if (isTeamFilterLoading)
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return Skeletonizer(
+                      enabled: true,
+                      containersColor: isDark
+                          ? AppColors.darkCardElevated
+                          : AppColors.lightCardElevated,
+                      child: NewsListItem(
+                        article: NewsArticleEntity(
+                          id: 'skeleton_$index',
+                          title: isNewsArabic
+                              ? 'تحميل تفاصيل وأخبار الفريق الرياضية بشكل كامل'
+                              : '────────────────────────────────────',
+                          publishedAt: '2024-01-01',
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: 5,
+                ),
+              )
+            else if (state.filteredLatest.isEmpty && !isLoading)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -324,10 +338,12 @@ class _NewsBody extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      l10n.translate('no_news_available'),
+                      isNewsArabic
+                          ? 'لا توجد أخبار لهذا النادي حالياً'
+                          : l10n.translate('no_news_available'),
                       style: AppTypography.getBodyMedium(
                         isDark: isDark,
-                        isArabic: isArabic,
+                        isArabic: isNewsArabic,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -338,9 +354,8 @@ class _NewsBody extends StatelessWidget {
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final articles = isLoading
-                        ? displayFeed.latest
-                        : state.filteredLatest;
+                    final articles =
+                        isLoading ? displayFeed.latest : state.filteredLatest;
                     if (index >= articles.length) return null;
                     return NewsListItem(article: articles[index]);
                   },
