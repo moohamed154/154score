@@ -12,6 +12,7 @@ import '../../features/matches/domain/entities/match_entity.dart';
 import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
 import '../notifications/notification_service.dart';
+import '../security/security_signer.dart';
 import 'match_notification_tracker.dart';
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -79,20 +80,28 @@ Future<bool> triggerMatchReminderBackgroundTask({Dio? dioClient}) async {
   try {
     Response? response;
     try {
+      final sig = SecuritySigner.buildSecurityHeaders(
+        method: 'POST',
+        path: ApiEndpoints.matchReminderBackgroundTask,
+      );
       response = await dio.post(
         ApiEndpoints.matchReminderBackgroundTask,
         data: payload,
-        options: Options(headers: requestHeaders),
+        options: Options(headers: {...requestHeaders, ...sig}),
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         debugPrint(
           '[BackgroundNotifTask] 404 on ${ApiEndpoints.matchReminderBackgroundTask}, falling back to ${ApiEndpoints.matchReminderBackgroundTaskFallback}',
         );
+        final fallbackSig = SecuritySigner.buildSecurityHeaders(
+          method: 'POST',
+          path: ApiEndpoints.matchReminderBackgroundTaskFallback,
+        );
         response = await dio.post(
           ApiEndpoints.matchReminderBackgroundTaskFallback,
           data: payload,
-          options: Options(headers: requestHeaders),
+          options: Options(headers: {...requestHeaders, ...fallbackSig}),
         );
       } else {
         debugPrint('[BackgroundNotifTask] matchReminderBackgroundTask error: $e');

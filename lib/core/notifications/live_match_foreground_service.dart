@@ -12,6 +12,7 @@ import '../../features/matches/data/models/match_dto.dart';
 import '../../features/matches/domain/entities/match_entity.dart';
 import '../config/app_config.dart';
 import '../constants/api_endpoints.dart';
+import '../security/security_signer.dart';
 import '../storage/local_storage_service.dart';
 import '../utils/match_status_helper.dart';
 import 'match_notification_tracker.dart';
@@ -45,24 +46,43 @@ class LiveMatchTaskHandler extends TaskHandler {
   int _newsTickCount = 0;
   int _todayPollTickCount = 0;
 
+  Dio _buildSecureDio() {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiEndpoints.baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': '154Score-Flutter/1.0',
+          'X-API-Key': AppConfig.validateApiKey(),
+        },
+      ),
+    );
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final signPath =
+              options.uri.path.isNotEmpty ? options.uri.path : options.path;
+          final sig = SecuritySigner.buildSecurityHeaders(
+            method: options.method,
+            path: signPath,
+          );
+          options.headers.addAll(sig);
+          return handler.next(options);
+        },
+      ),
+    );
+    return dio;
+  }
+
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     WidgetsFlutterBinding.ensureInitialized();
     DartPluginRegistrant.ensureInitialized();
 
     try {
-      _dio = Dio(
-        BaseOptions(
-          baseUrl: ApiEndpoints.baseUrl,
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': '154Score-Flutter/1.0',
-            'X-API-Key': AppConfig.validateApiKey(),
-          },
-        ),
-      );
+      _dio = _buildSecureDio();
       _prefs = await SharedPreferences.getInstance();
       try {
         await _prefs?.reload();
@@ -87,18 +107,7 @@ class LiveMatchTaskHandler extends TaskHandler {
 
   Future<void> _checkLiveMatches() async {
     try {
-      _dio ??= Dio(
-        BaseOptions(
-          baseUrl: ApiEndpoints.baseUrl,
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': '154Score-Flutter/1.0',
-            'X-API-Key': AppConfig.validateApiKey(),
-          },
-        ),
-      );
+      _dio ??= _buildSecureDio();
       _prefs ??= await SharedPreferences.getInstance();
       try {
         await _prefs?.reload();
@@ -176,18 +185,7 @@ class LiveMatchTaskHandler extends TaskHandler {
 
   Future<void> _checkNotificationsFeed() async {
     try {
-      _dio ??= Dio(
-        BaseOptions(
-          baseUrl: ApiEndpoints.baseUrl,
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': '154Score-Flutter/1.0',
-            'X-API-Key': AppConfig.validateApiKey(),
-          },
-        ),
-      );
+      _dio ??= _buildSecureDio();
       _prefs ??= await SharedPreferences.getInstance();
       try {
         await _prefs?.reload();
