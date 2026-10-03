@@ -102,200 +102,110 @@ class _SettingsViewState extends State<SettingsView> {
 
           const SizedBox(height: 24),
 
+          // Section: Language
+          _buildSectionHeader(
+            l10n.translate('settings_language'),
+            isDark,
+            isArabic,
+          ),
           BlocBuilder<LocaleCubit, LocaleState>(
             builder: (context, localeState) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _buildSectionHeader(
-                        l10n.translate('settings_language'),
-                        isDark,
-                        isArabic,
-                      ),
-                      if (localeState.showIndicator) ...[
-                        const SizedBox(width: 8),
-                        const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+              final appLang = localeState.locale.languageCode;
+              return BlocBuilder<NewsLanguageCubit, String>(
+                builder: (context, newsLang) {
+                  final newsLangDesc = switch (newsLang) {
+                    'ar' => l10n.translate('news_lang_arabic'),
+                    'en' => l10n.translate('news_lang_english'),
+                    _ => l10n.translate('news_lang_same_as_app'),
+                  };
 
-                  // 1. App Interface Language
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4, left: 4, right: 4),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.language_rounded,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          l10n.translate('settings_app_language'),
-                          style: AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
-                    child: Text(
-                      l10n.translate('settings_app_language_desc'),
-                      style: AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
-                        fontSize: 11.5,
-                      ),
-                    ),
-                  ),
-                  _buildCard(
+                  return _buildCard(
                     isDark: isDark,
-                    child: RadioGroup<String>(
-                      groupValue: localeState.locale.languageCode,
-                      onChanged: (lang) {
-                        if (lang != null) {
-                          context.read<LocaleCubit>().setLocale(Locale(lang));
-                        }
-                      },
-                      child: Column(
+                    child: ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(25),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.language_rounded,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
+                      ),
+                      title: Text(
+                        l10n.translate('settings_language'),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '${appLang == 'ar' ? 'العربية 🇸🇦' : 'English 🇬🇧'} • ${l10n.translate('settings_news_language')}: $newsLangDesc',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          RadioListTile<String>(
-                            title: Text(l10n.translate('lang_arabic')),
-                            secondary: const Text(
-                              '🇸🇦',
-                              style: TextStyle(fontSize: 22),
+                          if (localeState.showIndicator) ...[
+                            const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
                             ),
-                            value: 'ar',
+                            const SizedBox(width: 8),
+                          ],
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(25),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusSm,
+                              ),
+                              border: Border.all(
+                                color: AppColors.primary.withAlpha(60),
+                              ),
+                            ),
+                            child: Text(
+                              appLang == 'ar' ? 'العربية 🇸🇦' : 'English 🇬🇧',
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
-                          const Divider(height: 1),
-                          RadioListTile<String>(
-                            title: Text(l10n.translate('lang_english')),
-                            secondary: const Text(
-                              '🇬🇧',
-                              style: TextStyle(fontSize: 22),
-                            ),
-                            value: 'en',
+                          const SizedBox(width: 6),
+                          Icon(
+                            isArabic
+                                ? Icons.arrow_back_ios_new_rounded
+                                : Icons.arrow_forward_ios_rounded,
+                            size: 16,
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
                           ),
                         ],
                       ),
+                      onTap: () {
+                        context.push('/settings/language');
+                      },
                     ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 2. News & Articles Language
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4, left: 4, right: 4),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.newspaper_rounded,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          l10n.translate('settings_news_language'),
-                          style: AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
-                    child: Text(
-                      l10n.translate('settings_news_language_desc'),
-                      style: AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
-                        fontSize: 11.5,
-                      ),
-                    ),
-                  ),
-                  BlocBuilder<NewsLanguageCubit, String>(
-                    builder: (context, newsLang) {
-                      return _buildCard(
-                        isDark: isDark,
-                        child: RadioGroup<String>(
-                          groupValue: newsLang,
-                          onChanged: (val) {
-                            if (val != null) {
-                              context.read<NewsLanguageCubit>().setNewsLanguage(val);
-                              final effectiveLang = val == 'app'
-                                  ? localeState.locale.languageCode
-                                  : val;
-                              context.read<NewsBloc>().add(
-                                ChangeNewsLanguageEvent(effectiveLang),
-                              );
-                            }
-                          },
-                          child: Column(
-                            children: [
-                              RadioListTile<String>(
-                                title: Text(l10n.translate('news_lang_same_as_app')),
-                                subtitle: Text(
-                                  localeState.locale.languageCode == 'ar'
-                                      ? 'العربية 🇸🇦'
-                                      : 'English 🇬🇧',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                secondary: const Icon(
-                                  Icons.sync_rounded,
-                                  color: AppColors.primary,
-                                ),
-                                value: 'app',
-                              ),
-                              const Divider(height: 1),
-                              RadioListTile<String>(
-                                title: Text(l10n.translate('news_lang_arabic')),
-                                secondary: const Text(
-                                  '🇸🇦',
-                                  style: TextStyle(fontSize: 22),
-                                ),
-                                value: 'ar',
-                              ),
-                              const Divider(height: 1),
-                              RadioListTile<String>(
-                                title: Text(l10n.translate('news_lang_english')),
-                                secondary: const Text(
-                                  '🇬🇧',
-                                  style: TextStyle(fontSize: 22),
-                                ),
-                                value: 'en',
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                  );
+                },
               );
             },
           ),

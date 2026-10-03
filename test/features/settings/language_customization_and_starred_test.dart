@@ -2,10 +2,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:score154/core/localization/app_localizations.dart';
+import 'package:score154/core/network/api_result.dart';
 import 'package:score154/core/storage/local_storage_service.dart';
+import 'package:score154/core/websocket/websocket_service.dart';
 import 'package:score154/core/widgets/starred_button.dart';
 import 'package:score154/features/favorites/presentation/cubit/favorites_cubit.dart';
+import 'package:score154/features/news/domain/entities/news_entity.dart';
+import 'package:score154/features/news/domain/repositories/news_repository.dart';
+import 'package:score154/features/news/presentation/bloc/news_bloc.dart';
 import 'package:score154/features/settings/presentation/cubit/settings_cubits.dart';
+import 'package:score154/features/settings/presentation/views/language_settings_view.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -185,4 +194,50 @@ void main() {
       await tester.pumpAndSettle();
     });
   });
+
+  group('LanguageSettingsView Page Tests', () {
+    late SharedPreferences prefs;
+    late LocalStorageService storage;
+    late MockWebSocketService mockWs;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
+      storage = LocalStorageServiceImpl(prefs);
+      mockWs = MockWebSocketService();
+    });
+
+    testWidgets('renders both App Interface Language and News Language sections', (tester) async {
+      final localeCubit = LocaleCubit(storage, mockWs);
+      final newsLangCubit = NewsLanguageCubit(storage);
+      final mockNewsBloc = MockNewsBloc();
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<LocaleCubit>.value(value: localeCubit),
+            BlocProvider<NewsLanguageCubit>.value(value: newsLangCubit),
+            BlocProvider<NewsBloc>.value(value: mockNewsBloc),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: [AppLocalizations.delegate],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: LanguageSettingsView(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('العربية'), findsWidgets);
+      expect(find.text('English'), findsWidgets);
+      expect(find.byIcon(Icons.language_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.newspaper_rounded), findsOneWidget);
+
+      await localeCubit.close();
+      await newsLangCubit.close();
+    });
+  });
 }
+
+class MockWebSocketService extends Mock implements WebSocketService {}
+class MockNewsBloc extends Mock implements NewsBloc {}
