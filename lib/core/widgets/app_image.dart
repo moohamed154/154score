@@ -53,11 +53,11 @@ class AppImage extends StatelessWidget {
         : (safeHeight != null ? (safeHeight * 0.25).clamp(14.0, 40.0) : 24.0);
 
     final cacheW = (safeWidth != null && safeWidth > 0)
-        ? (safeWidth * 2).toInt()
-        : null;
+        ? (safeWidth * 2).toInt().clamp(32, 1024)
+        : 600;
     final cacheH = (safeHeight != null && safeHeight > 0)
-        ? (safeHeight * 2).toInt()
-        : null;
+        ? (safeHeight * 2).toInt().clamp(32, 1024)
+        : 600;
 
     final normalizedUrl = UrlHelper.normalizeImageUrl(imageUrl);
 

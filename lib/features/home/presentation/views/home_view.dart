@@ -201,30 +201,29 @@ class _HomeViewState extends State<HomeView> {
                       );
                     } catch (_) {}
                   },
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
-                    ),
-                    padding: const EdgeInsets.only(
-                      bottom: AppDimensions.xxxl,
-                    ),
-                    children: [
-                      if (isHomeLoading)
-                        _buildMatchesSkeleton(
-                          context,
-                          isDark,
-                          isArabic,
-                          matchesState.selectedDate,
+                  child: isHomeLoading
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(
+                            parent: BouncingScrollPhysics(),
+                          ),
+                          padding: const EdgeInsets.only(
+                            bottom: AppDimensions.xxxl,
+                          ),
+                          children: [
+                            _buildMatchesSkeleton(
+                              context,
+                              isDark,
+                              isArabic,
+                              matchesState.selectedDate,
+                            ),
+                          ],
                         )
-                      else
-                        _buildMatchesSection(
+                      : _buildMatchesSection(
                           context,
                           matchesState,
                           isDark,
                           isArabic,
                         ),
-                    ],
-                  ),
                 ),
               );
             },
@@ -299,8 +298,11 @@ class _HomeViewState extends State<HomeView> {
     }
 
     if (state.status == MatchesStatus.error && displayLeagues.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
         children: [
           dateHeader,
           ErrorView(
@@ -314,31 +316,37 @@ class _HomeViewState extends State<HomeView> {
     }
 
     if (displayLeagues.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      Widget emptyContent;
+      if (state.activeFilter == MatchFilterType.live) {
+        emptyContent = const EmptyView(
+          titleKey: 'no_live_matches',
+          icon: Icons.live_tv_outlined,
+        );
+      } else if (state.activeFilter == MatchFilterType.favorites) {
+        emptyContent = const EmptyView(
+          titleKey: 'no_favorites_matches',
+          icon: Icons.star_border_rounded,
+        );
+      } else {
+        emptyContent = const EmptyView(
+          titleKey: 'no_matches_date',
+          icon: Icons.sports_soccer_rounded,
+        );
+      }
+
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
         children: [
           dateHeader,
-          if (state.activeFilter == MatchFilterType.live)
-            const EmptyView(
-              titleKey: 'no_live_matches',
-              icon: Icons.live_tv_outlined,
-            )
-          else if (state.activeFilter == MatchFilterType.favorites)
-            const EmptyView(
-              titleKey: 'no_favorites_matches',
-              icon: Icons.star_border_rounded,
-            )
-          else
-            const EmptyView(
-              titleKey: 'no_matches_date',
-              icon: Icons.sports_soccer_rounded,
-            ),
+          emptyContent,
         ],
       );
     }
 
     // Extract Favorite Matches for today (pinned on top like Yalla Shoot)
-    // Always pinned on top across all filters and sorting orders
     final List<MatchEntity> favoriteMatches = [];
     if (state.activeFilter != MatchFilterType.favorites) {
       for (final league in displayLeagues) {
@@ -350,14 +358,22 @@ class _HomeViewState extends State<HomeView> {
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        dateHeader,
+    final hasFavorites = favoriteMatches.isNotEmpty;
+    final totalCount = 1 + (hasFavorites ? 1 : 0) + displayLeagues.length;
 
-        // Pinned Favorites section if any matches favorited
-        if (favoriteMatches.isNotEmpty)
-          LeagueSectionWidget(
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+      itemCount: totalCount,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return dateHeader;
+        }
+
+        if (hasFavorites && index == 1) {
+          return LeagueSectionWidget(
             key: ValueKey('fav_section_${state.selectedDate.day}'),
             league: LeagueGroupEntity(
               leagueTitle: isArabic ? 'المفضلة' : 'Favorites',
@@ -372,26 +388,26 @@ class _HomeViewState extends State<HomeView> {
                 context.read<FavoritesCubit>().loadFavorites();
               } catch (_) {}
             },
-          ),
-
-        // Championship / League Sections
-        ...displayLeagues.map((league) {
-          return LeagueSectionWidget(
-            key: ValueKey('${league.leagueTitle}_${state.timeFormat}'),
-            league: league,
-            timeFormat: state.timeFormat,
-            isTimeSorted: state.sortOrder == MatchesSortOrder.time,
-            onFavoriteMatchTap: (matchId) {
-              context.read<MatchesBloc>().add(
-                ToggleMatchFavoriteEvent(matchId),
-              );
-              try {
-                context.read<FavoritesCubit>().loadFavorites();
-              } catch (_) {}
-            },
           );
-        }),
-      ],
+        }
+
+        final leagueIndex = hasFavorites ? index - 2 : index - 1;
+        final league = displayLeagues[leagueIndex];
+        return LeagueSectionWidget(
+          key: ValueKey('${league.leagueTitle}_${state.timeFormat}'),
+          league: league,
+          timeFormat: state.timeFormat,
+          isTimeSorted: state.sortOrder == MatchesSortOrder.time,
+          onFavoriteMatchTap: (matchId) {
+            context.read<MatchesBloc>().add(
+              ToggleMatchFavoriteEvent(matchId),
+            );
+            try {
+              context.read<FavoritesCubit>().loadFavorites();
+            } catch (_) {}
+          },
+        );
+      },
     );
   }
 

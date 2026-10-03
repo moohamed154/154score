@@ -124,10 +124,12 @@ class DebugConsole {
   }
 
   /// Records and optionally prints an incoming response.
-  static DebugNetworkRecord logResponse(
+  static DebugNetworkRecord? logResponse(
     Response response, {
     Duration? duration,
   }) {
+    if (!enabled) return null;
+
     final record = DebugNetworkRecord(
       id: 'req_${++_idCounter}_${DateTime.now().millisecondsSinceEpoch}',
       method: response.requestOptions.method.toUpperCase(),
@@ -147,7 +149,7 @@ class DebugConsole {
 
     _addRecord(record);
 
-    if (enabled && autoPrintResponses) {
+    if (autoPrintResponses) {
       printRecord(record);
     }
 
@@ -155,7 +157,9 @@ class DebugConsole {
   }
 
   /// Records and optionally prints a network error.
-  static DebugNetworkRecord logError(DioException error, {Duration? duration}) {
+  static DebugNetworkRecord? logError(DioException error, {Duration? duration}) {
+    if (!enabled) return null;
+
     final record = DebugNetworkRecord(
       id: 'err_${++_idCounter}_${DateTime.now().millisecondsSinceEpoch}',
       method: error.requestOptions.method.toUpperCase(),
@@ -176,7 +180,7 @@ class DebugConsole {
 
     _addRecord(record);
 
-    if (enabled && autoPrintErrors) {
+    if (autoPrintErrors) {
       printRecord(record);
     }
 
@@ -365,9 +369,13 @@ class DebugConsoleInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (!DebugConsole.enabled) {
+      return super.onRequest(options, handler);
+    }
+
     options.extra[_startTimeKey] = DateTime.now().millisecondsSinceEpoch;
 
-    if (DebugConsole.enabled && DebugConsole.autoPrintRequests) {
+    if (DebugConsole.autoPrintRequests) {
       final safeHeaders = DebugConsole._redactHeaders(options.headers);
       final buf = StringBuffer()
         ..writeln(
@@ -391,6 +399,10 @@ class DebugConsoleInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (!DebugConsole.enabled) {
+      return super.onResponse(response, handler);
+    }
+
     Duration? duration;
     final startTime = response.requestOptions.extra[_startTimeKey] as int?;
     if (startTime != null) {
@@ -405,6 +417,10 @@ class DebugConsoleInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (!DebugConsole.enabled) {
+      return super.onError(err, handler);
+    }
+
     Duration? duration;
     final startTime = err.requestOptions.extra[_startTimeKey] as int?;
     if (startTime != null) {

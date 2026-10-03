@@ -446,39 +446,41 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     final s2 = int.tryParse(widget.score2 ?? '');
     final totalGoals = (s1 != null && s2 != null) ? (s1 + s2) : 0;
 
-    final clockWidget = SizedBox(
-      width: widget.size,
-      height: widget.size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CustomPaint(
-            size: Size(widget.size, widget.size),
-            painter: _CircularClockPainter(
-              progress: progress,
-              arcColor: widget.arcColor,
-              notchColor: widget.notchColor,
-              totalGoals: totalGoals,
-              goalMinutes: widget.goalMinutes,
-              currentMinute: _currentMinute,
+    final clockWidget = RepaintBoundary(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CustomPaint(
+              size: Size(widget.size, widget.size),
+              painter: _CircularClockPainter(
+                progress: progress,
+                arcColor: widget.arcColor,
+                notchColor: widget.notchColor,
+                totalGoals: totalGoals,
+                goalMinutes: widget.goalMinutes,
+                currentMinute: _currentMinute,
+              ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: widget.size * 0.08),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                _displayMinute,
-                style: TextStyle(
-                  color: effectiveTextColor,
-                  fontSize: widget.size * 0.24,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: widget.size * 0.08),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _displayMinute,
+                  style: TextStyle(
+                    color: effectiveTextColor,
+                    fontSize: widget.size * 0.24,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
 

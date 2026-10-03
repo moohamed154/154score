@@ -292,22 +292,23 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
 
           // Matches in this League
           if (_isExpanded)
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: widget.league.matches.length,
-              itemBuilder: (context, index) {
-                final match = widget.league.matches[index];
-                return MatchCard(
-                  key: ValueKey('${match.id}_${widget.timeFormat ?? ""}'),
-                  match: match,
-                  showLeague: isTimeSlot,
-                  timeFormat: widget.timeFormat,
-                  onFavoriteTap: widget.onFavoriteMatchTap != null
-                      ? () => widget.onFavoriteMatchTap!(match.id)
-                      : null,
-                );
-              },
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                widget.league.matches.length,
+                (index) {
+                  final match = widget.league.matches[index];
+                  return MatchCard(
+                    key: ValueKey('${match.id}_${widget.timeFormat ?? ""}'),
+                    match: match,
+                    showLeague: isTimeSlot,
+                    timeFormat: widget.timeFormat,
+                    onFavoriteTap: widget.onFavoriteMatchTap != null
+                        ? () => widget.onFavoriteMatchTap!(match.id)
+                        : null,
+                  );
+                },
+              ),
             ),
         ],
       ),

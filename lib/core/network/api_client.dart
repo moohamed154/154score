@@ -122,9 +122,6 @@ class ApiClient {
         options: options,
         cancelToken: cancelToken,
       );
-      if (response.data != null) {
-        return _sanitizeResponseData(response.data);
-      }
       return response.data;
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -333,6 +330,14 @@ class ApiClient {
   );
 
   static String _sanitizeString(String str) {
+    if (str.length < 5) return str;
+    // Fast path: avoid expensive regex execution if string doesn't contain forbidden patterns
+    if (!str.contains('يلا') &&
+        !str.toLowerCase().contains('download') &&
+        !str.toLowerCase().contains('shoot') &&
+        !str.toLowerCase().contains('scores')) {
+      return str;
+    }
     if (!_forbiddenRegExp.hasMatch(str)) return str;
     return str.replaceAll(_forbiddenRegExp, '').trim();
   }

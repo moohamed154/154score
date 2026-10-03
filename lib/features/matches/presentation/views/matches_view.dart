@@ -330,12 +330,16 @@ class _MatchesViewState extends State<MatchesView> {
       }
     }
 
-    return ListView(
+    final hasFavorites = favoriteMatches.isNotEmpty;
+    final leagues = state.filteredLeagues;
+    final totalCount = leagues.length + (hasFavorites ? 1 : 0);
+
+    return ListView.builder(
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-      children: [
-        // Pinned Favorites Section
-        if (favoriteMatches.isNotEmpty)
-          LeagueSectionWidget(
+      itemCount: totalCount,
+      itemBuilder: (context, index) {
+        if (hasFavorites && index == 0) {
+          return LeagueSectionWidget(
             key: ValueKey('fav_section_${state.selectedDate.day}'),
             league: LeagueGroupEntity(
               leagueTitle: isArabic ? 'المفضلة' : 'Favorites',
@@ -350,24 +354,24 @@ class _MatchesViewState extends State<MatchesView> {
                 context.read<FavoritesCubit>().loadFavorites();
               } catch (_) {}
             },
-          ),
-
-        // Leagues list
-        ...state.filteredLeagues.map((league) {
-          return LeagueSectionWidget(
-            key: ValueKey('${league.leagueTitle}_${state.timeFormat}'),
-            league: league,
-            timeFormat: state.timeFormat,
-            isTimeSorted: state.sortOrder == MatchesSortOrder.time,
-            onFavoriteMatchTap: (matchId) {
-              context.read<MatchesBloc>().add(ToggleMatchFavoriteEvent(matchId));
-              try {
-                context.read<FavoritesCubit>().loadFavorites();
-              } catch (_) {}
-            },
           );
-        }),
-      ],
+        }
+
+        final leagueIndex = hasFavorites ? index - 1 : index;
+        final league = leagues[leagueIndex];
+        return LeagueSectionWidget(
+          key: ValueKey('${league.leagueTitle}_${state.timeFormat}'),
+          league: league,
+          timeFormat: state.timeFormat,
+          isTimeSorted: state.sortOrder == MatchesSortOrder.time,
+          onFavoriteMatchTap: (matchId) {
+            context.read<MatchesBloc>().add(ToggleMatchFavoriteEvent(matchId));
+            try {
+              context.read<FavoritesCubit>().loadFavorites();
+            } catch (_) {}
+          },
+        );
+      },
     );
   }
 }

@@ -62,23 +62,24 @@ class MatchCard extends StatelessWidget {
     final hasScores = score1Str != '-' && score2Str != '-';
     final hasPenalties = match.hasPenalties;
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 4),
-      decoration: BoxDecoration(
-        color: isLive
-            ? (isDark ? const Color(0xFF161B26) : const Color(0xFFF0F7FF))
-            : (isDark ? AppColors.darkCard : AppColors.lightCard),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        border: Border.all(
+    return RepaintBoundary(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 4),
+        decoration: BoxDecoration(
           color: isLive
-              ? AppColors.liveRed.withValues(alpha: 0.35)
-              : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-          width: isLive ? 1.2 : 1,
+              ? (isDark ? const Color(0xFF161B26) : const Color(0xFFF0F7FF))
+              : (isDark ? AppColors.darkCard : AppColors.lightCard),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          border: Border.all(
+            color: isLive
+                ? AppColors.liveRed.withValues(alpha: 0.35)
+                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+            width: isLive ? 1.2 : 1,
+          ),
         ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           onTap: () {
             context.push(
@@ -158,6 +159,7 @@ class MatchCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
