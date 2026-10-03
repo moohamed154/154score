@@ -176,7 +176,7 @@ void main() {
   });
 
   group('MatchCard Real-Time Clock Widget Test', () {
-    testWidgets('MatchCard displays calculated minute when minute is null', (
+    testWidgets('MatchCard starts counting from 00:00 when live and minute is null', (
       tester,
     ) async {
       final now = DateTime.now();
@@ -214,7 +214,7 @@ void main() {
       expect(find.text('المقاولون العرب'), findsOneWidget);
       expect(find.text('الأهلي'), findsOneWidget);
       expect(find.text('مباشر'), findsNothing);
-      expect(find.textContaining('30'), findsOneWidget);
+      expect(find.textContaining('00:'), findsOneWidget);
     });
 
     testWidgets(
@@ -254,25 +254,20 @@ void main() {
     );
 
     testWidgets(
-      'MatchCard displays calculated 1st half extra time in circular live clock',
+      'MatchCard displays 1st half stoppage time in circular live clock when minute is 45',
       (tester) async {
-        // Started 48 minutes ago in 1st half
-        final now = DateTime.now();
-        final fortyEightMinsAgo = now.subtract(const Duration(minutes: 48));
-        final timeStr =
-            '${fortyEightMinsAgo.hour.toString().padLeft(2, '0')}:${fortyEightMinsAgo.minute.toString().padLeft(2, '0')}';
-
         final match = MatchEntity(
           id: '125',
           team1: 'المقاولون العرب',
           team2: 'الأهلي',
           score1: '1',
           score2: '1',
-          time: timeStr,
+          time: '20:00',
           status: 'الشوط الأول',
           statusCode: 'LIVE',
           period: '1st_half',
-          minute: null,
+          minute: '45',
+          extraTime: '03:00 / 4',
         );
 
         await tester.pumpWidget(
@@ -296,7 +291,7 @@ void main() {
     );
 
     testWidgets(
-      'MatchCard displays live minute when status is لم تبدأ but kickoff has arrived',
+      'MatchCard keeps static time and does NOT start live clock when status is لم تبدأ even if kickoff passed',
       (tester) async {
         final now = DateTime.now();
         final twentyTwoMinsAgo = now.subtract(const Duration(minutes: 22));
@@ -307,7 +302,7 @@ void main() {
           id: '126',
           team1: 'باريس',
           team2: 'براتيسلافا',
-          score1: '1',
+          score1: '0',
           score2: '0',
           time: timeStr,
           status: 'لم تبدأ',
@@ -329,9 +324,9 @@ void main() {
 
         await tester.pump();
 
-        // Must display live calculated minute e.g. 22:00 instead of static kick-off time
-        expect(find.text(timeStr), findsNothing);
-        expect(find.textContaining('22'), findsOneWidget);
+        // Must display static kick-off time and NOT live ticking clock
+        expect(find.text(timeStr), findsOneWidget);
+        expect(find.textContaining('22:'), findsNothing);
       },
     );
   });

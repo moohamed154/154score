@@ -209,34 +209,39 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       }
     }
 
-    // 3. Fallback or stoppage elapsed calculation from kick-off time
-    if (MatchStatusHelper.isLive(phase) &&
-        widget.time != null &&
-        widget.time!.isNotEmpty &&
-        widget.time != '-') {
-      final estimated = MatchStatusHelper.estimateMatchMinutes(
-        time: widget.time,
-        status: widget.status,
-        period: widget.period,
-        timestamp: widget.timestamp,
+    if (synced != null) {
+      if (synced.minute >= _currentMinute && _currentMinute > 0) {
+        _currentMinute = synced.minute;
+        _currentSecond = synced.second;
+      } else if (_currentMinute == 0 && (synced.minute > 0 || synced.second > 0)) {
+        _currentMinute = synced.minute;
+        _currentSecond = synced.second;
+      }
+    } else if (_currentMinute == 0 && MatchStatusHelper.isLive(phase)) {
+      // Live match just kicked off without an explicit minute from the API:
+      // Start counting from 00:00 (1st half) or 45:00 (2nd half), NOT from scheduled kickoff clock time!
+      final p = (widget.period ?? '').toLowerCase();
+      final s = (widget.status ?? '').toLowerCase();
+      if (p.contains('2nd') || s.contains('الثاني')) {
+        _currentMinute = 45;
+        _currentSecond = 0;
+      } else if (p.contains('1st_extra') || s.contains('الإضافي الأول')) {
+        _currentMinute = 90;
+        _currentSecond = 0;
+      } else if (p.contains('2nd_extra') || s.contains('الإضافي الثاني')) {
+        _currentMinute = 105;
+        _currentSecond = 0;
+      } else {
+        _currentMinute = 0;
+        _currentSecond = 0;
+      }
+      LiveClockSync.recordClock(
+        matchId: widget.matchId,
+        minute: _currentMinute,
+        second: _currentSecond,
+        elapsedExtraSeconds: 0,
+        totalExtraMinutes: 0,
       );
-
-      if (_currentMinute == 0 && estimated.minute > 0) {
-        _currentMinute = estimated.minute;
-        minuteNum = estimated.minute;
-      }
-
-      final isStoppageMinute = (_currentMinute == 45 || _currentMinute >= 90);
-      if (isStoppageMinute &&
-          _elapsedExtraSeconds == 0 &&
-          estimated.extraMinute > 0) {
-        _elapsedExtraSeconds = estimated.extraMinute * 60;
-      }
-    }
-
-    // 4. Initialize regular seconds if live and in-play
-    if (!_isInTest && _currentSecond == 0 && _currentMinute > 0) {
-      _currentSecond = DateTime.now().second;
     }
 
     // 5. Default total extra time if stoppage is active
@@ -332,7 +337,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
             : (baseMinute == 45 ? 3 : 5);
         _displayExtra = '$mm:$ss  / $total';
         _displayString = '$_displayMinute\n$_displayExtra';
-      } else if (m > 0) {
+      } else if (m >= 0) {
         final mm = m.toString().padLeft(2, '0');
         final ss = (_currentSecond % 60).toString().padLeft(2, '0');
         _displayMinute = '$mm:$ss';

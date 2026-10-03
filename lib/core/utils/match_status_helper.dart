@@ -255,22 +255,18 @@ class MatchStatusHelper {
     final isToday =
         date == null || date.trim().isEmpty || date.trim() == todayStr;
 
-    // 7. Timestamp-based or Time-based in-play detection
+    // 7. Auto-finish guard: Only transition to finished if active scores exist and match duration has clearly elapsed (> 150 mins)
+    // Matches DO NOT become live or change to half-time solely based on wall clock time.
+    // They ONLY become live when official live indicators (status text, status code, minute, or active scores) are present.
     if (timestamp != null && timestamp > 0) {
       final nowUtcSec =
           (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
           1000;
       final diff = nowUtcSec - timestamp;
-      if (diff >= 0 && diff <= 135 * 60) {
-        if (diff > 45 * 60 && diff <= 60 * 60) {
-          return MatchPhase.halfTime;
-        }
-        return MatchPhase.live;
-      } else if (diff > 135 * 60 && hasActiveScores) {
+      if (diff > 150 * 60 && hasActiveScores) {
         return MatchPhase.finished;
       }
     } else if (isToday &&
-        !isExplicitUpcoming &&
         time != null &&
         time.isNotEmpty &&
         time != '-') {
@@ -279,14 +275,7 @@ class MatchStatusHelper {
         final currentMins = currentTime.hour * 60 + currentTime.minute;
         var elapsed = currentMins - startMins;
         if (elapsed < -720) elapsed += 1440;
-
-        // Kick-off time has passed and within match duration window (0 to 135 minutes)
-        if (elapsed >= 0 && elapsed <= 135) {
-          if (elapsed > 45 && elapsed <= 60) {
-            return MatchPhase.halfTime;
-          }
-          return MatchPhase.live;
-        } else if (elapsed > 135 && hasActiveScores) {
+        if (elapsed > 150 && hasActiveScores) {
           return MatchPhase.finished;
         }
       }
@@ -737,15 +726,8 @@ class MatchStatusHelper {
         if (formattedExtra != null) {
           return "$baseMin'  $formattedExtra";
         }
-        // Fallback: estimate real time from kick-off time if available
-        final estimated = estimateMinuteFromKickoff(
-          time: time,
-          status: rawStatus,
-          period: period,
-          isArabic: isArabic,
-        );
-        if (estimated != null && estimated.isNotEmpty) {
-          return estimated;
+        if (minNum != null && minNum > 0) {
+          return "$minNum'";
         }
         return isArabic ? 'مباشر' : 'LIVE';
 

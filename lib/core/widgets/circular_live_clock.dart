@@ -141,28 +141,40 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       }
     }
 
-    if (minNum == 0) {
-      final est = MatchStatusHelper.estimateMatchMinutes(
-        time: widget.time,
-        status: widget.status,
-        period: widget.period,
-        timestamp: widget.timestamp,
-      );
-      minNum = est.minute;
-      if (est.extraMinute > 0) {
-        extraSecFromMinute ??= est.extraMinute * 60;
-      }
-    }
-
     final syncedClock = LiveClockSync.getLiveClock(widget.matchId);
     if (syncedClock != null) {
       if (syncedClock.minute >= minNum && minNum > 0) {
         minNum = syncedClock.minute;
         secNum = syncedClock.second;
-      } else if (minNum == 0 && syncedClock.minute > 0) {
+      } else if (minNum == 0 && (syncedClock.minute > 0 || syncedClock.second > 0)) {
         minNum = syncedClock.minute;
         secNum = syncedClock.second;
       }
+    } else if (minNum == 0 && MatchStatusHelper.isLive(_phase)) {
+      // Live match just kicked off or period just changed without an explicit minute from the API:
+      // Start counting from 00:00 (1st half) or 45:00 (2nd half), NOT from scheduled kickoff clock time!
+      final p = (widget.period ?? '').toLowerCase();
+      final s = (widget.status ?? '').toLowerCase();
+      if (p.contains('2nd') || s.contains('الثاني')) {
+        minNum = 45;
+        secNum = 0;
+      } else if (p.contains('1st_extra') || s.contains('الإضافي الأول')) {
+        minNum = 90;
+        secNum = 0;
+      } else if (p.contains('2nd_extra') || s.contains('الإضافي الثاني')) {
+        minNum = 105;
+        secNum = 0;
+      } else {
+        minNum = 0;
+        secNum = 0;
+      }
+      LiveClockSync.recordClock(
+        matchId: widget.matchId,
+        minute: minNum,
+        second: secNum,
+        elapsedExtraSeconds: 0,
+        totalExtraMinutes: 0,
+      );
     }
 
     _currentMinute = minNum;
