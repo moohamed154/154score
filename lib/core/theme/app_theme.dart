@@ -7,7 +7,13 @@ import '../constants/app_colors.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get darkTheme {
+  static final ThemeData _darkTheme = _buildDarkTheme();
+  static final ThemeData _lightTheme = _buildLightTheme();
+
+  static ThemeData get darkTheme => _darkTheme;
+  static ThemeData get lightTheme => _lightTheme;
+
+  static ThemeData _buildDarkTheme() {
     return ThemeData(
       useMaterial3: true,
       fontFamily: GoogleFonts.cairo().fontFamily,
@@ -81,7 +87,7 @@ class AppTheme {
     );
   }
 
-  static ThemeData get lightTheme {
+  static ThemeData _buildLightTheme() {
     return ThemeData(
       useMaterial3: true,
       fontFamily: GoogleFonts.cairo().fontFamily,

@@ -30,8 +30,9 @@ class ThemeCubit extends Cubit<ThemeMode> {
       ThemeMode.dark => 'dark',
       ThemeMode.system => 'system',
     };
-    await _storage.setThemeMode(modeStr);
+    if (mode == state) return;
     emit(mode);
+    await _storage.setThemeMode(modeStr);
   }
 }
 
