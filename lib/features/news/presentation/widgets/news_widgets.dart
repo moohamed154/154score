@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/text_direction_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../domain/entities/news_entity.dart';
 import '../bloc/news_bloc.dart';
@@ -20,7 +21,10 @@ class NewsHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    final isArabic = l10n.isArabic;
+    final isArticleArabic = TextDirectionHelper.isArabic(article.title) ||
+        TextDirectionHelper.isArabic(article.description);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final isArabic = l10n.isArabic || isArticleArabic || isRtl;
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
 
     return GestureDetector(
@@ -107,41 +111,59 @@ class NewsHeroCard extends StatelessWidget {
               ),
             ),
             // Title & timestamp
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    article.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.getHeadingSmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
+            Builder(
+              builder: (context) {
+                final isArticleArabic = TextDirectionHelper.isArabic(article.title) ||
+                    TextDirectionHelper.isArabic(article.description);
+                final effectiveArabic = isArticleArabic || isArabic;
+                final textDir = isArticleArabic
+                    ? TextDirection.rtl
+                    : (isArabic ? TextDirection.rtl : TextDirection.ltr);
+
+                return Directionality(
+                  textDirection: textDir,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDimensions.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          article.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textDirection: textDir,
+                          textAlign: isArticleArabic ? TextAlign.right : TextAlign.start,
+                          style: AppTypography.getHeadingSmall(
+                            isDark: isDark,
+                            isArabic: effectiveArabic,
+                          ),
+                        ),
+                        if (article.description != null &&
+                            article.description!.isNotEmpty) ...[
+                          const SizedBox(height: AppDimensions.xs),
+                          Text(
+                            article.description!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: textDir,
+                            textAlign: isArticleArabic ? TextAlign.right : TextAlign.start,
+                            style: AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: effectiveArabic,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: AppDimensions.xs),
+                        _RelativeTime(
+                          publishedAt: article.publishedAt,
+                          isDark: isDark,
+                          isArabic: effectiveArabic,
+                        ),
+                      ],
                     ),
                   ),
-                  if (article.description != null &&
-                      article.description!.isNotEmpty) ...[
-                    const SizedBox(height: AppDimensions.xs),
-                    Text(
-                      article.description!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: AppDimensions.xs),
-                  _RelativeTime(
-                    publishedAt: article.publishedAt,
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -219,17 +241,32 @@ class _ImportantCard extends StatelessWidget {
                 placeholderIcon: Icons.article_outlined,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.sm),
-              child: Text(
-                article.title,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.getBodyLarge(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
-              ),
+            Builder(
+              builder: (context) {
+                final isArticleArabic = TextDirectionHelper.isArabic(article.title);
+                final effectiveArabic = isArticleArabic || isArabic;
+                final textDir = isArticleArabic
+                    ? TextDirection.rtl
+                    : (isArabic ? TextDirection.rtl : TextDirection.ltr);
+
+                return Directionality(
+                  textDirection: textDir,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDimensions.sm),
+                    child: Text(
+                      article.title,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: textDir,
+                      textAlign: isArticleArabic ? TextAlign.right : TextAlign.start,
+                      style: AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: effectiveArabic,
+                      ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -254,7 +291,8 @@ class NewsTeamFilterBar extends StatelessWidget {
     if (teams.isEmpty) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    final isArabic = l10n.isArabic;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final isArabic = l10n.isArabic || isRtl;
 
     return SizedBox(
       height: 70,
@@ -274,7 +312,7 @@ class NewsTeamFilterBar extends StatelessWidget {
                 const SelectTeamFilterEvent(null),
               ),
               child: _TeamChip(
-                label: l10n.translate('all_clubs'),
+                label: isArabic ? 'الكل' : l10n.translate('all_clubs'),
                 logo: null,
                 isSelected: isSelected,
                 isDark: isDark,
@@ -347,12 +385,15 @@ class _TeamChip extends StatelessWidget {
             ),
             const SizedBox(width: 5),
           ],
-          Text(
-            label,
-            style:
-                AppTypography.getBodyMedium(
+          Builder(
+            builder: (context) {
+              final isChipArabic = TextDirectionHelper.isArabic(label);
+              final effectiveArabic = isChipArabic || isArabic;
+              return Text(
+                label,
+                style: AppTypography.getBodyMedium(
                   isDark: isDark,
-                  isArabic: isArabic,
+                  isArabic: effectiveArabic,
                 ).copyWith(
                   color: isSelected
                       ? AppColors.primary
@@ -361,6 +402,8 @@ class _TeamChip extends StatelessWidget {
                             : AppColors.lightTextSecondary),
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 ),
+              );
+            },
           ),
         ],
       ),
@@ -379,6 +422,12 @@ class NewsListItem extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
+
+    final isArticleArabic = TextDirectionHelper.isArabic(article.title);
+    final effectiveArabic = isArticleArabic || isArabic;
+    final textDir = isArticleArabic
+        ? TextDirection.rtl
+        : (isArabic ? TextDirection.rtl : TextDirection.ltr);
 
     return GestureDetector(
       onTap: () =>
@@ -413,25 +462,31 @@ class NewsListItem extends StatelessWidget {
             const SizedBox(width: AppDimensions.sm),
             // Text
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    article.title,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.getBodyLarge(
+              child: Directionality(
+                textDirection: textDir,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      article.title,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: textDir,
+                      textAlign:
+                          isArticleArabic ? TextAlign.right : TextAlign.start,
+                      style: AppTypography.getBodyLarge(
+                        isDark: isDark,
+                        isArabic: effectiveArabic,
+                      ).copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: AppDimensions.xs),
+                    _RelativeTime(
+                      publishedAt: article.publishedAt,
                       isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: AppDimensions.xs),
-                  _RelativeTime(
-                    publishedAt: article.publishedAt,
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ),
-                ],
+                      isArabic: effectiveArabic,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

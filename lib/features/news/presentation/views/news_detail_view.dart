@@ -13,6 +13,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/text_direction_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/news_entity.dart';
@@ -62,7 +63,7 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
 
   Future<void> _load() async {
     setState(() => _state = _DetailState.loading);
-    final lang = sl<LocalStorageService>().getLanguage();
+    final lang = sl<LocalStorageService>().getEffectiveNewsLanguage();
     final repo = sl<NewsRepository>();
     final result = await repo.getNewsDetail(
       widget.articleId,
@@ -254,83 +255,111 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
               ),
 
             // 2. Title & Date & Branding Content
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    detail.title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                      height: 1.35,
-                    ),
-                    textDirection:
-                        isArabic ? TextDirection.rtl : TextDirection.ltr,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 14),
+            Builder(
+              builder: (context) {
+                final isContentArabic =
+                    TextDirectionHelper.isArabic(detail.title);
+                final effectiveArabic = isContentArabic || isArabic;
+                final textDir = isContentArabic
+                    ? TextDirection.rtl
+                    : (isArabic ? TextDirection.rtl : TextDirection.ltr);
 
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_rounded,
-                        size: 13,
-                        color: mutedColor,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        formattedDate,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: mutedColor,
-                        ),
-                      ),
-                      const Spacer(),
-                      // 154 SCORE Branding Capsule
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            width: 1,
+                return Directionality(
+                  textDirection: textDir,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 16,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: isContentArabic
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          detail.title,
+                          style: AppTypography.getHeadingMedium(
+                            isDark: isDark,
+                            isArabic: effectiveArabic,
+                          ).copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                            height: 1.35,
                           ),
+                          textDirection: textDir,
+                          textAlign: isContentArabic
+                              ? TextAlign.right
+                              : TextAlign.start,
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
+                        const SizedBox(height: 14),
+
+                        Row(
                           children: [
                             Icon(
-                              Icons.sports_soccer_rounded,
-                              size: 12,
-                              color: AppColors.primary,
+                              Icons.calendar_today_rounded,
+                              size: 13,
+                              color: mutedColor,
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 6),
                             Text(
-                              '154 SCORE',
+                              formattedDate,
                               style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
-                                letterSpacing: 0.5,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: mutedColor,
+                              ),
+                            ),
+                            const Spacer(),
+                            // 154 SCORE Branding Capsule
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.sports_soccer_rounded,
+                                    size: 12,
+                                    color: AppColors.primary,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    '154 SCORE',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primary,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -411,6 +440,13 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
     AppLocalizations l10n,
   ) {
     final detail = _detail!;
+    final isContentArabic = TextDirectionHelper.isArabic(detail.title) ||
+        (detail.paragraphs.isNotEmpty &&
+            TextDirectionHelper.isArabic(detail.paragraphs.first));
+    final effectiveArabic = isContentArabic || isArabic;
+    final textDir = isContentArabic
+        ? TextDirection.rtl
+        : (isArabic ? TextDirection.rtl : TextDirection.ltr);
 
     return CustomScrollView(
       slivers: [
@@ -476,7 +512,7 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
                         onPressed: () => _shareNews(
                           detail,
                           isDark,
-                          isArabic,
+                          effectiveArabic,
                         ),
                       ),
               ),
@@ -486,62 +522,85 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
 
         // Article content
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title
-                Text(
-                  detail.title,
-                  style: AppTypography.getHeadingMedium(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.sm),
-                // Timestamp
-                if (detail.publishedAt != null)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_rounded,
-                        size: 13,
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
-                      ),
-                      const SizedBox(width: AppDimensions.xs),
-                      _buildTimestamp(detail.publishedAt, isDark, isArabic),
-                    ],
-                  ),
-                const SizedBox(height: AppDimensions.lg),
-
-                Divider(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  thickness: 1,
-                ),
-                const SizedBox(height: AppDimensions.md),
-
-                // Paragraphs
-                ...List<Widget>.generate(detail.paragraphs.length, (i) {
-                  final para = detail.paragraphs[i];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppDimensions.md),
-                    child: Text(
-                      para,
-                      style: AppTypography.getBodyLarge(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(height: 1.8),
-                      textDirection:
-                          isArabic ? TextDirection.rtl : TextDirection.ltr,
+          child: Directionality(
+            textDirection: textDir,
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.lg),
+              child: Column(
+                crossAxisAlignment: isContentArabic
+                    ? CrossAxisAlignment.end
+                    : (isArabic
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start),
+                children: [
+                  // Title
+                  Text(
+                    detail.title,
+                    textDirection: textDir,
+                    textAlign:
+                        isContentArabic ? TextAlign.right : TextAlign.start,
+                    style: AppTypography.getHeadingMedium(
+                      isDark: isDark,
+                      isArabic: effectiveArabic,
                     ),
-                  );
-                }),
+                  ),
+                  const SizedBox(height: AppDimensions.sm),
+                  // Timestamp
+                  if (detail.publishedAt != null)
+                    Row(
+                      mainAxisAlignment: isContentArabic
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 13,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                        ),
+                        const SizedBox(width: AppDimensions.xs),
+                        _buildTimestamp(
+                          detail.publishedAt,
+                          isDark,
+                          effectiveArabic,
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: AppDimensions.lg),
 
-                const SizedBox(height: AppDimensions.xxxl),
-              ],
+                  Divider(
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    thickness: 1,
+                  ),
+                  const SizedBox(height: AppDimensions.md),
+
+                  // Paragraphs
+                  ...List<Widget>.generate(detail.paragraphs.length, (i) {
+                    final para = detail.paragraphs[i];
+                    final isParaArabic = TextDirectionHelper.isArabic(para);
+                    final effectiveParaArabic = isParaArabic || effectiveArabic;
+                    final paraDir = isParaArabic ? TextDirection.rtl : textDir;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppDimensions.md),
+                      child: Text(
+                        para,
+                        style: AppTypography.getBodyLarge(
+                          isDark: isDark,
+                          isArabic: effectiveParaArabic,
+                        ).copyWith(height: 1.8),
+                        textDirection: paraDir,
+                        textAlign:
+                            isParaArabic ? TextAlign.right : TextAlign.start,
+                      ),
+                    );
+                  }),
+
+                  const SizedBox(height: AppDimensions.xxxl),
+                ],
+              ),
             ),
           ),
         ),

@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/text_direction_helper.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/news_entity.dart';
@@ -40,33 +41,37 @@ class NewsView extends StatelessWidget {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.tune_rounded),
-            tooltip: l10n.translate('news_customization'),
-            onPressed: () {
-              // TODO: show news preferences sheet
-            },
-          ),
-          const SizedBox(width: AppDimensions.xs),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.tune_rounded),
+        //     tooltip: l10n.translate('news_customization'),
+        //     onPressed: () {
+        //       // TODO: show news preferences sheet
+        //     },
+        //   ),
+        //   const SizedBox(width: AppDimensions.xs),
+        // ],
       ),
       body: BlocBuilder<NewsBloc, NewsState>(
         builder: (context, state) {
           if (state.status == NewsStatus.error && state.feed == null) {
             return ErrorView(
               message: state.errorMessage,
-              onRetry: () => context.read<NewsBloc>().add(const LoadNewsFeedEvent()),
+              onRetry: () =>
+                  context.read<NewsBloc>().add(const LoadNewsFeedEvent()),
             );
           }
 
-          final isLoading = state.status == NewsStatus.loading && state.feed == null;
+          final isLoading =
+              state.status == NewsStatus.loading && state.feed == null;
 
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () {
               final completer = Completer<void>();
-              context.read<NewsBloc>().add(LoadNewsFeedEvent(isRefresh: true, completer: completer));
+              context.read<NewsBloc>().add(
+                LoadNewsFeedEvent(isRefresh: true, completer: completer),
+              );
               return completer.future;
             },
             child: _NewsBody(
@@ -111,7 +116,8 @@ class _NewsBody extends StatelessWidget {
             ),
             important: List.generate(
               4,
-              (i) => NewsArticleEntity(id: '$i', title: '─────────────────────'),
+              (i) =>
+                  NewsArticleEntity(id: '$i', title: '─────────────────────'),
             ),
             teams: List.generate(
               6,
@@ -119,7 +125,10 @@ class _NewsBody extends StatelessWidget {
             ),
             latest: List.generate(
               5,
-              (i) => NewsArticleEntity(id: '$i', title: '──────────────────────────────'),
+              (i) => NewsArticleEntity(
+                id: '$i',
+                title: '──────────────────────────────',
+              ),
             ),
           )
         : state.feed;
@@ -129,173 +138,224 @@ class _NewsBody extends StatelessWidget {
       return Center(
         child: Text(
           l10n.translate('no_news_available'),
-          style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic),
+          style: AppTypography.getBodyMedium(
+            isDark: isDark,
+            isArabic: isArabic,
+          ),
         ),
       );
     }
 
-    return Skeletonizer(
-      enabled: isLoading,
-      containersColor: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
-      child: CustomScrollView(
-        slivers: [
-          // Section label: Latest News
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimensions.lg, AppDimensions.md, AppDimensions.lg, AppDimensions.xs,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 3,
-                    height: 18,
-                    margin: EdgeInsets.only(
-                      right: isArabic ? 0 : AppDimensions.xs,
-                      left: isArabic ? AppDimensions.xs : 0,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                    ),
-                  ),
-                  const SizedBox(width: AppDimensions.xs),
-                  Text(
-                    l10n.translate('latest_news'),
-                    style: AppTypography.getHeadingSmall(isDark: isDark, isArabic: isArabic),
-                  ),
-                ],
-              ),
-            ),
-          ),
+    final isNewsArabic =
+        isArabic ||
+        state.lang == 'ar' ||
+        (displayFeed.main != null &&
+            (TextDirectionHelper.isArabic(displayFeed.main!.title) ||
+                TextDirectionHelper.isArabic(
+                  displayFeed.main!.description ?? '',
+                ))) ||
+        (displayFeed.latest.isNotEmpty &&
+            TextDirectionHelper.isArabic(displayFeed.latest.first.title)) ||
+        (displayFeed.important.isNotEmpty &&
+            TextDirectionHelper.isArabic(displayFeed.important.first.title));
 
-          // Hero card (main)
-          if (displayFeed.main != null)
-            SliverToBoxAdapter(
-              child: NewsHeroCard(article: displayFeed.main!),
-            ),
-
-          // Section label: Trending
-          if (displayFeed.important.isNotEmpty)
+    return Directionality(
+      textDirection: isNewsArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Skeletonizer(
+        enabled: isLoading,
+        containersColor: isDark
+            ? AppColors.darkCardElevated
+            : AppColors.lightCardElevated,
+        child: CustomScrollView(
+          slivers: [
+            // Section label: Latest News
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  AppDimensions.lg, AppDimensions.md, AppDimensions.lg, AppDimensions.xs,
+                  AppDimensions.lg,
+                  AppDimensions.md,
+                  AppDimensions.lg,
+                  AppDimensions.xs,
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.local_fire_department_rounded,
-                      color: AppColors.liveRed,
-                      size: 18,
+                    Container(
+                      width: 3,
+                      height: 18,
+                      margin: EdgeInsets.only(
+                        right: isNewsArabic ? 0 : AppDimensions.xs,
+                        left: isNewsArabic ? AppDimensions.xs : 0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusFull,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: AppDimensions.xs),
                     Text(
-                      l10n.translate('important_news'),
-                      style: AppTypography.getHeadingSmall(isDark: isDark, isArabic: isArabic),
+                      isNewsArabic
+                          ? 'أحدث الأخبار'
+                          : l10n.translate('latest_news'),
+                      style: AppTypography.getHeadingSmall(
+                        isDark: isDark,
+                        isArabic: isNewsArabic,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-          // Important carousel
-          if (displayFeed.important.isNotEmpty)
-            SliverToBoxAdapter(
-              child: NewsImportantCarousel(articles: displayFeed.important),
-            ),
+            // Hero card (main)
+            if (displayFeed.main != null)
+              SliverToBoxAdapter(
+                child: NewsHeroCard(article: displayFeed.main!),
+              ),
 
-          // Team filter bar
-          if (displayFeed.teams.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: AppDimensions.sm),
-                child: NewsTeamFilterBar(
-                  teams: displayFeed.teams,
-                  selectedTeamId: state.selectedTeamId,
+            // Section label: Trending
+            if (displayFeed.important.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppDimensions.lg,
+                    AppDimensions.md,
+                    AppDimensions.lg,
+                    AppDimensions.xs,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.local_fire_department_rounded,
+                        color: AppColors.liveRed,
+                        size: 18,
+                      ),
+                      const SizedBox(width: AppDimensions.xs),
+                      Text(
+                        isNewsArabic
+                            ? 'الأخبار الرائجة'
+                            : l10n.translate('important_news'),
+                        style: AppTypography.getHeadingSmall(
+                          isDark: isDark,
+                          isArabic: isNewsArabic,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-          // Divider + "Latest" header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimensions.lg, AppDimensions.md, AppDimensions.lg, AppDimensions.xs,
+            // Important carousel
+            if (displayFeed.important.isNotEmpty)
+              SliverToBoxAdapter(
+                child: NewsImportantCarousel(articles: displayFeed.important),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 3,
-                    height: 18,
-                    margin: EdgeInsets.only(
-                      right: isArabic ? 0 : AppDimensions.xs,
-                      left: isArabic ? AppDimensions.xs : 0,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.accent,
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                    ),
+
+            // Team filter bar
+            if (displayFeed.teams.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: AppDimensions.sm),
+                  child: NewsTeamFilterBar(
+                    teams: displayFeed.teams,
+                    selectedTeamId: state.selectedTeamId,
                   ),
-                  const SizedBox(width: AppDimensions.xs),
-                  Text(
-                    isArabic ? 'آخر الأخبار' : 'All News',
-                    style: AppTypography.getHeadingSmall(isDark: isDark, isArabic: isArabic),
-                  ),
-                  const Spacer(),
-                  // Loading indicator for team filter
-                  if (state.status == NewsStatus.loading && state.feed != null)
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
+                ),
+              ),
+
+            // Divider + "Latest" header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppDimensions.lg,
+                  AppDimensions.md,
+                  AppDimensions.lg,
+                  AppDimensions.xs,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 18,
+                      margin: EdgeInsets.only(
+                        right: isNewsArabic ? 0 : AppDimensions.xs,
+                        left: isNewsArabic ? AppDimensions.xs : 0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent,
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusFull,
+                        ),
                       ),
                     ),
-                ],
+                    const SizedBox(width: AppDimensions.xs),
+                    Text(
+                      isNewsArabic ? 'كل الأخبار' : 'All News',
+                      style: AppTypography.getHeadingSmall(
+                        isDark: isDark,
+                        isArabic: isNewsArabic,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Loading indicator for team filter
+                    if (state.status == NewsStatus.loading &&
+                        state.feed != null)
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Latest news list
-          if (state.filteredLatest.isEmpty && !isLoading)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppDimensions.xl,
-                  horizontal: AppDimensions.lg,
-                ),
-                child: Center(
-                  child: Text(
-                    l10n.translate('no_news_available'),
-                    style: AppTypography.getBodyMedium(isDark: isDark, isArabic: isArabic),
-                    textAlign: TextAlign.center,
+            // Latest news list
+            if (state.filteredLatest.isEmpty && !isLoading)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppDimensions.xl,
+                    horizontal: AppDimensions.lg,
+                  ),
+                  child: Center(
+                    child: Text(
+                      l10n.translate('no_news_available'),
+                      style: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final articles = isLoading
+                        ? displayFeed.latest
+                        : state.filteredLatest;
+                    if (index >= articles.length) return null;
+                    return NewsListItem(article: articles[index]);
+                  },
+                  childCount: isLoading
+                      ? displayFeed.latest.length
+                      : state.filteredLatest.length,
+                ),
               ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final articles = isLoading
-                      ? displayFeed.latest
-                      : state.filteredLatest;
-                  if (index >= articles.length) return null;
-                  return NewsListItem(article: articles[index]);
-                },
-                childCount: isLoading
-                    ? displayFeed.latest.length
-                    : state.filteredLatest.length,
-              ),
-            ),
 
-          // Bottom spacing
-          const SliverToBoxAdapter(
-            child: SizedBox(height: AppDimensions.xxxl),
-          ),
-        ],
+            // Bottom spacing
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppDimensions.xxxl),
+            ),
+          ],
+        ),
       ),
     );
   }

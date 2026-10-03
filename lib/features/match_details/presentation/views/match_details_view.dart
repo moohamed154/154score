@@ -21,6 +21,7 @@ import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/utils/url_helper.dart';
+import '../../../../core/utils/text_direction_helper.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
@@ -3014,6 +3015,14 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.sm),
         itemBuilder: (context, index) {
           final item = state.news[index];
+          final isItemArabic = TextDirectionHelper.isArabic(item.title) ||
+              (item.description != null &&
+                  TextDirectionHelper.isArabic(item.description!));
+          final effectiveItemArabic = isItemArabic || isArabic;
+          final itemDir = isItemArabic
+              ? TextDirection.rtl
+              : (isArabic ? TextDirection.rtl : TextDirection.ltr);
+
           return Card(
             elevation: 0,
             color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -3039,59 +3048,73 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                   placeholderIcon: Icons.article_rounded,
                 ),
               ),
-              title: Text(
-                item.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.getBodyMedium(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(fontWeight: FontWeight.w600),
+              title: Directionality(
+                textDirection: itemDir,
+                child: Text(
+                  item.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textDirection: itemDir,
+                  textAlign: isItemArabic ? TextAlign.right : TextAlign.start,
+                  style: AppTypography.getBodyMedium(
+                    isDark: isDark,
+                    isArabic: effectiveItemArabic,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                ),
               ),
               subtitle:
                   (item.description != null && item.description!.isNotEmpty) ||
                       (item.date != null && item.date!.isNotEmpty)
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (item.description != null &&
-                            item.description!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              item.description!,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style:
-                                  AppTypography.getBodySmall(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    color: isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.lightTextSecondary,
-                                    fontSize: 12,
-                                  ),
+                  ? Directionality(
+                      textDirection: itemDir,
+                      child: Column(
+                        crossAxisAlignment: isItemArabic
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        children: [
+                          if (item.description != null &&
+                              item.description!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                item.description!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textDirection: itemDir,
+                                textAlign: isItemArabic
+                                    ? TextAlign.right
+                                    : TextAlign.start,
+                                style:
+                                    AppTypography.getBodySmall(
+                                      isDark: isDark,
+                                      isArabic: effectiveItemArabic,
+                                    ).copyWith(
+                                      color: isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.lightTextSecondary,
+                                      fontSize: 12,
+                                    ),
+                              ),
                             ),
-                          ),
-                        if (item.date != null && item.date!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              item.date!,
-                              style:
-                                  AppTypography.getBodySmall(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    color: isDark
-                                        ? AppColors.darkTextMuted
-                                        : AppColors.lightTextMuted,
-                                    fontSize: 11,
-                                  ),
+                          if (item.date != null && item.date!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                item.date!,
+                                style:
+                                    AppTypography.getBodySmall(
+                                      isDark: isDark,
+                                      isArabic: effectiveItemArabic,
+                                    ).copyWith(
+                                      color: isDark
+                                          ? AppColors.darkTextMuted
+                                          : AppColors.lightTextMuted,
+                                      fontSize: 11,
+                                    ),
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     )
                   : null,
               onTap: () {
