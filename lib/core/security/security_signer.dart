@@ -68,6 +68,7 @@ class SecuritySigner {
         cleanPath = uri.path;
       }
     }
+    cleanPath = cleanPath.split('?').first;
     if (!cleanPath.startsWith('/')) {
       cleanPath = '/$cleanPath';
     }

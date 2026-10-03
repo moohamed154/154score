@@ -72,9 +72,10 @@ class ApiClient {
           }
 
           // Anti-Tampering & Anti-Scraping: attach dynamic cryptographic signature (HMAC-SHA256, Nonce, Timestamp)
+          final signPath = options.uri.path.isNotEmpty ? options.uri.path : options.path;
           final securityHeaders = SecuritySigner.buildSecurityHeaders(
             method: options.method,
-            path: options.path,
+            path: signPath,
           );
           options.headers.addAll(securityHeaders);
 

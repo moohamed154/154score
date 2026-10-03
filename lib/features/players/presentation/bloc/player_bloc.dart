@@ -70,6 +70,7 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
           state.copyWith(
             status: PlayerStatus.success,
             profile: profile,
+            playerId: profile.id.isNotEmpty ? profile.id : state.playerId,
             playerName: profile.name.isNotEmpty
                 ? profile.name
                 : state.playerName,
@@ -114,6 +115,7 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
           state.copyWith(
             status: PlayerStatus.success,
             profile: profile,
+            playerId: profile.id.isNotEmpty ? profile.id : state.playerId,
             playerName: profile.name.isNotEmpty
                 ? profile.name
                 : state.playerName,

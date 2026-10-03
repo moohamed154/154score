@@ -40,11 +40,7 @@ class TransferEntity extends Equatable {
       final match = RegExp(r'/player(?:s)?/(\d+)').firstMatch(playerLink!);
       if (match != null) return match.group(1)!;
     }
-    if (playerImage != null && playerImage!.isNotEmpty) {
-      final match = RegExp(r'/player(?:s)?/\d+/(\d+)').firstMatch(playerImage!);
-      if (match != null) return match.group(1)!;
-    }
-    return Uri.encodeComponent(playerName);
+    return (playerName.trim().isNotEmpty) ? '0' : '';
   }
 
   @override
