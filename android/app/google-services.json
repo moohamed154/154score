@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "621440916293",
+    "project_id": "score-45ce7",
+    "storage_bucket": "score-45ce7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:621440916293:android:cf6836ee1d832f0ca17c2c",
+        "android_client_info": {
+          "package_name": "com.hamdy.app154score"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChIR56jBGOgEAP0IfuMYED_hTTap0UvWI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

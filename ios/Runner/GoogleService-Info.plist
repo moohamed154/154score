@@ -3,28 +3,28 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyB0154000154000154000154000154000</string>
+	<string>AIzaSyAIgy2gfI8FmP2jHy9Bt9J7Dt8yv0EIMLg</string>
 	<key>GCM_SENDER_ID</key>
-	<string>154000154000</string>
+	<string>621440916293</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.hamdy.app154score</string>
 	<key>PROJECT_ID</key>
-	<string>score154-app</string>
+	<string>score-45ce7</string>
 	<key>STORAGE_BUCKET</key>
-	<string>score154-app.appspot.com</string>
+	<string>score-45ce7.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
 	<false></false>
 	<key>IS_APPINVITE_ENABLED</key>
-	<false></false>
+	<true></true>
 	<key>IS_GCM_ENABLED</key>
 	<true></true>
 	<key>IS_SIGNIN_ENABLED</key>
-	<false></false>
+	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:154000154000:ios:a154000154000154000154</string>
+	<string>1:621440916293:ios:255ead2963250008a17c2c</string>
 </dict>
 </plist>
