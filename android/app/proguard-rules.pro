@@ -1,7 +1,11 @@
 # Google Play Core & Deferred Components (prevents R8 missing class errors)
 -dontwarn com.google.android.play.core.**
+-dontwarn com.google.android.play.core.splitcompat.**
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**
 -dontwarn io.flutter.embedding.**
 -dontwarn io.flutter.plugin.**
+-keep class com.google.android.play.core.** { *; }
 -ignorewarnings
 
 # Flutter Rules
