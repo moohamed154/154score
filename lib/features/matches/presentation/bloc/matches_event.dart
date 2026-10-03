@@ -120,10 +120,22 @@ class ToggleMatchFavoriteEvent extends MatchesEvent {
 }
 
 class RefreshFavoritesEvent extends MatchesEvent {
-  const RefreshFavoritesEvent();
+  final List<String>? favoriteMatches;
+  final List<String>? favoriteTeams;
+  final List<String>? favoriteCompetitions;
+
+  const RefreshFavoritesEvent({
+    this.favoriteMatches,
+    this.favoriteTeams,
+    this.favoriteCompetitions,
+  });
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [
+    favoriteMatches,
+    favoriteTeams,
+    favoriteCompetitions,
+  ];
 }
 
 class ChangeTimezoneEvent extends MatchesEvent {

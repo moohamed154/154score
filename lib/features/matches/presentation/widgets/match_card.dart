@@ -17,7 +17,6 @@ import '../../../../core/widgets/penalty_shootout_widget.dart';
 import '../../../../core/widgets/starred_button.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../bloc/matches_bloc.dart';
-import '../bloc/matches_event.dart';
 import '../../domain/entities/match_entity.dart';
 
 class MatchCard extends StatelessWidget {
@@ -676,7 +675,7 @@ class MatchCard extends StatelessWidget {
               id: match.team2Id,
               name: match.team2,
             );
-            final isMatchFav = match.isFavorite;
+            final isMatchFav = favState.isFavoriteMatch(match.id);
             final isLeagueFav = match.leagueTitle != null &&
                 favState.isFavoriteCompetition(
                   id: match.leagueId,
@@ -759,9 +758,6 @@ class MatchCard extends StatelessWidget {
                                 match.team1,
                                 id: match.team1Id,
                               );
-                          try {
-                            context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
-                          } catch (_) {}
                         },
                       ),
                       onTap: () {
@@ -769,9 +765,6 @@ class MatchCard extends StatelessWidget {
                               match.team1,
                               id: match.team1Id,
                             );
-                        try {
-                          context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
-                        } catch (_) {}
                       },
                     ),
 
@@ -806,9 +799,6 @@ class MatchCard extends StatelessWidget {
                                 match.team2,
                                 id: match.team2Id,
                               );
-                          try {
-                            context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
-                          } catch (_) {}
                         },
                       ),
                       onTap: () {
@@ -816,9 +806,6 @@ class MatchCard extends StatelessWidget {
                               match.team2,
                               id: match.team2Id,
                             );
-                        try {
-                          context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
-                        } catch (_) {}
                       },
                     ),
 
@@ -845,12 +832,7 @@ class MatchCard extends StatelessWidget {
                           if (onFavoriteTap != null) {
                             onFavoriteTap!();
                           } else {
-                            context.read<MatchesBloc>().add(
-                              ToggleMatchFavoriteEvent(match.id),
-                            );
-                            try {
-                              context.read<FavoritesCubit>().loadFavorites();
-                            } catch (_) {}
+                            context.read<FavoritesCubit>().toggleMatch(match.id);
                           }
                         },
                       ),
@@ -858,12 +840,7 @@ class MatchCard extends StatelessWidget {
                         if (onFavoriteTap != null) {
                           onFavoriteTap!();
                         } else {
-                          context.read<MatchesBloc>().add(
-                            ToggleMatchFavoriteEvent(match.id),
-                          );
-                          try {
-                            context.read<FavoritesCubit>().loadFavorites();
-                          } catch (_) {}
+                          context.read<FavoritesCubit>().toggleMatch(match.id);
                         }
                       },
                     ),
@@ -899,9 +876,6 @@ class MatchCard extends StatelessWidget {
                               id: match.leagueId,
                               name: match.leagueTitle,
                             );
-                            try {
-                              context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
-                            } catch (_) {}
                           },
                         ),
                         onTap: () {
@@ -909,9 +883,6 @@ class MatchCard extends StatelessWidget {
                             id: match.leagueId,
                             name: match.leagueTitle,
                           );
-                          try {
-                            context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
-                          } catch (_) {}
                         },
                       ),
                   ],

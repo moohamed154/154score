@@ -13,8 +13,6 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/starred_button.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../domain/entities/match_entity.dart';
-import '../bloc/matches_bloc.dart';
-import '../bloc/matches_event.dart';
 import 'match_card.dart';
 
 class LeagueSectionWidget extends StatefulWidget {
@@ -180,11 +178,6 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                             id: widget.league.leagueId,
                             name: widget.league.leagueTitle,
                           );
-                          try {
-                            context.read<MatchesBloc>().add(
-                              const RefreshFavoritesEvent(),
-                            );
-                          } catch (_) {}
                         },
                       );
                     },

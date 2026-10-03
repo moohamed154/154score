@@ -136,7 +136,13 @@ class _MatchesViewState extends State<MatchesView> {
       ),
       body: BlocListener<FavoritesCubit, FavoritesState>(
         listener: (context, favState) {
-          context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
+          context.read<MatchesBloc>().add(
+            RefreshFavoritesEvent(
+              favoriteMatches: favState.favoriteMatches,
+              favoriteTeams: favState.favoriteTeams,
+              favoriteCompetitions: favState.favoriteCompetitions,
+            ),
+          );
         },
         child: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, state) {
@@ -347,12 +353,7 @@ class _MatchesViewState extends State<MatchesView> {
             ),
             timeFormat: state.timeFormat,
             onFavoriteMatchTap: (matchId) {
-              context.read<MatchesBloc>().add(
-                ToggleMatchFavoriteEvent(matchId),
-              );
-              try {
-                context.read<FavoritesCubit>().loadFavorites();
-              } catch (_) {}
+              context.read<FavoritesCubit>().toggleMatch(matchId);
             },
           );
         }
@@ -365,10 +366,7 @@ class _MatchesViewState extends State<MatchesView> {
           timeFormat: state.timeFormat,
           isTimeSorted: state.sortOrder == MatchesSortOrder.time,
           onFavoriteMatchTap: (matchId) {
-            context.read<MatchesBloc>().add(ToggleMatchFavoriteEvent(matchId));
-            try {
-              context.read<FavoritesCubit>().loadFavorites();
-            } catch (_) {}
+            context.read<FavoritesCubit>().toggleMatch(matchId);
           },
         );
       },
