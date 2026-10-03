@@ -199,11 +199,26 @@ class FavoritesCubit extends Cubit<FavoritesState> {
 
   Future<void> toggleTeam(String teamName, {String? id}) async {
     final wasFav = isTeamFavorite(id: id, name: teamName);
+    final key = (id != null && id.trim().isNotEmpty) ? id.trim() : teamName.trim();
+
+    // Optimistic UI update: 0ms lag
+    final updatedList = List<String>.from(state.favoriteTeams);
+    if (wasFav) {
+      updatedList.removeWhere((item) =>
+          item.toLowerCase() == key.toLowerCase() ||
+          item.toLowerCase() == teamName.trim().toLowerCase() ||
+          (id != null && item.toLowerCase() == id.trim().toLowerCase()));
+    } else {
+      if (!updatedList.any((item) => item.toLowerCase() == key.toLowerCase())) {
+        updatedList.add(key);
+      }
+    }
+    emit(state.copyWith(favoriteTeams: updatedList));
+
     await _storage.toggleFavoriteTeam(teamName, id: id);
     loadFavorites();
     final isFavNow = isTeamFavorite(id: id, name: teamName);
     if (!wasFav && isFavNow) {
-      final key = (id != null && id.trim().isNotEmpty) ? id.trim() : teamName.trim();
       await _storage.setTeamNotificationMuted(key, false);
       if (!_storage.isTeamNotificationEnabled(key)) {
         await _storage.toggleTeamNotification(key);
@@ -224,6 +239,24 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     String? slug,
   }) async {
     final effectiveName = name ?? compName;
+    final wasFav = isCompetitionFavorite(id: id, name: effectiveName, slug: slug);
+    final target = id ?? effectiveName ?? slug ?? '';
+
+    // Optimistic UI update: 0ms lag
+    final updatedList = List<String>.from(state.favoriteCompetitions);
+    if (wasFav) {
+      updatedList.removeWhere((c) =>
+          c.toLowerCase() == target.toLowerCase() ||
+          (effectiveName != null && c.toLowerCase() == effectiveName.toLowerCase()) ||
+          (id != null && c.toLowerCase() == id.toLowerCase()));
+    } else {
+      if (target.isNotEmpty &&
+          !updatedList.any((c) => c.toLowerCase() == target.toLowerCase())) {
+        updatedList.add(target);
+      }
+    }
+    emit(state.copyWith(favoriteCompetitions: updatedList));
+
     await _storage.toggleFavoriteCompetition(
       compName: effectiveName,
       id: id,
@@ -255,6 +288,17 @@ class FavoritesCubit extends Cubit<FavoritesState> {
   }
 
   Future<void> toggleMatch(String matchId) async {
+    final wasFav = isMatchFavorite(matchId);
+
+    // Optimistic UI update: 0ms lag
+    final updatedList = List<String>.from(state.favoriteMatches);
+    if (wasFav) {
+      updatedList.remove(matchId);
+    } else {
+      if (!updatedList.contains(matchId)) updatedList.add(matchId);
+    }
+    emit(state.copyWith(favoriteMatches: updatedList));
+
     await _storage.toggleFavoriteMatch(matchId);
     loadFavorites();
   }

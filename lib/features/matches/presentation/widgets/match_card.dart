@@ -14,6 +14,7 @@ import '../../../../core/utils/score_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/circular_live_clock.dart';
 import '../../../../core/widgets/penalty_shootout_widget.dart';
+import '../../../../core/widgets/starred_button.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../bloc/matches_bloc.dart';
 import '../bloc/matches_event.dart';
@@ -750,10 +751,18 @@ class MatchCard extends StatelessWidget {
                           color: isTeam1Fav ? AppColors.primary : null,
                         ),
                       ),
-                      trailing: Icon(
-                        isTeam1Fav ? Icons.star_rounded : Icons.star_border_rounded,
-                        color: isTeam1Fav ? AppColors.yellowCard : null,
+                      trailing: StarredButton(
+                        isStarred: isTeam1Fav,
                         size: 24,
+                        onTap: () {
+                          context.read<FavoritesCubit>().toggleTeam(
+                                match.team1,
+                                id: match.team1Id,
+                              );
+                          try {
+                            context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
+                          } catch (_) {}
+                        },
                       ),
                       onTap: () {
                         context.read<FavoritesCubit>().toggleTeam(
@@ -785,14 +794,22 @@ class MatchCard extends StatelessWidget {
                             ? (isArabic ? 'في قائمة الفرق المفضلة' : 'In Favorite Teams')
                             : (isArabic ? 'إضافة إلى الفرق المفضلة' : 'Add to Favorite Teams'),
                         style: TextStyle(
-                          fontSize: 11,
+                           fontSize: 11,
                           color: isTeam2Fav ? AppColors.primary : null,
                         ),
                       ),
-                      trailing: Icon(
-                        isTeam2Fav ? Icons.star_rounded : Icons.star_border_rounded,
-                        color: isTeam2Fav ? AppColors.yellowCard : null,
+                      trailing: StarredButton(
+                        isStarred: isTeam2Fav,
                         size: 24,
+                        onTap: () {
+                          context.read<FavoritesCubit>().toggleTeam(
+                                match.team2,
+                                id: match.team2Id,
+                              );
+                          try {
+                            context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
+                          } catch (_) {}
+                        },
                       ),
                       onTap: () {
                         context.read<FavoritesCubit>().toggleTeam(
@@ -821,10 +838,21 @@ class MatchCard extends StatelessWidget {
                           color: isMatchFav ? AppColors.primary : null,
                         ),
                       ),
-                      trailing: Icon(
-                        isMatchFav ? Icons.star_rounded : Icons.star_border_rounded,
-                        color: isMatchFav ? AppColors.yellowCard : null,
+                      trailing: StarredButton(
+                        isStarred: isMatchFav,
                         size: 24,
+                        onTap: () {
+                          if (onFavoriteTap != null) {
+                            onFavoriteTap!();
+                          } else {
+                            context.read<MatchesBloc>().add(
+                              ToggleMatchFavoriteEvent(match.id),
+                            );
+                            try {
+                              context.read<FavoritesCubit>().loadFavorites();
+                            } catch (_) {}
+                          }
+                        },
                       ),
                       onTap: () {
                         if (onFavoriteTap != null) {
@@ -863,10 +891,18 @@ class MatchCard extends StatelessWidget {
                             color: isLeagueFav ? AppColors.primary : null,
                           ),
                         ),
-                        trailing: Icon(
-                          isLeagueFav ? Icons.star_rounded : Icons.star_border_rounded,
-                          color: isLeagueFav ? AppColors.yellowCard : null,
+                        trailing: StarredButton(
+                          isStarred: isLeagueFav,
                           size: 24,
+                          onTap: () {
+                            context.read<FavoritesCubit>().toggleCompetition(
+                              id: match.leagueId,
+                              name: match.leagueTitle,
+                            );
+                            try {
+                              context.read<MatchesBloc>().add(const RefreshFavoritesEvent());
+                            } catch (_) {}
+                          },
                         ),
                         onTap: () {
                           context.read<FavoritesCubit>().toggleCompetition(

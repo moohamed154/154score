@@ -209,3 +209,17 @@ class TimezoneCubit extends Cubit<TimezoneState> {
     );
   }
 }
+
+// News Language Cubit ('app', 'ar', 'en')
+class NewsLanguageCubit extends Cubit<String> {
+  final LocalStorageService _storage;
+
+  NewsLanguageCubit(this._storage) : super(_storage.getNewsLanguage());
+
+  Future<void> setNewsLanguage(String lang) async {
+    if (state == lang) return;
+    await _storage.setNewsLanguage(lang);
+    emit(lang);
+  }
+}
+

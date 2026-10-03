@@ -113,6 +113,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<VideosBloc>(create: (_) => sl<VideosBloc>()),
         BlocProvider<FavoritesCubit>(create: (_) => sl<FavoritesCubit>()),
         BlocProvider<TimezoneCubit>(create: (_) => sl<TimezoneCubit>()),
+        BlocProvider<NewsLanguageCubit>(create: (_) => sl<NewsLanguageCubit>()),
       ],
       child: ForegroundNotificationListener(
         child: BlocBuilder<ThemeCubit, ThemeMode>(

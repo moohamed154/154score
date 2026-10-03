@@ -10,6 +10,7 @@ import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../../core/widgets/starred_button.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../domain/entities/match_entity.dart';
 import '../bloc/matches_bloc.dart';
@@ -170,10 +171,10 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                         name: widget.league.leagueTitle,
                       );
 
-                      return InkWell(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusFull,
-                        ),
+                      return StarredButton(
+                        isStarred: isFav,
+                        size: 20,
+                        padding: const EdgeInsets.all(4.0),
                         onTap: () {
                           context.read<FavoritesCubit>().toggleCompetition(
                             id: widget.league.leagueId,
@@ -185,20 +186,6 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                             );
                           } catch (_) {}
                         },
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Icon(
-                            isFav
-                                ? Icons.star_rounded
-                                : Icons.star_border_rounded,
-                            size: 18,
-                            color: isFav
-                                ? AppColors.yellowCard
-                                : (isDark
-                                      ? AppColors.darkTextMuted
-                                      : AppColors.lightTextMuted),
-                          ),
-                        ),
                       );
                     },
                   ),

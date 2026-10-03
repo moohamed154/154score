@@ -104,7 +104,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
   NewsBloc({
     required this.repository,
     required LocalStorageService localStorageService,
-  }) : super(NewsState(lang: localStorageService.getLanguage())) {
+  }) : super(NewsState(lang: localStorageService.getEffectiveNewsLanguage())) {
     on<LoadNewsFeedEvent>(_onLoadFeed);
     on<SelectTeamFilterEvent>(_onSelectTeam);
     on<ChangeNewsLanguageEvent>(_onChangeLanguage);

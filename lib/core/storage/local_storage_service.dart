@@ -13,6 +13,12 @@ abstract class LocalStorageService {
   String getLanguage();
   Future<bool> setLanguage(String langCode);
 
+  // News Language ('app', 'ar', 'en')
+  String getNewsLanguage() => 'app';
+  Future<bool> setNewsLanguage(String langCode) async => true;
+  String getEffectiveNewsLanguage() =>
+      getNewsLanguage() == 'app' ? getLanguage() : getNewsLanguage();
+
   // Theme Mode ('system', 'light', 'dark')
   String getThemeMode();
   Future<bool> setThemeMode(String themeMode);
@@ -122,6 +128,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
   LocalStorageServiceImpl(this._prefs);
 
   static const String _keyLanguage = 'app_language';
+  static const String _keyNewsLanguage = 'app_news_language';
   static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyTimeFormat = 'app_time_format';
   static const String _keyTimezoneOffset = 'app_timezone_offset';
@@ -224,6 +231,25 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setLanguage(String langCode) {
     return _prefs.setString(_keyLanguage, langCode);
+  }
+
+  @override
+  String getNewsLanguage() {
+    return _prefs.getString(_keyNewsLanguage) ?? 'app';
+  }
+
+  @override
+  Future<bool> setNewsLanguage(String langCode) {
+    return _prefs.setString(_keyNewsLanguage, langCode);
+  }
+
+  @override
+  String getEffectiveNewsLanguage() {
+    final newsLang = getNewsLanguage();
+    if (newsLang == 'app') {
+      return getLanguage();
+    }
+    return newsLang;
   }
 
   @override

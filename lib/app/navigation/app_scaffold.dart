@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/di/injection_container.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/storage/local_storage_service.dart';
 import '../../core/widgets/app_brand_logo.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/matches/presentation/bloc/matches_bloc.dart';
@@ -58,9 +60,14 @@ class AppScaffold extends StatelessWidget {
         context.read<VideosBloc>().add(
           ChangeVideosLanguageEvent(lang, completer: videosCompleter),
         );
-        context.read<NewsBloc>().add(
-          ChangeNewsLanguageEvent(lang, completer: newsCompleter),
-        );
+        final newsLangSetting = sl<LocalStorageService>().getNewsLanguage();
+        if (newsLangSetting == 'app') {
+          context.read<NewsBloc>().add(
+            ChangeNewsLanguageEvent(lang, completer: newsCompleter),
+          );
+        } else {
+          newsCompleter.complete();
+        }
         context.read<NotificationsBloc>().add(
           LoadNotificationsEvent(lang: lang, isRefresh: true, completer: notificationsCompleter),
         );

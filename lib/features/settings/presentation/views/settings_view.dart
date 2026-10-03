@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
+import '../../../news/presentation/bloc/news_bloc.dart';
 import '../cubit/settings_cubits.dart';
 import '../widgets/debug_console_sheet.dart';
 import '../widgets/diagnostics_sheet.dart';
@@ -126,6 +127,43 @@ class _SettingsViewState extends State<SettingsView> {
                       ],
                     ],
                   ),
+
+                  // 1. App Interface Language
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4, left: 4, right: 4),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.language_rounded,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.translate('settings_app_language'),
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
+                    child: Text(
+                      l10n.translate('settings_app_language_desc'),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ),
                   _buildCard(
                     isDark: isDark,
                     child: RadioGroup<String>(
@@ -157,6 +195,105 @@ class _SettingsViewState extends State<SettingsView> {
                         ],
                       ),
                     ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 2. News & Articles Language
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4, left: 4, right: 4),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.newspaper_rounded,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.translate('settings_news_language'),
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
+                    child: Text(
+                      l10n.translate('settings_news_language_desc'),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ),
+                  BlocBuilder<NewsLanguageCubit, String>(
+                    builder: (context, newsLang) {
+                      return _buildCard(
+                        isDark: isDark,
+                        child: RadioGroup<String>(
+                          groupValue: newsLang,
+                          onChanged: (val) {
+                            if (val != null) {
+                              context.read<NewsLanguageCubit>().setNewsLanguage(val);
+                              final effectiveLang = val == 'app'
+                                  ? localeState.locale.languageCode
+                                  : val;
+                              context.read<NewsBloc>().add(
+                                ChangeNewsLanguageEvent(effectiveLang),
+                              );
+                            }
+                          },
+                          child: Column(
+                            children: [
+                              RadioListTile<String>(
+                                title: Text(l10n.translate('news_lang_same_as_app')),
+                                subtitle: Text(
+                                  localeState.locale.languageCode == 'ar'
+                                      ? 'العربية 🇸🇦'
+                                      : 'English 🇬🇧',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                secondary: const Icon(
+                                  Icons.sync_rounded,
+                                  color: AppColors.primary,
+                                ),
+                                value: 'app',
+                              ),
+                              const Divider(height: 1),
+                              RadioListTile<String>(
+                                title: Text(l10n.translate('news_lang_arabic')),
+                                secondary: const Text(
+                                  '🇸🇦',
+                                  style: TextStyle(fontSize: 22),
+                                ),
+                                value: 'ar',
+                              ),
+                              const Divider(height: 1),
+                              RadioListTile<String>(
+                                title: Text(l10n.translate('news_lang_english')),
+                                secondary: const Text(
+                                  '🇬🇧',
+                                  style: TextStyle(fontSize: 22),
+                                ),
+                                value: 'en',
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               );

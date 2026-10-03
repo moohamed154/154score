@@ -17,6 +17,7 @@ import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/starred_button.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../leagues/presentation/bloc/league_bloc.dart';
 import '../../../leagues/presentation/views/league_view.dart';
@@ -1254,23 +1255,11 @@ class _StandingsViewState extends State<StandingsView> {
                 ),
 
                 // 4. Star Action Button
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+                StarredButton(
+                  isStarred: isFavorite,
+                  size: 22,
+                  padding: const EdgeInsets.all(4),
                   onTap: onToggleStar,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      isFavorite
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
-                      color: isFavorite
-                          ? AppColors.yellowCard
-                          : (isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted),
-                      size: 24,
-                    ),
-                  ),
                 ),
               ],
             ),

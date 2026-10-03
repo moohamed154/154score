@@ -11,6 +11,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../../core/widgets/starred_button.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
@@ -256,10 +257,10 @@ class TeamHeaderCard extends StatelessWidget {
                       id: profile?.teamId,
                       name: name,
                     );
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusFull,
-                      ),
+                    return StarredButton(
+                      isStarred: isFav,
+                      size: isSmall ? 22 : 26,
+                      padding: const EdgeInsets.all(6.0),
                       onTap: () {
                         context.read<FavoritesCubit>().toggleTeam(
                           name,
@@ -271,18 +272,6 @@ class TeamHeaderCard extends StatelessWidget {
                           );
                         } catch (_) {}
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: Icon(
-                          isFav ? Icons.star_rounded : Icons.star_border_rounded,
-                          color: isFav
-                              ? AppColors.yellowCard
-                              : (isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted),
-                          size: isSmall ? 22 : 26,
-                        ),
-                      ),
                     );
                   },
                 ),

@@ -5,6 +5,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../../core/widgets/starred_button.dart';
 
 class LeagueHeaderCard extends StatelessWidget {
   final String title;
@@ -155,21 +156,11 @@ class LeagueHeaderCard extends StatelessWidget {
           // Favorite Button
           if (onFavoriteTap != null) ...[
             const SizedBox(width: 8),
-            InkWell(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+            StarredButton(
+              isStarred: isFavorite,
+              size: isSmall ? 22 : 26,
+              padding: const EdgeInsets.all(6.0),
               onTap: onFavoriteTap,
-              child: Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: Icon(
-                  isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
-                  color: isFavorite
-                      ? AppColors.yellowCard
-                      : (isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted),
-                  size: isSmall ? 22 : 26,
-                ),
-              ),
             ),
           ],
         ],

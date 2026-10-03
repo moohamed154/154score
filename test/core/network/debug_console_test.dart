@@ -86,7 +86,7 @@ void main() {
       expect(DebugConsole.history.first.statusCode, 200);
       expect(DebugConsole.history.first.duration?.inMilliseconds, 200);
       expect(notified, 1);
-      expect(record.method, 'GET');
+      expect(record?.method, 'GET');
     });
 
     test('logError stores error in history', () {
@@ -113,9 +113,9 @@ void main() {
       );
 
       expect(DebugConsole.history.length, 1);
-      expect(record.isError, isTrue);
-      expect(record.statusCode, 404);
-      expect(record.errorMessage, 'Resource not found');
+      expect(record?.isError, isTrue);
+      expect(record?.statusCode, 404);
+      expect(record?.errorMessage, 'Resource not found');
     });
 
     test('maxHistorySize trims oldest records', () {
