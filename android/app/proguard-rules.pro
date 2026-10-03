@@ -5,7 +5,6 @@
 -dontwarn com.google.android.play.core.tasks.**
 -dontwarn io.flutter.embedding.**
 -dontwarn io.flutter.plugin.**
--keep class com.google.android.play.core.** { *; }
 -ignorewarnings
 
 # Flutter Rules
