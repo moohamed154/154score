@@ -253,7 +253,10 @@ class PushNotificationService {
 
     // Cross-channel deduplication with in-app tracker
     final score = data['score']?.toString() ?? '';
-    final dedupKey = '${eventType}_${matchId}_$score';
+    final minute = data['minute']?.toString() ?? '';
+    final player = data['player']?.toString() ?? data['player_in']?.toString() ?? '';
+    final articleId = data['article_id']?.toString() ?? '';
+    final dedupKey = '${eventType}_${matchId}_${score}_${minute}_${player}_$articleId';
     try {
       final prefs = await SharedPreferences.getInstance();
       final sentKeys = (prefs.getStringList('154score_sent_alert_keys') ?? []).toSet();
@@ -283,8 +286,50 @@ class PushNotificationService {
         body: body,
         payload: payload,
       );
+    } else if (eventType == 'red_card') {
+      await notifService.showRedCardNotification(
+        matchId: matchId ?? 'live',
+        title: title,
+        body: body,
+        payload: payload,
+      );
+    } else if (eventType == 'yellow_card') {
+      await notifService.showYellowCardNotification(
+        matchId: matchId ?? 'live',
+        title: title,
+        body: body,
+        payload: payload,
+      );
+    } else if (eventType == 'substitution') {
+      await notifService.showSubstitutionNotification(
+        matchId: matchId ?? 'live',
+        title: title,
+        body: body,
+        payload: payload,
+      );
+    } else if (eventType == 'penalty_miss') {
+      await notifService.showPenaltyMissNotification(
+        matchId: matchId ?? 'live',
+        title: title,
+        body: body,
+        payload: payload,
+      );
     } else if (eventType == 'match_start') {
       await notifService.showMatchStartNotification(
+        matchId: matchId ?? 'live',
+        title: title,
+        body: body,
+        payload: payload,
+      );
+    } else if (eventType == 'half_time') {
+      await notifService.showHalfTimeNotification(
+        matchId: matchId ?? 'live',
+        title: title,
+        body: body,
+        payload: payload,
+      );
+    } else if (eventType == 'second_half_start') {
+      await notifService.showSecondHalfStartNotification(
         matchId: matchId ?? 'live',
         title: title,
         body: body,

@@ -277,6 +277,78 @@ class NotificationService {
     );
   }
 
+  Future<void> showRedCardNotification({
+    required String matchId,
+    required String title,
+    required String body,
+    String? payload,
+    int? notificationId,
+  }) async {
+    await _show(
+      id: notificationId ?? _stableId('redcard_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
+      title: title,
+      body: body,
+      channelId: _channelMatchId,
+      payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
+    );
+  }
+
+  Future<void> showYellowCardNotification({
+    required String matchId,
+    required String title,
+    required String body,
+    String? payload,
+    int? notificationId,
+  }) async {
+    await _show(
+      id: notificationId ?? _stableId('yellowcard_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
+      title: title,
+      body: body,
+      channelId: _channelMatchId,
+      payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
+    );
+  }
+
+  Future<void> showSubstitutionNotification({
+    required String matchId,
+    required String title,
+    required String body,
+    String? payload,
+    int? notificationId,
+  }) async {
+    await _show(
+      id: notificationId ?? _stableId('sub_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
+      title: title,
+      body: body,
+      channelId: _channelMatchId,
+      payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
+    );
+  }
+
+  Future<void> showPenaltyMissNotification({
+    required String matchId,
+    required String title,
+    required String body,
+    String? payload,
+    int? notificationId,
+  }) async {
+    await _show(
+      id: notificationId ?? _stableId('penmiss_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
+      title: title,
+      body: body,
+      channelId: _channelMatchId,
+      payload: payload,
+      priority: Priority.max,
+      importance: Importance.max,
+    );
+  }
+
   Future<void> showNewsNotification({
     required String articleId,
     required String title,

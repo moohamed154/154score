@@ -326,7 +326,7 @@ void main() {
 
         // Must display static kick-off time and NOT live ticking clock
         expect(find.text(timeStr), findsOneWidget);
-        expect(find.textContaining('22:'), findsNothing);
+        expect(find.textContaining("22'"), findsNothing);
       },
     );
   });
