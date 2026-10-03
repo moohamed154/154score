@@ -1,3 +1,9 @@
+# Google Play Core & Deferred Components (prevents R8 missing class errors)
+-dontwarn com.google.android.play.core.**
+-dontwarn io.flutter.embedding.**
+-dontwarn io.flutter.plugin.**
+-ignorewarnings
+
 # Flutter Rules
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.**  { *; }
