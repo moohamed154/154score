@@ -13,7 +13,7 @@ class AppConfig {
 
   static const String apiKey = String.fromEnvironment(
     'API_KEY',
-    defaultValue: '154s_75ace672eb9e465c5097c06818226447',
+    defaultValue: '154s_790029b3321ece28ede82f76dd1c2436',
   );
 
   static const String appVersion = String.fromEnvironment(
