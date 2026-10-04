@@ -163,6 +163,30 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     }
   }
 
+  final List<TabController> _controllersToDispose = [];
+
+  void _updateTabsIfNeeded(List<_MatchTabType> newTabs) {
+    if (_tabController.length != newTabs.length) {
+      final oldController = _tabController;
+      final oldIndex = _tabController.index;
+      _controllersToDispose.add(oldController);
+      _currentTabs = newTabs;
+      _tabController = TabController(
+        length: newTabs.length,
+        vsync: this,
+        initialIndex: oldIndex.clamp(0, newTabs.length - 1),
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_controllersToDispose.contains(oldController)) {
+          _controllersToDispose.remove(oldController);
+          try {
+            oldController.dispose();
+          } catch (_) {}
+        }
+      });
+    }
+  }
+
   void _ensureLeagueBloc(String? leagueId, String? title, String? logo) {
     if (leagueId == null || leagueId.isEmpty) return;
     if (_leagueBloc == null || _currentLeagueId != leagueId) {
@@ -773,6 +797,12 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
   @override
   void dispose() {
+    for (final c in _controllersToDispose) {
+      try {
+        c.dispose();
+      } catch (_) {}
+    }
+    _controllersToDispose.clear();
     _tabController.dispose();
     _leagueBloc?.close();
     super.dispose();
@@ -922,14 +952,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               final newTabs = _getTabsForStatus(isStartedOrEnded);
               if (_tabController.length != newTabs.length) {
                 setState(() {
-                  final oldIndex = _tabController.index;
-                  _tabController.dispose();
-                  _tabController = TabController(
-                    length: newTabs.length,
-                    vsync: this,
-                    initialIndex: oldIndex.clamp(0, newTabs.length - 1),
-                  );
-                  _currentTabs = newTabs;
+                  _updateTabsIfNeeded(newTabs);
                 });
               }
             },
@@ -949,15 +972,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               final activeTabs = _getTabsForStatus(isStartedOrEnded);
               _currentTabs = activeTabs;
 
-              if (_tabController.length != activeTabs.length) {
-                final oldIndex = _tabController.index;
-                _tabController.dispose();
-                _tabController = TabController(
-                  length: activeTabs.length,
-                  vsync: this,
-                  initialIndex: oldIndex.clamp(0, activeTabs.length - 1),
-                );
-              }
+              _updateTabsIfNeeded(activeTabs);
 
               final effectiveLeagueId =
                   state.championshipId ??
@@ -1018,6 +1033,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                         ? AppColors.darkSurface
                         : AppColors.lightSurface,
                     child: TabBar(
+                      key: ValueKey(_tabController),
                       controller: _tabController,
                       isScrollable: true,
                       tabAlignment: TabAlignment.start,
@@ -1069,6 +1085,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                             ),
                           )
                         : TabBarView(
+                            key: ValueKey(_tabController),
                             controller: _tabController,
                             physics: const NeverScrollableScrollPhysics(),
                             children: activeTabs.map((tab) {
