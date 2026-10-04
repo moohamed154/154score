@@ -79,6 +79,8 @@ class MatchHeaderBanner extends StatelessWidget {
         ScoreHelper.isLiveStatus(effectiveStatus);
     final isUpcoming = MatchStatusHelper.isUpcoming(phase);
     final isFinished = MatchStatusHelper.isFinished(phase);
+    final isCancelled = MatchStatusHelper.isCancelled(phase);
+    final isPostponed = MatchStatusHelper.isPostponed(phase);
 
     final score1Str = ScoreHelper.normalizeScore(s1);
     final score2Str = ScoreHelper.normalizeScore(s2);
@@ -289,6 +291,8 @@ class MatchHeaderBanner extends StatelessWidget {
                     isSmall: isSmall,
                     isUpcoming: isUpcoming,
                     isFinished: isFinished,
+                    isCancelled: isCancelled,
+                    isPostponed: isPostponed,
                     hasScores: hasScores,
                     score1Str: score1Str,
                     score2Str: score2Str,
@@ -383,6 +387,8 @@ class MatchHeaderBanner extends StatelessWidget {
     required bool isSmall,
     required bool isUpcoming,
     required bool isFinished,
+    bool isCancelled = false,
+    bool isPostponed = false,
     required bool hasScores,
     required String score1Str,
     required String score2Str,
@@ -392,6 +398,62 @@ class MatchHeaderBanner extends StatelessWidget {
     String? effectiveStatus,
   }) {
     final pillBg = isDark ? const Color(0xFF1B2232) : const Color(0xFFEDF2F7);
+
+    if (isCancelled || isPostponed) {
+      final timeFormat = sl<LocalStorageService>().getTimeFormat();
+      final timeStr =
+          (match.time != null && match.time!.isNotEmpty && match.time != '-')
+              ? DateFormatter.formatDisplayTime(
+                  match.time!,
+                  timeFormat: timeFormat,
+                  isArabic: isArabic,
+                )
+              : '';
+      final statusLabel = isCancelled
+          ? (isArabic ? 'ألغيت' : 'Canceled')
+          : (isArabic ? 'تأجلت' : 'Postponed');
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (timeStr.isNotEmpty) ...[
+            Text(
+              timeStr,
+              style: TextStyle(
+                fontSize: isSmall ? 13 : 15,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmall ? 14 : 18,
+              vertical: isSmall ? 5 : 6,
+            ),
+            decoration: BoxDecoration(
+              color: pillBg,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+            ),
+            child: Text(
+              statusLabel,
+              style: TextStyle(
+                fontSize: isSmall ? 11 : 12,
+                fontWeight: FontWeight.w600,
+                color: isCancelled
+                    ? (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626))
+                    : (isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     Widget content;
 

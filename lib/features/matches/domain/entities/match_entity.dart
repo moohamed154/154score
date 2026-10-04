@@ -29,6 +29,7 @@ class MatchEntity extends Equatable {
   final String? leagueId;
   final String? date;
   final int? timestamp;
+  final String? note;
   final bool isFavorite;
 
   const MatchEntity({
@@ -60,6 +61,7 @@ class MatchEntity extends Equatable {
     this.leagueId,
     this.date,
     this.timestamp,
+    this.note,
     this.isFavorite = false,
   });
 
@@ -104,6 +106,7 @@ class MatchEntity extends Equatable {
     String? leagueId,
     String? date,
     int? timestamp,
+    String? note,
     bool? isFavorite,
   }) {
     return MatchEntity(
@@ -135,6 +138,7 @@ class MatchEntity extends Equatable {
       leagueId: leagueId ?? this.leagueId,
       date: date ?? this.date,
       timestamp: timestamp ?? this.timestamp,
+      note: note ?? this.note,
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }
@@ -169,6 +173,7 @@ class MatchEntity extends Equatable {
     leagueId,
     date,
     timestamp,
+    note,
     isFavorite,
   ];
 }

@@ -30,6 +30,7 @@ class MatchDto {
   final String? leagueId;
   final String? date;
   final int? timestamp;
+  final String? note;
 
   const MatchDto({
     this.id,
@@ -60,6 +61,7 @@ class MatchDto {
     this.leagueId,
     this.date,
     this.timestamp,
+    this.note,
   });
 
   factory MatchDto.fromJson(
@@ -313,6 +315,7 @@ class MatchDto {
       leagueId: lId,
       date: date ?? json['date']?.toString(),
       timestamp: ts,
+      note: (json['notice'] ?? json['comment'] ?? json['note'])?.toString(),
     );
   }
 
@@ -346,6 +349,7 @@ class MatchDto {
       leagueId: leagueId,
       date: date,
       timestamp: timestamp,
+      note: note,
       isFavorite: isFavorite,
     );
   }
@@ -379,6 +383,7 @@ class MatchDto {
     String? leagueId,
     String? date,
     int? timestamp,
+    String? note,
   }) {
     return MatchDto(
       id: id ?? this.id,
@@ -409,6 +414,7 @@ class MatchDto {
       leagueId: leagueId ?? this.leagueId,
       date: date ?? this.date,
       timestamp: timestamp ?? this.timestamp,
+      note: note ?? this.note,
     );
   }
 }

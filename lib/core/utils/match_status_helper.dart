@@ -347,7 +347,19 @@ class MatchStatusHelper {
   }
 
   static bool isUpcoming(MatchPhase phase) {
-    return phase == MatchPhase.upcoming || phase == MatchPhase.postponed;
+    return phase == MatchPhase.upcoming;
+  }
+
+  static bool isPostponed(MatchPhase phase) {
+    return phase == MatchPhase.postponed;
+  }
+
+  static bool isCancelled(MatchPhase phase) {
+    return phase == MatchPhase.cancelled;
+  }
+
+  static bool isPostponedOrCancelled(MatchPhase phase) {
+    return phase == MatchPhase.postponed || phase == MatchPhase.cancelled;
   }
 
   /// Priority for match ordering:

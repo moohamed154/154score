@@ -2077,6 +2077,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         : (widget.initialMatch?.team2 ??
               _extractTeamNameFromDetails(detailsList, isHome: false));
 
+    final noticeText = overview?.note ?? match.note ?? widget.initialMatch?.note;
+
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: _handleRefresh,
@@ -2085,6 +2087,56 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
+          // 0. Cancellation / Postponement / Special Notice Card
+          if (noticeText != null && noticeText.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF131B2B)
+                      : const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF1E2D48)
+                        : const Color(0xFFBFDBFE),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: isDark
+                          ? const Color(0xFF3B82F6)
+                          : const Color(0xFF2563EB),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        noticeText.trim(),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          height: 1.45,
+                          color: isDark
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFF1E293B),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           // 1. First Leg / Return Leg
           if (overview?.returnLeg case final returnLeg?)
             MatchReturnLegCard(

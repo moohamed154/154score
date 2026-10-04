@@ -1013,7 +1013,13 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           }
         }
       }
-      final status = map['status']?.toString();
+      final status = map['status_text']?.toString() ??
+          map['status']?.toString();
+      final statusCode = map['status_code']?.toString() ??
+          map['statusCode']?.toString();
+      final note = map['notice']?.toString() ??
+          map['comment']?.toString() ??
+          map['note']?.toString();
       final time = map['time']?.toString();
       final date = map['date']?.toString();
       final round = map['round']?.toString();
@@ -1032,6 +1038,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         score1: score1,
         score2: score2,
         status: status,
+        statusCode: statusCode,
+        note: note,
         time: time,
         date: date,
         round: round,

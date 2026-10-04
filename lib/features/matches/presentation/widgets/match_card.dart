@@ -56,6 +56,8 @@ class MatchCard extends StatelessWidget {
     final isLive = MatchStatusHelper.isLive(phase);
     final isUpcoming = MatchStatusHelper.isUpcoming(phase);
     final isFinished = MatchStatusHelper.isFinished(phase);
+    final isCancelled = MatchStatusHelper.isCancelled(phase);
+    final isPostponed = MatchStatusHelper.isPostponed(phase);
 
     final score1Str = ScoreHelper.normalizeScore(match.score1);
     final score2Str = ScoreHelper.normalizeScore(match.score2);
@@ -150,6 +152,8 @@ class MatchCard extends StatelessWidget {
                         isSmall: isSmall,
                         isUpcoming: isUpcoming,
                         isFinished: isFinished,
+                        isCancelled: isCancelled,
+                        isPostponed: isPostponed,
                         hasScores: hasScores,
                         score1Str: score1Str,
                         score2Str: score2Str,
@@ -353,6 +357,8 @@ class MatchCard extends StatelessWidget {
     required bool isSmall,
     required bool isUpcoming,
     required bool isFinished,
+    bool isCancelled = false,
+    bool isPostponed = false,
     required bool hasScores,
     required String score1Str,
     required String score2Str,
@@ -426,6 +432,8 @@ class MatchCard extends StatelessWidget {
           isSmall: isSmall,
           isUpcoming: isUpcoming,
           isFinished: isFinished,
+          isCancelled: isCancelled,
+          isPostponed: isPostponed,
           hasScores: hasScores,
           score1Str: score1Str,
           score2Str: score2Str,
@@ -499,12 +507,74 @@ class MatchCard extends StatelessWidget {
     required bool isSmall,
     required bool isUpcoming,
     required bool isFinished,
+    bool isCancelled = false,
+    bool isPostponed = false,
     required bool hasScores,
     required String score1Str,
     required String score2Str,
     required bool hasPenalties,
   }) {
     final pillBg = isDark ? const Color(0xFF1B2232) : const Color(0xFFEDF2F7);
+
+    if (isCancelled || isPostponed) {
+      String activeFormat = timeFormat ?? '24h';
+      if (timeFormat == null) {
+        try {
+          activeFormat =
+              context.select<MatchesBloc, String>((b) => b.state.timeFormat);
+        } catch (_) {
+          try {
+            if (sl.isRegistered<LocalStorageService>()) {
+              activeFormat = sl<LocalStorageService>().getTimeFormat();
+            }
+          } catch (_) {}
+        }
+      }
+      final statusLabel = isCancelled
+          ? (isArabic ? 'ألغيت' : 'Canceled')
+          : (isArabic ? 'تأجلت' : 'Postponed');
+      final formattedTime =
+          (match.time != null && match.time!.isNotEmpty && match.time != '-')
+              ? DateFormatter.formatDisplayTime(
+                  match.time!,
+                  timeFormat: activeFormat,
+                  isArabic: isArabic,
+                )
+              : '';
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            statusLabel,
+            style: TextStyle(
+              fontSize: isSmall ? 10.5 : 11.5,
+              fontWeight: FontWeight.w600,
+              color: isCancelled
+                  ? (isDark
+                      ? const Color(0xFFF87171)
+                      : const Color(0xFFDC2626))
+                  : (isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted),
+            ),
+          ),
+          if (formattedTime.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              formattedTime,
+              style: TextStyle(
+                fontSize: isSmall ? 12 : 13,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+            ),
+          ],
+        ],
+      );
+    }
 
     Widget content;
 
