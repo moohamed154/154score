@@ -138,19 +138,20 @@ class _MaintenanceViewState extends State<MaintenanceView>
                         // 1. Brand Logo with Theme Switching
                         RepaintBoundary(
                           child: AppBrandLogo(
-                            size: 64,
+                            size: 92,
                             isDark: isDark,
+                            padding: const EdgeInsets.all(8),
                           ),
                         ),
-                        const SizedBox(height: 36),
+                        const SizedBox(height: 24),
 
                         // 2. Animated Maintenance Badge Icon
                         RepaintBoundary(
                           child: ScaleTransition(
                             scale: _pulseAnimation,
                             child: Container(
-                              width: 104,
-                              height: 104,
+                              width: 80,
+                              height: 80,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: isDark
@@ -165,23 +166,23 @@ class _MaintenanceViewState extends State<MaintenanceView>
                                     color: Colors.amber.withValues(
                                       alpha: isDark ? 0.25 : 0.15,
                                     ),
-                                    blurRadius: 28,
-                                    spreadRadius: 4,
-                                    offset: const Offset(0, 4),
+                                    blurRadius: 24,
+                                    spreadRadius: 3,
+                                    offset: const Offset(0, 3),
                                   ),
                                 ],
                               ),
                               child: const Center(
                                 child: Icon(
                                   Icons.engineering_rounded,
-                                  size: 52,
+                                  size: 40,
                                   color: Colors.amber,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 20),
 
                         // 3. Status Pill
                         Container(
