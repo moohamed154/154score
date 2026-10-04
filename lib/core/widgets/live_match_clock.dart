@@ -218,30 +218,35 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         _currentSecond = synced.second;
       }
     } else if (_currentMinute == 0 && MatchStatusHelper.isLive(phase)) {
-      // Live match just kicked off without an explicit minute from the API:
-      // Start counting from 00:00 (1st half) or 45:00 (2nd half), NOT from scheduled kickoff clock time!
-      final p = (widget.period ?? '').toLowerCase();
-      final s = (widget.status ?? '').toLowerCase();
-      if (p.contains('2nd') || s.contains('الثاني')) {
-        _currentMinute = 45;
-        _currentSecond = 0;
-      } else if (p.contains('1st_extra') || s.contains('الإضافي الأول')) {
-        _currentMinute = 90;
-        _currentSecond = 0;
-      } else if (p.contains('2nd_extra') || s.contains('الإضافي الثاني')) {
-        _currentMinute = 105;
-        _currentSecond = 0;
-      } else {
-        _currentMinute = 0;
-        _currentSecond = 0;
+      // Live match in play: calculate elapsed time from kickoff timestamp / time (matching Yalla Shoot logic)
+      final estimated = MatchStatusHelper.calculateLiveClock(
+        time: widget.time,
+        status: widget.status,
+        period: widget.period,
+        timestamp: widget.timestamp,
+      );
+      _currentMinute = estimated.minute;
+      _currentSecond = estimated.second;
+      minuteNum = _currentMinute;
+      if (estimated.elapsedExtraSeconds > 0 && _elapsedExtraSeconds == 0) {
+        _elapsedExtraSeconds = estimated.elapsedExtraSeconds;
+      }
+      if (estimated.totalExtraMinutes > 0 && _totalExtraMinutes == 0) {
+        _totalExtraMinutes = estimated.totalExtraMinutes;
       }
       LiveClockSync.recordClock(
         matchId: widget.matchId,
         minute: _currentMinute,
         second: _currentSecond,
-        elapsedExtraSeconds: 0,
-        totalExtraMinutes: 0,
+        elapsedExtraSeconds: _elapsedExtraSeconds,
+        totalExtraMinutes: _totalExtraMinutes,
       );
+    }
+
+    if (_currentMinute > 0 && _currentSecond == 0 && widget.timestamp != null && widget.timestamp! > 0) {
+      final nowSec = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+      final calcSec = (nowSec - widget.timestamp!) % 60;
+      if (calcSec >= 0) _currentSecond = calcSec;
     }
 
     // 5. Default total extra time if stoppage is active

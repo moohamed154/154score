@@ -612,6 +612,211 @@ class MatchStatusHelper {
     return 90;
   }
 
+  /// Calculates live match minute, seconds, and extra-time stoppage
+  /// from kickoff timestamp / time and current time matching Yalla Shoot logic.
+  static ({
+    int minute,
+    int second,
+    int elapsedExtraSeconds,
+    int totalExtraMinutes,
+  }) calculateLiveClock({
+    required String? time,
+    String? status,
+    String? period,
+    int? timestamp,
+    DateTime? now,
+  }) {
+    int elapsedSeconds = 0;
+    if (timestamp != null && timestamp > 0) {
+      final nowSec =
+          (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
+          1000;
+      elapsedSeconds = nowSec - timestamp;
+    } else {
+      final startMins = parseTimeToMinutes(time);
+      if (startMins != null) {
+        final current = now ?? DateTime.now();
+        final currentMins = current.hour * 60 + current.minute;
+        var diffMins = currentMins - startMins;
+        if (diffMins < -720) {
+          diffMins += 1440;
+        }
+        elapsedSeconds = diffMins * 60 + current.second;
+      }
+    }
+
+    if (elapsedSeconds < 0) {
+      return (
+        minute: 0,
+        second: 0,
+        elapsedExtraSeconds: 0,
+        totalExtraMinutes: 0,
+      );
+    }
+
+    final s = (status ?? '').toLowerCase();
+    final p = (period ?? '').toLowerCase();
+
+    final is1stHalf =
+        p.contains('1st') ||
+        p.contains('first') ||
+        s.contains('الأول') ||
+        s.contains('الاول');
+    final is2ndHalf =
+        p.contains('2nd') || p.contains('second') || s.contains('الثاني');
+    final is1stExtra =
+        p.contains('1st_extra') ||
+        s.contains('الإضافي الأول') ||
+        s.contains('الاضافي الاول');
+    final is2ndExtra =
+        p.contains('2nd_extra') ||
+        s.contains('الإضافي الثاني') ||
+        s.contains('الاضافي الثاني');
+    final isHt =
+        p.contains('ht') ||
+        p.contains('break') ||
+        s.contains('استراحة') ||
+        s.contains('بين الشوطين') ||
+        s.contains('half time');
+
+    if (isHt) {
+      return (
+        minute: 45,
+        second: 0,
+        elapsedExtraSeconds: 0,
+        totalExtraMinutes: 0,
+      );
+    }
+
+    if (is1stHalf) {
+      if (elapsedSeconds <= 45 * 60) {
+        return (
+          minute: elapsedSeconds ~/ 60,
+          second: elapsedSeconds % 60,
+          elapsedExtraSeconds: 0,
+          totalExtraMinutes: 0,
+        );
+      } else {
+        final extraSec = elapsedSeconds - (45 * 60);
+        final totalExtra = (extraSec ~/ 60) >= 3 ? ((extraSec ~/ 60) + 1) : 3;
+        return (
+          minute: 45,
+          second: 0,
+          elapsedExtraSeconds: extraSec,
+          totalExtraMinutes: totalExtra,
+        );
+      }
+    }
+
+    if (is2ndHalf) {
+      final secHalfElapsed = elapsedSeconds > (60 * 60)
+          ? (elapsedSeconds - (60 * 60))
+          : (elapsedSeconds > (45 * 60) ? (elapsedSeconds - (45 * 60)) : 0);
+
+      if (secHalfElapsed <= 45 * 60) {
+        return (
+          minute: 45 + (secHalfElapsed ~/ 60),
+          second: secHalfElapsed % 60,
+          elapsedExtraSeconds: 0,
+          totalExtraMinutes: 0,
+        );
+      } else {
+        final extraSec = secHalfElapsed - (45 * 60);
+        final totalExtra = (extraSec ~/ 60) >= 5 ? ((extraSec ~/ 60) + 1) : 5;
+        return (
+          minute: 90,
+          second: 0,
+          elapsedExtraSeconds: extraSec,
+          totalExtraMinutes: totalExtra,
+        );
+      }
+    }
+
+    if (is1stExtra) {
+      final et1Elapsed =
+          elapsedSeconds > (115 * 60) ? (elapsedSeconds - (115 * 60)) : 0;
+      if (et1Elapsed <= 15 * 60) {
+        return (
+          minute: 90 + (et1Elapsed ~/ 60),
+          second: et1Elapsed % 60,
+          elapsedExtraSeconds: 0,
+          totalExtraMinutes: 0,
+        );
+      } else {
+        final extraSec = et1Elapsed - (15 * 60);
+        return (
+          minute: 105,
+          second: 0,
+          elapsedExtraSeconds: extraSec,
+          totalExtraMinutes: 2,
+        );
+      }
+    }
+
+    if (is2ndExtra) {
+      final et2Elapsed =
+          elapsedSeconds > (135 * 60) ? (elapsedSeconds - (135 * 60)) : 0;
+      if (et2Elapsed <= 15 * 60) {
+        return (
+          minute: 105 + (et2Elapsed ~/ 60),
+          second: et2Elapsed % 60,
+          elapsedExtraSeconds: 0,
+          totalExtraMinutes: 0,
+        );
+      } else {
+        final extraSec = et2Elapsed - (15 * 60);
+        return (
+          minute: 120,
+          second: 0,
+          elapsedExtraSeconds: extraSec,
+          totalExtraMinutes: 2,
+        );
+      }
+    }
+
+    // Generic live match
+    if (elapsedSeconds <= 45 * 60) {
+      return (
+        minute: elapsedSeconds ~/ 60,
+        second: elapsedSeconds % 60,
+        elapsedExtraSeconds: 0,
+        totalExtraMinutes: 0,
+      );
+    } else if (elapsedSeconds <= 60 * 60) {
+      return (
+        minute: 45,
+        second: 0,
+        elapsedExtraSeconds: 0,
+        totalExtraMinutes: 0,
+      );
+    } else if (elapsedSeconds <= 105 * 60) {
+      final secHalf = elapsedSeconds - (60 * 60);
+      if (secHalf <= 45 * 60) {
+        return (
+          minute: 45 + (secHalf ~/ 60),
+          second: secHalf % 60,
+          elapsedExtraSeconds: 0,
+          totalExtraMinutes: 0,
+        );
+      } else {
+        final extraSec = secHalf - (45 * 60);
+        return (
+          minute: 90,
+          second: 0,
+          elapsedExtraSeconds: extraSec,
+          totalExtraMinutes: 5,
+        );
+      }
+    } else {
+      return (
+        minute: 90,
+        second: 0,
+        elapsedExtraSeconds: 5 * 60,
+        totalExtraMinutes: 5,
+      );
+    }
+  }
+
   /// Estimates the real-time match display label (e.g. "75'", "45' +2'", "استراحة")
   /// when the API does not explicitly return the minute field.
   static String? estimateMinuteFromKickoff({
@@ -692,6 +897,7 @@ class MatchStatusHelper {
     String? extraTime,
     String? time,
     String? period,
+    int? timestamp,
     required bool isArabic,
   }) {
     int? minNum;
@@ -703,6 +909,7 @@ class MatchStatusHelper {
         time: time,
         status: rawStatus,
         period: period,
+        timestamp: timestamp,
       );
     }
     final p = (period ?? '').toLowerCase();

@@ -151,30 +151,34 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         secNum = syncedClock.second;
       }
     } else if (minNum == 0 && MatchStatusHelper.isLive(_phase)) {
-      // Live match just kicked off or period just changed without an explicit minute from the API:
-      // Start counting from 00:00 (1st half) or 45:00 (2nd half), NOT from scheduled kickoff clock time!
-      final p = (widget.period ?? '').toLowerCase();
-      final s = (widget.status ?? '').toLowerCase();
-      if (p.contains('2nd') || s.contains('الثاني')) {
-        minNum = 45;
-        secNum = 0;
-      } else if (p.contains('1st_extra') || s.contains('الإضافي الأول')) {
-        minNum = 90;
-        secNum = 0;
-      } else if (p.contains('2nd_extra') || s.contains('الإضافي الثاني')) {
-        minNum = 105;
-        secNum = 0;
-      } else {
-        minNum = 0;
-        secNum = 0;
+      // Live match in play: calculate elapsed time from kickoff timestamp / time (matching Yalla Shoot logic)
+      final estimated = MatchStatusHelper.calculateLiveClock(
+        time: widget.time,
+        status: widget.status,
+        period: widget.period,
+        timestamp: widget.timestamp,
+      );
+      minNum = estimated.minute;
+      secNum = estimated.second;
+      if (estimated.elapsedExtraSeconds > 0 && extraSecFromMinute == null) {
+        extraSecFromMinute = estimated.elapsedExtraSeconds;
+      }
+      if (estimated.totalExtraMinutes > 0 && _totalExtraMinutes == 0) {
+        _totalExtraMinutes = estimated.totalExtraMinutes;
       }
       LiveClockSync.recordClock(
         matchId: widget.matchId,
         minute: minNum,
         second: secNum,
-        elapsedExtraSeconds: 0,
-        totalExtraMinutes: 0,
+        elapsedExtraSeconds: extraSecFromMinute ?? 0,
+        totalExtraMinutes: _totalExtraMinutes,
       );
+    }
+
+    if (minNum > 0 && secNum == 0 && widget.timestamp != null && widget.timestamp! > 0) {
+      final nowSec = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+      final calcSec = (nowSec - widget.timestamp!) % 60;
+      if (calcSec >= 0) secNum = calcSec;
     }
 
     _currentMinute = minNum;

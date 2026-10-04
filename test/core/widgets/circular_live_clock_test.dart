@@ -156,5 +156,59 @@ void main() {
       expect(find.text('90:00'), findsOneWidget);
       expect(find.text('+04:00 / 6'), findsOneWidget);
     });
+
+    testWidgets(
+      'Calculates elapsed time from timestamp when minute is null on app restart (never resets to 00:00)',
+      (tester) async {
+        final nowUtc = DateTime.now().toUtc();
+        // Kickoff 20 minutes ago
+        final kickoffTs = (nowUtc.millisecondsSinceEpoch ~/ 1000) - (20 * 60 + 15);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: CircularLiveClock(
+                minute: null,
+                status: 'الشوط الأول',
+                period: '1st_half',
+                statusCode: 'LIVE',
+                timestamp: kickoffTs,
+              ),
+            ),
+          ),
+        );
+
+        // It should display 20:15, NOT 00:00!
+        expect(find.text('20:15'), findsOneWidget);
+        expect(find.text('00:00'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Calculates 2nd half elapsed time from timestamp when minute is null',
+      (tester) async {
+        final nowUtc = DateTime.now().toUtc();
+        // Match kicked off 75 minutes ago (45m 1st half + 15m HT break + 15m 2nd half)
+        final kickoffTs = (nowUtc.millisecondsSinceEpoch ~/ 1000) - (75 * 60 + 30);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: CircularLiveClock(
+                minute: null,
+                status: 'الشوط الثاني',
+                period: '2nd_half',
+                statusCode: 'LIVE',
+                timestamp: kickoffTs,
+              ),
+            ),
+          ),
+        );
+
+        // It should display 60:30 (45 + 15m 30s), NOT 45:00 or 00:00!
+        expect(find.text('60:30'), findsOneWidget);
+        expect(find.text('00:00'), findsNothing);
+      },
+    );
   });
 }

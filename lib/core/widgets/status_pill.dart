@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:score154/core/utils/match_status_helper.dart';
 
 import '../constants/app_colors.dart';
@@ -9,6 +9,7 @@ import '../utils/score_helper.dart';
 import 'live_match_clock.dart';
 
 class StatusPill extends StatelessWidget {
+  final String? matchId;
   final String? status;
   final String? minute;
   final String? extraTime;
@@ -17,10 +18,12 @@ class StatusPill extends StatelessWidget {
   final String? date;
   final String? score1;
   final String? score2;
+  final int? timestamp;
   final bool compact;
 
   const StatusPill({
     super.key,
+    this.matchId,
     required this.status,
     this.minute,
     this.extraTime,
@@ -29,6 +32,7 @@ class StatusPill extends StatelessWidget {
     this.date,
     this.score1,
     this.score2,
+    this.timestamp,
     this.compact = false,
   });
 
@@ -117,6 +121,7 @@ class StatusPill extends StatelessWidget {
           ),
         ),
         child: LiveMatchClock(
+          matchId: matchId,
           status: status,
           minute: minute,
           extraTime: extraTime,
@@ -125,6 +130,7 @@ class StatusPill extends StatelessWidget {
           date: date,
           score1: score1,
           score2: score2,
+          timestamp: timestamp,
           showLiveDot: true,
           textStyle: TextStyle(
             fontSize: compact ? 10 : 12,
