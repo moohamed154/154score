@@ -433,7 +433,7 @@ class _StandingsViewState extends State<StandingsView> {
       final rKey = LeagueResolver.resolveId(key);
       final normKey = LeagueResolver.normalize(key);
 
-      ChampionshipInfo? matched =
+      final ChampionshipInfo? matched =
           leagueById[key] ??
           leagueByName[cleanKey] ??
           (rKey != null ? leagueByCanonical[rKey] : null) ??

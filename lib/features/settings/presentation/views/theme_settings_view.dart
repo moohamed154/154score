@@ -193,7 +193,6 @@ class ThemeSettingsView extends StatelessWidget {
     final previewCardBg = isPreviewDark ? const Color(0xFF1E293B) : Colors.white;
     final previewBorder = isPreviewDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
     final previewText = isPreviewDark ? Colors.white : const Color(0xFF0F172A);
-    final previewMuted = isPreviewDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return RepaintBoundary(
       child: AnimatedContainer(

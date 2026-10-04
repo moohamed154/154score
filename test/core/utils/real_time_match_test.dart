@@ -256,7 +256,7 @@ void main() {
     testWidgets(
       'MatchCard displays 1st half stoppage time in circular live clock when minute is 45',
       (tester) async {
-        final match = MatchEntity(
+        const match = MatchEntity(
           id: '125',
           team1: 'المقاولون العرب',
           team2: 'الأهلي',
@@ -271,13 +271,13 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            localizationsDelegates: const [
+          const MaterialApp(
+            localizationsDelegates: [
               AppLocalizations.delegate,
               ...GlobalMaterialLocalizations.delegates,
             ],
-            supportedLocales: const [Locale('ar')],
-            locale: const Locale('ar'),
+            supportedLocales: [Locale('ar')],
+            locale: Locale('ar'),
             home: Scaffold(body: MatchCard(match: match)),
           ),
         );

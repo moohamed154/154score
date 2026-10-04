@@ -13,21 +13,18 @@ class FavoritesState extends Equatable {
   final List<String> favoriteMatches;
   final Map<String, String> competitionTitles;
   final Map<String, String> teamTitles;
-  final Set<String> _cachedFavCompetitionKeys;
-  final Set<String> _cachedFavTeamKeys;
+  final Set<String> cachedFavCompetitionKeys;
+  final Set<String> cachedFavTeamKeys;
 
-  FavoritesState({
+  const FavoritesState({
     this.favoriteTeams = const [],
     this.favoriteCompetitions = const [],
     this.favoriteMatches = const [],
     this.competitionTitles = const {},
     this.teamTitles = const {},
-    Set<String>? cachedFavCompetitionKeys,
-    Set<String>? cachedFavTeamKeys,
-  })  : _cachedFavCompetitionKeys = cachedFavCompetitionKeys ??
-            _buildCompetitionKeys(favoriteCompetitions, competitionTitles),
-        _cachedFavTeamKeys = cachedFavTeamKeys ??
-            _buildTeamKeys(favoriteTeams, teamTitles);
+    this.cachedFavCompetitionKeys = const {},
+    this.cachedFavTeamKeys = const {},
+  });
 
   static Set<String> _buildCompetitionKeys(
     List<String> favCompetitions,
@@ -52,6 +49,15 @@ class FavoritesState extends Equatable {
         if (normMapped.isNotEmpty) keys.add(normMapped);
         final rMapped = LeagueResolver.resolveId(cleanMapped);
         if (rMapped != null && rMapped.isNotEmpty) keys.add(rMapped);
+      }
+      for (final entry in titles.entries) {
+        if (entry.value.trim().toLowerCase() == clean ||
+            LeagueResolver.normalize(entry.value).toLowerCase() == clean) {
+          final idKey = entry.key.trim().toLowerCase();
+          keys.add(idKey);
+          final rId = LeagueResolver.resolveId(idKey);
+          if (rId != null && rId.isNotEmpty) keys.add(rId);
+        }
       }
     }
     return keys;
@@ -79,6 +85,15 @@ class FavoritesState extends Equatable {
           keys.add(cMapped.toLowerCase());
         }
       }
+      for (final entry in titles.entries) {
+        if (entry.value.trim().toLowerCase() == clean ||
+            TeamResolver.areSameTeam(entry.value, clean)) {
+          final idKey = entry.key.trim().toLowerCase();
+          keys.add(idKey);
+          final cId = TeamResolver.getCanonicalKey(idKey);
+          if (cId != null && cId.isNotEmpty) keys.add(cId.toLowerCase());
+        }
+      }
     }
     return keys;
   }
@@ -90,12 +105,20 @@ class FavoritesState extends Equatable {
     Map<String, String>? competitionTitles,
     Map<String, String>? teamTitles,
   }) {
+    final nextTeams = favoriteTeams ?? this.favoriteTeams;
+    final nextCompetitions = favoriteCompetitions ?? this.favoriteCompetitions;
+    final nextTitles = competitionTitles ?? this.competitionTitles;
+    final nextTeamTitles = teamTitles ?? this.teamTitles;
+
     return FavoritesState(
-      favoriteTeams: favoriteTeams ?? this.favoriteTeams,
-      favoriteCompetitions: favoriteCompetitions ?? this.favoriteCompetitions,
+      favoriteTeams: nextTeams,
+      favoriteCompetitions: nextCompetitions,
       favoriteMatches: favoriteMatches ?? this.favoriteMatches,
-      competitionTitles: competitionTitles ?? this.competitionTitles,
-      teamTitles: teamTitles ?? this.teamTitles,
+      competitionTitles: nextTitles,
+      teamTitles: nextTeamTitles,
+      cachedFavCompetitionKeys:
+          _buildCompetitionKeys(nextCompetitions, nextTitles),
+      cachedFavTeamKeys: _buildTeamKeys(nextTeams, nextTeamTitles),
     );
   }
 
@@ -104,21 +127,23 @@ class FavoritesState extends Equatable {
 
     final cleanId = id?.trim().toLowerCase();
     if (cleanId != null && cleanId.isNotEmpty) {
-      if (_cachedFavCompetitionKeys.contains(cleanId)) return true;
+      if (cachedFavCompetitionKeys.contains(cleanId)) return true;
       final rId = LeagueResolver.resolveId(cleanId);
-      if (rId != null && _cachedFavCompetitionKeys.contains(rId)) return true;
+      if (rId != null && cachedFavCompetitionKeys.contains(rId)) return true;
+      final titleForId = competitionTitles[cleanId] ?? competitionTitles[id?.trim()];
+      if (titleForId != null && isFavoriteCompetition(name: titleForId)) return true;
     }
 
     final cleanName = name?.trim();
     if (cleanName != null && cleanName.isNotEmpty) {
       final lowerName = cleanName.toLowerCase();
-      if (_cachedFavCompetitionKeys.contains(lowerName)) return true;
+      if (cachedFavCompetitionKeys.contains(lowerName)) return true;
       final normName = LeagueResolver.normalize(cleanName);
-      if (normName.isNotEmpty && _cachedFavCompetitionKeys.contains(normName)) {
+      if (normName.isNotEmpty && cachedFavCompetitionKeys.contains(normName)) {
         return true;
       }
       final rName = LeagueResolver.resolveId(cleanName);
-      if (rName != null && _cachedFavCompetitionKeys.contains(rName)) {
+      if (rName != null && cachedFavCompetitionKeys.contains(rName)) {
         return true;
       }
     }
@@ -126,13 +151,13 @@ class FavoritesState extends Equatable {
     final cleanSlug = slug?.trim();
     if (cleanSlug != null && cleanSlug.isNotEmpty) {
       final lowerSlug = cleanSlug.toLowerCase();
-      if (_cachedFavCompetitionKeys.contains(lowerSlug)) return true;
+      if (cachedFavCompetitionKeys.contains(lowerSlug)) return true;
       final normSlug = LeagueResolver.normalize(cleanSlug);
-      if (normSlug.isNotEmpty && _cachedFavCompetitionKeys.contains(normSlug)) {
+      if (normSlug.isNotEmpty && cachedFavCompetitionKeys.contains(normSlug)) {
         return true;
       }
       final rSlug = LeagueResolver.resolveId(cleanSlug);
-      if (rSlug != null && _cachedFavCompetitionKeys.contains(rSlug)) {
+      if (rSlug != null && cachedFavCompetitionKeys.contains(rSlug)) {
         return true;
       }
     }
@@ -161,18 +186,20 @@ class FavoritesState extends Equatable {
     final cleanName = name?.trim();
 
     if (cleanId != null && cleanId.isNotEmpty) {
-      if (_cachedFavTeamKeys.contains(cleanId)) return true;
+      if (cachedFavTeamKeys.contains(cleanId)) return true;
       final cId = TeamResolver.getCanonicalKey(cleanId);
-      if (cId != null && _cachedFavTeamKeys.contains(cId.toLowerCase())) {
+      if (cId != null && cachedFavTeamKeys.contains(cId.toLowerCase())) {
         return true;
       }
+      final titleForId = teamTitles[cleanId] ?? teamTitles[id?.trim()];
+      if (titleForId != null && isFavoriteTeam(name: titleForId)) return true;
     }
 
     if (cleanName != null && cleanName.isNotEmpty) {
       final lowerName = cleanName.toLowerCase();
-      if (_cachedFavTeamKeys.contains(lowerName)) return true;
+      if (cachedFavTeamKeys.contains(lowerName)) return true;
       final cName = TeamResolver.getCanonicalKey(cleanName);
-      if (cName != null && _cachedFavTeamKeys.contains(cName.toLowerCase())) {
+      if (cName != null && cachedFavTeamKeys.contains(cName.toLowerCase())) {
         return true;
       }
     }
@@ -350,12 +377,17 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     String? name,
     String? slug,
   }) async {
+    final cleanId = id?.trim();
+    final lookupTitle = (cleanId != null && cleanId.isNotEmpty)
+        ? (state.competitionTitles[cleanId] ?? _storage.resolveCompetitionTitle(cleanId))
+        : null;
     final effectiveName = (name != null && name.trim().isNotEmpty)
         ? name.trim()
         : ((compName != null && compName.trim().isNotEmpty)
             ? compName.trim()
-            : (slug?.trim() ?? ''));
-    final cleanId = id?.trim();
+            : ((slug != null && slug.trim().isNotEmpty)
+                ? slug.trim()
+                : (lookupTitle ?? '')));
 
     final wasFav = isCompetitionFavorite(
       id: cleanId,
@@ -370,6 +402,15 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     if (wasFav) {
       updatedList.removeWhere((item) {
         final itemTrim = item.trim();
+        if (cleanId != null && cleanId.isNotEmpty) {
+          if (itemTrim.toLowerCase() == cleanId.toLowerCase()) return true;
+          if (state.competitionTitles[cleanId]?.toLowerCase() == itemTrim.toLowerCase()) return true;
+          if (state.competitionTitles[itemTrim]?.toLowerCase() == cleanId.toLowerCase()) return true;
+          if (lookupTitle != null && lookupTitle.toLowerCase() == itemTrim.toLowerCase()) return true;
+        }
+        if (effectiveName.isNotEmpty && itemTrim.toLowerCase() == effectiveName.toLowerCase()) {
+          return true;
+        }
         final mappedId = state.competitionTitles[itemTrim];
         return LeagueResolver.areSameCompetition(
           itemTrim,
@@ -412,6 +453,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
       name: effectiveName,
       slug: slug,
     );
+    loadFavorites();
   }
 
   Future<void> registerCompetitionTitles(Map<String, String> titles) async {

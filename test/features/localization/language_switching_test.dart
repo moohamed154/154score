@@ -33,6 +33,8 @@ void main() {
   late MockMatchesRepository mockRepository;
 
   setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
     mockStorage = MockLocalStorageService();
     mockWebSocketService = MockWebSocketService();
     mockRepository = MockMatchesRepository();
