@@ -11,22 +11,27 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
   @override
   Future<MaintenanceInfo> checkMaintenanceStatus() async {
     try {
-      final response = await _apiClient.get(
+      final dynamic raw = await _apiClient.get(
         ApiEndpoints.config,
         queryParameters: {'type': 'maintenance'},
       );
 
-      if (response.data is Map<String, dynamic>) {
-        return MaintenanceInfo.fromJson(response.data as Map<String, dynamic>);
+      final Map<String, dynamic>? data = raw is Map<String, dynamic>
+          ? raw
+          : (raw is Map ? Map<String, dynamic>.from(raw) : null);
+
+      if (data != null) {
+        return MaintenanceInfo.fromJson(data);
       }
     } catch (_) {
-      // In case /api/config?type=maintenance threw or returned 503
       try {
-        final fallbackResponse = await _apiClient.get(ApiEndpoints.maintenance);
-        if (fallbackResponse.data is Map<String, dynamic>) {
-          return MaintenanceInfo.fromJson(
-            fallbackResponse.data as Map<String, dynamic>,
-          );
+        final dynamic fallbackRaw = await _apiClient.get(ApiEndpoints.maintenance);
+        final Map<String, dynamic>? fallbackData = fallbackRaw is Map<String, dynamic>
+            ? fallbackRaw
+            : (fallbackRaw is Map ? Map<String, dynamic>.from(fallbackRaw) : null);
+
+        if (fallbackData != null) {
+          return MaintenanceInfo.fromJson(fallbackData);
         }
       } catch (_) {}
     }
