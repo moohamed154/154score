@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -310,6 +311,39 @@ List<ChampionshipInfo> getDefaultFallbackChampionships(String lang) {
 const List<ChampionshipInfo> kDefaultFallbackChampionships =
     kDefaultFallbackChampionshipsAr;
 
+Map<String, List<ChampionshipInfo>> _parseRankingsJsonData(String rawJson) {
+  try {
+    final dynamic decoded = jsonDecode(rawJson);
+    if (decoded is! Map) return {};
+    final featuredRaw = decoded['featured'] as List? ??
+        (decoded['favorites'] as List? ?? []);
+    final leaguesRaw = decoded['leagues'] as List? ??
+        (decoded['all'] as List? ?? []);
+
+    final featured = <ChampionshipInfo>[];
+    for (final item in featuredRaw) {
+      if (item is Map) {
+        featured.add(
+          ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
+        );
+      }
+    }
+
+    final all = <ChampionshipInfo>[];
+    for (final item in leaguesRaw) {
+      if (item is Map) {
+        all.add(
+          ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
+        );
+      }
+    }
+
+    return {'featured': featured, 'all': all};
+  } catch (_) {
+    return {};
+  }
+}
+
 class StandingsView extends StatefulWidget {
   final String? initialLeagueId;
 
@@ -334,6 +368,7 @@ class _StandingsViewState extends State<StandingsView> {
   // Cached partitioned lists to avoid O(N * M) calculations in build()
   List<ChampionshipInfo> _memoizedFavorites = [];
   List<ChampionshipInfo> _memoizedHidden = [];
+  Set<String> _cachedFavIds = {};
   List<String> _lastPartitionFavKeys = [];
   int _lastPartitionAllLeaguesCount = -1;
   String _lastPartitionLang = '';
@@ -376,11 +411,13 @@ class _StandingsViewState extends State<StandingsView> {
     final favCanonicalSet = <String>{};
     for (final key in currentFavKeys) {
       final clean = key.trim().toLowerCase();
-      favSet.add(clean);
-      final rId = LeagueResolver.resolveId(key);
-      if (rId != null && rId.isNotEmpty) favCanonicalSet.add(rId);
-      final norm = LeagueResolver.normalize(key);
-      if (norm.isNotEmpty) favCanonicalSet.add(norm);
+      if (clean.isNotEmpty) {
+        favSet.add(clean);
+        final rId = LeagueResolver.resolveId(key);
+        if (rId != null && rId.isNotEmpty) favCanonicalSet.add(rId);
+        final norm = LeagueResolver.normalize(key);
+        if (norm.isNotEmpty) favCanonicalSet.add(norm);
+      }
     }
 
     // 2. Pre-index available leagues for fast O(1) matching
@@ -435,6 +472,7 @@ class _StandingsViewState extends State<StandingsView> {
 
       final ChampionshipInfo? matched =
           leagueById[key] ??
+          leagueById[cleanKey] ??
           leagueByName[cleanKey] ??
           (rKey != null ? leagueByCanonical[rKey] : null) ??
           (normKey.isNotEmpty ? leagueByCanonical[normKey] : null);
@@ -444,20 +482,16 @@ class _StandingsViewState extends State<StandingsView> {
       }
     }
 
-    // Also include any league marked favorite directly in favState
+    // Also include any league marked favorite directly in favSet
     for (final l in _allLeagues) {
       if (!addedFavIds.contains(l.id)) {
-        final rId = LeagueResolver.resolveId(l.name);
-        final norm = LeagueResolver.normalize(l.name);
-        if (favSet.contains(l.id) ||
-            favSet.contains(l.name.trim().toLowerCase()) ||
-            (rId != null && favCanonicalSet.contains(rId)) ||
-            (norm.isNotEmpty && favCanonicalSet.contains(norm)) ||
-            favState.isFavoriteCompetition(
-              id: l.id,
-              name: l.name,
-              slug: l.slug,
-            )) {
+        final lowerName = l.name.trim().toLowerCase();
+        final lowerSlug = l.slug?.trim().toLowerCase();
+        if (favSet.contains(l.id.toLowerCase()) ||
+            (l.seasonId != null &&
+                favSet.contains(l.seasonId!.toLowerCase())) ||
+            favSet.contains(lowerName) ||
+            (lowerSlug != null && favSet.contains(lowerSlug))) {
           addedFavIds.add(l.id);
           favoriteCards.add(l);
         }
@@ -474,6 +508,7 @@ class _StandingsViewState extends State<StandingsView> {
 
     _memoizedFavorites = favoriteCards;
     _memoizedHidden = hiddenCards;
+    _cachedFavIds = addedFavIds;
     // Retain active baseline while user is in tab to prevent jarring shifts & allow star animations to complete
     _tabFavoritesBaseline ??= List<ChampionshipInfo>.from(favoriteCards);
     _tabHiddenBaseline ??= List<ChampionshipInfo>.from(hiddenCards);
@@ -510,41 +545,21 @@ class _StandingsViewState extends State<StandingsView> {
     if (cachedData == null || cachedData.isEmpty) return;
 
     try {
-      final decoded = await Future.microtask(() => jsonDecode(cachedData));
-      if (decoded is Map) {
-        final featuredRaw = decoded['featured'] as List? ?? [];
-        final leaguesRaw = decoded['leagues'] as List? ?? [];
+      final parsed = await compute(_parseRankingsJsonData, cachedData);
+      final cachedFeatured = parsed['featured'] ?? [];
+      final cachedAll = parsed['all'] ?? [];
 
-        final cachedFeatured = <ChampionshipInfo>[];
-        for (final item in featuredRaw) {
-          if (item is Map) {
-            cachedFeatured.add(
-              ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
-            );
-          }
-        }
-
-        final cachedAll = <ChampionshipInfo>[];
-        for (final item in leaguesRaw) {
-          if (item is Map) {
-            cachedAll.add(
-              ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
-            );
-          }
-        }
-
-        if (!mounted) return;
-        if (cachedAll.isNotEmpty || cachedFeatured.isNotEmpty) {
-          setState(() {
-            _featuredLeagues = cachedFeatured;
-            _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
-            _isLoading = false;
-            // Update baseline with full cached catalog
-            _tabFavoritesBaseline = null;
-            _tabHiddenBaseline = null;
-            _lastPartitionFavKeys.clear();
-          });
-        }
+      if (!mounted) return;
+      if (cachedAll.isNotEmpty || cachedFeatured.isNotEmpty) {
+        setState(() {
+          _featuredLeagues = cachedFeatured;
+          _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
+          _isLoading = false;
+          // Update baseline with full cached catalog
+          _tabFavoritesBaseline = null;
+          _tabHiddenBaseline = null;
+          _lastPartitionFavKeys.clear();
+        });
       }
     } catch (_) {}
   }
@@ -585,29 +600,10 @@ class _StandingsViewState extends State<StandingsView> {
 
       if (resMap != null && resMap['data'] != null && resMap['data'] is Map) {
         final data = Map<String, dynamic>.from(resMap['data'] as Map);
-
-        final featuredRaw =
-            data['favorites'] as List? ?? (data['featured'] as List? ?? []);
-        final leaguesRaw =
-            data['all'] as List? ?? (data['leagues'] as List? ?? []);
-
-        final fetchedFeatured = <ChampionshipInfo>[];
-        for (final item in featuredRaw) {
-          if (item is Map) {
-            fetchedFeatured.add(
-              ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
-            );
-          }
-        }
-
-        final fetchedAll = <ChampionshipInfo>[];
-        for (final item in leaguesRaw) {
-          if (item is Map) {
-            fetchedAll.add(
-              ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
-            );
-          }
-        }
+        final rawJsonStr = jsonEncode(data);
+        final parsed = await compute(_parseRankingsJsonData, rawJsonStr);
+        final fetchedFeatured = parsed['featured'] ?? [];
+        final fetchedAll = parsed['all'] ?? [];
 
         // Cache the remote data per language
         if (search.isEmpty &&
@@ -681,6 +677,14 @@ class _StandingsViewState extends State<StandingsView> {
     ChampionshipInfo item,
     List<ChampionshipInfo> currentFavorites,
   ) {
+    setState(() {
+      if (_cachedFavIds.contains(item.id)) {
+        _cachedFavIds.remove(item.id);
+      } else {
+        _cachedFavIds.add(item.id);
+      }
+    });
+
     context.read<FavoritesCubit>().toggleCompetition(
       id: item.id,
       name: item.name,
@@ -877,18 +881,16 @@ class _StandingsViewState extends State<StandingsView> {
                                   l10n: l10n,
                                 )
                               : ListView.builder(
+                                  key: const PageStorageKey('standings_search_list'),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
                                     vertical: 4,
                                   ),
                                   itemCount: searchList.length,
+                                  itemExtent: 64.0,
                                   itemBuilder: (context, index) {
                                     final item = searchList[index];
-                                    final isFav = favState.isFavoriteCompetition(
-                                      id: item.id,
-                                      name: item.name,
-                                      slug: item.slug,
-                                    );
+                                    final isFav = _cachedFavIds.contains(item.id);
                                     return _buildChampionshipCard(
                                       key: ValueKey('search_${item.id}'),
                                       context: context,
@@ -908,112 +910,98 @@ class _StandingsViewState extends State<StandingsView> {
                                     );
                                   },
                                 ))
-                          : IndexedStack(
-                              index: isFavoritesTab ? 0 : 1,
-                              children: [
-                                // 1. Favorites Tab List
-                                favoriteCards.isEmpty
-                                    ? _buildEmptyState(
-                                        isFavorites: true,
-                                        isSearching: false,
-                                        isDark: isDark,
-                                        cardBg: cardBg,
-                                        cardBorder: cardBorder,
-                                        primary: primary,
-                                        l10n: l10n,
-                                      )
-                                    : ReorderableListView.builder(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 4,
-                                        ),
-                                        itemCount: favoriteCards.length,
-                                        buildDefaultDragHandles: false,
-                                        // ignore: deprecated_member_use
-                                        onReorder: (oldIndex, newIndex) {
-                                          _onReorderFavorites(
+                          : isFavoritesTab
+                          ? (favoriteCards.isEmpty
+                              ? _buildEmptyState(
+                                  isFavorites: true,
+                                  isSearching: false,
+                                  isDark: isDark,
+                                  cardBg: cardBg,
+                                  cardBorder: cardBorder,
+                                  primary: primary,
+                                  l10n: l10n,
+                                )
+                              : ReorderableListView.builder(
+                                  key: const PageStorageKey('standings_fav_tab_list'),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  itemCount: favoriteCards.length,
+                                  buildDefaultDragHandles: false,
+                                  // ignore: deprecated_member_use
+                                  onReorder: (oldIndex, newIndex) {
+                                    _onReorderFavorites(
+                                      context,
+                                      oldIndex,
+                                      newIndex,
+                                      favoriteCards,
+                                    );
+                                  },
+                                  itemBuilder: (context, index) {
+                                    final item = favoriteCards[index];
+                                    final isFav = _cachedFavIds.contains(item.id);
+                                    return _buildChampionshipCard(
+                                      key: ValueKey('fav_${item.id}'),
+                                      context: context,
+                                      item: item,
+                                      index: index,
+                                      isFavorite: isFav,
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                      isSearching: false,
+                                      cardBg: cardBg,
+                                      cardBorder: cardBorder,
+                                      onToggleStar: () =>
+                                          _toggleFavoriteItem(
                                             context,
-                                            oldIndex,
-                                            newIndex,
+                                            item,
                                             favoriteCards,
-                                          );
-                                        },
-                                        itemBuilder: (context, index) {
-                                          final item = favoriteCards[index];
-                                          final isFav = favState
-                                              .isFavoriteCompetition(
-                                                id: item.id,
-                                                name: item.name,
-                                                slug: item.slug,
-                                              );
-                                          return _buildChampionshipCard(
-                                            key: ValueKey('fav_${item.id}'),
-                                            context: context,
-                                            item: item,
-                                            index: index,
-                                            isFavorite: isFav,
-                                            isDark: isDark,
-                                            isArabic: isArabic,
-                                            isSearching: false,
-                                            cardBg: cardBg,
-                                            cardBorder: cardBorder,
-                                            onToggleStar: () =>
-                                                _toggleFavoriteItem(
-                                                  context,
-                                                  item,
-                                                  favoriteCards,
-                                                ),
-                                          );
-                                        },
-                                      ),
-
-                                // 2. Hidden Tab List
-                                hiddenCards.isEmpty
-                                    ? _buildEmptyState(
-                                        isFavorites: false,
-                                        isSearching: false,
-                                        isDark: isDark,
-                                        cardBg: cardBg,
-                                        cardBorder: cardBorder,
-                                        primary: primary,
-                                        l10n: l10n,
-                                      )
-                                    : ListView.builder(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 4,
-                                        ),
-                                        itemCount: hiddenCards.length,
-                                        itemBuilder: (context, index) {
-                                          final item = hiddenCards[index];
-                                          final isFav = favState
-                                              .isFavoriteCompetition(
-                                                id: item.id,
-                                                name: item.name,
-                                                slug: item.slug,
-                                              );
-                                          return _buildChampionshipCard(
-                                            key: ValueKey('hidden_${item.id}'),
-                                            context: context,
-                                            item: item,
-                                            index: index,
-                                            isFavorite: isFav,
-                                            isDark: isDark,
-                                            isArabic: isArabic,
-                                            isSearching: false,
-                                            cardBg: cardBg,
-                                            cardBorder: cardBorder,
-                                            onToggleStar: () =>
-                                                _toggleFavoriteItem(
-                                                  context,
-                                                  item,
-                                                  favoriteCards,
-                                                ),
-                                          );
-                                        },
-                                      ),
-                              ],
-                            ),
+                                          ),
+                                    );
+                                  },
+                                ))
+                          : (hiddenCards.isEmpty
+                              ? _buildEmptyState(
+                                  isFavorites: false,
+                                  isSearching: false,
+                                  isDark: isDark,
+                                  cardBg: cardBg,
+                                  cardBorder: cardBorder,
+                                  primary: primary,
+                                  l10n: l10n,
+                                )
+                              : ListView.builder(
+                                  key: const PageStorageKey('standings_hidden_tab_list'),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  itemCount: hiddenCards.length,
+                                  itemExtent: 64.0,
+                                  itemBuilder: (context, index) {
+                                    final item = hiddenCards[index];
+                                    final isFav = _cachedFavIds.contains(item.id);
+                                    return _buildChampionshipCard(
+                                      key: ValueKey('hidden_${item.id}'),
+                                      context: context,
+                                      item: item,
+                                      index: index,
+                                      isFavorite: isFav,
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                      isSearching: false,
+                                      cardBg: cardBg,
+                                      cardBorder: cardBorder,
+                                      onToggleStar: () =>
+                                          _toggleFavoriteItem(
+                                            context,
+                                            item,
+                                            favoriteCards,
+                                          ),
+                                    );
+                                  },
+                                )),
                     ),
                   ),
                 ],
@@ -1279,57 +1267,58 @@ class _StandingsViewState extends State<StandingsView> {
     return RepaintBoundary(
       key: key,
       child: Container(
+        height: 56,
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cardBorder, width: 0.8),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+          color: cardBg,
           borderRadius: BorderRadius.circular(14),
-          onTap: () {
-            final targetTab = item.hasStandings ? 1 : 0;
-            try {
-              context.push(
-                '/league/$targetLeagueId?tab=$targetTab',
-                extra: {
-                  'title': title,
-                  'logo': item.logo.isNotEmpty ? item.logo : null,
-                  'tab': targetTab,
-                  'season_id': item.seasonId,
-                  'champ_id': item.id,
-                },
-              );
-            } catch (_) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (_) => sl<LeagueBloc>(
-                      param1: targetLeagueId,
-                      param2: {
-                        'title': title,
-                        'logo': item.logo.isNotEmpty ? item.logo : null,
-                        'season_id': item.seasonId,
-                        'champ_id': item.id,
-                      },
-                    ),
-                    child: LeagueView(
-                      leagueId: targetLeagueId,
-                      initialTitle: title,
-                      initialLogo: item.logo.isNotEmpty ? item.logo : null,
-                      initialTabIndex: targetTab,
+          border: Border.all(color: cardBorder, width: 0.8),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () {
+              final targetTab = item.hasStandings ? 1 : 0;
+              try {
+                context.push(
+                  '/league/$targetLeagueId?tab=$targetTab',
+                  extra: {
+                    'title': title,
+                    'logo': item.logo.isNotEmpty ? item.logo : null,
+                    'tab': targetTab,
+                    'season_id': item.seasonId,
+                    'champ_id': item.id,
+                  },
+                );
+              } catch (_) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                      create: (_) => sl<LeagueBloc>(
+                        param1: targetLeagueId,
+                        param2: {
+                          'title': title,
+                          'logo': item.logo.isNotEmpty ? item.logo : null,
+                          'season_id': item.seasonId,
+                          'champ_id': item.id,
+                        },
+                      ),
+                      child: LeagueView(
+                        leagueId: targetLeagueId,
+                        initialTitle: title,
+                        initialLogo: item.logo.isNotEmpty ? item.logo : null,
+                        initialTabIndex: targetTab,
+                      ),
                     ),
                   ),
-                ),
-              );
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Row(
+                );
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
               children: [
                 // 1. Reorder Drag Handle (in Favorites tab when not searching)
                 if (isFavorite && !isSearching) ...[
