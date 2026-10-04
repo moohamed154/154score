@@ -266,6 +266,7 @@ class MatchCard extends StatelessWidget {
               score1: match.score1,
               score2: match.score2,
               timestamp: match.timestamp,
+              htTime: match.htTime,
               size: isSmall ? 48 : 56,
             ),
             if (hasPenalties) ...[

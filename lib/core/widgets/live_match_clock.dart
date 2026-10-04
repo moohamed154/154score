@@ -19,6 +19,7 @@ class LiveMatchClock extends StatefulWidget {
   final String? score1;
   final String? score2;
   final int? timestamp;
+  final int? htTime;
   final bool showLiveDot;
   final TextStyle? textStyle;
 
@@ -36,6 +37,7 @@ class LiveMatchClock extends StatefulWidget {
     this.score1,
     this.score2,
     this.timestamp,
+    this.htTime,
     this.showLiveDot = true,
     this.textStyle,
   });
@@ -224,6 +226,7 @@ class _LiveMatchClockState extends State<LiveMatchClock>
         status: widget.status,
         period: widget.period,
         timestamp: widget.timestamp,
+        htTime: widget.htTime,
       );
       _currentMinute = estimated.minute;
       _currentSecond = estimated.second;
@@ -243,10 +246,18 @@ class _LiveMatchClockState extends State<LiveMatchClock>
       );
     }
 
-    if (_currentMinute > 0 && _currentSecond == 0 && widget.timestamp != null && widget.timestamp! > 0) {
+    if (_currentMinute > 0 && _currentSecond == 0) {
       final nowSec = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
-      final calcSec = (nowSec - widget.timestamp!) % 60;
-      if (calcSec >= 0) _currentSecond = calcSec;
+      final p = (widget.period ?? '').toLowerCase();
+      final s = (widget.status ?? '').toLowerCase();
+      final is2ndHalf = p.contains('2nd') || s.contains('الثاني') || s.contains('second');
+      if (is2ndHalf && widget.htTime != null && widget.htTime! > 0) {
+        final calcSec = (nowSec - widget.htTime!) % 60;
+        if (calcSec >= 0) _currentSecond = calcSec;
+      } else if (widget.timestamp != null && widget.timestamp! > 0) {
+        final calcSec = (nowSec - widget.timestamp!) % 60;
+        if (calcSec >= 0) _currentSecond = calcSec;
+      }
     }
 
     // 5. Default total extra time if stoppage is active

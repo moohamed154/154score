@@ -30,6 +30,7 @@ class MatchDto {
   final String? leagueId;
   final String? date;
   final int? timestamp;
+  final int? htTime;
   final String? note;
 
   const MatchDto({
@@ -61,6 +62,7 @@ class MatchDto {
     this.leagueId,
     this.date,
     this.timestamp,
+    this.htTime,
     this.note,
   });
 
@@ -315,6 +317,11 @@ class MatchDto {
       leagueId: lId,
       date: date ?? json['date']?.toString(),
       timestamp: ts,
+      htTime: json['ht_time'] != null
+          ? int.tryParse(json['ht_time'].toString())
+          : (json['htTime'] != null
+              ? int.tryParse(json['htTime'].toString())
+              : null),
       note: (json['notice'] ?? json['comment'] ?? json['note'])?.toString(),
     );
   }
@@ -349,6 +356,7 @@ class MatchDto {
       leagueId: leagueId,
       date: date,
       timestamp: timestamp,
+      htTime: htTime,
       note: note,
       isFavorite: isFavorite,
     );
@@ -383,6 +391,7 @@ class MatchDto {
     String? leagueId,
     String? date,
     int? timestamp,
+    int? htTime,
     String? note,
   }) {
     return MatchDto(
@@ -414,6 +423,7 @@ class MatchDto {
       leagueId: leagueId ?? this.leagueId,
       date: date ?? this.date,
       timestamp: timestamp ?? this.timestamp,
+      htTime: htTime ?? this.htTime,
       note: note ?? this.note,
     );
   }

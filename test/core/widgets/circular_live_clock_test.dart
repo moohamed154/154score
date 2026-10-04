@@ -210,5 +210,34 @@ void main() {
         expect(find.text('00:00'), findsNothing);
       },
     );
+
+    testWidgets(
+      'Calculates 2nd half elapsed time accurately when htTime is provided',
+      (tester) async {
+        final nowUtc = DateTime.now().toUtc();
+        final nowSec = nowUtc.millisecondsSinceEpoch ~/ 1000;
+        // Kickoff was 70 mins ago, but 2nd half actually kicked off 13 mins 20s ago (htTime)
+        final kickoffTs = nowSec - (70 * 60);
+        final htTime = nowSec - (13 * 60 + 20);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: CircularLiveClock(
+                minute: null,
+                status: 'الشوط الثاني',
+                period: '2nd_half',
+                statusCode: 'LIVE',
+                timestamp: kickoffTs,
+                htTime: htTime,
+              ),
+            ),
+          ),
+        );
+
+        // 45 + 13m 20s = 58:20!
+        expect(find.text('58:20'), findsOneWidget);
+      },
+    );
   });
 }

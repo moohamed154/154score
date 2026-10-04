@@ -269,6 +269,7 @@ class MatchHeaderBanner extends StatelessWidget {
                       score1: s1,
                       score2: s2,
                       timestamp: match.timestamp,
+                      htTime: match.htTime,
                       size: isSmall ? 48 : 56,
                     ),
                     if (hasPenalties) ...[

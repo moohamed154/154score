@@ -20,6 +20,7 @@ class CircularLiveClock extends StatefulWidget {
   final String? score1;
   final String? score2;
   final int? timestamp;
+  final int? htTime;
   final double size;
   final Color arcColor;
   final Color notchColor;
@@ -39,6 +40,7 @@ class CircularLiveClock extends StatefulWidget {
     this.score1,
     this.score2,
     this.timestamp,
+    this.htTime,
     this.size = 56.0,
     this.arcColor = const Color(0xFF2EE5A7),
     this.notchColor = const Color(0xFFFFD200),
@@ -83,7 +85,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         oldWidget.date != widget.date ||
         oldWidget.score1 != widget.score1 ||
         oldWidget.score2 != widget.score2 ||
-        oldWidget.timestamp != widget.timestamp) {
+        oldWidget.timestamp != widget.timestamp ||
+        oldWidget.htTime != widget.htTime) {
       _syncClock();
       _startTimerIfNeeded();
     }
@@ -157,6 +160,7 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         status: widget.status,
         period: widget.period,
         timestamp: widget.timestamp,
+        htTime: widget.htTime,
       );
       minNum = estimated.minute;
       secNum = estimated.second;
@@ -175,10 +179,18 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       );
     }
 
-    if (minNum > 0 && secNum == 0 && widget.timestamp != null && widget.timestamp! > 0) {
+    if (minNum > 0 && secNum == 0) {
       final nowSec = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
-      final calcSec = (nowSec - widget.timestamp!) % 60;
-      if (calcSec >= 0) secNum = calcSec;
+      final p = (widget.period ?? '').toLowerCase();
+      final s = (widget.status ?? '').toLowerCase();
+      final is2ndHalf = p.contains('2nd') || s.contains('الثاني') || s.contains('second');
+      if (is2ndHalf && widget.htTime != null && widget.htTime! > 0) {
+        final calcSec = (nowSec - widget.htTime!) % 60;
+        if (calcSec >= 0) secNum = calcSec;
+      } else if (widget.timestamp != null && widget.timestamp! > 0) {
+        final calcSec = (nowSec - widget.timestamp!) % 60;
+        if (calcSec >= 0) secNum = calcSec;
+      }
     }
 
     _currentMinute = minNum;
@@ -273,6 +285,7 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
           status: widget.status,
           period: widget.period,
           timestamp: widget.timestamp,
+          htTime: widget.htTime,
         );
         if (est.extraMinute > 0) {
           computedElapsedExtraSec = est.extraMinute * 60;

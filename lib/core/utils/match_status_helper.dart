@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'date_formatter.dart';
 
 enum MatchPhase {
@@ -476,6 +477,7 @@ class MatchStatusHelper {
     String? status,
     String? period,
     int? timestamp,
+    int? htTime,
     DateTime? now,
   }) {
     int elapsed;
@@ -529,9 +531,17 @@ class MatchStatusHelper {
     }
 
     if (is2ndHalf) {
-      final secondHalfElapsed = elapsed > 60
-          ? elapsed - 60
-          : (elapsed > 45 ? elapsed - 45 : 0);
+      int secondHalfElapsed;
+      if (htTime != null && htTime > 0) {
+        final nowSec =
+            (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
+            1000;
+        secondHalfElapsed = math.max(0, (nowSec - htTime) ~/ 60);
+      } else {
+        secondHalfElapsed = elapsed > 68
+            ? elapsed - 68
+            : (elapsed > 45 ? elapsed - 45 : 0);
+      }
       final min = 45 + secondHalfElapsed;
       if (min < 46) return (minute: 46, extraMinute: 0);
       if (min <= 90) return (minute: min, extraMinute: 0);
@@ -542,8 +552,8 @@ class MatchStatusHelper {
     // Generic live match
     if (elapsed <= 0) return (minute: 1, extraMinute: 0);
     if (elapsed <= 45) return (minute: elapsed, extraMinute: 0);
-    if (elapsed <= 60) return (minute: 45, extraMinute: 0);
-    final secHalfMin = 45 + (elapsed - 60);
+    if (elapsed <= 68) return (minute: 45, extraMinute: 0);
+    final secHalfMin = 45 + (elapsed - 68);
     if (secHalfMin <= 90) return (minute: secHalfMin, extraMinute: 0);
     if (secHalfMin <= 102) return (minute: 90, extraMinute: secHalfMin - 90);
     return (minute: 90, extraMinute: 5);
@@ -555,6 +565,7 @@ class MatchStatusHelper {
     String? status,
     String? period,
     int? timestamp,
+    int? htTime,
     DateTime? now,
   }) {
     int elapsed;
@@ -606,9 +617,17 @@ class MatchStatusHelper {
     }
 
     if (is2ndHalf) {
-      final secondHalfElapsed = elapsed > 60
-          ? elapsed - 60
-          : (elapsed > 45 ? elapsed - 45 : 0);
+      int secondHalfElapsed;
+      if (htTime != null && htTime > 0) {
+        final nowSec =
+            (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
+            1000;
+        secondHalfElapsed = math.max(0, (nowSec - htTime) ~/ 60);
+      } else {
+        secondHalfElapsed = elapsed > 68
+            ? elapsed - 68
+            : (elapsed > 45 ? elapsed - 45 : 0);
+      }
       final min = 45 + secondHalfElapsed;
       if (min < 46) return 46;
       if (min <= 90) return min;
@@ -618,8 +637,8 @@ class MatchStatusHelper {
     // Generic live match
     if (elapsed <= 0) return 1;
     if (elapsed <= 45) return elapsed;
-    if (elapsed <= 60) return 45;
-    final secHalfMin = 45 + (elapsed - 60);
+    if (elapsed <= 68) return 45;
+    final secHalfMin = 45 + (elapsed - 68);
     if (secHalfMin <= 90) return secHalfMin;
     return 90;
   }
@@ -636,6 +655,7 @@ class MatchStatusHelper {
     String? status,
     String? period,
     int? timestamp,
+    int? htTime,
     DateTime? now,
   }) {
     int elapsedSeconds = 0;
@@ -721,9 +741,17 @@ class MatchStatusHelper {
     }
 
     if (is2ndHalf) {
-      final secHalfElapsed = elapsedSeconds > (60 * 60)
-          ? (elapsedSeconds - (60 * 60))
-          : (elapsedSeconds > (45 * 60) ? (elapsedSeconds - (45 * 60)) : 0);
+      int secHalfElapsed;
+      if (htTime != null && htTime > 0) {
+        final nowSec =
+            (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
+            1000;
+        secHalfElapsed = math.max(0, nowSec - htTime);
+      } else {
+        secHalfElapsed = elapsedSeconds > (60 * 60)
+            ? (elapsedSeconds - (60 * 60))
+            : (elapsedSeconds > (45 * 60) ? (elapsedSeconds - (45 * 60)) : 0);
+      }
 
       if (secHalfElapsed <= 45 * 60) {
         return (
@@ -835,6 +863,7 @@ class MatchStatusHelper {
     required String? time,
     String? status,
     String? period,
+    int? htTime,
     bool isArabic = true,
     DateTime? now,
   }) {
@@ -882,9 +911,17 @@ class MatchStatusHelper {
     }
 
     if (is2ndHalf) {
-      final secondHalfElapsed = elapsed > 60
-          ? elapsed - 60
-          : (elapsed > 45 ? elapsed - 45 : 0);
+      int secondHalfElapsed;
+      if (htTime != null && htTime > 0) {
+        final nowSec =
+            (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
+            1000;
+        secondHalfElapsed = math.max(0, (nowSec - htTime) ~/ 60);
+      } else {
+        secondHalfElapsed = elapsed > 68
+            ? elapsed - 68
+            : (elapsed > 45 ? elapsed - 45 : 0);
+      }
       final min = 45 + secondHalfElapsed;
       if (min < 46) return "46'";
       if (min <= 90) return "$min'";
@@ -895,8 +932,8 @@ class MatchStatusHelper {
     // Generic live match
     if (elapsed <= 0) return "1'";
     if (elapsed <= 45) return "$elapsed'";
-    if (elapsed <= 60) return isArabic ? 'استراحة' : 'HT';
-    final secHalfMin = 45 + (elapsed - 60);
+    if (elapsed <= 68) return isArabic ? 'استراحة' : 'HT';
+    final secHalfMin = 45 + (elapsed - 68);
     if (secHalfMin <= 90) return "$secHalfMin'";
     final extra = (secHalfMin - 90).clamp(1, 15);
     return "90' +$extra'";
@@ -910,6 +947,7 @@ class MatchStatusHelper {
     String? time,
     String? period,
     int? timestamp,
+    int? htTime,
     required bool isArabic,
   }) {
     int? minNum;
@@ -922,6 +960,7 @@ class MatchStatusHelper {
         status: rawStatus,
         period: period,
         timestamp: timestamp,
+        htTime: htTime,
       );
     }
     final p = (period ?? '').toLowerCase();
