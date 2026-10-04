@@ -25,6 +25,7 @@ import '../../features/search/presentation/views/search_view.dart';
 import '../../features/settings/presentation/views/language_settings_view.dart';
 import '../../features/settings/presentation/views/notification_settings_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
+import '../../features/settings/presentation/views/theme_settings_view.dart';
 import '../../features/settings/presentation/views/time_format_settings_view.dart';
 import '../../features/settings/presentation/views/timezone_selection_view.dart';
 import '../../features/standings/presentation/views/standings_view.dart';
@@ -288,6 +289,14 @@ class AppRouter {
                     pageBuilder: (context, state) => _buildCupertinoPage(
                       state: state,
                       child: const LanguageSettingsView(),
+                    ),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: 'theme',
+                    pageBuilder: (context, state) => _buildCupertinoPage(
+                      state: state,
+                      child: const ThemeSettingsView(),
                     ),
                   ),
                 ],

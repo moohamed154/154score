@@ -143,43 +143,97 @@ class _SettingsViewState extends State<SettingsView> {
           ),
           BlocBuilder<ThemeCubit, ThemeMode>(
             builder: (context, themeMode) {
+              final modeDesc = switch (themeMode) {
+                ThemeMode.dark => l10n.translate('theme_dark_title'),
+                ThemeMode.light => l10n.translate('theme_light_title'),
+                ThemeMode.system => l10n.translate('theme_system_title'),
+              };
+
+              final badgeText = switch (themeMode) {
+                ThemeMode.dark => isArabic ? 'داكن' : 'Dark',
+                ThemeMode.light => isArabic ? 'فاتح' : 'Light',
+                ThemeMode.system => isArabic ? 'تلقائي' : 'Auto',
+              };
+
+              final modeIcon = switch (themeMode) {
+                ThemeMode.dark => Icons.dark_mode_rounded,
+                ThemeMode.light => Icons.light_mode_rounded,
+                ThemeMode.system => Icons.settings_system_daydream_rounded,
+              };
+
               return _buildCard(
                 isDark: isDark,
-                child: Column(
-                  children: [
-                    _buildThemeOption(
-                      context,
-                      mode: ThemeMode.dark,
-                      currentMode: themeMode,
-                      title: l10n.translate('theme_dark'),
-                      icon: Icons.dark_mode_rounded,
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      modeIcon,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(
+                    l10n.translate('settings_appearance'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    modeDesc,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.getBodySmall(
                       isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
                     ),
-                    Divider(
-                      height: 1,
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    ),
-                    _buildThemeOption(
-                      context,
-                      mode: ThemeMode.light,
-                      currentMode: themeMode,
-                      title: l10n.translate('theme_light'),
-                      icon: Icons.light_mode_rounded,
-                      isDark: isDark,
-                    ),
-                    Divider(
-                      height: 1,
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    ),
-                    _buildThemeOption(
-                      context,
-                      mode: ThemeMode.system,
-                      currentMode: themeMode,
-                      title: l10n.translate('theme_system'),
-                      icon: Icons.settings_system_daydream_rounded,
-                      isDark: isDark,
-                    ),
-                  ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSm,
+                          ),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          badgeText,
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        isArabic
+                            ? Icons.arrow_back_ios_new_rounded
+                            : Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    context.push('/settings/theme');
+                  },
                 ),
               );
             },
@@ -724,123 +778,6 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildThemeOption(
-    BuildContext context, {
-    required ThemeMode mode,
-    required ThemeMode currentMode,
-    required String title,
-    required IconData icon,
-    required bool isDark,
-  }) {
-    final isSelected = mode == currentMode;
-    const primaryColor = AppColors.primary;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          if (!isSelected) {
-            HapticFeedback.selectionClick();
-            context.read<ThemeCubit>().setThemeMode(mode);
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          color: isSelected
-              ? primaryColor.withAlpha(isDark ? 28 : 16)
-              : Colors.transparent,
-          child: Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? primaryColor.withAlpha(isDark ? 50 : 35)
-                      : (isDark
-                          ? AppColors.darkSurface
-                          : AppColors.lightSurface),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: isSelected
-                        ? primaryColor.withAlpha(140)
-                        : (isDark
-                            ? AppColors.darkBorder
-                            : AppColors.lightBorder),
-                    width: isSelected ? 1.2 : 0.8,
-                  ),
-                ),
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0, end: isSelected ? 1 : 0),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutBack,
-                  builder: (context, anim, _) {
-                    return Transform.scale(
-                      scale: 0.95 + (anim * 0.15),
-                      child: Icon(
-                        icon,
-                        size: 20,
-                        color: isSelected
-                            ? primaryColor
-                            : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? (isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary)
-                        : (isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary),
-                  ),
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? primaryColor : Colors.transparent,
-                  border: Border.all(
-                    color: isSelected
-                        ? primaryColor
-                        : (isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted),
-                    width: isSelected ? 2 : 1.5,
-                  ),
-                ),
-                child: isSelected
-                    ? const Icon(
-                        Icons.check_rounded,
-                        size: 14,
-                        color: Colors.white,
-                      )
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildCard({
     required bool isDark,
