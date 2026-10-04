@@ -1,8 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../constants/app_colors.dart';
-import '../utils/url_helper.dart';
 
 /// Reusable application brand logo widget displaying the official 154Score
 /// icon with responsive light and dark mode styling, subtle depth, and glow.
@@ -31,7 +29,7 @@ class AppBrandLogo extends StatelessWidget {
     final effectiveRadius = borderRadius ?? BorderRadius.circular(size * 0.26);
     final effectivePadding = padding ?? EdgeInsets.all(size * 0.08);
 
-    final localFallback = Image.asset(
+    final imageWidget = Image.asset(
       'assets/icons/app_icon.png',
       width: size,
       height: size,
@@ -51,21 +49,6 @@ class AppBrandLogo extends StatelessWidget {
         ),
       ),
     );
-
-    final logoUrl = UrlHelper.getBrandLogoUrl(isDark: effectiveIsDark);
-
-    final imageWidget = useRemoteBrand
-        ? CachedNetworkImage(
-            imageUrl: logoUrl,
-            width: size,
-            height: size,
-            fit: BoxFit.contain,
-            memCacheWidth: (size * 2).toInt(),
-            memCacheHeight: (size * 2).toInt(),
-            placeholder: (context, url) => localFallback,
-            errorWidget: (context, url, error) => localFallback,
-          )
-        : localFallback;
 
     if (!withBackground) {
       return SizedBox(width: size, height: size, child: imageWidget);
