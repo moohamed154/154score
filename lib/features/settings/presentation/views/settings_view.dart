@@ -221,9 +221,7 @@ class _SettingsViewState extends State<SettingsView> {
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        isArabic
-                            ? Icons.arrow_back_ios_new_rounded
-                            : Icons.arrow_forward_ios_rounded,
+                        Icons.arrow_forward_ios_rounded,
                         size: 16,
                         color: isDark
                             ? AppColors.darkTextMuted
@@ -329,9 +327,7 @@ class _SettingsViewState extends State<SettingsView> {
                           ),
                           const SizedBox(width: 6),
                           Icon(
-                            isArabic
-                                ? Icons.arrow_back_ios_new_rounded
-                                : Icons.arrow_forward_ios_rounded,
+                            Icons.arrow_forward_ios_rounded,
                             size: 16,
                             color: isDark
                                 ? AppColors.darkTextMuted
@@ -407,9 +403,7 @@ class _SettingsViewState extends State<SettingsView> {
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        isArabic
-                            ? Icons.arrow_back_ios_new_rounded
-                            : Icons.arrow_forward_ios_rounded,
+                        Icons.arrow_forward_ios_rounded,
                         size: 16,
                         color: isDark
                             ? AppColors.darkTextMuted
@@ -477,9 +471,7 @@ class _SettingsViewState extends State<SettingsView> {
                           ),
                           const SizedBox(width: 8),
                           Icon(
-                            isArabic
-                                ? Icons.arrow_back_ios_new_rounded
-                                : Icons.arrow_forward_ios_rounded,
+                            Icons.arrow_forward_ios_rounded,
                             size: 16,
                             color: isDark
                                 ? AppColors.darkTextMuted
@@ -527,9 +519,11 @@ class _SettingsViewState extends State<SettingsView> {
                 ),
               ),
               trailing: Icon(
-                isArabic
-                    ? Icons.chevron_left_rounded
-                    : Icons.chevron_right_rounded,
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
               ),
               onTap: () async {
                 await context.push('/settings/notifications');
@@ -570,9 +564,11 @@ class _SettingsViewState extends State<SettingsView> {
                           : 'Reset Onboarding, test alerts & system diagnostics',
                     ),
                     trailing: Icon(
-                      isArabic
-                          ? Icons.chevron_left_rounded
-                          : Icons.chevron_right_rounded,
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
                     ),
                     onTap: () {
                       DeveloperToolsSheet.show(
@@ -639,9 +635,11 @@ class _SettingsViewState extends State<SettingsView> {
                     title: Text(l10n.translate('diag_title')),
                     subtitle: Text(l10n.translate('settings_diagnostics')),
                     trailing: Icon(
-                      isArabic
-                          ? Icons.chevron_left_rounded
-                          : Icons.chevron_right_rounded,
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
                     ),
                     onTap: () {
                       showModalBottomSheet(
@@ -660,9 +658,11 @@ class _SettingsViewState extends State<SettingsView> {
                     title: Text(l10n.translate('debug_console_title')),
                     subtitle: Text(l10n.translate('debug_console_subtitle')),
                     trailing: Icon(
-                      isArabic
-                          ? Icons.chevron_left_rounded
-                          : Icons.chevron_right_rounded,
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
                     ),
                     onTap: () {
                       DebugConsoleSheet.show(context);

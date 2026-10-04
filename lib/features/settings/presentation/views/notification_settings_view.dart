@@ -559,7 +559,9 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                   ),
                   subtitle: Text(countText),
                   trailing: Icon(
-                    isArabic ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                   ),
                   onTap: () => context.push('/favorites'),
                 ),
