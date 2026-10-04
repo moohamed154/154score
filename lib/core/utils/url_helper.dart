@@ -7,9 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 class UrlHelper {
   UrlHelper._();
 
-  /// Official dark and light theme logos from MOBILE_ENDPOINTS catalog.
-  static const String brandLogoDark = 'https://imgs.ysscores.com/images/logodark.png';
-  static const String brandLogoLight = 'https://imgs.ysscores.com/images/logolight.png';
+  /// Official dark and light theme logos hosted on 154Score backend.
+  static const String brandLogoDark = 'https://moohamed154-154score-api.hf.space/images/logo_dark.png';
+  static const String brandLogoLight = 'https://moohamed154-154score-api.hf.space/images/logo_light.png';
 
   /// Returns the corresponding brand logo URL based on theme mode.
   static String getBrandLogoUrl({required bool isDark}) =>

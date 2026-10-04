@@ -14,8 +14,8 @@ class ApiEndpoints {
   static String wsMatchRoom(String matchId) => 'match:$matchId';
 
   // Static Asset & Image Endpoints (Section 2)
-  static const String logoDark = 'https://imgs.ysscores.com/images/logodark.png';
-  static const String logoLight = 'https://imgs.ysscores.com/images/logolight.png';
+  static const String logoDark = 'https://moohamed154-154score-api.hf.space/images/logo_dark.png';
+  static const String logoLight = 'https://moohamed154-154score-api.hf.space/images/logo_light.png';
 
   // 1. System Operations
   static const String root = '/';
