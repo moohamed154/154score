@@ -21,7 +21,7 @@ class AppBrandLogo extends StatelessWidget {
     this.withBackground = true,
     this.borderRadius,
     this.padding,
-    this.useRemoteBrand = true,
+    this.useRemoteBrand = false,
   });
 
   @override
