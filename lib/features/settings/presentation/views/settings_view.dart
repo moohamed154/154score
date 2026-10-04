@@ -145,36 +145,41 @@ class _SettingsViewState extends State<SettingsView> {
             builder: (context, themeMode) {
               return _buildCard(
                 isDark: isDark,
-                child: RadioGroup<ThemeMode>(
-                  groupValue: themeMode,
-                  onChanged: (mode) {
-                    if (mode != null) {
-                      context.read<ThemeCubit>().setThemeMode(mode);
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      RadioListTile<ThemeMode>(
-                        title: Text(l10n.translate('theme_dark')),
-                        secondary: const Icon(Icons.dark_mode_rounded),
-                        value: ThemeMode.dark,
-                      ),
-                      const Divider(height: 1),
-                      RadioListTile<ThemeMode>(
-                        title: Text(l10n.translate('theme_light')),
-                        secondary: const Icon(Icons.light_mode_rounded),
-                        value: ThemeMode.light,
-                      ),
-                      const Divider(height: 1),
-                      RadioListTile<ThemeMode>(
-                        title: Text(l10n.translate('theme_system')),
-                        secondary: const Icon(
-                          Icons.settings_system_daydream_rounded,
-                        ),
-                        value: ThemeMode.system,
-                      ),
-                    ],
-                  ),
+                child: Column(
+                  children: [
+                    _buildThemeOption(
+                      context,
+                      mode: ThemeMode.dark,
+                      currentMode: themeMode,
+                      title: l10n.translate('theme_dark'),
+                      icon: Icons.dark_mode_rounded,
+                      isDark: isDark,
+                    ),
+                    Divider(
+                      height: 1,
+                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    ),
+                    _buildThemeOption(
+                      context,
+                      mode: ThemeMode.light,
+                      currentMode: themeMode,
+                      title: l10n.translate('theme_light'),
+                      icon: Icons.light_mode_rounded,
+                      isDark: isDark,
+                    ),
+                    Divider(
+                      height: 1,
+                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    ),
+                    _buildThemeOption(
+                      context,
+                      mode: ThemeMode.system,
+                      currentMode: themeMode,
+                      title: l10n.translate('theme_system'),
+                      icon: Icons.settings_system_daydream_rounded,
+                      isDark: isDark,
+                    ),
+                  ],
                 ),
               );
             },
@@ -719,23 +724,146 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
+  Widget _buildThemeOption(
+    BuildContext context, {
+    required ThemeMode mode,
+    required ThemeMode currentMode,
+    required String title,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    final isSelected = mode == currentMode;
+    const primaryColor = AppColors.primary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          if (!isSelected) {
+            HapticFeedback.selectionClick();
+            context.read<ThemeCubit>().setThemeMode(mode);
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          color: isSelected
+              ? primaryColor.withAlpha(isDark ? 28 : 16)
+              : Colors.transparent,
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? primaryColor.withAlpha(isDark ? 50 : 35)
+                      : (isDark
+                          ? AppColors.darkSurface
+                          : AppColors.lightSurface),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected
+                        ? primaryColor.withAlpha(140)
+                        : (isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder),
+                    width: isSelected ? 1.2 : 0.8,
+                  ),
+                ),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0, end: isSelected ? 1 : 0),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutBack,
+                  builder: (context, anim, _) {
+                    return Transform.scale(
+                      scale: 0.95 + (anim * 0.15),
+                      child: Icon(
+                        icon,
+                        size: 20,
+                        color: isSelected
+                            ? primaryColor
+                            : (isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? (isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary)
+                        : (isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary),
+                  ),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? primaryColor : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected
+                        ? primaryColor
+                        : (isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted),
+                    width: isSelected ? 2 : 1.5,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(
+                        Icons.check_rounded,
+                        size: 14,
+                        color: Colors.white,
+                      )
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCard({
     required bool isDark,
     required Widget child,
     EdgeInsetsGeometry? padding,
   }) {
     return RepaintBoundary(
-      child: Material(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          side: BorderSide(
+          border: Border.all(
             color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
           ),
         ),
-        child:
-            padding != null ? Padding(padding: padding, child: child) : child,
+        child: Material(
+          color: Colors.transparent,
+          child:
+              padding != null ? Padding(padding: padding, child: child) : child,
+        ),
       ),
     );
   }
