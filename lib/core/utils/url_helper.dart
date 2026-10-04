@@ -8,8 +8,10 @@ class UrlHelper {
   UrlHelper._();
 
   /// Official dark and light theme logos hosted on 154Score backend.
-  static const String brandLogoDark = 'https://moohamed154-154score-api.hf.space/images/logo_dark.png';
-  static const String brandLogoLight = 'https://moohamed154-154score-api.hf.space/images/logo_light.png';
+  static const String brandLogoDark =
+      'https://154score-api.medohs770.workers.dev/images/logo_dark.png';
+  static const String brandLogoLight =
+      'https://154score-api.medohs770.workers.dev/images/logo_light.png';
 
   /// Returns the corresponding brand logo URL based on theme mode.
   static String getBrandLogoUrl({required bool isDark}) =>

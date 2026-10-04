@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/network_info.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
@@ -510,10 +512,21 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
               ),
               padding: const EdgeInsets.all(16),
               child: Center(
-                child: Image.asset(
-                  'assets/icons/app_icon.png',
+                child: CachedNetworkImage(
+                  imageUrl: UrlHelper.getBrandLogoUrl(isDark: isDark),
                   fit: BoxFit.contain,
-                  semanticLabel: '154Score Logo',
+                  memCacheWidth: 384,
+                  memCacheHeight: 384,
+                  placeholder: (context, url) => Image.asset(
+                    'assets/icons/app_icon.png',
+                    fit: BoxFit.contain,
+                    semanticLabel: '154Score Logo',
+                  ),
+                  errorWidget: (context, url, error) => Image.asset(
+                    'assets/icons/app_icon.png',
+                    fit: BoxFit.contain,
+                    semanticLabel: '154Score Logo',
+                  ),
                 ),
               ),
             ),
