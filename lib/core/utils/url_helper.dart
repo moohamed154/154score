@@ -7,6 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 class UrlHelper {
   UrlHelper._();
 
+  /// Official dark and light theme logos from MOBILE_ENDPOINTS catalog.
+  static const String brandLogoDark = 'https://imgs.ysscores.com/images/logodark.png';
+  static const String brandLogoLight = 'https://imgs.ysscores.com/images/logolight.png';
+
+  /// Returns the corresponding brand logo URL based on theme mode.
+  static String getBrandLogoUrl({required bool isDark}) =>
+      isDark ? brandLogoDark : brandLogoLight;
+
   /// Normalizes image and asset URLs from the API.
   /// Handles protocol-relative URLs (`//imgs...`), non-secure `http:`, and trims whitespace.
   static String? normalizeImageUrl(String? url) {

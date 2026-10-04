@@ -71,9 +71,11 @@ class PlayerStatsTabView extends StatelessWidget {
                 : AppColors.lightCardElevated,
             child: Row(
               children: [
-                if (l.logo != null) ...[
+                if (l.logo != null || l.logoLight != null) ...[
                   AppImage(
-                    imageUrl: l.logo,
+                    imageUrl: (!isDark && l.logoLight != null && l.logoLight!.isNotEmpty)
+                        ? l.logoLight!
+                        : (l.logo ?? ''),
                     width: 24,
                     height: 24,
                     placeholderIcon: Icons.emoji_events_outlined,

@@ -1259,7 +1259,11 @@ class _StandingsViewState extends State<StandingsView> {
     required VoidCallback onToggleStar,
   }) {
     final title = item.name;
-    final normalizedLogo = UrlHelper.normalizeImageUrl(item.logo);
+    final effectiveLogo =
+        (!isDark && item.logoLight != null && item.logoLight!.isNotEmpty)
+            ? item.logoLight!
+            : item.logo;
+    final normalizedLogo = UrlHelper.normalizeImageUrl(effectiveLogo);
     final targetLeagueId = (item.seasonId != null && item.seasonId!.isNotEmpty)
         ? item.seasonId!
         : item.id;
@@ -1285,7 +1289,7 @@ class _StandingsViewState extends State<StandingsView> {
                   '/league/$targetLeagueId?tab=$targetTab',
                   extra: {
                     'title': title,
-                    'logo': item.logo.isNotEmpty ? item.logo : null,
+                    'logo': effectiveLogo.isNotEmpty ? effectiveLogo : null,
                     'tab': targetTab,
                     'season_id': item.seasonId,
                     'champ_id': item.id,
@@ -1300,7 +1304,7 @@ class _StandingsViewState extends State<StandingsView> {
                         param1: targetLeagueId,
                         param2: {
                           'title': title,
-                          'logo': item.logo.isNotEmpty ? item.logo : null,
+                          'logo': effectiveLogo.isNotEmpty ? effectiveLogo : null,
                           'season_id': item.seasonId,
                           'champ_id': item.id,
                         },
@@ -1308,7 +1312,7 @@ class _StandingsViewState extends State<StandingsView> {
                       child: LeagueView(
                         leagueId: targetLeagueId,
                         initialTitle: title,
-                        initialLogo: item.logo.isNotEmpty ? item.logo : null,
+                        initialLogo: effectiveLogo.isNotEmpty ? effectiveLogo : null,
                         initialTabIndex: targetTab,
                       ),
                     ),

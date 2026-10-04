@@ -13,6 +13,10 @@ class ApiEndpoints {
   static const String wsChannelTransfersAr = 'transfers_ar';
   static String wsMatchRoom(String matchId) => 'match:$matchId';
 
+  // Static Asset & Image Endpoints (Section 2)
+  static const String logoDark = 'https://imgs.ysscores.com/images/logodark.png';
+  static const String logoLight = 'https://imgs.ysscores.com/images/logolight.png';
+
   // 1. System Operations
   static const String root = '/';
   static const String ping = '/ping';
