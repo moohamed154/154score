@@ -121,6 +121,10 @@ abstract class LocalStorageService {
   List<String> getReadNotificationIds();
   Future<bool> markNotificationAsRead(String id);
   Future<bool> markAllNotificationsAsRead(List<String> ids);
+
+  // Developer / Debugging Mode
+  bool isDeveloperModeEnabled();
+  Future<bool> setDeveloperModeEnabled(bool enabled);
 }
 
 class LocalStorageServiceImpl implements LocalStorageService {
@@ -1023,5 +1027,17 @@ class LocalStorageServiceImpl implements LocalStorageService {
     final list = (_prefs.getStringList(_keyReadNotifications) ?? []).toSet();
     list.addAll(ids);
     return _prefs.setStringList(_keyReadNotifications, list.toList());
+  }
+
+  static const String _keyDeveloperMode = 'app_developer_mode_enabled';
+
+  @override
+  bool isDeveloperModeEnabled() {
+    return _prefs.getBool(_keyDeveloperMode) ?? false;
+  }
+
+  @override
+  Future<bool> setDeveloperModeEnabled(bool enabled) {
+    return _prefs.setBool(_keyDeveloperMode, enabled);
   }
 }

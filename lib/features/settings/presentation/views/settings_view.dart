@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,8 +15,10 @@ import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
+import '../../../onboarding/domain/repositories/onboarding_repository.dart';
 import '../cubit/settings_cubits.dart';
 import '../widgets/debug_console_sheet.dart';
+import '../widgets/developer_tools_sheet.dart';
 import '../widgets/diagnostics_sheet.dart';
 
 class SettingsView extends StatefulWidget {
@@ -24,6 +29,78 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
+  int _logoTapCount = 0;
+  Timer? _tapResetTimer;
+  late bool _isDeveloperModeUnlocked;
+
+  @override
+  void initState() {
+    super.initState();
+    _isDeveloperModeUnlocked = sl<LocalStorageService>().isDeveloperModeEnabled();
+  }
+
+  @override
+  void dispose() {
+    _tapResetTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onLogoTap(BuildContext context) {
+    _tapResetTimer?.cancel();
+    _tapResetTimer = Timer(const Duration(seconds: 2), () {
+      _logoTapCount = 0;
+    });
+
+    _logoTapCount++;
+    final remaining = 10 - _logoTapCount;
+
+    if (_logoTapCount >= 5 && _logoTapCount < 10) {
+      HapticFeedback.selectionClick();
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).isArabic
+                ? 'باقي $remaining نقرات لتفعيل أدوات المطور والتشخيص 🛠️'
+                : '$remaining more taps to activate Developer Mode 🛠️',
+          ),
+          duration: const Duration(milliseconds: 900),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else if (_logoTapCount >= 10) {
+      _logoTapCount = 0;
+      _tapResetTimer?.cancel();
+      HapticFeedback.heavyImpact();
+      setState(() {
+        _isDeveloperModeUnlocked = true;
+      });
+      sl<LocalStorageService>().setDeveloperModeEnabled(true);
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).isArabic
+                ? '🎉 تم تفعيل أدوات المطور والتشخيص بنجاح!'
+                : '🎉 Developer Tools unlocked successfully!',
+          ),
+          backgroundColor: AppColors.uclGreen,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      DeveloperToolsSheet.show(
+        context,
+        onLockDeveloperMode: () {
+          if (mounted) {
+            setState(() {
+              _isDeveloperModeUnlocked = false;
+            });
+          }
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -38,14 +115,20 @@ class _SettingsViewState extends State<SettingsView> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppBrandLogo(size: 40, isDark: isDark),
+            GestureDetector(
+              onTap: () => _onLogoTap(context),
+              child: AppBrandLogo(size: 40, isDark: isDark),
+            ),
             const SizedBox(width: 10),
-            Text(
-              '154Score',
-              style: AppTypography.getHeadingLarge(
-                isDark: isDark,
-                isArabic: isArabic,
-              ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+            GestureDetector(
+              onTap: () => _onLogoTap(context),
+              child: Text(
+                '154Score',
+                style: AppTypography.getHeadingLarge(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+              ),
             ),
           ],
         ),
@@ -368,58 +451,169 @@ class _SettingsViewState extends State<SettingsView> {
 
           const SizedBox(height: 24),
 
-          // Section: Diagnostics & Health
-          _buildSectionHeader(
-            l10n.translate('settings_diagnostics'),
-            isDark,
-            isArabic,
-          ),
-          _buildCard(
-            isDark: isDark,
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(
-                    Icons.health_and_safety_rounded,
-                    color: AppColors.primary,
-                  ),
-                  title: Text(l10n.translate('diag_title')),
-                  subtitle: Text(l10n.translate('settings_diagnostics')),
-                  trailing: Icon(
-                    isArabic
-                        ? Icons.chevron_left_rounded
-                        : Icons.chevron_right_rounded,
-                  ),
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      builder: (ctx) => DiagnosticsSheet(webSocketService: ws),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(
-                    Icons.terminal_rounded,
-                    color: AppColors.primary,
-                  ),
-                  title: Text(l10n.translate('debug_console_title')),
-                  subtitle: Text(l10n.translate('debug_console_subtitle')),
-                  trailing: Icon(
-                    isArabic
-                        ? Icons.chevron_left_rounded
-                        : Icons.chevron_right_rounded,
-                  ),
-                  onTap: () {
-                    DebugConsoleSheet.show(context);
-                  },
-                ),
-              ],
+          // Section: Developer & Debugging Tools (Hidden by default - unlocked via 10 logo taps)
+          if (_isDeveloperModeUnlocked) ...[
+            _buildSectionHeader(
+              isArabic
+                  ? '🛠️ أدوات المطور والتشخيص (Developer Tools)'
+                  : '🛠️ Developer & Debugging Tools',
+              isDark,
+              isArabic,
             ),
-          ),
-
-          const SizedBox(height: 24),
+            _buildCard(
+              isDark: isDark,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.dashboard_customize_rounded,
+                      color: AppColors.primary,
+                    ),
+                    title: Text(
+                      isArabic
+                          ? 'لوحة أدوات المطور الشاملة'
+                          : 'Developer Tools Dashboard',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: Text(
+                      isArabic
+                          ? 'تصفير Onboarding، فحص الشبكة، واختبار الإشعارات'
+                          : 'Reset Onboarding, test alerts & system diagnostics',
+                    ),
+                    trailing: Icon(
+                      isArabic
+                          ? Icons.chevron_left_rounded
+                          : Icons.chevron_right_rounded,
+                    ),
+                    onTap: () {
+                      DeveloperToolsSheet.show(
+                        context,
+                        onLockDeveloperMode: () {
+                          if (mounted) {
+                            setState(() {
+                              _isDeveloperModeUnlocked = false;
+                            });
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.restart_alt_rounded,
+                      color: AppColors.accent,
+                    ),
+                    title: Text(
+                      isArabic
+                          ? 'تصفير شاشة الترحيب (Reset Onboarding)'
+                          : 'Reset Onboarding Flow',
+                    ),
+                    subtitle: Text(
+                      isArabic
+                          ? 'مسح علامة الإتمام لتظهر شاشة الترحيب مجدداً'
+                          : 'Clear completed flag so onboarding shows on launch',
+                    ),
+                    trailing: OutlinedButton(
+                      onPressed: () async {
+                        await HapticFeedback.mediumImpact();
+                        await sl<OnboardingRepository>().resetOnboarding();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                '✅ تم تصفير شاشة الترحيب بنجاح!',
+                              ),
+                              backgroundColor: AppColors.uclGreen,
+                              action: SnackBarAction(
+                                label: 'فتح الآن',
+                                textColor: Colors.white,
+                                onPressed: () => context.push('/onboarding'),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.accent,
+                        side: const BorderSide(color: AppColors.accent),
+                      ),
+                      child: Text(isArabic ? 'تصفير' : 'Reset'),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.health_and_safety_rounded,
+                      color: AppColors.primary,
+                    ),
+                    title: Text(l10n.translate('diag_title')),
+                    subtitle: Text(l10n.translate('settings_diagnostics')),
+                    trailing: Icon(
+                      isArabic
+                          ? Icons.chevron_left_rounded
+                          : Icons.chevron_right_rounded,
+                    ),
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (ctx) => DiagnosticsSheet(webSocketService: ws),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.terminal_rounded,
+                      color: AppColors.primary,
+                    ),
+                    title: Text(l10n.translate('debug_console_title')),
+                    subtitle: Text(l10n.translate('debug_console_subtitle')),
+                    trailing: Icon(
+                      isArabic
+                          ? Icons.chevron_left_rounded
+                          : Icons.chevron_right_rounded,
+                    ),
+                    onTap: () {
+                      DebugConsoleSheet.show(context);
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.lock_rounded,
+                      color: AppColors.liveRed,
+                    ),
+                    title: Text(
+                      isArabic
+                          ? 'قفل وإخفاء أدوات المطور'
+                          : 'Lock Developer Mode',
+                      style: const TextStyle(color: AppColors.liveRed),
+                    ),
+                    subtitle: Text(
+                      isArabic
+                          ? 'إعادة إخفاء هذه القائمة حتى النقر 10 مرات مجدداً'
+                          : 'Hide this section until logo is tapped 10 times again',
+                    ),
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      storage.setDeveloperModeEnabled(false);
+                      setState(() {
+                        _isDeveloperModeUnlocked = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('🔒 تم قفل وإخفاء أدوات المطور.'),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
 
           // Section: About
           _buildSectionHeader(
@@ -433,30 +627,34 @@ class _SettingsViewState extends State<SettingsView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    AppBrandLogo(size: 48, isDark: isDark),
-                    const SizedBox(width: 14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '154Score v1.0.0',
-                          style: AppTypography.getBodyLarge(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          'Powered by 154Dev',
-                          style: AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
+                GestureDetector(
+                  onTap: () => _onLogoTap(context),
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
+                    children: [
+                      AppBrandLogo(size: 48, isDark: isDark),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '154Score v1.0.0',
+                            style: AppTypography.getBodyLarge(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(fontWeight: FontWeight.w700),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          Text(
+                            'Powered by 154Dev',
+                            style: AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(

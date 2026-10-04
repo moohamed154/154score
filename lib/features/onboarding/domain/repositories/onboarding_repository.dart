@@ -5,4 +5,7 @@ abstract class OnboardingRepository {
 
   /// Marks the onboarding as completed so it is never shown again.
   Future<void> markCompleted();
+
+  /// Resets the onboarding status so it can be presented again.
+  Future<void> resetOnboarding();
 }

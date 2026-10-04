@@ -19,4 +19,9 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
   Future<void> markCompleted() async {
     await _prefs.setBool(_keyCompleted, true);
   }
+
+  @override
+  Future<void> resetOnboarding() async {
+    await _prefs.remove(_keyCompleted);
+  }
 }
