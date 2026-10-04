@@ -19,6 +19,7 @@ import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../settings/presentation/cubit/settings_cubits.dart';
 import '../../../onboarding/domain/repositories/onboarding_repository.dart';
+import '../../../maintenance/domain/repositories/maintenance_repository.dart';
 
 /// A custom, high-performance animated splash screen for 154 SCORE.
 /// Features:
@@ -180,9 +181,26 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
     }
 
     // Network is verified
-    _setTargetProgress(0.35);
+    _setTargetProgress(0.25);
 
-    // 2. Dispatch and Monitor Preload Operations (MatchesBloc only)
+    // 2. Check App Maintenance Status
+    try {
+      if (sl.isRegistered<MaintenanceRepository>()) {
+        final maintenanceRepo = sl<MaintenanceRepository>();
+        final maintenanceInfo = await maintenanceRepo.checkMaintenanceStatus();
+        if (maintenanceInfo.isMaintenanceMode && mounted) {
+          _timeoutTimer?.cancel();
+          unawaited(_connectivitySubscription?.cancel());
+          unawaited(_matchesSubscription?.cancel());
+          context.go('/maintenance', extra: maintenanceInfo);
+          return;
+        }
+      }
+    } catch (_) {}
+
+    _setTargetProgress(0.40);
+
+    // 3. Dispatch and Monitor Preload Operations (MatchesBloc only)
     bool hasFeeds = false;
 
     if (!mounted) return;

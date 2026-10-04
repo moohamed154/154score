@@ -39,6 +39,9 @@ import '../../core/network/debug_console.dart';
 import '../../features/splash/presentation/views/splash_view.dart';
 import '../../features/onboarding/presentation/viewmodels/onboarding_cubit.dart';
 import '../../features/onboarding/presentation/views/onboarding_view.dart';
+import '../../features/maintenance/domain/entities/maintenance_info.dart';
+import '../../features/maintenance/presentation/viewmodels/maintenance_cubit.dart';
+import '../../features/maintenance/presentation/views/maintenance_view.dart';
 import '../navigation/app_scaffold.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -71,6 +74,15 @@ class AppRouter {
     try {
       final loc = router.routerDelegate.currentConfiguration.uri.toString();
       return loc.isEmpty || loc == '/splash' || loc.startsWith('/splash');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static bool get isMaintenanceActive {
+    try {
+      final loc = router.routerDelegate.currentConfiguration.uri.toString();
+      return loc == '/maintenance' || loc.startsWith('/maintenance');
     } catch (_) {
       return false;
     }
@@ -311,6 +323,21 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/splash',
         builder: (context, state) => const SplashView(),
+      ),
+
+      // Maintenance Screen
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/maintenance',
+        builder: (context, state) {
+          final info = state.extra is MaintenanceInfo
+              ? state.extra as MaintenanceInfo
+              : null;
+          return BlocProvider<MaintenanceCubit>(
+            create: (_) => sl<MaintenanceCubit>(),
+            child: MaintenanceView(initialInfo: info),
+          );
+        },
       ),
 
       // First-launch onboarding (shown once)

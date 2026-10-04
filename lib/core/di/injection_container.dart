@@ -69,6 +69,10 @@ import '../../features/notifications/data/repositories/notifications_repository_
 import '../../features/notifications/domain/repositories/notifications_repository.dart';
 import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
 
+import '../../features/maintenance/data/repositories/maintenance_repository_impl.dart';
+import '../../features/maintenance/domain/repositories/maintenance_repository.dart';
+import '../../features/maintenance/presentation/viewmodels/maintenance_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -248,4 +252,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<TimezoneCubit>(() => TimezoneCubit(sl()));
 
   sl.registerLazySingleton<NewsLanguageCubit>(() => NewsLanguageCubit(sl()));
+
+  sl.registerLazySingleton<MaintenanceRepository>(
+    () => MaintenanceRepositoryImpl(sl()),
+  );
+  sl.registerFactory<MaintenanceCubit>(() => MaintenanceCubit(sl()));
 }
