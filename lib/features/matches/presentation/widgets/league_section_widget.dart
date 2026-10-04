@@ -170,6 +170,7 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                       );
 
                       return StarredButton(
+                        key: ValueKey('comp_star_${widget.league.leagueId ?? widget.league.leagueTitle}'),
                         isStarred: isFav,
                         size: 20,
                         padding: const EdgeInsets.all(4.0),

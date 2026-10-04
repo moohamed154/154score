@@ -157,6 +157,7 @@ class LeagueHeaderCard extends StatelessWidget {
           if (onFavoriteTap != null) ...[
             const SizedBox(width: 8),
             StarredButton(
+              key: ValueKey('league_star_$title'),
               isStarred: isFavorite,
               size: isSmall ? 22 : 26,
               padding: const EdgeInsets.all(6.0),

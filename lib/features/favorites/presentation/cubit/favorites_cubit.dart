@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/team_resolver.dart';
 
 class FavoritesState extends Equatable {
@@ -40,52 +41,45 @@ class FavoritesState extends Equatable {
   bool isFavoriteCompetition({String? id, String? name, String? slug}) {
     if (favoriteCompetitions.isEmpty) return false;
 
-    final targets = <String>{};
-    void addTarget(String? s) {
-      if (s != null && s.trim().isNotEmpty) {
-        targets.add(s.trim().toLowerCase());
-      }
-    }
-
-    addTarget(id);
-    addTarget(name);
-    addTarget(slug);
-
-    if (id != null && competitionTitles.containsKey(id.trim())) {
-      addTarget(competitionTitles[id.trim()]);
-    }
-    if (name != null && competitionTitles.containsKey(name.trim())) {
-      addTarget(competitionTitles[name.trim()]);
-    }
-
-    for (final candidate in [id, name, slug]) {
-      if (candidate != null && candidate.trim().isNotEmpty) {
-        final clean = candidate.trim().toLowerCase();
-        final resolvedId =
-            LocalStorageServiceImpl.defaultNameToId[clean] ??
-            competitionTitles[clean];
-        if (resolvedId != null) addTarget(resolvedId);
-      }
-    }
+    final cleanId = id?.trim();
+    final cleanName = name?.trim();
+    final cleanSlug = slug?.trim();
 
     for (final fav in favoriteCompetitions) {
-      final cleanFav = fav.trim().toLowerCase();
-      if (targets.contains(cleanFav)) return true;
-      if (competitionTitles.containsKey(fav.trim())) {
-        final mapped = competitionTitles[fav.trim()]!.trim().toLowerCase();
-        if (targets.contains(mapped)) return true;
-      }
-      if (competitionTitles.containsKey(cleanFav)) {
-        final mapped = competitionTitles[cleanFav]!.trim().toLowerCase();
-        if (targets.contains(mapped)) return true;
-      }
-      final resolvedId = LocalStorageServiceImpl.defaultNameToId[cleanFav];
-      if (resolvedId != null && targets.contains(resolvedId.toLowerCase())) {
+      final favTrim = fav.trim();
+      final mappedId = competitionTitles[favTrim];
+      if (LeagueResolver.areSameCompetition(
+        favTrim,
+        cleanName,
+        idA: mappedId,
+        idB: cleanId,
+      )) {
         return true;
+      }
+      if (cleanSlug != null && cleanSlug.isNotEmpty) {
+        if (LeagueResolver.areSameCompetition(
+          favTrim,
+          cleanSlug,
+          idA: mappedId,
+          idB: cleanId,
+        )) {
+          return true;
+        }
+      }
+      if (cleanId != null && cleanId.isNotEmpty) {
+        if (LeagueResolver.areSameCompetition(
+          favTrim,
+          null,
+          idA: mappedId,
+          idB: cleanId,
+        )) {
+          return true;
+        }
       }
     }
     return false;
   }
+
 
   bool isFavoriteTeam({String? id, String? name}) {
     if (favoriteTeams.isEmpty) return false;
@@ -265,29 +259,18 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     String? name,
     String? slug,
   }) async {
-    final effectiveName = name ?? compName;
-    final wasFav = isCompetitionFavorite(id: id, name: effectiveName, slug: slug);
+    final effectiveName = (name != null && name.trim().isNotEmpty)
+        ? name.trim()
+        : ((compName != null && compName.trim().isNotEmpty)
+            ? compName.trim()
+            : (slug?.trim() ?? ''));
+    final cleanId = id?.trim();
 
-    final targets = <String>{};
-    void addTarget(String? s) {
-      if (s != null && s.trim().isNotEmpty) {
-        targets.add(s.trim().toLowerCase());
-      }
-    }
-    addTarget(compName);
-    addTarget(id);
-    addTarget(name);
-    addTarget(slug);
-
-    if (id != null && state.competitionTitles.containsKey(id.trim())) {
-      addTarget(state.competitionTitles[id.trim()]);
-    }
-    if (name != null && state.competitionTitles.containsKey(name.trim())) {
-      addTarget(state.competitionTitles[name.trim()]);
-    }
-    if (compName != null && state.competitionTitles.containsKey(compName.trim())) {
-      addTarget(state.competitionTitles[compName.trim()]);
-    }
+    final wasFav = isCompetitionFavorite(
+      id: cleanId,
+      name: effectiveName,
+      slug: slug,
+    );
 
     // Optimistic UI update: 0ms lag
     final updatedList = List<String>.from(state.favoriteCompetitions);
@@ -295,28 +278,38 @@ class FavoritesCubit extends Cubit<FavoritesState> {
 
     if (wasFav) {
       updatedList.removeWhere((item) {
-        final cleanItem = item.trim().toLowerCase();
-        if (targets.contains(cleanItem)) return true;
-        if (state.competitionTitles.containsKey(item.trim()) &&
-            targets.contains(state.competitionTitles[item.trim()]!.trim().toLowerCase())) {
-          return true;
-        }
-        return false;
+        final itemTrim = item.trim();
+        final mappedId = state.competitionTitles[itemTrim];
+        return LeagueResolver.areSameCompetition(
+          itemTrim,
+          effectiveName,
+          idA: mappedId,
+          idB: cleanId,
+        );
       });
     } else {
-      final canonicalName = (name != null && name.trim().isNotEmpty)
-          ? name.trim()
-          : ((compName != null && compName.trim().isNotEmpty)
-                ? compName.trim()
-                : (id?.trim() ?? ''));
+      final canonicalName = effectiveName.isNotEmpty
+          ? effectiveName
+          : (cleanId ?? '');
 
-      if (canonicalName.isNotEmpty && !updatedList.contains(canonicalName)) {
+      if (canonicalName.isNotEmpty &&
+          !updatedList.any((item) {
+            final itemTrim = item.trim();
+            final mappedId = state.competitionTitles[itemTrim];
+            return LeagueResolver.areSameCompetition(
+              itemTrim,
+              canonicalName,
+              idA: mappedId,
+              idB: cleanId,
+            );
+          })) {
         updatedList.add(canonicalName);
       }
-      if (id != null && id.trim().isNotEmpty && canonicalName.isNotEmpty) {
-        updatedTitles[id.trim()] = canonicalName;
+      if (cleanId != null && cleanId.isNotEmpty && canonicalName.isNotEmpty) {
+        updatedTitles[cleanId] = canonicalName;
       }
     }
+
     emit(state.copyWith(
       favoriteCompetitions: updatedList,
       competitionTitles: updatedTitles,
@@ -324,11 +317,10 @@ class FavoritesCubit extends Cubit<FavoritesState> {
 
     await _storage.toggleFavoriteCompetition(
       compName: effectiveName,
-      id: id,
+      id: cleanId,
       name: effectiveName,
       slug: slug,
     );
-    loadFavorites();
   }
 
   Future<void> registerCompetitionTitles(Map<String, String> titles) async {

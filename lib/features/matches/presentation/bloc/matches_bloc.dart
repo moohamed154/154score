@@ -7,6 +7,7 @@ import '../../../../core/notifications/live_match_foreground_service.dart';
 import '../../../../core/notifications/match_notification_tracker.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/realtime_merge_engine.dart';
 import '../../../../core/utils/team_resolver.dart';
@@ -982,6 +983,25 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     return hours * 60 + minutes;
   }
 
+  bool _isLeagueFav(
+    String? title,
+    String? id,
+    Set<String> favCompetitionsSet,
+    List<String> effectiveFavCompetitions,
+  ) {
+    final cleanTitle = title?.trim().toLowerCase();
+    if (cleanTitle != null && favCompetitionsSet.contains(cleanTitle)) {
+      return true;
+    }
+    final cleanId = id?.trim().toLowerCase();
+    if (cleanId != null && favCompetitionsSet.contains(cleanId)) {
+      return true;
+    }
+    return effectiveFavCompetitions.any(
+      (c) => LeagueResolver.areSameCompetition(c, title, idB: id),
+    );
+  }
+
   List<LeagueGroupEntity> _applyFilters({
     required List<LeagueGroupEntity> leagues,
     required MatchFilterType filter,
@@ -1023,14 +1043,12 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           return true;
         })
         .map((league) {
-          final isLeagueFavorite =
-              (league.leagueId != null &&
-                  favCompetitionsSet.contains(
-                    league.leagueId!.trim().toLowerCase(),
-                  )) ||
-              favCompetitionsSet.contains(
-                league.leagueTitle.trim().toLowerCase(),
-              );
+          final isLeagueFavorite = _isLeagueFav(
+            league.leagueTitle,
+            league.leagueId,
+            favCompetitionsSet,
+            effectiveFavCompetitions,
+          );
 
           final matches = league.matches
               .map((match) {
@@ -1045,16 +1063,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
                 final phase = MatchStatusHelper.parseMatch(match);
 
                 // Check if match belongs to a favorite league
-                final isMatchLeagueFavorite =
-                    isLeagueFavorite ||
-                    (match.leagueId != null &&
-                        favCompetitionsSet.contains(
-                          match.leagueId!.trim().toLowerCase(),
-                        )) ||
-                    (match.leagueTitle != null &&
-                        favCompetitionsSet.contains(
-                          match.leagueTitle!.trim().toLowerCase(),
-                        ));
+                final isMatchLeagueFavorite = isLeagueFavorite ||
+                    _isLeagueFav(
+                      match.leagueTitle,
+                      match.leagueId,
+                      favCompetitionsSet,
+                      effectiveFavCompetitions,
+                    );
 
                 // Apply status filter
                 final matchesFilter = switch (filter) {
@@ -1178,20 +1193,20 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     } else if (sortOrder == MatchesSortOrder.league) {
       // Sort leagues: favorites first, then alphabetically by league title
       result.sort((a, b) {
-        final aIsFav =
-            favCompetitionsSet.contains(a.leagueTitle.trim().toLowerCase()) ||
-            (a.leagueId != null &&
-                favCompetitionsSet.contains(
-                  a.leagueId!.trim().toLowerCase(),
-                )) ||
+        final aIsFav = _isLeagueFav(
+              a.leagueTitle,
+              a.leagueId,
+              favCompetitionsSet,
+              effectiveFavCompetitions,
+            ) ||
             a.matches.any((m) => m.isFavorite);
 
-        final bIsFav =
-            favCompetitionsSet.contains(b.leagueTitle.trim().toLowerCase()) ||
-            (b.leagueId != null &&
-                favCompetitionsSet.contains(
-                  b.leagueId!.trim().toLowerCase(),
-                )) ||
+        final bIsFav = _isLeagueFav(
+              b.leagueTitle,
+              b.leagueId,
+              favCompetitionsSet,
+              effectiveFavCompetitions,
+            ) ||
             b.matches.any((m) => m.isFavorite);
 
         if (aIsFav && !bIsFav) return -1;
@@ -1205,20 +1220,20 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         for (int i = 0; i < leagues.length; i++) leagues[i].leagueTitle: i,
       };
       result.sort((a, b) {
-        final aIsFav =
-            favCompetitionsSet.contains(a.leagueTitle.trim().toLowerCase()) ||
-            (a.leagueId != null &&
-                favCompetitionsSet.contains(
-                  a.leagueId!.trim().toLowerCase(),
-                )) ||
+        final aIsFav = _isLeagueFav(
+              a.leagueTitle,
+              a.leagueId,
+              favCompetitionsSet,
+              effectiveFavCompetitions,
+            ) ||
             a.matches.any((m) => m.isFavorite);
 
-        final bIsFav =
-            favCompetitionsSet.contains(b.leagueTitle.trim().toLowerCase()) ||
-            (b.leagueId != null &&
-                favCompetitionsSet.contains(
-                  b.leagueId!.trim().toLowerCase(),
-                )) ||
+        final bIsFav = _isLeagueFav(
+              b.leagueTitle,
+              b.leagueId,
+              favCompetitionsSet,
+              effectiveFavCompetitions,
+            ) ||
             b.matches.any((m) => m.isFavorite);
 
         if (aIsFav && !bIsFav) return -1;

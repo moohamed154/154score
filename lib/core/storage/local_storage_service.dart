@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../notifications/notification_sync_service.dart';
+import '../utils/league_resolver.dart';
 import '../utils/team_resolver.dart';
 
 abstract class LocalStorageService {
@@ -488,8 +489,10 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
-  Future<bool> setFavoriteCompetitions(List<String> list) {
-    return _prefs.setStringList(_keyFavoriteCompetitions, list);
+  Future<bool> setFavoriteCompetitions(List<String> list) async {
+    final res = await _prefs.setStringList(_keyFavoriteCompetitions, list);
+    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
+    return res;
   }
 
   @override
@@ -541,51 +544,45 @@ class LocalStorageServiceImpl implements LocalStorageService {
     final list = getFavoriteCompetitions();
     if (list.isEmpty) return false;
 
-    final targets = <String>{};
-    void addTarget(String? s) {
-      if (s != null && s.trim().isNotEmpty) {
-        targets.add(s.trim().toLowerCase());
-      }
-    }
-
-    addTarget(compName);
-    addTarget(id);
-    addTarget(name);
-    addTarget(slug);
+    final effectiveName = (name != null && name.trim().isNotEmpty)
+        ? name.trim()
+        : ((compName != null && compName.trim().isNotEmpty)
+            ? compName.trim()
+            : (slug?.trim() ?? ''));
+    final cleanId = id?.trim();
 
     final titles = getFavoriteCompetitionTitles();
-    if (id != null && titles.containsKey(id.trim())) {
-      addTarget(titles[id.trim()]);
-    }
-    if (compName != null && titles.containsKey(compName.trim())) {
-      addTarget(titles[compName.trim()]);
-    }
-    if (name != null && titles.containsKey(name.trim())) {
-      addTarget(titles[name.trim()]);
-    }
-
-    for (final candidate in [compName, name, slug]) {
-      if (candidate != null && candidate.trim().isNotEmpty) {
-        final clean = candidate.trim().toLowerCase();
-        final resolvedId = defaultNameToId[clean] ?? titles[clean];
-        if (resolvedId != null) addTarget(resolvedId);
-      }
-    }
 
     for (final fav in list) {
-      final cleanFav = fav.trim().toLowerCase();
-      if (targets.contains(cleanFav)) return true;
-      if (titles.containsKey(fav.trim())) {
-        final mapped = titles[fav.trim()]!.trim().toLowerCase();
-        if (targets.contains(mapped)) return true;
-      }
-      if (titles.containsKey(cleanFav)) {
-        final mapped = titles[cleanFav]!.trim().toLowerCase();
-        if (targets.contains(mapped)) return true;
-      }
-      final resolvedId = defaultNameToId[cleanFav];
-      if (resolvedId != null && targets.contains(resolvedId.toLowerCase())) {
+      final favTrim = fav.trim();
+      final favId = titles[favTrim];
+      if (LeagueResolver.areSameCompetition(
+        favTrim,
+        effectiveName,
+        idA: favId,
+        idB: cleanId,
+      )) {
         return true;
+      }
+      if (slug != null && slug.trim().isNotEmpty) {
+        if (LeagueResolver.areSameCompetition(
+          favTrim,
+          slug.trim(),
+          idA: favId,
+          idB: cleanId,
+        )) {
+          return true;
+        }
+      }
+      if (cleanId != null && cleanId.isNotEmpty) {
+        if (LeagueResolver.areSameCompetition(
+          favTrim,
+          null,
+          idA: favId,
+          idB: cleanId,
+        )) {
+          return true;
+        }
       }
     }
     return false;
@@ -599,58 +596,53 @@ class LocalStorageServiceImpl implements LocalStorageService {
     String? slug,
   }) async {
     final list = getFavoriteCompetitions().toList();
+    final effectiveName = (name != null && name.trim().isNotEmpty)
+        ? name.trim()
+        : ((compName != null && compName.trim().isNotEmpty)
+            ? compName.trim()
+            : (slug?.trim() ?? ''));
+    final cleanId = id?.trim();
+
     final isFav = isFavoriteCompetition(
       compName: compName,
-      id: id,
-      name: name,
+      id: cleanId,
+      name: effectiveName,
       slug: slug,
     );
 
-    final targets = <String>{};
-    void addTarget(String? s) {
-      if (s != null && s.trim().isNotEmpty) {
-        targets.add(s.trim().toLowerCase());
-      }
-    }
-
-    addTarget(compName);
-    addTarget(id);
-    addTarget(name);
-    addTarget(slug);
-
     final titles = getFavoriteCompetitionTitles();
-    if (id != null && titles.containsKey(id.trim())) {
-      addTarget(titles[id.trim()]);
-    }
-    if (name != null && titles.containsKey(name.trim())) {
-      addTarget(titles[name.trim()]);
-    }
-    if (compName != null && titles.containsKey(compName.trim())) {
-      addTarget(titles[compName.trim()]);
-    }
 
     if (isFav) {
       list.removeWhere((item) {
-        final cleanItem = item.trim().toLowerCase();
-        if (targets.contains(cleanItem)) return true;
-        if (titles.containsKey(item.trim()) &&
-            targets.contains(titles[item.trim()]!.trim().toLowerCase())) {
-          return true;
-        }
-        return false;
+        final itemTrim = item.trim();
+        final favId = titles[itemTrim];
+        return LeagueResolver.areSameCompetition(
+          itemTrim,
+          effectiveName,
+          idA: favId,
+          idB: cleanId,
+        );
       });
     } else {
-      final canonicalName = (name != null && name.trim().isNotEmpty)
-          ? name.trim()
-          : ((compName != null && compName.trim().isNotEmpty)
-                ? compName.trim()
-                : (id?.trim() ?? ''));
+      final canonicalName = effectiveName.isNotEmpty
+          ? effectiveName
+          : (cleanId ?? '');
 
-      if (canonicalName.isNotEmpty && !list.contains(canonicalName)) {
+      if (canonicalName.isNotEmpty &&
+          !list.any((item) {
+            final itemTrim = item.trim();
+            final favId = titles[itemTrim];
+            return LeagueResolver.areSameCompetition(
+              itemTrim,
+              canonicalName,
+              idA: favId,
+              idB: cleanId,
+            );
+          })) {
         list.add(canonicalName);
       }
-      if (id != null && id.trim().isNotEmpty && canonicalName.isNotEmpty) {
-        unawaited(registerCompetitionTitles({id.trim(): canonicalName}));
+      if (cleanId != null && cleanId.isNotEmpty && canonicalName.isNotEmpty) {
+        unawaited(registerCompetitionTitles({cleanId: canonicalName}));
       }
     }
 

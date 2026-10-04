@@ -14,6 +14,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/error_view.dart';
@@ -324,9 +325,21 @@ class _StandingsViewState extends State<StandingsView> {
   bool _isLoading = true;
   String? _errorMessage;
   StandingsTab _activeTab = StandingsTab.favorites;
+  List<ChampionshipInfo>? _tabHiddenBaseline;
+  List<ChampionshipInfo>? _tabFavoritesBaseline;
 
   List<ChampionshipInfo> _featuredLeagues = [];
   List<ChampionshipInfo> _allLeagues = [];
+
+  void _switchTab(StandingsTab tab) {
+    if (_activeTab != tab) {
+      setState(() {
+        _activeTab = tab;
+        _tabHiddenBaseline = null;
+        _tabFavoritesBaseline = null;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -554,6 +567,7 @@ class _StandingsViewState extends State<StandingsView> {
     }
     final moved = list.removeAt(oldIndex);
     list.insert(newIndex, moved);
+    _tabFavoritesBaseline = List<ChampionshipInfo>.from(list);
     final identifiers = list
         .map((e) => e.id.isNotEmpty ? e.id : e.name)
         .toList();
@@ -603,38 +617,26 @@ class _StandingsViewState extends State<StandingsView> {
               // Build favorite cards in user order with robust cross-language resolution
               final List<ChampionshipInfo> favoriteCards = [];
               for (final key in currentFavKeys) {
-                final cleanKey = key.trim().toLowerCase();
-                final resolvedId =
-                    favState.competitionTitles[key.trim()] ??
-                    favState.competitionTitles[cleanKey] ??
-                    LocalStorageServiceImpl.defaultNameToId[cleanKey];
-
                 ChampionshipInfo? matched;
                 for (final l in _allLeagues) {
-                  if (l.id == key ||
-                      (resolvedId != null && l.id == resolvedId) ||
-                      (l.seasonId != null &&
-                          (l.seasonId == key ||
-                              (resolvedId != null &&
-                                  l.seasonId == resolvedId))) ||
-                      l.name.trim().toLowerCase() == cleanKey ||
-                      (l.slug != null &&
-                          l.slug!.trim().toLowerCase() == cleanKey)) {
+                  if (LeagueResolver.areSameCompetition(
+                    l.name,
+                    key,
+                    idA: l.id,
+                    idB: key,
+                  )) {
                     matched = l;
                     break;
                   }
                 }
                 if (matched == null) {
                   for (final l in _featuredLeagues) {
-                    if (l.id == key ||
-                        (resolvedId != null && l.id == resolvedId) ||
-                        (l.seasonId != null &&
-                            (l.seasonId == key ||
-                                (resolvedId != null &&
-                                    l.seasonId == resolvedId))) ||
-                        l.name.trim().toLowerCase() == cleanKey ||
-                        (l.slug != null &&
-                            l.slug!.trim().toLowerCase() == cleanKey)) {
+                    if (LeagueResolver.areSameCompetition(
+                      l.name,
+                      key,
+                      idA: l.id,
+                      idB: key,
+                    )) {
                       matched = l;
                       break;
                     }
@@ -666,37 +668,35 @@ class _StandingsViewState extends State<StandingsView> {
                 }
               }
 
-              // Search query filtering
-              final searchQuery = _searchController.text.trim().toLowerCase();
-              final List<ChampionshipInfo> displayedFavorites =
-                  searchQuery.isEmpty
-                  ? favoriteCards
-                  : favoriteCards
-                        .where(
-                          (c) =>
-                              c.name.toLowerCase().contains(searchQuery) ||
-                              (c.slug ?? '').toLowerCase().contains(
-                                searchQuery,
-                              ),
-                        )
-                        .toList();
+              // Initialize tab baselines on tab entry or when empty
+              _tabHiddenBaseline ??= List<ChampionshipInfo>.from(hiddenCards);
+              _tabFavoritesBaseline ??= List<ChampionshipInfo>.from(favoriteCards);
 
-              final List<ChampionshipInfo> displayedHidden = searchQuery.isEmpty
-                  ? hiddenCards
-                  : hiddenCards
-                        .where(
-                          (c) =>
-                              c.name.toLowerCase().contains(searchQuery) ||
-                              (c.slug ?? '').toLowerCase().contains(
-                                searchQuery,
-                              ),
-                        )
-                        .toList();
+              if (_tabHiddenBaseline!.isEmpty && hiddenCards.isNotEmpty) {
+                _tabHiddenBaseline = List<ChampionshipInfo>.from(hiddenCards);
+              }
+              if (_tabFavoritesBaseline!.isEmpty && favoriteCards.isNotEmpty) {
+                _tabFavoritesBaseline = List<ChampionshipInfo>.from(favoriteCards);
+              }
 
               final isFavoritesTab = _activeTab == StandingsTab.favorites;
-              final currentList = isFavoritesTab
-                  ? displayedFavorites
-                  : displayedHidden;
+              final currentBaseline = isFavoritesTab
+                  ? _tabFavoritesBaseline!
+                  : _tabHiddenBaseline!;
+
+              // Search query filtering
+              final searchQuery = _searchController.text.trim().toLowerCase();
+              final List<ChampionshipInfo> currentList = searchQuery.isEmpty
+                  ? currentBaseline
+                  : (isFavoritesTab ? favoriteCards : _allLeagues)
+                        .where(
+                          (c) =>
+                              c.name.toLowerCase().contains(searchQuery) ||
+                              (c.slug ?? '').toLowerCase().contains(
+                                searchQuery,
+                              ),
+                        )
+                        .toList();
 
               return Column(
                 children: [
@@ -763,6 +763,10 @@ class _StandingsViewState extends State<StandingsView> {
                       color: primary,
                       onRefresh: () async {
                         try {
+                          setState(() {
+                            _tabHiddenBaseline = null;
+                            _tabFavoritesBaseline = null;
+                          });
                           await _fetchRankings(
                             search: _searchController.text.trim(),
                           ).timeout(const Duration(milliseconds: 3500));
@@ -800,7 +804,7 @@ class _StandingsViewState extends State<StandingsView> {
                                 horizontal: 16,
                                 vertical: 4,
                               ),
-                              itemCount: displayedFavorites.length,
+                              itemCount: currentList.length,
                               buildDefaultDragHandles: false,
                               // ignore: deprecated_member_use
                               onReorder: (oldIndex, newIndex) {
@@ -808,17 +812,22 @@ class _StandingsViewState extends State<StandingsView> {
                                   context,
                                   oldIndex,
                                   newIndex,
-                                  favoriteCards,
+                                  currentList,
                                 );
                               },
                               itemBuilder: (context, index) {
-                                final item = displayedFavorites[index];
+                                final item = currentList[index];
+                                final isFav = favState.isFavoriteCompetition(
+                                  id: item.id,
+                                  name: item.name,
+                                  slug: item.slug,
+                                );
                                 return _buildChampionshipCard(
-                                  key: ValueKey('fav_${item.id}_$index'),
+                                  key: ValueKey('fav_${item.id}'),
                                   context: context,
                                   item: item,
                                   index: index,
-                                  isFavorite: true,
+                                  isFavorite: isFav,
                                   isDark: isDark,
                                   isArabic: isArabic,
                                   isSearching: false,
@@ -840,17 +849,17 @@ class _StandingsViewState extends State<StandingsView> {
                               itemCount: currentList.length,
                               itemBuilder: (context, index) {
                                 final item = currentList[index];
+                                final isFav = favState.isFavoriteCompetition(
+                                  id: item.id,
+                                  name: item.name,
+                                  slug: item.slug,
+                                );
                                 return _buildChampionshipCard(
-                                  key: ValueKey('item_${item.id}_$index'),
+                                  key: ValueKey('item_${item.id}'),
                                   context: context,
                                   item: item,
                                   index: index,
-                                  isFavorite: isFavoritesTab ||
-                                      favState.isFavoriteCompetition(
-                                        id: item.id,
-                                        name: item.name,
-                                        slug: item.slug,
-                                      ),
+                                  isFavorite: isFav,
                                   isDark: isDark,
                                   isArabic: isArabic,
                                   isSearching: searchQuery.isNotEmpty,
@@ -955,11 +964,7 @@ class _StandingsViewState extends State<StandingsView> {
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (_activeTab != StandingsTab.favorites) {
-                  setState(() => _activeTab = StandingsTab.favorites);
-                }
-              },
+              onTap: () => _switchTab(StandingsTab.favorites),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
@@ -1035,11 +1040,7 @@ class _StandingsViewState extends State<StandingsView> {
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (_activeTab != StandingsTab.hidden) {
-                  setState(() => _activeTab = StandingsTab.hidden);
-                }
-              },
+              onTap: () => _switchTab(StandingsTab.hidden),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
@@ -1261,6 +1262,7 @@ class _StandingsViewState extends State<StandingsView> {
 
                 // 4. Star Action Button
                 StarredButton(
+                  key: ValueKey('star_champ_${item.id}'),
                   isStarred: isFavorite,
                   size: 22,
                   padding: const EdgeInsets.all(4),

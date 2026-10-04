@@ -475,4 +475,151 @@ class LeagueResolver {
 
     return trimmed;
   }
+
+  /// Returns a canonical identifier for a competition given its name or ID.
+  static String? getCanonicalId(String? nameOrId) {
+    if (nameOrId == null || nameOrId.trim().isEmpty) return null;
+    return resolveId(nameOrId);
+  }
+
+  /// Determines if two competition names, slugs, or identifiers refer to the same competition.
+  /// Handles:
+  /// - Exact match (case insensitive)
+  /// - Normalized Arabic text (alif, hamza, taa marbuta, etc.)
+  /// - Cross-API IDs (e.g. '1933' vs '938652' for LaLiga, '6811' vs '937599' for Premier League)
+  /// - Arabic <-> English translations (e.g. 'Premier League' vs 'الدوري الإنجليزي الممتاز')
+  /// - Known aliases and title variations
+  static bool areSameCompetition(
+    String? a,
+    String? b, {
+    String? idA,
+    String? idB,
+  }) {
+    final cleanA = a?.trim() ?? '';
+    final cleanB = b?.trim() ?? '';
+    final cleanIdA = idA?.trim() ?? '';
+    final cleanIdB = idB?.trim() ?? '';
+
+    final hasA = cleanA.isNotEmpty || cleanIdA.isNotEmpty;
+    final hasB = cleanB.isNotEmpty || cleanIdB.isNotEmpty;
+    if (!hasA || !hasB) return false;
+
+    // 1. Direct ID match
+    if (cleanIdA.isNotEmpty && cleanIdB.isNotEmpty && cleanIdA == cleanIdB) {
+      return true;
+    }
+
+    // 2. Direct name match (case-insensitive)
+    if (cleanA.isNotEmpty && cleanB.isNotEmpty &&
+        cleanA.toLowerCase() == cleanB.toLowerCase()) {
+      return true;
+    }
+
+    // 3. Normalized Arabic match
+    if (cleanA.isNotEmpty && cleanB.isNotEmpty) {
+      final normA = normalize(cleanA);
+      final normB = normalize(cleanB);
+      if (normA == normB) return true;
+    }
+
+    // 4. Resolve IDs from names or IDs
+    final resIdA = cleanIdA.isNotEmpty
+        ? (resolveId(cleanIdA) ?? cleanIdA)
+        : (cleanA.isNotEmpty ? resolveId(cleanA) : null);
+
+    final resIdB = cleanIdB.isNotEmpty
+        ? (resolveId(cleanIdB) ?? cleanIdB)
+        : (cleanB.isNotEmpty ? resolveId(cleanB) : null);
+
+    if (resIdA != null && resIdB != null && resIdA == resIdB) {
+      return true;
+    }
+
+    // 5. Cross-check with _idToTitles (which maps duplicate API IDs to canonical names)
+    // E.g., '1933' and '938652' both have ar: 'الدوري الإسباني', en: 'LaLiga'
+    final pairA = (resIdA != null && _idToTitles.containsKey(resIdA))
+        ? _idToTitles[resIdA]
+        : ((cleanIdA.isNotEmpty && _idToTitles.containsKey(cleanIdA))
+            ? _idToTitles[cleanIdA]
+            : null);
+
+    final pairB = (resIdB != null && _idToTitles.containsKey(resIdB))
+        ? _idToTitles[resIdB]
+        : ((cleanIdB.isNotEmpty && _idToTitles.containsKey(cleanIdB))
+            ? _idToTitles[cleanIdB]
+            : null);
+
+    if (pairA != null && pairB != null) {
+      if (pairA.ar == pairB.ar ||
+          pairA.en.toLowerCase() == pairB.en.toLowerCase()) {
+        return true;
+      }
+    }
+
+    // Check if name A matches title pair of B
+    if (pairB != null && cleanA.isNotEmpty) {
+      if (cleanA.toLowerCase() == pairB.en.toLowerCase() ||
+          cleanA == pairB.ar ||
+          normalize(cleanA) == normalize(pairB.ar)) {
+        return true;
+      }
+    }
+
+    // Check if name B matches title pair of A
+    if (pairA != null && cleanB.isNotEmpty) {
+      if (cleanB.toLowerCase() == pairA.en.toLowerCase() ||
+          cleanB == pairA.ar ||
+          normalize(cleanB) == normalize(pairA.ar)) {
+        return true;
+      }
+    }
+
+    // 6. Cross-language mapping (_arToEn and _enToAr)
+    if (cleanA.isNotEmpty && cleanB.isNotEmpty) {
+      final normA = normalize(cleanA);
+      final normB = normalize(cleanB);
+
+      final enFromA = _arToEn[cleanA] ?? _arToEn[normA];
+      if (enFromA != null && enFromA.toLowerCase() == cleanB.toLowerCase()) {
+        return true;
+      }
+
+      final enFromB = _arToEn[cleanB] ?? _arToEn[normB];
+      if (enFromB != null && enFromB.toLowerCase() == cleanA.toLowerCase()) {
+        return true;
+      }
+
+      final arFromA = _enToAr[cleanA.toLowerCase()];
+      if (arFromA != null &&
+          (arFromA == cleanB || normalize(arFromA) == normB)) {
+        return true;
+      }
+
+      final arFromB = _enToAr[cleanB.toLowerCase()];
+      if (arFromB != null &&
+          (arFromB == cleanA || normalize(arFromB) == normA)) {
+        return true;
+      }
+
+      // Check resolved titles
+      final titleArA = resolveTitle(cleanA, isArabic: true, id: resIdA);
+      final titleArB = resolveTitle(cleanB, isArabic: true, id: resIdB);
+      if (titleArA.isNotEmpty && titleArA == titleArB) {
+        return true;
+      }
+      if (titleArA.isNotEmpty && normalize(titleArA) == normalize(titleArB)) {
+        return true;
+      }
+
+      final titleEnA = resolveTitle(cleanA, isArabic: false, id: resIdA);
+      final titleEnB = resolveTitle(cleanB, isArabic: false, id: resIdB);
+      if (titleEnA.isNotEmpty &&
+          titleEnA.toLowerCase() == titleEnB.toLowerCase()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
+

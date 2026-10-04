@@ -46,6 +46,7 @@ class _StarredButtonState extends State<StarredButton>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 380),
+      value: widget.isStarred ? 1.0 : 0.0,
     );
 
     // Spring bounce: 0.8 -> 1.35 -> 1.0
@@ -90,8 +91,16 @@ class _StarredButtonState extends State<StarredButton>
   @override
   void didUpdateWidget(covariant StarredButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!oldWidget.isStarred && widget.isStarred) {
-      _controller.forward(from: 0.0);
+    if (oldWidget.isStarred != widget.isStarred) {
+      if (widget.isStarred) {
+        if (!_controller.isAnimating && _controller.value < 0.5) {
+          _controller.forward(from: 0.0);
+        }
+      } else {
+        if (!_controller.isAnimating && _controller.value > 0.5) {
+          _controller.reverse(from: 1.0);
+        }
+      }
     }
   }
 
@@ -106,7 +115,7 @@ class _StarredButtonState extends State<StarredButton>
     if (!widget.isStarred) {
       _controller.forward(from: 0.0);
     } else {
-      _controller.forward(from: 0.2);
+      _controller.reverse(from: 1.0);
     }
     widget.onTap?.call();
   }
