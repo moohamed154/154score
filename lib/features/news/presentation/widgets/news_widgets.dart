@@ -20,11 +20,10 @@ class NewsHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
     final isArticleArabic = TextDirectionHelper.isArabic(article.title) ||
         TextDirectionHelper.isArabic(article.description);
     final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final isArabic = l10n.isArabic || isArticleArabic || isRtl;
+    final isArabic = isRtl || isArticleArabic;
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
 
     return GestureDetector(
@@ -182,8 +181,7 @@ class NewsImportantCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     if (articles.isEmpty) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
-    final isArabic = l10n.isArabic;
+    final isArabic = Directionality.of(context) == TextDirection.rtl;
 
     return SizedBox(
       height: 200,
@@ -291,8 +289,7 @@ class NewsTeamFilterBar extends StatelessWidget {
     if (teams.isEmpty) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final isArabic = l10n.isArabic || isRtl;
+    final isArabic = Directionality.of(context) == TextDirection.rtl;
 
     return SizedBox(
       height: 70,
@@ -420,14 +417,13 @@ class NewsListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
-    final isArabic = l10n.isArabic;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     final isArticleArabic = TextDirectionHelper.isArabic(article.title);
-    final effectiveArabic = isArticleArabic || isArabic;
+    final effectiveArabic = isArticleArabic || isRtl;
     final textDir = isArticleArabic
         ? TextDirection.rtl
-        : (isArabic ? TextDirection.rtl : TextDirection.ltr);
+        : (isRtl ? TextDirection.rtl : TextDirection.ltr);
 
     return GestureDetector(
       onTap: () =>

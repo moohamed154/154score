@@ -8,8 +8,7 @@ import '../datasources/news_remote_datasource.dart';
 class NewsRepositoryImpl implements NewsRepository {
   final NewsRemoteDataSource _remoteDataSource;
 
-  NewsFeedEntity? _cachedFeed;
-  DateTime? _feedCachedAt;
+  final Map<String, ({NewsFeedEntity feed, DateTime timestamp})> _cachedFeeds = {};
 
   final Map<String, ({List<NewsArticleEntity> items, DateTime timestamp})>
   _teamNewsCache = {};
@@ -20,27 +19,47 @@ class NewsRepositoryImpl implements NewsRepository {
   NewsRepositoryImpl(this._remoteDataSource);
 
   @override
+  NewsFeedEntity? getCachedNewsFeed({required String lang}) {
+    return _cachedFeeds[lang]?.feed;
+  }
+
+  @override
   Future<ApiResult<NewsFeedEntity>> getNewsFeed({required String lang}) async {
-    if (_cachedFeed != null &&
-        _feedCachedAt != null &&
-        DateTime.now().difference(_feedCachedAt!) < const Duration(minutes: 5)) {
-      return ApiSuccess(_cachedFeed!);
+    final cached = _cachedFeeds[lang];
+    if (cached != null &&
+        DateTime.now().difference(cached.timestamp) < const Duration(minutes: 5)) {
+      _prewarmOtherLanguage(lang);
+      return ApiSuccess(cached.feed);
     }
 
     try {
       final feed = await _remoteDataSource.getNewsFeed(lang: lang);
-      _cachedFeed = feed;
-      _feedCachedAt = DateTime.now();
+      _cachedFeeds[lang] = (feed: feed, timestamp: DateTime.now());
+      _prewarmOtherLanguage(lang);
       return ApiSuccess(feed);
     } on NetworkException catch (e) {
-      if (_cachedFeed != null) return ApiSuccess(_cachedFeed!);
+      if (cached != null) return ApiSuccess(cached.feed);
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
-      if (_cachedFeed != null) return ApiSuccess(_cachedFeed!);
+      if (cached != null) return ApiSuccess(cached.feed);
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
-      if (_cachedFeed != null) return ApiSuccess(_cachedFeed!);
+      if (cached != null) return ApiSuccess(cached.feed);
       return ApiFailure(ServerFailure('Failed to load news feed: $e'));
+    }
+  }
+
+  void _prewarmOtherLanguage(String currentLang) {
+    final otherLang = currentLang == 'ar' ? 'en' : 'ar';
+    final otherCached = _cachedFeeds[otherLang];
+    if (otherCached == null ||
+        DateTime.now().difference(otherCached.timestamp) >= const Duration(minutes: 10)) {
+      _remoteDataSource
+          .getNewsFeed(lang: otherLang)
+          .then((otherFeed) {
+            _cachedFeeds[otherLang] = (feed: otherFeed, timestamp: DateTime.now());
+          })
+          .catchError((_) {});
     }
   }
 

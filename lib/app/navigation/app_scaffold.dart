@@ -34,9 +34,19 @@ class AppScaffold extends StatelessWidget {
     final isArabic = l10n.isArabic;
     final width = MediaQuery.of(context).size.width;
 
-    return BlocConsumer<LocaleCubit, LocaleState>(
-      listenWhen: (prev, curr) => prev.locale != curr.locale,
-      listener: (context, localeState) {
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<NewsLanguageCubit, String>(
+          listener: (context, newsLang) {
+            final appLang = context.read<LocaleCubit>().state.locale.languageCode;
+            final targetLang = newsLang == 'app' ? appLang : newsLang;
+            context.read<NewsBloc>().add(ChangeNewsLanguageEvent(targetLang));
+          },
+        ),
+      ],
+      child: BlocConsumer<LocaleCubit, LocaleState>(
+        listenWhen: (prev, curr) => prev.locale != curr.locale,
+        listener: (context, localeState) {
         final lang = localeState.locale.languageCode;
         final token = localeState.requestToken;
 
@@ -192,8 +202,9 @@ class AppScaffold extends StatelessWidget {
           },
         );
       },
-    );
-  }
+    ),
+  );
+}
 
   void _onTap(BuildContext context, int index) {
     navigationShell.goBranch(

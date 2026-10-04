@@ -7,10 +7,12 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/utils/text_direction_helper.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../settings/presentation/cubit/settings_cubits.dart';
 import '../../domain/entities/news_entity.dart';
 import '../bloc/news_bloc.dart';
 import '../widgets/news_widgets.dart';
@@ -24,65 +26,77 @@ class NewsView extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
 
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: AppDimensions.lg,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppBrandLogo(size: 40, isDark: isDark),
-            const SizedBox(width: 10),
-            Text(
-              '154Score',
-              style: AppTypography.getHeadingLarge(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<LocaleCubit, LocaleState>(
+          listenWhen: (prev, curr) => prev.locale != curr.locale,
+          listener: (context, localeState) {
+            final newsLangSetting = sl<LocalStorageService>().getNewsLanguage();
+            if (newsLangSetting == 'app') {
+              context.read<NewsBloc>().add(
+                ChangeNewsLanguageEvent(localeState.locale.languageCode),
+              );
+            }
+          },
+        ),
+        BlocListener<NewsLanguageCubit, String>(
+          listener: (context, newsLang) {
+            final appLang = context.read<LocaleCubit>().state.locale.languageCode;
+            final targetLang = newsLang == 'app' ? appLang : newsLang;
+            context.read<NewsBloc>().add(ChangeNewsLanguageEvent(targetLang));
+          },
+        ),
+      ],
+      child: Scaffold(
+        appBar: AppBar(
+          titleSpacing: AppDimensions.lg,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppBrandLogo(size: 40, isDark: isDark),
+              const SizedBox(width: 10),
+              Text(
+                '154Score',
+                style: AppTypography.getHeadingLarge(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+              ),
+            ],
+          ),
+        ),
+        body: BlocBuilder<NewsBloc, NewsState>(
+          builder: (context, state) {
+            if (state.status == NewsStatus.error && state.feed == null) {
+              return ErrorView(
+                message: state.errorMessage,
+                onRetry: () =>
+                    context.read<NewsBloc>().add(const LoadNewsFeedEvent()),
+              );
+            }
+
+            final isLoading =
+                state.status == NewsStatus.loading && state.feed == null;
+
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () {
+                final completer = Completer<void>();
+                context.read<NewsBloc>().add(
+                  LoadNewsFeedEvent(isRefresh: true, completer: completer),
+                );
+                return completer.future;
+              },
+              child: _NewsBody(
+                isLoading: isLoading,
+                state: state,
                 isDark: isDark,
                 isArabic: isArabic,
-              ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 0.5),
-            ),
-          ],
-        ),
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.tune_rounded),
-        //     tooltip: l10n.translate('news_customization'),
-        //     onPressed: () {
-        //       // TODO: show news preferences sheet
-        //     },
-        //   ),
-        //   const SizedBox(width: AppDimensions.xs),
-        // ],
-      ),
-      body: BlocBuilder<NewsBloc, NewsState>(
-        builder: (context, state) {
-          if (state.status == NewsStatus.error && state.feed == null) {
-            return ErrorView(
-              message: state.errorMessage,
-              onRetry: () =>
-                  context.read<NewsBloc>().add(const LoadNewsFeedEvent()),
+                l10n: l10n,
+              ),
             );
-          }
-
-          final isLoading =
-              state.status == NewsStatus.loading && state.feed == null;
-
-          return RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: () {
-              final completer = Completer<void>();
-              context.read<NewsBloc>().add(
-                LoadNewsFeedEvent(isRefresh: true, completer: completer),
-              );
-              return completer.future;
-            },
-            child: _NewsBody(
-              isLoading: isLoading,
-              state: state,
-              isDark: isDark,
-              isArabic: isArabic,
-              l10n: l10n,
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -137,27 +151,18 @@ class _NewsBody extends StatelessWidget {
     if (displayFeed == null) {
       return Center(
         child: Text(
-          l10n.translate('no_news_available'),
+          state.lang == 'ar'
+              ? 'لا توجد أخبار متاحة حالياً'
+              : l10n.translate('no_news_available'),
           style: AppTypography.getBodyMedium(
             isDark: isDark,
-            isArabic: isArabic,
+            isArabic: state.lang == 'ar',
           ),
         ),
       );
     }
 
-    final isNewsArabic =
-        isArabic ||
-        state.lang == 'ar' ||
-        (displayFeed.main != null &&
-            (TextDirectionHelper.isArabic(displayFeed.main!.title) ||
-                TextDirectionHelper.isArabic(
-                  displayFeed.main!.description ?? '',
-                ))) ||
-        (displayFeed.latest.isNotEmpty &&
-            TextDirectionHelper.isArabic(displayFeed.latest.first.title)) ||
-        (displayFeed.important.isNotEmpty &&
-            TextDirectionHelper.isArabic(displayFeed.important.first.title));
+    final isNewsArabic = state.lang == 'ar';
 
     final isTeamFilterLoading =
         state.status == NewsStatus.loading && state.feed != null;

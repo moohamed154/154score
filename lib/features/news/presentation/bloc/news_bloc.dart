@@ -211,15 +211,73 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
     ChangeNewsLanguageEvent event,
     Emitter<NewsState> emit,
   ) async {
+    final targetLang = event.languageCode;
+
+    if (state.lang == targetLang &&
+        state.status == NewsStatus.success &&
+        state.feed != null) {
+      event.completer?.complete();
+      return;
+    }
+
+    // 1. Instant Cache: If target language already cached, update immediately (0ms)
+    final cached = repository.getCachedNewsFeed(lang: targetLang);
+    if (cached != null) {
+      final filtered = _applyTeamFilter(cached.latest, null);
+      emit(
+        state.copyWith(
+          lang: targetLang,
+          status: NewsStatus.success,
+          feed: cached,
+          filteredLatest: filtered,
+          clearTeamId: true,
+          errorMessage: null,
+        ),
+      );
+      event.completer?.complete();
+
+      // Silent background revalidation
+      unawaited(
+        repository.getNewsFeed(lang: targetLang).then((result) {
+          result.fold(
+            onSuccess: (feed) {
+              if (state.lang == targetLang && !isClosed) {
+                final refiltered = _applyTeamFilter(
+                  feed.latest,
+                  state.selectedTeamId,
+                );
+                emit(
+                  state.copyWith(
+                    status: NewsStatus.success,
+                    feed: feed,
+                    filteredLatest: refiltered,
+                  ),
+                );
+              }
+            },
+            onFailure: (_) {},
+          );
+        }),
+      );
+      return;
+    }
+
+    // 2. Uncached:
     emit(
-      state.copyWith(lang: event.languageCode, status: NewsStatus.loading),
+      state.copyWith(
+        lang: targetLang,
+        status: NewsStatus.loading,
+        feed: null,
+        filteredLatest: const [],
+        clearTeamId: true,
+      ),
     );
 
-    final result = await repository.getNewsFeed(lang: event.languageCode);
+    final result = await repository.getNewsFeed(lang: targetLang);
 
     result.fold(
       onSuccess: (feed) {
-        final filtered = _applyTeamFilter(feed.latest, state.selectedTeamId);
+        final filtered = _applyTeamFilter(feed.latest, null);
         emit(
           state.copyWith(
             status: NewsStatus.success,
