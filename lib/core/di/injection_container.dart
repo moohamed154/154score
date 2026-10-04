@@ -54,6 +54,9 @@ import '../../features/players/presentation/bloc/player_bloc.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/favorites/presentation/cubit/favorites_cubit.dart';
 import '../../features/settings/presentation/cubit/settings_cubits.dart';
+import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
+import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
+import '../../features/onboarding/presentation/viewmodels/onboarding_cubit.dart';
 import '../../features/search/data/repositories/search_repository.dart';
 import '../../features/search/presentation/cubit/search_cubit.dart';
 
@@ -235,6 +238,10 @@ Future<void> initDependencies() async {
   sl.registerFactory<SearchCubit>(() => SearchCubit(sl()));
 
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit(sl()));
+  sl.registerLazySingleton<OnboardingRepository>(
+    () => OnboardingRepositoryImpl(sl()),
+  );
+  sl.registerFactory<OnboardingCubit>(() => OnboardingCubit(sl()));
 
   sl.registerLazySingleton<LocaleCubit>(() => LocaleCubit(sl(), sl()));
 

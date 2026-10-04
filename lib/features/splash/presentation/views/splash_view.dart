@@ -16,6 +16,7 @@ import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../settings/presentation/cubit/settings_cubits.dart';
+import '../../../onboarding/domain/repositories/onboarding_repository.dart';
 
 /// A custom, high-performance animated splash screen for 154 SCORE.
 /// Features:
@@ -302,6 +303,11 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
     try {
       if (GoRouter.maybeOf(context) != null) {
         final router = GoRouter.of(context);
+        final onboardingRepo = sl<OnboardingRepository>();
+        if (!onboardingRepo.isCompleted()) {
+          router.go('/onboarding');
+          return;
+        }
         router.go('/');
         final pending = AppRouter.consumePendingRoute();
         if (pending != null) {

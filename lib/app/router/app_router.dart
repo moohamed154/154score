@@ -35,6 +35,8 @@ import '../../features/videos/presentation/views/video_details_view.dart';
 import '../../features/videos/presentation/views/videos_view.dart';
 import '../../core/network/debug_console.dart';
 import '../../features/splash/presentation/views/splash_view.dart';
+import '../../features/onboarding/presentation/viewmodels/onboarding_cubit.dart';
+import '../../features/onboarding/presentation/views/onboarding_view.dart';
 import '../navigation/app_scaffold.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -291,6 +293,16 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/splash',
         builder: (context, state) => const SplashView(),
+      ),
+
+      // First-launch onboarding (shown once)
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/onboarding',
+        builder: (context, state) => BlocProvider<OnboardingCubit>(
+          create: (_) => sl<OnboardingCubit>(),
+          child: const OnboardingView(),
+        ),
       ),
 
       // Favorites
