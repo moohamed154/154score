@@ -321,6 +321,7 @@ class _NewsBody extends StatelessWidget {
                           ? AppColors.darkCardElevated
                           : AppColors.lightCardElevated,
                       child: NewsListItem(
+                        key: ValueKey('skeleton_$index'),
                         article: NewsArticleEntity(
                           id: 'skeleton_$index',
                           title: isNewsArabic
@@ -362,7 +363,11 @@ class _NewsBody extends StatelessWidget {
                     final articles =
                         isLoading ? displayFeed.latest : state.filteredLatest;
                     if (index >= articles.length) return null;
-                    return NewsListItem(article: articles[index]);
+                    final art = articles[index];
+                    return NewsListItem(
+                      key: ValueKey('news_${art.id}'),
+                      article: art,
+                    );
                   },
                   childCount: isLoading
                       ? displayFeed.latest.length

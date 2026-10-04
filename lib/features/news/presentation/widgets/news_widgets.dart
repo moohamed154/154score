@@ -26,10 +26,11 @@ class NewsHeroCard extends StatelessWidget {
     final isArabic = isRtl || isArticleArabic;
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
 
-    return GestureDetector(
-      onTap: () =>
-          context.push('/news/${article.id}', extra: {'slug': article.slug}),
-      child: Container(
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: () =>
+            context.push('/news/${article.id}', extra: {'slug': article.slug}),
+        child: Container(
         margin: const EdgeInsets.symmetric(
           horizontal: AppDimensions.lg,
           vertical: AppDimensions.sm,
@@ -167,8 +168,9 @@ class NewsHeroCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 /// Horizontal carousel of important/trending articles.
@@ -183,21 +185,23 @@ class NewsImportantCarousel extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = Directionality.of(context) == TextDirection.rtl;
 
-    return SizedBox(
-      height: 200,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
-        itemCount: articles.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppDimensions.sm),
-        itemBuilder: (context, index) {
-          final article = articles[index];
-          return _ImportantCard(
-            article: article,
-            isDark: isDark,
-            isArabic: isArabic,
-          );
-        },
+    return RepaintBoundary(
+      child: SizedBox(
+        height: 200,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+          itemCount: articles.length,
+          separatorBuilder: (_, __) => const SizedBox(width: AppDimensions.sm),
+          itemBuilder: (context, index) {
+            final article = articles[index];
+            return _ImportantCard(
+              article: article,
+              isDark: isDark,
+              isArabic: isArabic,
+            );
+          },
+        ),
       ),
     );
   }
@@ -216,57 +220,67 @@ class _ImportantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () =>
-          context.push('/news/${article.id}', extra: {'slug': article.slug}),
-      child: Container(
-        width: 170,
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightCard,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: () =>
+            context.push('/news/${article.id}', extra: {'slug': article.slug}),
+        child: Container(
+          width: 170,
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
           ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: AppImage(
-                imageUrl: article.image,
-                borderRadius: 0,
-                placeholderIcon: Icons.article_outlined,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: AppImage(
+                  imageUrl: article.image,
+                  borderRadius: 0,
+                  placeholderIcon: Icons.article_outlined,
+                ),
               ),
-            ),
-            Builder(
-              builder: (context) {
-                final isArticleArabic = TextDirectionHelper.isArabic(article.title);
-                final effectiveArabic = isArticleArabic || isArabic;
-                final textDir = isArticleArabic
-                    ? TextDirection.rtl
-                    : (isArabic ? TextDirection.rtl : TextDirection.ltr);
+              Builder(
+                builder: (context) {
+                  final isArticleArabic = TextDirectionHelper.isArabic(
+                    article.title,
+                  );
+                  final effectiveArabic = isArticleArabic || isArabic;
+                  final textDir = isArticleArabic
+                      ? TextDirection.rtl
+                      : (isArabic ? TextDirection.rtl : TextDirection.ltr);
 
-                return Directionality(
-                  textDirection: textDir,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppDimensions.sm),
-                    child: Text(
-                      article.title,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      textDirection: textDir,
-                      textAlign: isArticleArabic ? TextAlign.right : TextAlign.start,
-                      style: AppTypography.getBodyLarge(
-                        isDark: isDark,
-                        isArabic: effectiveArabic,
-                      ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
+                  return Directionality(
+                    textDirection: textDir,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppDimensions.sm),
+                      child: Text(
+                        article.title,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: textDir,
+                        textAlign: isArticleArabic
+                            ? TextAlign.right
+                            : TextAlign.start,
+                        style:
+                            AppTypography.getBodyLarge(
+                              isDark: isDark,
+                              isArabic: effectiveArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -425,67 +439,69 @@ class NewsListItem extends StatelessWidget {
         ? TextDirection.rtl
         : (isRtl ? TextDirection.rtl : TextDirection.ltr);
 
-    return GestureDetector(
-      onTap: () =>
-          context.push('/news/${article.id}', extra: {'slug': article.slug}),
-      child: Container(
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.lg,
-          vertical: AppDimensions.xs,
-        ),
-        padding: const EdgeInsets.all(AppDimensions.sm),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightCard,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: () =>
+            context.push('/news/${article.id}', extra: {'slug': article.slug}),
+        child: Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.lg,
+            vertical: AppDimensions.xs,
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-              child: AppImage(
-                imageUrl: article.thumbnail ?? article.image,
-                width: 88,
-                height: 72,
-                borderRadius: AppDimensions.radiusSm,
-                placeholderIcon: Icons.article_outlined,
-              ),
+          padding: const EdgeInsets.all(AppDimensions.sm),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
             ),
-            const SizedBox(width: AppDimensions.sm),
-            // Text
-            Expanded(
-              child: Directionality(
-                textDirection: textDir,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      article.title,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      textDirection: textDir,
-                      textAlign:
-                          isArticleArabic ? TextAlign.right : TextAlign.start,
-                      style: AppTypography.getBodyLarge(
-                        isDark: isDark,
-                        isArabic: effectiveArabic,
-                      ).copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: AppDimensions.xs),
-                    _RelativeTime(
-                      publishedAt: article.publishedAt,
-                      isDark: isDark,
-                      isArabic: effectiveArabic,
-                    ),
-                  ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Thumbnail
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                child: AppImage(
+                  imageUrl: article.thumbnail ?? article.image,
+                  width: 88,
+                  height: 72,
+                  borderRadius: AppDimensions.radiusSm,
+                  placeholderIcon: Icons.article_outlined,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: AppDimensions.sm),
+              // Text
+              Expanded(
+                child: Directionality(
+                  textDirection: textDir,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        article.title,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: textDir,
+                        textAlign:
+                            isArticleArabic ? TextAlign.right : TextAlign.start,
+                        style: AppTypography.getBodyLarge(
+                          isDark: isDark,
+                          isArabic: effectiveArabic,
+                        ).copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: AppDimensions.xs),
+                      _RelativeTime(
+                        publishedAt: article.publishedAt,
+                        isDark: isDark,
+                        isArabic: effectiveArabic,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

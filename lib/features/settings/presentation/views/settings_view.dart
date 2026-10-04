@@ -694,16 +694,19 @@ class _SettingsViewState extends State<SettingsView> {
     required Widget child,
     EdgeInsetsGeometry? padding,
   }) {
-    return Material(
-      color: isDark ? AppColors.darkCard : AppColors.lightCard,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        side: BorderSide(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+    return RepaintBoundary(
+      child: Material(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          side: BorderSide(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
         ),
+        child:
+            padding != null ? Padding(padding: padding, child: child) : child,
       ),
-      child: padding != null ? Padding(padding: padding, child: child) : child,
     );
   }
 }
