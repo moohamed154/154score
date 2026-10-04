@@ -8,17 +8,13 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/widgets/app_brand_logo.dart';
 import '../../domain/entities/maintenance_info.dart';
 import '../viewmodels/maintenance_cubit.dart';
 
 class MaintenanceView extends StatefulWidget {
   final MaintenanceInfo? initialInfo;
 
-  const MaintenanceView({
-    super.key,
-    this.initialInfo,
-  });
+  const MaintenanceView({super.key, this.initialInfo});
 
   @override
   State<MaintenanceView> createState() => _MaintenanceViewState();
@@ -82,8 +78,7 @@ class _MaintenanceViewState extends State<MaintenanceView>
       );
       context.go('/');
     } else {
-      final isArabic =
-          AppLocalizations.of(context).locale.languageCode == 'ar';
+      final isArabic = AppLocalizations.of(context).locale.languageCode == 'ar';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -109,7 +104,8 @@ class _MaintenanceViewState extends State<MaintenanceView>
         }
       },
       builder: (context, state) {
-        final displayMessage = state.info?.getDisplayMessage(isArabic) ??
+        final displayMessage =
+            state.info?.getDisplayMessage(isArabic) ??
             (isArabic
                 ? 'الخوادم تخضع لأعمال الصيانة والتطوير حالياً لتحسين الخدمة. يرجى المحاولة لاحقاً.'
                 : 'Servers are currently undergoing scheduled maintenance. Please try again shortly.');
@@ -136,22 +132,18 @@ class _MaintenanceViewState extends State<MaintenanceView>
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // 1. Brand Logo with Theme Switching
-                        RepaintBoundary(
-                          child: AppBrandLogo(
-                            size: 92,
-                            isDark: isDark,
-                            padding: const EdgeInsets.all(8),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+                        // RepaintBoundary(
+                        //   child: AppBrandLogo(size: 120, isDark: isDark),
+                        // ),
+                        // const SizedBox(height: 36),
 
                         // 2. Animated Maintenance Badge Icon
                         RepaintBoundary(
                           child: ScaleTransition(
                             scale: _pulseAnimation,
                             child: Container(
-                              width: 80,
-                              height: 80,
+                              width: 120,
+                              height: 120,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: isDark
@@ -166,23 +158,23 @@ class _MaintenanceViewState extends State<MaintenanceView>
                                     color: Colors.amber.withValues(
                                       alpha: isDark ? 0.25 : 0.15,
                                     ),
-                                    blurRadius: 24,
-                                    spreadRadius: 3,
-                                    offset: const Offset(0, 3),
+                                    blurRadius: 28,
+                                    spreadRadius: 4,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
                               child: const Center(
                                 child: Icon(
                                   Icons.engineering_rounded,
-                                  size: 40,
+                                  size: 52,
                                   color: Colors.amber,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 30),
 
                         // 3. Status Pill
                         Container(
@@ -268,15 +260,16 @@ class _MaintenanceViewState extends State<MaintenanceView>
                               Text(
                                 displayMessage,
                                 textAlign: TextAlign.center,
-                                style: AppTypography.getBodyMedium(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  height: 1.6,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
-                                ),
+                                style:
+                                    AppTypography.getBodyMedium(
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                    ).copyWith(
+                                      height: 1.6,
+                                      color: isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.lightTextSecondary,
+                                    ),
                               ),
                               if (state.info?.updatedAt != null) ...[
                                 const SizedBox(height: 12),
@@ -302,8 +295,9 @@ class _MaintenanceViewState extends State<MaintenanceView>
                           width: double.infinity,
                           height: 52,
                           child: ElevatedButton(
-                            onPressed:
-                                isChecking ? null : () => _onRetry(context),
+                            onPressed: isChecking
+                                ? null
+                                : () => _onRetry(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.black,
@@ -318,15 +312,13 @@ class _MaintenanceViewState extends State<MaintenanceView>
                                     height: 22,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
                                         Colors.black,
                                       ),
                                     ),
                                   )
                                 : Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       const Icon(
                                         Icons.refresh_rounded,
