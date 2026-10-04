@@ -342,6 +342,8 @@ class _StandingsViewState extends State<StandingsView> {
     if (_activeTab != tab) {
       setState(() {
         _activeTab = tab;
+        _tabFavoritesBaseline = List<ChampionshipInfo>.from(_memoizedFavorites);
+        _tabHiddenBaseline = List<ChampionshipInfo>.from(_memoizedHidden);
       });
     }
   }
@@ -437,20 +439,6 @@ class _StandingsViewState extends State<StandingsView> {
           (rKey != null ? leagueByCanonical[rKey] : null) ??
           (normKey.isNotEmpty ? leagueByCanonical[normKey] : null);
 
-      if (matched == null) {
-        for (final l in _featuredLeagues) {
-          if (LeagueResolver.areSameCompetition(
-            l.name,
-            key,
-            idA: l.id,
-            idB: key,
-          )) {
-            matched = l;
-            break;
-          }
-        }
-      }
-
       if (matched != null && addedFavIds.add(matched.id)) {
         favoriteCards.add(matched);
       }
@@ -486,8 +474,9 @@ class _StandingsViewState extends State<StandingsView> {
 
     _memoizedFavorites = favoriteCards;
     _memoizedHidden = hiddenCards;
-    _tabFavoritesBaseline = List<ChampionshipInfo>.from(favoriteCards);
-    _tabHiddenBaseline = List<ChampionshipInfo>.from(hiddenCards);
+    // Retain active baseline while user is in tab to prevent jarring shifts & allow star animations to complete
+    _tabFavoritesBaseline ??= List<ChampionshipInfo>.from(favoriteCards);
+    _tabHiddenBaseline ??= List<ChampionshipInfo>.from(hiddenCards);
   }
 
   @override
@@ -497,72 +486,67 @@ class _StandingsViewState extends State<StandingsView> {
     final storage = sl<LocalStorageService>();
     final currentLang = storage.getLanguage();
 
-    // 1. Startup: Load cached championships if available
-    final hasCache = _loadCachedRankings(currentLang);
-
-    // 2. Fallback if no cache found yet for current language
-    if (!hasCache && _allLeagues.isEmpty) {
-      final fallbacks = getDefaultFallbackChampionships(currentLang);
-      _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
-      _allLeagues = List<ChampionshipInfo>.from(fallbacks);
-    }
+    // 1. Startup: Load fallback championships instantly for 0ms initial frame
+    final fallbacks = getDefaultFallbackChampionships(currentLang);
+    _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
+    _allLeagues = List<ChampionshipInfo>.from(fallbacks);
 
     _searchController.addListener(_onSearchChanged);
 
-    // 3. Guaranteed fresh network fetch on first open
+    // 2. Load cached full directory asynchronously & fetch fresh network data post-frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchRankings(lang: currentLang);
+      if (!mounted) return;
+      _loadCachedRankingsAsync(currentLang).then((_) {
+        if (mounted) {
+          _fetchRankings(lang: currentLang);
+        }
+      });
     });
   }
 
-  bool _loadCachedRankings(String lang) {
+  Future<void> _loadCachedRankingsAsync(String lang) async {
     final storage = sl<LocalStorageService>();
     final cachedData = storage.getCachedRankings(lang: lang);
-    if (cachedData != null && cachedData.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(cachedData);
-        if (decoded is Map) {
-          final featuredRaw = decoded['featured'] as List? ?? [];
-          final leaguesRaw = decoded['leagues'] as List? ?? [];
+    if (cachedData == null || cachedData.isEmpty) return;
 
-          final cachedFeatured = <ChampionshipInfo>[];
-          for (final item in featuredRaw) {
-            if (item is Map) {
-              cachedFeatured.add(
-                ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
-              );
-            }
-          }
+    try {
+      final decoded = await Future.microtask(() => jsonDecode(cachedData));
+      if (decoded is Map) {
+        final featuredRaw = decoded['featured'] as List? ?? [];
+        final leaguesRaw = decoded['leagues'] as List? ?? [];
 
-          final cachedAll = <ChampionshipInfo>[];
-          for (final item in leaguesRaw) {
-            if (item is Map) {
-              cachedAll.add(
-                ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
-              );
-            }
-          }
-
-          if (cachedAll.isNotEmpty || cachedFeatured.isNotEmpty) {
-            final targetFeatured = cachedFeatured;
-            final targetAll = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
-            if (mounted) {
-              setState(() {
-                _featuredLeagues = targetFeatured;
-                _allLeagues = targetAll;
-                _isLoading = false;
-              });
-            } else {
-              _featuredLeagues = targetFeatured;
-              _allLeagues = targetAll;
-              _isLoading = false;
-            }
-            return true;
+        final cachedFeatured = <ChampionshipInfo>[];
+        for (final item in featuredRaw) {
+          if (item is Map) {
+            cachedFeatured.add(
+              ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
+            );
           }
         }
-      } catch (_) {}
-    }
-    return false;
+
+        final cachedAll = <ChampionshipInfo>[];
+        for (final item in leaguesRaw) {
+          if (item is Map) {
+            cachedAll.add(
+              ChampionshipInfo.fromJson(Map<String, dynamic>.from(item)),
+            );
+          }
+        }
+
+        if (!mounted) return;
+        if (cachedAll.isNotEmpty || cachedFeatured.isNotEmpty) {
+          setState(() {
+            _featuredLeagues = cachedFeatured;
+            _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
+            _isLoading = false;
+            // Update baseline with full cached catalog
+            _tabFavoritesBaseline = null;
+            _tabHiddenBaseline = null;
+            _lastPartitionFavKeys.clear();
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   void _onSearchChanged() {
@@ -743,15 +727,17 @@ class _StandingsViewState extends State<StandingsView> {
       listenWhen: (prev, curr) => prev.locale != curr.locale,
       listener: (context, localeState) {
         final targetLang = localeState.locale.languageCode;
-        final hasCache = _loadCachedRankings(targetLang);
-        if (!hasCache) {
-          final fallbacks = getDefaultFallbackChampionships(targetLang);
-          setState(() {
-            _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
-            _allLeagues = List<ChampionshipInfo>.from(fallbacks);
-          });
-        }
-        _fetchRankings(lang: targetLang);
+        final fallbacks = getDefaultFallbackChampionships(targetLang);
+        setState(() {
+          _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
+          _allLeagues = List<ChampionshipInfo>.from(fallbacks);
+          _tabFavoritesBaseline = null;
+          _tabHiddenBaseline = null;
+          _lastPartitionFavKeys.clear();
+        });
+        _loadCachedRankingsAsync(targetLang).then((_) {
+          if (mounted) _fetchRankings(lang: targetLang);
+        });
       },
       child: Scaffold(
         backgroundColor: bg,
@@ -837,8 +823,8 @@ class _StandingsViewState extends State<StandingsView> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _buildSegmentControl(
                       context,
-                      favoritesCount: favoriteCards.length,
-                      hiddenCount: hiddenCards.length,
+                      favoritesCount: _memoizedFavorites.length,
+                      hiddenCount: _memoizedHidden.length,
                       isDark: isDark,
                       l10n: l10n,
                       primary: primary,
@@ -856,6 +842,8 @@ class _StandingsViewState extends State<StandingsView> {
                         try {
                           _lastPartitionFavKeys.clear();
                           _lastPartitionAllLeaguesCount = -1;
+                          _tabFavoritesBaseline = null;
+                          _tabHiddenBaseline = null;
                           await _fetchRankings(
                             search: _searchController.text.trim(),
                           ).timeout(const Duration(milliseconds: 3500));
@@ -952,12 +940,18 @@ class _StandingsViewState extends State<StandingsView> {
                                         },
                                         itemBuilder: (context, index) {
                                           final item = favoriteCards[index];
+                                          final isFav = favState
+                                              .isFavoriteCompetition(
+                                                id: item.id,
+                                                name: item.name,
+                                                slug: item.slug,
+                                              );
                                           return _buildChampionshipCard(
                                             key: ValueKey('fav_${item.id}'),
                                             context: context,
                                             item: item,
                                             index: index,
-                                            isFavorite: true,
+                                            isFavorite: isFav,
                                             isDark: isDark,
                                             isArabic: isArabic,
                                             isSearching: false,

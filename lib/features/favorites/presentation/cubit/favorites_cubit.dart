@@ -13,14 +13,75 @@ class FavoritesState extends Equatable {
   final List<String> favoriteMatches;
   final Map<String, String> competitionTitles;
   final Map<String, String> teamTitles;
+  final Set<String> _cachedFavCompetitionKeys;
+  final Set<String> _cachedFavTeamKeys;
 
-  const FavoritesState({
+  FavoritesState({
     this.favoriteTeams = const [],
     this.favoriteCompetitions = const [],
     this.favoriteMatches = const [],
     this.competitionTitles = const {},
     this.teamTitles = const {},
-  });
+    Set<String>? cachedFavCompetitionKeys,
+    Set<String>? cachedFavTeamKeys,
+  })  : _cachedFavCompetitionKeys = cachedFavCompetitionKeys ??
+            _buildCompetitionKeys(favoriteCompetitions, competitionTitles),
+        _cachedFavTeamKeys = cachedFavTeamKeys ??
+            _buildTeamKeys(favoriteTeams, teamTitles);
+
+  static Set<String> _buildCompetitionKeys(
+    List<String> favCompetitions,
+    Map<String, String> titles,
+  ) {
+    if (favCompetitions.isEmpty) return const {};
+    final keys = <String>{};
+    for (final fav in favCompetitions) {
+      final clean = fav.trim().toLowerCase();
+      if (clean.isNotEmpty) {
+        keys.add(clean);
+        final norm = LeagueResolver.normalize(clean);
+        if (norm.isNotEmpty) keys.add(norm);
+        final rId = LeagueResolver.resolveId(clean);
+        if (rId != null && rId.isNotEmpty) keys.add(rId);
+      }
+      final mappedTitle = titles[fav] ?? titles[clean];
+      if (mappedTitle != null && mappedTitle.trim().isNotEmpty) {
+        final cleanMapped = mappedTitle.trim().toLowerCase();
+        keys.add(cleanMapped);
+        final normMapped = LeagueResolver.normalize(cleanMapped);
+        if (normMapped.isNotEmpty) keys.add(normMapped);
+        final rMapped = LeagueResolver.resolveId(cleanMapped);
+        if (rMapped != null && rMapped.isNotEmpty) keys.add(rMapped);
+      }
+    }
+    return keys;
+  }
+
+  static Set<String> _buildTeamKeys(
+    List<String> favTeams,
+    Map<String, String> titles,
+  ) {
+    if (favTeams.isEmpty) return const {};
+    final keys = <String>{};
+    for (final team in favTeams) {
+      final clean = team.trim().toLowerCase();
+      if (clean.isNotEmpty) {
+        keys.add(clean);
+        final cKey = TeamResolver.getCanonicalKey(clean);
+        if (cKey != null && cKey.isNotEmpty) keys.add(cKey.toLowerCase());
+      }
+      final mappedTitle = titles[team] ?? titles[clean];
+      if (mappedTitle != null && mappedTitle.trim().isNotEmpty) {
+        final cleanMapped = mappedTitle.trim().toLowerCase();
+        keys.add(cleanMapped);
+        final cMapped = TeamResolver.getCanonicalKey(cleanMapped);
+        if (cMapped != null && cMapped.isNotEmpty) {
+          keys.add(cMapped.toLowerCase());
+        }
+      }
+    }
+    return keys;
+  }
 
   FavoritesState copyWith({
     List<String>? favoriteTeams,
@@ -41,54 +102,84 @@ class FavoritesState extends Equatable {
   bool isFavoriteCompetition({String? id, String? name, String? slug}) {
     if (favoriteCompetitions.isEmpty) return false;
 
-    final cleanId = id?.trim();
-    final cleanName = name?.trim();
-    final cleanSlug = slug?.trim();
+    final cleanId = id?.trim().toLowerCase();
+    if (cleanId != null && cleanId.isNotEmpty) {
+      if (_cachedFavCompetitionKeys.contains(cleanId)) return true;
+      final rId = LeagueResolver.resolveId(cleanId);
+      if (rId != null && _cachedFavCompetitionKeys.contains(rId)) return true;
+    }
 
+    final cleanName = name?.trim();
+    if (cleanName != null && cleanName.isNotEmpty) {
+      final lowerName = cleanName.toLowerCase();
+      if (_cachedFavCompetitionKeys.contains(lowerName)) return true;
+      final normName = LeagueResolver.normalize(cleanName);
+      if (normName.isNotEmpty && _cachedFavCompetitionKeys.contains(normName)) {
+        return true;
+      }
+      final rName = LeagueResolver.resolveId(cleanName);
+      if (rName != null && _cachedFavCompetitionKeys.contains(rName)) {
+        return true;
+      }
+    }
+
+    final cleanSlug = slug?.trim();
+    if (cleanSlug != null && cleanSlug.isNotEmpty) {
+      final lowerSlug = cleanSlug.toLowerCase();
+      if (_cachedFavCompetitionKeys.contains(lowerSlug)) return true;
+      final normSlug = LeagueResolver.normalize(cleanSlug);
+      if (normSlug.isNotEmpty && _cachedFavCompetitionKeys.contains(normSlug)) {
+        return true;
+      }
+      final rSlug = LeagueResolver.resolveId(cleanSlug);
+      if (rSlug != null && _cachedFavCompetitionKeys.contains(rSlug)) {
+        return true;
+      }
+    }
+
+    // Safety fallback for any complex dynamic variation
+    final origCleanName = name?.trim();
+    final origCleanId = id?.trim();
     for (final fav in favoriteCompetitions) {
       final favTrim = fav.trim();
       final mappedId = competitionTitles[favTrim];
       if (LeagueResolver.areSameCompetition(
         favTrim,
-        cleanName,
+        origCleanName,
         idA: mappedId,
-        idB: cleanId,
+        idB: origCleanId,
       )) {
         return true;
-      }
-      if (cleanSlug != null && cleanSlug.isNotEmpty) {
-        if (LeagueResolver.areSameCompetition(
-          favTrim,
-          cleanSlug,
-          idA: mappedId,
-          idB: cleanId,
-        )) {
-          return true;
-        }
-      }
-      if (cleanId != null && cleanId.isNotEmpty) {
-        if (LeagueResolver.areSameCompetition(
-          favTrim,
-          null,
-          idA: mappedId,
-          idB: cleanId,
-        )) {
-          return true;
-        }
       }
     }
     return false;
   }
 
-
   bool isFavoriteTeam({String? id, String? name}) {
     if (favoriteTeams.isEmpty) return false;
-    final cleanId = id?.trim();
+    final cleanId = id?.trim().toLowerCase();
     final cleanName = name?.trim();
+
+    if (cleanId != null && cleanId.isNotEmpty) {
+      if (_cachedFavTeamKeys.contains(cleanId)) return true;
+      final cId = TeamResolver.getCanonicalKey(cleanId);
+      if (cId != null && _cachedFavTeamKeys.contains(cId.toLowerCase())) {
+        return true;
+      }
+    }
+
+    if (cleanName != null && cleanName.isNotEmpty) {
+      final lowerName = cleanName.toLowerCase();
+      if (_cachedFavTeamKeys.contains(lowerName)) return true;
+      final cName = TeamResolver.getCanonicalKey(cleanName);
+      if (cName != null && _cachedFavTeamKeys.contains(cName.toLowerCase())) {
+        return true;
+      }
+    }
 
     final targets = <String>{};
     if (cleanId != null && cleanId.isNotEmpty) {
-      targets.add(cleanId.toLowerCase());
+      targets.add(cleanId);
       if (teamTitles.containsKey(cleanId)) {
         targets.add(teamTitles[cleanId]!.trim().toLowerCase());
       }

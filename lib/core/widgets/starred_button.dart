@@ -39,10 +39,12 @@ class _StarredButtonState extends State<StarredButton>
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _rotationAnimation;
+  late bool _isStarred;
 
   @override
   void initState() {
     super.initState();
+    _isStarred = widget.isStarred;
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 380),
@@ -91,15 +93,14 @@ class _StarredButtonState extends State<StarredButton>
   @override
   void didUpdateWidget(covariant StarredButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.isStarred != widget.isStarred) {
-      if (widget.isStarred) {
-        if (!_controller.isAnimating && _controller.value < 0.5) {
-          _controller.forward(from: 0.0);
-        }
+    if (widget.isStarred != _isStarred) {
+      setState(() {
+        _isStarred = widget.isStarred;
+      });
+      if (_isStarred) {
+        _controller.forward(from: 0.0);
       } else {
-        if (!_controller.isAnimating && _controller.value > 0.5) {
-          _controller.reverse(from: 1.0);
-        }
+        _controller.reverse(from: 1.0);
       }
     }
   }
@@ -112,7 +113,10 @@ class _StarredButtonState extends State<StarredButton>
 
   void _handleTap() {
     HapticFeedback.lightImpact();
-    if (!widget.isStarred) {
+    setState(() {
+      _isStarred = !_isStarred;
+    });
+    if (_isStarred) {
       _controller.forward(from: 0.0);
     } else {
       _controller.reverse(from: 1.0);
@@ -139,7 +143,7 @@ class _StarredButtonState extends State<StarredButton>
                 duration: const Duration(milliseconds: 220),
                 transitionBuilder: (child, anim) =>
                     ScaleTransition(scale: anim, child: child),
-                child: widget.isStarred
+                child: _isStarred
                     ? Icon(
                         Icons.star_rounded,
                         key: const ValueKey(true),
@@ -147,8 +151,8 @@ class _StarredButtonState extends State<StarredButton>
                         color: activeColor,
                         shadows: [
                           BoxShadow(
-                            color: activeColor.withAlpha(90),
-                            blurRadius: 8,
+                            color: activeColor.withAlpha(120),
+                            blurRadius: 10,
                             spreadRadius: 2,
                           ),
                         ],
