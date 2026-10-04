@@ -25,6 +25,7 @@ import '../../features/search/presentation/views/search_view.dart';
 import '../../features/settings/presentation/views/language_settings_view.dart';
 import '../../features/settings/presentation/views/notification_settings_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
+import '../../features/settings/presentation/views/time_format_settings_view.dart';
 import '../../features/settings/presentation/views/timezone_selection_view.dart';
 import '../../features/standings/presentation/views/standings_view.dart';
 import '../../features/teams/presentation/bloc/team_bloc.dart';
@@ -271,6 +272,14 @@ class AppRouter {
                     pageBuilder: (context, state) => _buildCupertinoPage(
                       state: state,
                       child: const NotificationSettingsView(),
+                    ),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: 'time-format',
+                    pageBuilder: (context, state) => _buildCupertinoPage(
+                      state: state,
+                      child: const TimeFormatSettingsView(),
                     ),
                   ),
                   GoRoute(

@@ -13,8 +13,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/websocket/websocket_service.dart';
-import '../../../matches/presentation/bloc/matches_bloc.dart';
-import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../onboarding/domain/repositories/onboarding_repository.dart';
 import '../cubit/settings_cubits.dart';
 import '../widgets/debug_console_sheet.dart';
@@ -307,31 +305,63 @@ class _SettingsViewState extends State<SettingsView> {
                 ListTile(
                   leading: const Icon(Icons.access_time_rounded),
                   title: Text(l10n.translate('time_format')),
-                  trailing: DropdownButton<String>(
-                    value: storage.getTimeFormat(),
-                    underline: const SizedBox(),
-                    items: [
-                      DropdownMenuItem(
-                        value: '12h',
-                        child: Text(l10n.translate('time_12h')),
+                  subtitle: Text(
+                    storage.getTimeFormat() == '12h'
+                        ? l10n.translate('time_12h')
+                        : l10n.translate('time_24h'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSm,
+                          ),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          storage.getTimeFormat().toUpperCase(),
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
-                      DropdownMenuItem(
-                        value: '24h',
-                        child: Text(l10n.translate('time_24h')),
+                      const SizedBox(width: 8),
+                      Icon(
+                        isArabic
+                            ? Icons.arrow_back_ios_new_rounded
+                            : Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
                       ),
                     ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        storage.setTimeFormat(val);
-                        setState(() {});
-                        try {
-                          context.read<MatchesBloc>().add(
-                            ChangeTimeFormatEvent(val),
-                          );
-                        } catch (_) {}
-                      }
-                    },
                   ),
+                  onTap: () async {
+                    await context.push('/settings/time-format');
+                    if (mounted) setState(() {});
+                  },
                 ),
                 const Divider(height: 1),
                 BlocBuilder<TimezoneCubit, TimezoneState>(
