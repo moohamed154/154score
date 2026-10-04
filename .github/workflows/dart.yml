@@ -34,7 +34,6 @@ jobs:
 
       - name: Build iOS (Release)
         run: |
-          rm -rf ios/Podfile ios/Podfile.lock ios/Pods
           flutter precache --ios
           flutter build ios --release --no-codesign
 
