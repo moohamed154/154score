@@ -120,8 +120,12 @@ class NotificationService {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
       if (androidPlugin != null) {
-        final granted = await androidPlugin.requestNotificationsPermission();
-        return granted ?? false;
+        try {
+          final granted = await androidPlugin.requestNotificationsPermission();
+          return granted ?? false;
+        } catch (e) {
+          debugPrint('[NotificationService] androidPlugin.requestNotificationsPermission error: $e');
+        }
       }
     } catch (e) {
       debugPrint('[NotificationService] requestPermissions error: $e');
@@ -142,8 +146,12 @@ class NotificationService {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
       if (androidPlugin != null) {
-        final enabled = await androidPlugin.areNotificationsEnabled();
-        return enabled ?? false;
+        try {
+          final enabled = await androidPlugin.areNotificationsEnabled();
+          return enabled ?? false;
+        } catch (e) {
+          debugPrint('[NotificationService] androidPlugin.areNotificationsEnabled error: $e');
+        }
       }
     } catch (e) {
       debugPrint('[NotificationService] areNotificationsEnabled error: $e');

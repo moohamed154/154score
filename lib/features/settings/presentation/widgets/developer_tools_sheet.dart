@@ -656,11 +656,11 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
   }
 
   Widget _buildCard({required bool isDark, required Widget child}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+    return Material(
+      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        border: Border.all(
+        side: BorderSide(
           color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
         ),
       ),

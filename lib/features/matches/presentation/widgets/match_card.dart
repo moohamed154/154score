@@ -734,7 +734,13 @@ class MatchCard extends StatelessWidget {
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusXl),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
       builder: (bottomSheetContext) {
         return BlocBuilder<FavoritesCubit, FavoritesState>(
           builder: (context, favState) {
@@ -753,18 +759,14 @@ class MatchCard extends StatelessWidget {
                   name: match.leagueTitle,
                 );
 
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(AppDimensions.radiusXl),
-                ),
-              ),
+            return Material(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                     // Handle
                     Container(
                       width: 36,
@@ -959,8 +961,9 @@ class MatchCard extends StatelessWidget {
                   ],
                 ),
               ),
-            );
-          },
+            ),
+          );
+        },
         );
       },
     );
