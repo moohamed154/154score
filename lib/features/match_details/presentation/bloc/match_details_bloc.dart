@@ -152,6 +152,16 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         }
       });
 
+      eventsFuture = eventsFuture.timeout(
+        const Duration(seconds: 4),
+        onTimeout: () => const ApiSuccess(MatchEventsPayload()),
+      );
+
+      detailsFuture = detailsFuture.timeout(
+        const Duration(seconds: 4),
+        onTimeout: () => const ApiSuccess(MatchDetailsPayload()),
+      );
+
       final statsFuture = repository
           .getStats(cleanTarget, lang: lang)
           .catchError((_) => const ApiSuccess<List<MatchStatItemEntity>>([]));
@@ -162,20 +172,12 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           .getLineups(cleanTarget, lang: lang)
           .catchError((_) => const ApiSuccess<MatchLineupEntity?>(null));
 
-      // 1. Await primary core data (events & details/overview) for immediate screen render
-      final primaryResults = await Future.wait([eventsFuture, detailsFuture]);
+      // 1. Staged Emission 1: Await primary events payload (~200ms) and show screen immediately!
       final eventsPayloadRes =
-          (primaryResults[0] as ApiResult<MatchEventsPayload>).dataOrNull ??
-          const MatchEventsPayload();
-      final detailsPayload =
-          (primaryResults[1] as ApiResult<MatchDetailsPayload>).dataOrNull ??
-          const MatchDetailsPayload();
+          (await eventsFuture).dataOrNull ?? const MatchEventsPayload();
 
       final eventsRes = eventsPayloadRes.events;
       final videosRes = eventsPayloadRes.videos;
-      final detailsRes = detailsPayload.sections;
-      final overviewRes = detailsPayload.overview;
-
       final resolvedHalfScores =
           eventsPayloadRes.halfScores ?? state.halfScores;
       final rawEvents = eventsRes.isNotEmpty ? eventsRes : state.events;
@@ -186,19 +188,10 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         ),
       );
       final resolvedVideos = videosRes.isNotEmpty ? videosRes : state.videos;
-      final resolvedDetails = detailsRes.isNotEmpty
-          ? detailsRes
-          : state.details;
-      final resolvedOverview = overviewRes ?? state.overview;
-      final resolvedChampionshipId =
-          eventsPayloadRes.championshipId ??
-          resolvedOverview?.championshipId ??
-          state.championshipId;
+      String? resolvedChampionshipId =
+          eventsPayloadRes.championshipId ?? state.championshipId;
 
-      final knownScore1 = state.liveScore1 ?? resolvedOverview?.score1;
-      final knownScore2 = state.liveScore2 ?? resolvedOverview?.score2;
-
-      String? resolvedStatus = state.liveStatus ?? resolvedOverview?.status;
+      String? resolvedStatus = state.liveStatus;
       String? resolvedStatusCode = state.liveStatusCode;
 
       final hasFinishedEvent = resolvedEvents.any((e) {
@@ -230,12 +223,66 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
       final isCurrentlyLive =
           ScoreHelper.isLiveStatus(resolvedStatus) ||
-          ScoreHelper.isLiveStatus(state.liveStatus) ||
           (resolvedStatusCode != null &&
               (resolvedStatusCode == 'LIVE' ||
                   resolvedStatusCode.startsWith('IN_PLAY') ||
                   resolvedStatusCode == 'HALF_TIME' ||
                   resolvedStatusCode == 'HT'));
+
+      if (!isCurrentlyLive && hasFinishedEvent) {
+        if (resolvedStatus == null ||
+            resolvedStatus.isEmpty ||
+            !ScoreHelper.isFinishedStatus(resolvedStatus)) {
+          resolvedStatus = 'انتهت';
+          resolvedStatusCode = 'FINISHED';
+        }
+      }
+
+      // Show screen, score hero banner, and Events tab immediately!
+      emit(
+        state.copyWith(
+          status: MatchDetailsStatus.success,
+          matchId: cleanTarget,
+          events: resolvedEvents,
+          videos: resolvedVideos,
+          championshipId: resolvedChampionshipId,
+          halfScores: resolvedHalfScores,
+          penaltiesDetail:
+              eventsPayloadRes.penaltiesDetail ?? state.penaltiesDetail,
+          liveScore1: state.liveScore1,
+          liveScore2: state.liveScore2,
+          liveStatus: resolvedStatus,
+          liveStatusCode: resolvedStatusCode,
+          errorMessage: null,
+        ),
+      );
+
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
+
+      // 2. Staged Emission 2: Await details & overview and enrich state seamlessly
+      final detailsPayload =
+          (await detailsFuture).dataOrNull ?? const MatchDetailsPayload();
+      if (isClosed) return;
+
+      final detailsRes = detailsPayload.sections;
+      final overviewRes = detailsPayload.overview;
+      final resolvedDetails = detailsRes.isNotEmpty
+          ? detailsRes
+          : state.details;
+      final resolvedOverview = overviewRes ?? state.overview;
+      resolvedChampionshipId =
+          resolvedChampionshipId ??
+          resolvedOverview?.championshipId ??
+          state.championshipId;
+
+      final knownScore1 = state.liveScore1 ?? resolvedOverview?.score1;
+      final knownScore2 = state.liveScore2 ?? resolvedOverview?.score2;
+
+      resolvedStatus =
+          state.liveStatus ?? resolvedOverview?.status ?? resolvedStatus;
+      resolvedStatusCode = state.liveStatusCode ?? resolvedStatusCode;
 
       final effectiveDate = resolvedOverview?.date;
       final isPastMatch =
@@ -252,7 +299,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       if (!isCurrentlyLive &&
           (hasFinishedEvent ||
               (isPastMatch &&
-                  (knownScore1 != null || knownScore2 != null || resolvedEvents.isNotEmpty)))) {
+                  (knownScore1 != null ||
+                      knownScore2 != null ||
+                      resolvedEvents.isNotEmpty)))) {
         if (resolvedStatus == null ||
             resolvedStatus.isEmpty ||
             !ScoreHelper.isFinishedStatus(resolvedStatus)) {
@@ -261,30 +310,15 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         }
       }
 
-      // Staged Emission 1: Show screen, score hero banner, and Events tab immediately!
       emit(
         state.copyWith(
-          status: MatchDetailsStatus.success,
-          matchId: cleanTarget,
-          events: resolvedEvents,
-          videos: resolvedVideos,
           details: resolvedDetails,
           overview: resolvedOverview,
           championshipId: resolvedChampionshipId,
-          halfScores: resolvedHalfScores,
-          penaltiesDetail:
-              eventsPayloadRes.penaltiesDetail ?? state.penaltiesDetail,
-          liveScore1: state.liveScore1,
-          liveScore2: state.liveScore2,
           liveStatus: resolvedStatus,
           liveStatusCode: resolvedStatusCode,
-          errorMessage: null,
         ),
       );
-
-      if (event.completer != null && !event.completer!.isCompleted) {
-        event.completer!.complete();
-      }
 
       // 2. Await secondary data (stats, lineups, news) and update state seamlessly
       final secondaryResults = await Future.wait([

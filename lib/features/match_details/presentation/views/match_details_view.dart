@@ -76,10 +76,8 @@ class MatchDetailsView extends StatefulWidget {
   State<MatchDetailsView> createState() => _MatchDetailsViewState();
 }
 
-class _MatchDetailsViewState extends State<MatchDetailsView>
-    with SingleTickerProviderStateMixin {
+class _MatchDetailsViewState extends State<MatchDetailsView> {
   // Dynamic tabs: Events & Stats only when started or ended, plus League Scorers & Assists
-  late TabController _tabController;
   List<_MatchTabType> _currentTabs = const [];
   LeagueBloc? _leagueBloc;
   String? _currentLeagueId;
@@ -161,30 +159,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         _MatchTabType.assists,
         _MatchTabType.news,
       ];
-    }
-  }
-
-  final List<TabController> _controllersToDispose = [];
-
-  void _updateTabsIfNeeded(List<_MatchTabType> newTabs) {
-    if (_tabController.length != newTabs.length) {
-      final oldController = _tabController;
-      final oldIndex = _tabController.index;
-      _controllersToDispose.add(oldController);
-      _currentTabs = newTabs;
-      _tabController = TabController(
-        length: newTabs.length,
-        vsync: this,
-        initialIndex: oldIndex.clamp(0, newTabs.length - 1),
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_controllersToDispose.contains(oldController)) {
-          _controllersToDispose.remove(oldController);
-          try {
-            oldController.dispose();
-          } catch (_) {}
-        }
-      });
     }
   }
 
@@ -792,19 +766,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       hasFinishedEvent: false,
     );
     _currentTabs = _getTabsForStatus(initialIsStarted);
-    _tabController = TabController(length: _currentTabs.length, vsync: this);
     context.read<MatchDetailsBloc>().add(LoadMatchDetailsEvent(widget.matchId));
   }
 
   @override
   void dispose() {
-    for (final c in _controllersToDispose) {
-      try {
-        c.dispose();
-      } catch (_) {}
-    }
-    _controllersToDispose.clear();
-    _tabController.dispose();
     _leagueBloc?.close();
     super.dispose();
   }
@@ -938,25 +904,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         child: Container(
           color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
           child: BlocConsumer<MatchDetailsBloc, MatchDetailsState>(
-            listener: (context, state) {
-              final activeMatch = _resolveActiveMatch(
-                fallbackMatch: fallbackMatch,
-                liveFromMatches: liveFromMatches,
-                state: state,
-              );
-              final hasFinishedEvent = _computeHasFinishedEvent(state);
-              final isStartedOrEnded = _computeIsStartedOrEnded(
-                match: activeMatch,
-                state: state,
-                hasFinishedEvent: hasFinishedEvent,
-              );
-              final newTabs = _getTabsForStatus(isStartedOrEnded);
-              if (_tabController.length != newTabs.length) {
-                setState(() {
-                  _updateTabsIfNeeded(newTabs);
-                });
-              }
-            },
+            listener: (context, state) {},
             builder: (context, state) {
               final activeMatch = _resolveActiveMatch(
                 fallbackMatch: fallbackMatch,
@@ -973,8 +921,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               final activeTabs = _getTabsForStatus(isStartedOrEnded);
               _currentTabs = activeTabs;
 
-              _updateTabsIfNeeded(activeTabs);
-
               final effectiveLeagueId =
                   state.championshipId ??
                   state.overview?.championshipId ??
@@ -988,107 +934,108 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                 activeMatch.leagueLogo,
               );
 
-              return Column(
-                children: [
-                  // ── Top Score Hero Banner ──────────────────────────────────
-                  Skeletonizer(
-                    enabled:
-                        widget.initialMatch == null &&
-                        (state.status == MatchDetailsStatus.loading ||
-                            state.status == MatchDetailsStatus.initial),
-                    effect: ShimmerEffect(
-                      baseColor: isDark
-                          ? const Color(0xFF1E2836)
-                          : const Color(0xFFE2E8F0),
-                      highlightColor: isDark
-                          ? const Color(0xFF2E3D52)
-                          : const Color(0xFFF1F5F9),
-                      duration: const Duration(milliseconds: 1500),
-                    ),
-                    child: MatchHeaderBanner(
-                      match: activeMatch,
-                      liveScore1: activeMatch.score1,
-                      liveScore2: activeMatch.score2,
-                      liveStatus: activeMatch.status,
-                      liveStatusCode: activeMatch.statusCode,
-                      liveMinute:
-                          activeMatch.minute ??
-                          state.liveMinute ??
-                          liveFromMatches?.minute,
-                      liveExtraTime:
-                          activeMatch.extraTime ??
-                          state.liveExtraTime ??
-                          liveFromMatches?.extraTime,
-                      livePeriod:
-                          activeMatch.period ??
-                          state.livePeriod ??
-                          liveFromMatches?.period,
-                      penaltyScore1: activeMatch.penaltyScore1,
-                      penaltyScore2: activeMatch.penaltyScore2,
-                    ),
-                  ),
+              return DefaultTabController(
+                key: ValueKey(activeTabs.length),
+                length: activeTabs.length,
+                child: Builder(
+                  builder: (tabContext) {
+                    return Column(
+                      children: [
+                        // ── Top Score Hero Banner ──────────────────────────────────
+                        Skeletonizer(
+                          enabled:
+                              widget.initialMatch == null &&
+                              (state.status == MatchDetailsStatus.loading ||
+                                  state.status == MatchDetailsStatus.initial),
+                          effect: ShimmerEffect(
+                            baseColor: isDark
+                                ? const Color(0xFF1E2836)
+                                : const Color(0xFFE2E8F0),
+                            highlightColor: isDark
+                                ? const Color(0xFF2E3D52)
+                                : const Color(0xFFF1F5F9),
+                            duration: const Duration(milliseconds: 1500),
+                          ),
+                          child: MatchHeaderBanner(
+                            match: activeMatch,
+                            liveScore1: activeMatch.score1,
+                            liveScore2: activeMatch.score2,
+                            liveStatus: activeMatch.status,
+                            liveStatusCode: activeMatch.statusCode,
+                            liveMinute:
+                                activeMatch.minute ??
+                                state.liveMinute ??
+                                liveFromMatches?.minute,
+                            liveExtraTime:
+                                activeMatch.extraTime ??
+                                state.liveExtraTime ??
+                                liveFromMatches?.extraTime,
+                            livePeriod:
+                                activeMatch.period ??
+                                state.livePeriod ??
+                                liveFromMatches?.period,
+                            penaltyScore1: activeMatch.penaltyScore1,
+                            penaltyScore2: activeMatch.penaltyScore2,
+                          ),
+                        ),
 
-                  // ── Main Horizontal Scrollable Tab Bar ─────────────────────
-                  Container(
-                    color: isDark
-                        ? AppColors.darkSurface
-                        : AppColors.lightSurface,
-                    child: TabBar(
-                      key: ValueKey(_tabController),
-                      controller: _tabController,
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      indicatorColor: AppColors.primary,
-                      indicatorWeight: 3,
-                      labelColor: AppColors.primary,
-                      unselectedLabelColor: isDark
-                          ? AppColors.darkTextMuted
-                          : AppColors.lightTextMuted,
-                      labelStyle: AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(fontWeight: FontWeight.w700),
-                      tabs: activeTabs.map((tab) {
-                        switch (tab) {
-                          case _MatchTabType.events:
-                            return Tab(text: isArabic ? 'الأحداث' : 'Events');
-                          case _MatchTabType.details:
-                            return Tab(text: isArabic ? 'التفاصيل' : 'Details');
-                          case _MatchTabType.lineups:
-                            return Tab(text: isArabic ? 'التشكيلة' : 'Lineups');
-                          case _MatchTabType.stats:
-                            return Tab(text: isArabic ? 'الإحصائيات' : 'Stats');
-                          case _MatchTabType.standings:
-                            return Tab(text: isArabic ? 'الترتيب' : 'Standings');
-                          case _MatchTabType.scorers:
-                            return Tab(text: isArabic ? 'الهدافون' : 'Scorers');
-                          case _MatchTabType.assists:
-                            return Tab(text: isArabic ? 'الصناع' : 'Assists');
-                          case _MatchTabType.news:
-                            return Tab(text: isArabic ? 'الأخبار' : 'News');
-                        }
-                      }).toList(),
-                    ),
-                  ),
+                        // ── Main Horizontal Scrollable Tab Bar ─────────────────────
+                        Container(
+                          color: isDark
+                              ? AppColors.darkSurface
+                              : AppColors.lightSurface,
+                          child: TabBar(
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            indicatorColor: AppColors.primary,
+                            indicatorWeight: 3,
+                            labelColor: AppColors.primary,
+                            unselectedLabelColor: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                            labelStyle: AppTypography.getBodyMedium(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(fontWeight: FontWeight.w700),
+                            tabs: activeTabs.map((tab) {
+                              switch (tab) {
+                                case _MatchTabType.events:
+                                  return Tab(text: isArabic ? 'الأحداث' : 'Events');
+                                case _MatchTabType.details:
+                                  return Tab(text: isArabic ? 'التفاصيل' : 'Details');
+                                case _MatchTabType.lineups:
+                                  return Tab(text: isArabic ? 'التشكيلة' : 'Lineups');
+                                case _MatchTabType.stats:
+                                  return Tab(text: isArabic ? 'الإحصائيات' : 'Stats');
+                                case _MatchTabType.standings:
+                                  return Tab(text: isArabic ? 'الترتيب' : 'Standings');
+                                case _MatchTabType.scorers:
+                                  return Tab(text: isArabic ? 'الهدافون' : 'Scorers');
+                                case _MatchTabType.assists:
+                                  return Tab(text: isArabic ? 'الصناع' : 'Assists');
+                                case _MatchTabType.news:
+                                  return Tab(text: isArabic ? 'الأخبار' : 'News');
+                              }
+                            }).toList(),
+                          ),
+                        ),
 
-                  const Divider(height: 1),
+                        const Divider(height: 1),
 
-                  // ── Tab Content ────────────────────────────────────────────
-                  Expanded(
-                    child:
-                        (state.status == MatchDetailsStatus.error &&
-                            state.details.isEmpty &&
-                            state.events.isEmpty)
-                        ? ErrorView(
-                            message: state.errorMessage,
-                            onRetry: () => context.read<MatchDetailsBloc>().add(
-                              LoadMatchDetailsEvent(widget.matchId),
-                            ),
-                          )
-                        : TabBarView(
-                            key: ValueKey(_tabController),
-                            controller: _tabController,
-                            physics: const NeverScrollableScrollPhysics(),
+                        // ── Tab Content ────────────────────────────────────────────
+                        Expanded(
+                          child:
+                              (state.status == MatchDetailsStatus.error &&
+                                  state.details.isEmpty &&
+                                  state.events.isEmpty)
+                              ? ErrorView(
+                                  message: state.errorMessage,
+                                  onRetry: () => context.read<MatchDetailsBloc>().add(
+                                    LoadMatchDetailsEvent(widget.matchId),
+                                  ),
+                                )
+                              : TabBarView(
+                                  physics: const NeverScrollableScrollPhysics(),
                             children: activeTabs.map((tab) {
                               switch (tab) {
                                 case _MatchTabType.events:
@@ -1150,14 +1097,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                             }).toList(),
                           ),
                   ),
-                ],
-              );
-            },
+                        ],
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
   // ── Tab 1: الأحداث (Events) ────────────────────────────────────────────────
   Widget _buildEventsTab(
@@ -1969,7 +1919,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
               // Animate to Statistics tab
               final statsIndex = _currentTabs.indexOf(_MatchTabType.stats);
               if (statsIndex != -1) {
-                _tabController.animateTo(statsIndex);
+                DefaultTabController.maybeOf(context)?.animateTo(statsIndex);
               }
             },
             child: Padding(
@@ -2004,7 +1954,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
   ) {
     if (state.status == MatchDetailsStatus.loading ||
         state.status == MatchDetailsStatus.initial) {
-      return _buildDetailsSkeleton(context, isDark, isArabic);
+      if ((match.team1.isEmpty || match.team1 == 'Home Team') &&
+          widget.initialMatch == null) {
+        return _buildDetailsSkeleton(context, isDark, isArabic);
+      }
     }
 
     final overview = state.overview;
