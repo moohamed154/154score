@@ -2095,7 +2095,27 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         : (widget.initialMatch?.team2 ??
               _extractTeamNameFromDetails(detailsList, isHome: false));
 
-    final noticeText = overview?.note ?? match.note ?? widget.initialMatch?.note;
+    String? noticeText = overview?.note ?? match.note ?? widget.initialMatch?.note;
+    if (noticeText == null || noticeText.trim().isEmpty) {
+      for (final sec in detailsList) {
+        final lowerTitle = sec.section.toLowerCase();
+        if (lowerTitle.contains('alert') ||
+            lowerTitle.contains('notice') ||
+            lowerTitle.contains('hint') ||
+            lowerTitle.contains('تنبيه') ||
+            lowerTitle.contains('ملاحظة') ||
+            lowerTitle.contains('إلغاء') ||
+            lowerTitle.contains('تأجيل')) {
+          if (sec.items.isNotEmpty) {
+            final c = sec.items.first.content.trim();
+            if (c.isNotEmpty) {
+              noticeText = c;
+              break;
+            }
+          }
+        }
+      }
+    }
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -2213,6 +2233,16 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                           ))) {
                     return false;
                   }
+                }
+                final lowerTitle = sec.section.toLowerCase();
+                if (lowerTitle.contains('alert') ||
+                    lowerTitle.contains('notice') ||
+                    lowerTitle.contains('hint') ||
+                    lowerTitle.contains('تنبيه') ||
+                    lowerTitle.contains('ملاحظة') ||
+                    lowerTitle.contains('إلغاء') ||
+                    lowerTitle.contains('تأجيل')) {
+                  return false;
                 }
                 return true;
               })

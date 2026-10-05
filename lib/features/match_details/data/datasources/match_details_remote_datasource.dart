@@ -819,8 +819,10 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     String matchId,
     List<MatchInfoSectionEntity> sections,
   ) {
-    if (rawOverview is Map) {
-      final map = Map<String, dynamic>.from(rawOverview);
+    if (rawOverview is Map || sections.isNotEmpty) {
+      final map = rawOverview is Map
+          ? Map<String, dynamic>.from(rawOverview)
+          : <String, dynamic>{};
       final (secHome, secAway) = _extractTeamNamesFromSections(sections);
 
       MatchReturnLegEntity? returnLeg;
@@ -1112,9 +1114,29 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           map['status']?.toString();
       final statusCode = map['status_code']?.toString() ??
           map['statusCode']?.toString();
-      final note = map['notice']?.toString() ??
+      String? note = map['notice']?.toString() ??
           map['comment']?.toString() ??
           map['note']?.toString();
+      if (note == null || note.trim().isEmpty) {
+        for (final sec in sections) {
+          final sName = sec.section.toLowerCase();
+          if (sName.contains('alert') ||
+              sName.contains('notice') ||
+              sName.contains('hint') ||
+              sName.contains('تنبيه') ||
+              sName.contains('ملاحظة') ||
+              sName.contains('إلغاء') ||
+              sName.contains('تأجيل')) {
+            if (sec.items.isNotEmpty) {
+              final val = sec.items.first.content.trim();
+              if (val.isNotEmpty) {
+                note = val;
+                break;
+              }
+            }
+          }
+        }
+      }
       final time = map['time']?.toString();
       final date = map['date']?.toString();
       final round = map['round']?.toString();
