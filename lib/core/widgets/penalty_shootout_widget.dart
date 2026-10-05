@@ -48,14 +48,18 @@ class PenaltyShootoutWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
+          // Balanced Row with symmetrical Expanded anchors so the score is strictly centered
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (attempts1 != null && attempts1!.isNotEmpty) ...[
-                _buildAttemptSoccerBalls(attempts1!),
-                const SizedBox(width: 8),
-              ],
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: (attempts1 != null && attempts1!.isNotEmpty)
+                      ? _buildAttemptSoccerBalls(attempts1!)
+                      : const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
                 '$penaltyScore1 - $penaltyScore2',
                 style: TextStyle(
@@ -66,10 +70,15 @@ class PenaltyShootoutWidget extends StatelessWidget {
                       : AppColors.lightTextPrimary,
                 ),
               ),
-              if (attempts2 != null && attempts2!.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                _buildAttemptSoccerBalls(attempts2!),
-              ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: (attempts2 != null && attempts2!.isNotEmpty)
+                      ? _buildAttemptSoccerBalls(attempts2!)
+                      : const SizedBox.shrink(),
+                ),
+              ),
             ],
           ),
         ],
@@ -115,9 +124,13 @@ class PenaltyShootoutWidget extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildAttemptSoccerBalls(attempts1!),
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: _buildAttemptSoccerBalls(attempts1!),
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
@@ -129,7 +142,12 @@ class PenaltyShootoutWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                _buildAttemptSoccerBalls(attempts2!),
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: _buildAttemptSoccerBalls(attempts2!),
+                  ),
+                ),
               ],
             ),
           ],
@@ -140,7 +158,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
     // ── 3. Compact Pill ──────────────────────────────────────────────────
     if (isCompact) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
         decoration: BoxDecoration(
           color: AppColors.accent.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
@@ -151,21 +169,36 @@ class PenaltyShootoutWidget extends StatelessWidget {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              '$title ',
+              title,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9.5,
                 fontWeight: FontWeight.w700,
                 color: isDark ? AppColors.accent : const Color(0xFF0070BA),
               ),
             ),
+            const SizedBox(width: 5),
             Text(
               '$penaltyScore1 - $penaltyScore2',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 5),
+            // Symmetry spacer with identical width so the score itself is in the exact center
+            Opacity(
+              opacity: 0.0,
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
