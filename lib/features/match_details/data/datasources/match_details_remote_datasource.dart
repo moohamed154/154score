@@ -89,26 +89,36 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       Map<String, dynamic>? halfScores;
       dynamic rawPenDetail;
 
+      dynamic rootItems;
       if (parsed is List && parsed.isNotEmpty) {
-        final first = parsed[0];
-        if (first is Map && first['items'] is Map) {
-          final items = first['items'] as Map;
-          championshipId = items['championship_id']?.toString();
-          rawPenDetail = items['penalties_detail'];
-          if (items['half_scores'] is Map) {
-            halfScores = Map<String, dynamic>.from(items['half_scores'] as Map);
-          }
-        }
+        rootItems = parsed[0];
       } else if (parsed is Map) {
         final data = parsed['data'] ?? parsed;
-        if (data is Map) {
-          championshipId =
-              data['championship_id']?.toString() ??
-              data['championship']?['url_id']?.toString();
-          rawPenDetail = data['penalties_detail'];
-          if (data['half_scores'] is Map) {
-            halfScores = Map<String, dynamic>.from(data['half_scores'] as Map);
-          }
+        if (data is List && data.isNotEmpty) {
+          rootItems = data[0];
+        } else if (data is Map) {
+          rootItems = data;
+        }
+      }
+
+      if (rootItems is Map) {
+        final items = (rootItems['items'] is Map)
+            ? rootItems['items'] as Map
+            : rootItems;
+        championshipId = items['championship_id']?.toString() ??
+            items['championship']?['url_id']?.toString() ??
+            rootItems['championship_id']?.toString();
+        rawPenDetail = items['penalties_detail'] ??
+            items['match_penalties'] ??
+            items['penalties'] ??
+            rootItems['penalties_detail'] ??
+            rootItems['match_penalties'] ??
+            rootItems['penalties'];
+        if (items['half_scores'] is Map) {
+          halfScores = Map<String, dynamic>.from(items['half_scores'] as Map);
+        } else if (rootItems['half_scores'] is Map) {
+          halfScores =
+              Map<String, dynamic>.from(rootItems['half_scores'] as Map);
         }
       }
 
@@ -119,14 +129,32 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           final list = <PenaltyKickItemEntity>[];
           for (final k in kicksRaw) {
             if (k is Map) {
+              final rawPlayer = k['player_name'] ?? k['player'] ?? k['name'];
+              String playerName;
+              String? playerPhoto;
+              if (rawPlayer is Map) {
+                playerName = rawPlayer['title']?.toString() ??
+                    rawPlayer['full_title']?.toString() ??
+                    rawPlayer['short_title']?.toString() ??
+                    rawPlayer['name']?.toString() ??
+                    '';
+                playerPhoto = UrlHelper.normalizePlayerPhotoUrl(
+                  rawPlayer['image']?.toString() ??
+                      rawPlayer['id']?.toString(),
+                );
+              } else {
+                playerName = rawPlayer?.toString() ?? '';
+                playerPhoto = UrlHelper.normalizePlayerPhotoUrl(
+                  k['player_photo']?.toString() ?? k['player_id']?.toString(),
+                );
+              }
+
               list.add(
                 PenaltyKickItemEntity(
                   order: int.tryParse(k['order']?.toString() ?? '0') ?? 0,
                   playerId: k['player_id']?.toString(),
-                  playerName: k['player_name']?.toString() ?? '',
-                  playerPhoto: UrlHelper.normalizeImageUrl(
-                    k['player_photo']?.toString(),
-                  ),
+                  playerName: playerName,
+                  playerPhoto: playerPhoto,
                   isGoal:
                       k['is_goal'] == true ||
                       k['score'] == 1 ||
@@ -139,11 +167,39 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           return list;
         }
 
+        dynamic rawHomeKicks =
+            rawPenDetail['home_kicks'] ?? rawPenDetail['home'];
+        dynamic rawAwayKicks =
+            rawPenDetail['away_kicks'] ?? rawPenDetail['away'];
+
+        if (rawHomeKicks == null && rawAwayKicks == null) {
+          final keys = rawPenDetail.keys
+              .where((k) => k != 'home_score' && k != 'away_score')
+              .toList();
+          if (keys.length >= 2) {
+            rawHomeKicks = rawPenDetail[keys[0]];
+            rawAwayKicks = rawPenDetail[keys[1]];
+          }
+        }
+
+        final homeKicksList = parseKicks(rawHomeKicks);
+        final awayKicksList = parseKicks(rawAwayKicks);
+        final calculatedHomeScore =
+            homeKicksList.where((k) => k.isGoal).length;
+        final calculatedAwayScore =
+            awayKicksList.where((k) => k.isGoal).length;
+
         penaltiesDetail = PenaltyShootoutDetailEntity(
-          homeScore: rawPenDetail['home_score']?.toString(),
-          awayScore: rawPenDetail['away_score']?.toString(),
-          homeKicks: parseKicks(rawPenDetail['home_kicks']),
-          awayKicks: parseKicks(rawPenDetail['away_kicks']),
+          homeScore: rawPenDetail['home_score']?.toString() ??
+              (homeKicksList.isNotEmpty
+                  ? calculatedHomeScore.toString()
+                  : null),
+          awayScore: rawPenDetail['away_score']?.toString() ??
+              (awayKicksList.isNotEmpty
+                  ? calculatedAwayScore.toString()
+                  : null),
+          homeKicks: homeKicksList,
+          awayKicks: awayKicksList,
         );
       }
 

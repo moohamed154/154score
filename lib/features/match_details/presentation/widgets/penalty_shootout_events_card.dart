@@ -28,18 +28,23 @@ class PenaltyShootoutEventsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final homeAttempts = penaltiesDetail?.homeAttempts ?? fallbackAttempts1 ?? [];
-    final awayAttempts = penaltiesDetail?.awayAttempts ?? fallbackAttempts2 ?? [];
+    final homeAttempts =
+        penaltiesDetail?.homeAttempts ?? fallbackAttempts1 ?? [];
+    final awayAttempts =
+        penaltiesDetail?.awayAttempts ?? fallbackAttempts2 ?? [];
 
     final homeScore = penaltiesDetail?.homeScore ?? penaltyScore1;
     final awayScore = penaltiesDetail?.awayScore ?? penaltyScore2;
 
     final homeKicks = penaltiesDetail?.homeKicks ?? [];
     final awayKicks = penaltiesDetail?.awayKicks ?? [];
-    final maxKicks = homeKicks.length > awayKicks.length ? homeKicks.length : awayKicks.length;
+    final maxKicks = homeKicks.length > awayKicks.length
+        ? homeKicks.length
+        : awayKicks.length;
 
     final cardBg = isDark ? const Color(0xFF141927) : const Color(0xFFF1F5F9);
-    final borderColor = isDark ? const Color(0xFF1E2638) : const Color(0xFFE2E8F0);
+    final borderColor =
+        isDark ? const Color(0xFF1E2638) : const Color(0xFFE2E8F0);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppDimensions.md),
@@ -70,17 +75,21 @@ class PenaltyShootoutEventsCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           // ── 2. Shootout Row: [Dots]  Score  [Dots] ──────────────────────
+          // Perfectly centered score regardless of asymmetrical kick counts
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Home Team Kick Balls
-              if (homeAttempts.isNotEmpty) ...[
-                _buildBallRow(homeAttempts),
-                const SizedBox(width: 14),
-              ],
+              // Home Team Kick Balls (anchored towards the center score)
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: homeAttempts.isNotEmpty
+                      ? _buildBallRow(homeAttempts)
+                      : const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(width: 12),
 
-              // Shootout Score
+              // Shootout Score - ALWAYS MATHEMATICALLY CENTERED
               Text(
                 '$homeScore - $awayScore',
                 style: TextStyle(
@@ -90,45 +99,23 @@ class PenaltyShootoutEventsCard extends StatelessWidget {
                   letterSpacing: 1.2,
                 ),
               ),
+              const SizedBox(width: 12),
 
-              // Away Team Kick Balls
-              if (awayAttempts.isNotEmpty) ...[
-                const SizedBox(width: 14),
-                _buildBallRow(awayAttempts),
-              ],
-            ],
-          ),
-
-          // ── 3. Kick-by-Kick Details Rows ────────────────────────────────
-          if (maxKicks > 0) ...[
-            const SizedBox(height: 14),
-            for (int i = 0; i < maxKicks; i++) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2.5),
-                child: Row(
-                  children: [
-                    // Home kicker on Left
-                    Expanded(
-                      child: i < homeKicks.length
-                          ? _buildHomeKickerText(homeKicks[i], isDark, isArabic)
-                          : const SizedBox.shrink(),
-                    ),
-                    const SizedBox(width: 12),
-                    // Away kicker on Right
-                    Expanded(
-                      child: i < awayKicks.length
-                          ? _buildAwayKickerText(awayKicks[i], isDark, isArabic)
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
+              // Away Team Kick Balls (anchored towards the center score)
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: awayAttempts.isNotEmpty
+                      ? _buildBallRow(awayAttempts)
+                      : const SizedBox.shrink(),
                 ),
               ),
             ],
-          ],
+          ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
-          // ── 4. Running FT Score & "Penalties" Label ──────────────────────
+          // ── 3. Running FT Score & "Penalties" Label ──────────────────────
           Text(
             fullTimeScore,
             style: TextStyle(
@@ -146,50 +133,129 @@ class PenaltyShootoutEventsCard extends StatelessWidget {
               color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
             ),
           ),
+
+          // ── 4. Kick-by-Kick Shootout Takers in Order ──────────────────────
+          if (maxKicks > 0) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Divider(
+                height: 1,
+                thickness: 0.8,
+                color: borderColor,
+              ),
+            ),
+            for (int i = 0; i < maxKicks; i++) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3.5),
+                child: Row(
+                  children: [
+                    // Home kicker on Left (Name then Ball)
+                    Expanded(
+                      child: i < homeKicks.length
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    homeKicks[i].playerName,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? const Color(0xFFE2E8F0)
+                                          : const Color(0xFF1E293B),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _buildKickBall(homeKicks[i].isGoal),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+
+                    // Order Number Pill in the exact center
+                    Container(
+                      width: 24,
+                      height: 20,
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF1E2638)
+                            : const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${i + 1}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+
+                    // Away kicker on Right (Ball then Name)
+                    Expanded(
+                      child: i < awayKicks.length
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                _buildKickBall(awayKicks[i].isGoal),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    awayKicks[i].playerName,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? const Color(0xFFE2E8F0)
+                                          : const Color(0xFF1E293B),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildHomeKickerText(
-    PenaltyKickItemEntity kick,
-    bool isDark,
-    bool isArabic,
-  ) {
-    final status = kick.isGoal
-        ? (isArabic ? 'هدف' : 'Goal')
-        : (isArabic ? 'ضائعة' : 'Missed');
-    return Text(
-      '${kick.order}- ${kick.playerName} ($status)',
-      style: TextStyle(
-        fontSize: 11.5,
-        fontWeight: FontWeight.w500,
-        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+  Widget _buildKickBall(bool isGoal) {
+    return Container(
+      width: 17,
+      height: 17,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isGoal ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+        border: Border.all(
+          color: isGoal ? const Color(0xFF059669) : const Color(0xFFDC2626),
+          width: 0.8,
+        ),
       ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      textAlign: TextAlign.start,
-    );
-  }
-
-  Widget _buildAwayKickerText(
-    PenaltyKickItemEntity kick,
-    bool isDark,
-    bool isArabic,
-  ) {
-    final status = kick.isGoal
-        ? (isArabic ? 'هدف' : 'Goal')
-        : (isArabic ? 'ضائعة' : 'Missed');
-    return Text(
-      '${kick.playerName} ($status) -${kick.order}',
-      style: TextStyle(
-        fontSize: 11.5,
-        fontWeight: FontWeight.w500,
-        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+      alignment: Alignment.center,
+      child: Icon(
+        isGoal ? Icons.sports_soccer_rounded : Icons.close_rounded,
+        size: 11.5,
+        color: Colors.white,
       ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      textAlign: TextAlign.end,
     );
   }
 
@@ -197,24 +263,9 @@ class PenaltyShootoutEventsCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: attempts.map((isGoal) {
-        return Container(
-          width: 17,
-          height: 17,
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isGoal ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-            border: Border.all(
-              color: isGoal ? const Color(0xFF059669) : const Color(0xFFDC2626),
-              width: 0.8,
-            ),
-          ),
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.sports_soccer_rounded,
-            size: 11.5,
-            color: Colors.white,
-          ),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: _buildKickBall(isGoal),
         );
       }).toList(),
     );
