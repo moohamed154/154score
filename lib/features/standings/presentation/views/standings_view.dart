@@ -359,13 +359,18 @@ class _StandingsViewState extends State<StandingsView> {
   bool _isLoading = true;
   String? _errorMessage;
   StandingsTab _activeTab = StandingsTab.favorites;
-  List<ChampionshipInfo>? _tabHiddenBaseline;
-  List<ChampionshipInfo>? _tabFavoritesBaseline;
 
   List<ChampionshipInfo> _featuredLeagues = [];
   List<ChampionshipInfo> _allLeagues = [];
 
-  // Cached partitioned lists to avoid O(N * M) calculations in build()
+  // Pre-indexed league directory for fast O(1) matching (<0.5ms) without repeated regex loops
+  final Map<String, ChampionshipInfo> _leagueById = {};
+  final Map<String, ChampionshipInfo> _leagueByCanonical = {};
+  final Map<String, ChampionshipInfo> _leagueByName = {};
+  final Map<ChampionshipInfo, String> _leagueLowerName = {};
+  final Map<ChampionshipInfo, String> _leagueLowerSlug = {};
+
+  // Cached partitioned lists
   List<ChampionshipInfo> _memoizedFavorites = [];
   List<ChampionshipInfo> _memoizedHidden = [];
   Set<String> _cachedFavIds = {};
@@ -373,13 +378,68 @@ class _StandingsViewState extends State<StandingsView> {
   int _lastPartitionAllLeaguesCount = -1;
   String _lastPartitionLang = '';
 
+  Timer? _pendingTransitionTimer;
+  final Set<String> _pendingTransitionIds = {};
+
   void _switchTab(StandingsTab tab) {
     if (_activeTab != tab) {
+      _pendingTransitionTimer?.cancel();
+      _pendingTransitionIds.clear();
       setState(() {
         _activeTab = tab;
-        _tabFavoritesBaseline = List<ChampionshipInfo>.from(_memoizedFavorites);
-        _tabHiddenBaseline = List<ChampionshipInfo>.from(_memoizedHidden);
       });
+    }
+  }
+
+  void _rebuildLeagueIndex() {
+    _leagueById.clear();
+    _leagueByCanonical.clear();
+    _leagueByName.clear();
+    _leagueLowerName.clear();
+    _leagueLowerSlug.clear();
+
+    for (final l in _allLeagues) {
+      if (l.id.isNotEmpty) _leagueById[l.id] = l;
+      if (l.seasonId != null && l.seasonId!.isNotEmpty) {
+        _leagueById[l.seasonId!] = l;
+      }
+      final cleanName = l.name.trim().toLowerCase();
+      _leagueByName[cleanName] = l;
+      _leagueLowerName[l] = cleanName;
+      _leagueLowerSlug[l] = l.slug?.trim().toLowerCase() ?? '';
+
+      final rId =
+          LeagueResolver.resolveId(l.name) ??
+          (l.id.isNotEmpty ? LeagueResolver.resolveId(l.id) : null);
+      if (rId != null && rId.isNotEmpty) _leagueByCanonical[rId] = l;
+      final norm = LeagueResolver.normalize(l.name);
+      if (norm.isNotEmpty) _leagueByCanonical[norm] = l;
+    }
+
+    for (final l in _featuredLeagues) {
+      if (l.id.isNotEmpty && !_leagueById.containsKey(l.id)) {
+        _leagueById[l.id] = l;
+      }
+      final cleanName = l.name.trim().toLowerCase();
+      if (!_leagueByName.containsKey(cleanName)) {
+        _leagueByName[cleanName] = l;
+      }
+      if (!_leagueLowerName.containsKey(l)) {
+        _leagueLowerName[l] = cleanName;
+        _leagueLowerSlug[l] = l.slug?.trim().toLowerCase() ?? '';
+      }
+      final rId =
+          LeagueResolver.resolveId(l.name) ??
+          (l.id.isNotEmpty ? LeagueResolver.resolveId(l.id) : null);
+      if (rId != null &&
+          rId.isNotEmpty &&
+          !_leagueByCanonical.containsKey(rId)) {
+        _leagueByCanonical[rId] = l;
+      }
+      final norm = LeagueResolver.normalize(l.name);
+      if (norm.isNotEmpty && !_leagueByCanonical.containsKey(norm)) {
+        _leagueByCanonical[norm] = l;
+      }
     }
   }
 
@@ -406,99 +466,59 @@ class _StandingsViewState extends State<StandingsView> {
     _lastPartitionAllLeaguesCount = _allLeagues.length;
     _lastPartitionLang = currentLang;
 
-    // 1. Build fast lookup sets - O(M) once
+    // 1. Build fast lookup sets
     final favSet = <String>{};
-    final favCanonicalSet = <String>{};
     for (final key in currentFavKeys) {
       final clean = key.trim().toLowerCase();
       if (clean.isNotEmpty) {
         favSet.add(clean);
         final rId = LeagueResolver.resolveId(key);
-        if (rId != null && rId.isNotEmpty) favCanonicalSet.add(rId);
+        if (rId != null && rId.isNotEmpty) favSet.add(rId.toLowerCase());
         final norm = LeagueResolver.normalize(key);
-        if (norm.isNotEmpty) favCanonicalSet.add(norm);
+        if (norm.isNotEmpty) favSet.add(norm.toLowerCase());
       }
     }
 
-    // 2. Pre-index available leagues for fast O(1) matching
-    final Map<String, ChampionshipInfo> leagueById = {};
-    final Map<String, ChampionshipInfo> leagueByCanonical = {};
-    final Map<String, ChampionshipInfo> leagueByName = {};
-
-    for (final l in _allLeagues) {
-      if (l.id.isNotEmpty) leagueById[l.id] = l;
-      if (l.seasonId != null && l.seasonId!.isNotEmpty) {
-        leagueById[l.seasonId!] = l;
-      }
-      final cleanName = l.name.trim().toLowerCase();
-      leagueByName[cleanName] = l;
-      final rId =
-          LeagueResolver.resolveId(l.name) ??
-          (l.id.isNotEmpty ? LeagueResolver.resolveId(l.id) : null);
-      if (rId != null && rId.isNotEmpty) leagueByCanonical[rId] = l;
-      final norm = LeagueResolver.normalize(l.name);
-      if (norm.isNotEmpty) leagueByCanonical[norm] = l;
-    }
-    for (final l in _featuredLeagues) {
-      if (l.id.isNotEmpty && !leagueById.containsKey(l.id)) {
-        leagueById[l.id] = l;
-      }
-      final cleanName = l.name.trim().toLowerCase();
-      if (!leagueByName.containsKey(cleanName)) {
-        leagueByName[cleanName] = l;
-      }
-      final rId =
-          LeagueResolver.resolveId(l.name) ??
-          (l.id.isNotEmpty ? LeagueResolver.resolveId(l.id) : null);
-      if (rId != null &&
-          rId.isNotEmpty &&
-          !leagueByCanonical.containsKey(rId)) {
-        leagueByCanonical[rId] = l;
-      }
-      final norm = LeagueResolver.normalize(l.name);
-      if (norm.isNotEmpty && !leagueByCanonical.containsKey(norm)) {
-        leagueByCanonical[norm] = l;
-      }
-    }
-
-    // 3. Match favorite cards in user order in O(1) per key
     final List<ChampionshipInfo> favoriteCards = [];
     final Set<String> addedFavIds = {};
 
+    // 2. Match favorite cards in user order using pre-built index in O(1)
     for (final key in currentFavKeys) {
       final cleanKey = key.trim().toLowerCase();
       final rKey = LeagueResolver.resolveId(key);
       final normKey = LeagueResolver.normalize(key);
 
       final ChampionshipInfo? matched =
-          leagueById[key] ??
-          leagueById[cleanKey] ??
-          leagueByName[cleanKey] ??
-          (rKey != null ? leagueByCanonical[rKey] : null) ??
-          (normKey.isNotEmpty ? leagueByCanonical[normKey] : null);
+          _leagueById[key] ??
+          _leagueById[cleanKey] ??
+          _leagueByName[cleanKey] ??
+          (rKey != null ? _leagueByCanonical[rKey] : null) ??
+          (normKey.isNotEmpty ? _leagueByCanonical[normKey] : null);
 
       if (matched != null && addedFavIds.add(matched.id)) {
         favoriteCards.add(matched);
       }
     }
 
-    // Also include any league marked favorite directly in favSet
+    // Also include any league marked favorite directly in favSet or state
     for (final l in _allLeagues) {
       if (!addedFavIds.contains(l.id)) {
-        final lowerName = l.name.trim().toLowerCase();
-        final lowerSlug = l.slug?.trim().toLowerCase();
-        if (favSet.contains(l.id.toLowerCase()) ||
-            (l.seasonId != null &&
-                favSet.contains(l.seasonId!.toLowerCase())) ||
+        final lowerName = _leagueLowerName[l] ?? l.name.trim().toLowerCase();
+        final lowerSlug = _leagueLowerSlug[l] ?? (l.slug?.trim().toLowerCase() ?? '');
+        final isFav = favSet.contains(l.id.toLowerCase()) ||
+            (l.seasonId != null && favSet.contains(l.seasonId!.toLowerCase())) ||
             favSet.contains(lowerName) ||
-            (lowerSlug != null && favSet.contains(lowerSlug))) {
+            (lowerSlug.isNotEmpty && favSet.contains(lowerSlug)) ||
+            favState.isFavoriteCompetition(id: l.id, name: l.name, slug: l.slug);
+
+        if (isFav) {
           addedFavIds.add(l.id);
           favoriteCards.add(l);
         }
       }
     }
 
-    // 4. Hidden cards are the rest of _allLeagues
+    // 3. Hidden cards are the rest of _allLeagues
     final List<ChampionshipInfo> hiddenCards = [];
     for (final l in _allLeagues) {
       if (!addedFavIds.contains(l.id)) {
@@ -509,9 +529,6 @@ class _StandingsViewState extends State<StandingsView> {
     _memoizedFavorites = favoriteCards;
     _memoizedHidden = hiddenCards;
     _cachedFavIds = addedFavIds;
-    // Retain active baseline while user is in tab to prevent jarring shifts & allow star animations to complete
-    _tabFavoritesBaseline ??= List<ChampionshipInfo>.from(favoriteCards);
-    _tabHiddenBaseline ??= List<ChampionshipInfo>.from(hiddenCards);
   }
 
   @override
@@ -525,6 +542,7 @@ class _StandingsViewState extends State<StandingsView> {
     final fallbacks = getDefaultFallbackChampionships(currentLang);
     _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
     _allLeagues = List<ChampionshipInfo>.from(fallbacks);
+    _rebuildLeagueIndex();
 
     _searchController.addListener(_onSearchChanged);
 
@@ -555,9 +573,7 @@ class _StandingsViewState extends State<StandingsView> {
           _featuredLeagues = cachedFeatured;
           _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
           _isLoading = false;
-          // Update baseline with full cached catalog
-          _tabFavoritesBaseline = null;
-          _tabHiddenBaseline = null;
+          _rebuildLeagueIndex();
           _lastPartitionFavKeys.clear();
         });
       }
@@ -643,6 +659,8 @@ class _StandingsViewState extends State<StandingsView> {
             _errorMessage = null;
             _featuredLeagues = fetchedFeatured;
             _allLeagues = fetchedAll.isNotEmpty ? fetchedAll : fetchedFeatured;
+            _rebuildLeagueIndex();
+            _lastPartitionFavKeys.clear();
           });
         }
       } else {
@@ -666,6 +684,7 @@ class _StandingsViewState extends State<StandingsView> {
 
   @override
   void dispose() {
+    _pendingTransitionTimer?.cancel();
     _debounceTimer?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
@@ -677,19 +696,36 @@ class _StandingsViewState extends State<StandingsView> {
     ChampionshipInfo item,
     List<ChampionshipInfo> currentFavorites,
   ) {
+    final willBeFav = !_cachedFavIds.contains(item.id);
+
+    // 1. Immediately toggle star visually and keep card in place during animation
     setState(() {
-      if (_cachedFavIds.contains(item.id)) {
-        _cachedFavIds.remove(item.id);
-      } else {
+      if (willBeFav) {
         _cachedFavIds.add(item.id);
+      } else {
+        _cachedFavIds.remove(item.id);
       }
+      _pendingTransitionIds.add(item.id);
     });
 
+    // 2. Dispatch to FavoritesCubit (optimistic 0ms update)
     context.read<FavoritesCubit>().toggleCompetition(
       id: item.id,
       name: item.name,
       slug: item.slug,
     );
+
+    // 3. Smooth transition: After spring bounce animation (300ms) completes,
+    // let the card move smoothly to its proper tab without jarring jump
+    _pendingTransitionTimer?.cancel();
+    _pendingTransitionTimer = Timer(const Duration(milliseconds: 320), () {
+      if (mounted) {
+        setState(() {
+          _pendingTransitionIds.clear();
+          _lastPartitionFavKeys.clear();
+        });
+      }
+    });
   }
 
   void _onReorderFavorites(
@@ -704,7 +740,6 @@ class _StandingsViewState extends State<StandingsView> {
     }
     final moved = list.removeAt(oldIndex);
     list.insert(newIndex, moved);
-    _tabFavoritesBaseline = List<ChampionshipInfo>.from(list);
     _memoizedFavorites = List<ChampionshipInfo>.from(list);
     final identifiers = list
         .map((e) => e.id.isNotEmpty ? e.id : e.name)
@@ -735,8 +770,7 @@ class _StandingsViewState extends State<StandingsView> {
         setState(() {
           _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
           _allLeagues = List<ChampionshipInfo>.from(fallbacks);
-          _tabFavoritesBaseline = null;
-          _tabHiddenBaseline = null;
+          _rebuildLeagueIndex();
           _lastPartitionFavKeys.clear();
         });
         _loadCachedRankingsAsync(targetLang).then((_) {
@@ -758,12 +792,33 @@ class _StandingsViewState extends State<StandingsView> {
               // Fast O(1) partitioned list calculation with memoization
               _updatePartitionedLists(currentFavKeys, favState);
 
-              final favoriteCards =
-                  _tabFavoritesBaseline ?? _memoizedFavorites;
-              final hiddenCards =
-                  _tabHiddenBaseline ?? _memoizedHidden;
+              final List<ChampionshipInfo> favoriteCards =
+                  List<ChampionshipInfo>.from(_memoizedFavorites);
+              final List<ChampionshipInfo> hiddenCards =
+                  List<ChampionshipInfo>.from(_memoizedHidden);
 
               final isFavoritesTab = _activeTab == StandingsTab.favorites;
+
+              // Smooth Star Animation Preservation:
+              // If an item was just toggled, keep it visible in its current tab for 320ms
+              // so the user sees the star bounce animation, after which it cleanly transitions.
+              if (_pendingTransitionIds.isNotEmpty) {
+                if (isFavoritesTab) {
+                  for (final id in _pendingTransitionIds) {
+                    if (!favoriteCards.any((c) => c.id == id)) {
+                      final item = _leagueById[id];
+                      if (item != null) favoriteCards.add(item);
+                    }
+                  }
+                } else {
+                  for (final id in _pendingTransitionIds) {
+                    if (!hiddenCards.any((c) => c.id == id)) {
+                      final item = _leagueById[id];
+                      if (item != null) hiddenCards.insert(0, item);
+                    }
+                  }
+                }
+              }
 
               // Search query filtering
               final searchQuery = _searchController.text.trim().toLowerCase();
@@ -844,10 +899,10 @@ class _StandingsViewState extends State<StandingsView> {
                       color: primary,
                       onRefresh: () async {
                         try {
+                          _pendingTransitionTimer?.cancel();
+                          _pendingTransitionIds.clear();
                           _lastPartitionFavKeys.clear();
                           _lastPartitionAllLeaguesCount = -1;
-                          _tabFavoritesBaseline = null;
-                          _tabHiddenBaseline = null;
                           await _fetchRankings(
                             search: _searchController.text.trim(),
                           ).timeout(const Duration(milliseconds: 3500));

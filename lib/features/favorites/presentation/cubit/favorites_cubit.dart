@@ -453,7 +453,6 @@ class FavoritesCubit extends Cubit<FavoritesState> {
       name: effectiveName,
       slug: slug,
     );
-    loadFavorites();
   }
 
   Future<void> registerCompetitionTitles(Map<String, String> titles) async {

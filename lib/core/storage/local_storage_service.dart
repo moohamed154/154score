@@ -494,9 +494,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
 
   @override
   Future<bool> setFavoriteCompetitions(List<String> list) async {
-    final res = await _prefs.setStringList(_keyFavoriteCompetitions, list);
-    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
-    return res;
+    return _prefs.setStringList(_keyFavoriteCompetitions, list);
   }
 
   @override
