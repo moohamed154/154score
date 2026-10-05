@@ -45,6 +45,8 @@ class MatchEntity extends Equatable {
     this.score2,
     this.penaltyScore1,
     this.penaltyScore2,
+    this.penaltyAttempts1,
+    this.penaltyAttempts2,
     this.halfTimeScore1,
     this.halfTimeScore2,
     this.extraTimeScore1,
@@ -66,6 +68,9 @@ class MatchEntity extends Equatable {
     this.note,
     this.isFavorite = false,
   });
+
+  final List<bool>? penaltyAttempts1;
+  final List<bool>? penaltyAttempts2;
 
   bool get hasPenalties =>
       (penaltyScore1 != null && penaltyScore1!.isNotEmpty) ||
@@ -91,6 +96,8 @@ class MatchEntity extends Equatable {
     String? score2,
     String? penaltyScore1,
     String? penaltyScore2,
+    List<bool>? penaltyAttempts1,
+    List<bool>? penaltyAttempts2,
     String? halfTimeScore1,
     String? halfTimeScore2,
     String? extraTimeScore1,
@@ -124,6 +131,8 @@ class MatchEntity extends Equatable {
       score2: score2 ?? this.score2,
       penaltyScore1: penaltyScore1 ?? this.penaltyScore1,
       penaltyScore2: penaltyScore2 ?? this.penaltyScore2,
+      penaltyAttempts1: penaltyAttempts1 ?? this.penaltyAttempts1,
+      penaltyAttempts2: penaltyAttempts2 ?? this.penaltyAttempts2,
       halfTimeScore1: halfTimeScore1 ?? this.halfTimeScore1,
       halfTimeScore2: halfTimeScore2 ?? this.halfTimeScore2,
       extraTimeScore1: extraTimeScore1 ?? this.extraTimeScore1,
@@ -160,6 +169,8 @@ class MatchEntity extends Equatable {
     score2,
     penaltyScore1,
     penaltyScore2,
+    penaltyAttempts1,
+    penaltyAttempts2,
     halfTimeScore1,
     halfTimeScore2,
     extraTimeScore1,

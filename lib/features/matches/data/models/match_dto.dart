@@ -32,6 +32,8 @@ class MatchDto {
   final int? timestamp;
   final int? htTime;
   final String? note;
+  final List<bool>? penaltyAttempts1;
+  final List<bool>? penaltyAttempts2;
 
   const MatchDto({
     this.id,
@@ -45,6 +47,8 @@ class MatchDto {
     this.score2,
     this.penaltyScore1,
     this.penaltyScore2,
+    this.penaltyAttempts1,
+    this.penaltyAttempts2,
     this.halfTimeScore1,
     this.halfTimeScore2,
     this.extraTimeScore1,
@@ -200,6 +204,35 @@ class MatchDto {
     if (pen1 == 'null') pen1 = null;
     if (pen2 == 'null') pen2 = null;
 
+    List<bool>? parseAttempts(dynamic raw) {
+      if (raw is List) {
+        return raw
+            .map((e) => e == true || e == 1 || e == '1' || e == 'true')
+            .toList();
+      }
+      return null;
+    }
+
+    final penAttempts1 =
+        parseAttempts(json['penalty_attempts_1']) ??
+        parseAttempts(json['penaltyAttempts1']) ??
+        (json['penalties'] is Map
+            ? parseAttempts(json['penalties']['attempts_1'] ?? json['penalties']['attempts_home'])
+            : null) ??
+        (json['score'] is Map && json['score']['penalties'] is Map
+            ? parseAttempts(json['score']['penalties']['attempts_1'] ?? json['score']['penalties']['attempts_home'])
+            : null);
+
+    final penAttempts2 =
+        parseAttempts(json['penalty_attempts_2']) ??
+        parseAttempts(json['penaltyAttempts2']) ??
+        (json['penalties'] is Map
+            ? parseAttempts(json['penalties']['attempts_2'] ?? json['penalties']['attempts_away'])
+            : null) ??
+        (json['score'] is Map && json['score']['penalties'] is Map
+            ? parseAttempts(json['score']['penalties']['attempts_2'] ?? json['score']['penalties']['attempts_away'])
+            : null);
+
     // 6. Half-Time Scores
     String? ht1;
     String? ht2;
@@ -291,6 +324,8 @@ class MatchDto {
       score2: s2,
       penaltyScore1: pen1,
       penaltyScore2: pen2,
+      penaltyAttempts1: penAttempts1,
+      penaltyAttempts2: penAttempts2,
       halfTimeScore1: ht1,
       halfTimeScore2: ht2,
       extraTimeScore1: et1,
@@ -339,6 +374,8 @@ class MatchDto {
       score2: score2,
       penaltyScore1: penaltyScore1,
       penaltyScore2: penaltyScore2,
+      penaltyAttempts1: penaltyAttempts1,
+      penaltyAttempts2: penaltyAttempts2,
       halfTimeScore1: halfTimeScore1,
       halfTimeScore2: halfTimeScore2,
       extraTimeScore1: extraTimeScore1,
@@ -374,6 +411,8 @@ class MatchDto {
     String? score2,
     String? penaltyScore1,
     String? penaltyScore2,
+    List<bool>? penaltyAttempts1,
+    List<bool>? penaltyAttempts2,
     String? halfTimeScore1,
     String? halfTimeScore2,
     String? extraTimeScore1,
@@ -406,6 +445,8 @@ class MatchDto {
       score2: score2 ?? this.score2,
       penaltyScore1: penaltyScore1 ?? this.penaltyScore1,
       penaltyScore2: penaltyScore2 ?? this.penaltyScore2,
+      penaltyAttempts1: penaltyAttempts1 ?? this.penaltyAttempts1,
+      penaltyAttempts2: penaltyAttempts2 ?? this.penaltyAttempts2,
       halfTimeScore1: halfTimeScore1 ?? this.halfTimeScore1,
       halfTimeScore2: halfTimeScore2 ?? this.halfTimeScore2,
       extraTimeScore1: extraTimeScore1 ?? this.extraTimeScore1,

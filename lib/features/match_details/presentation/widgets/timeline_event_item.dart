@@ -52,65 +52,58 @@ class TimelineEventItem extends StatelessWidget {
     final isPeriodEvent = _isPeriodEvent(event.type, event.playerName);
 
     if (isPeriodEvent) {
-      final periodWidget = Container(
-        margin: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.darkCardElevated
-              : AppColors.lightCardElevated,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+      final scoreStr =
+          (event.score != null &&
+                  event.score!.trim().isNotEmpty &&
+                  event.score != '-')
+              ? event.score!.trim()
+              : null;
+      final label = _getPeriodLabel(event, l10n, isArabic);
+
+      final periodWidget = Padding(
+        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 10),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.sports_rounded,
-              size: 14,
-              color: AppColors.primary,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                _getPeriodLabel(event, l10n, isArabic),
-                style:
-                    AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (event.minute.isNotEmpty &&
-                !event.minute.contains('-') &&
-                event.minute != '0' &&
-                event.minute != '0\'' &&
-                !_isFirstHalfStart(event)) ...[
-              const SizedBox(width: 6),
+            if (scoreStr != null) ...[
               Text(
-                '(${MatchEventHelper.sanitizeMinute(event.minute)}\')',
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+                scoreStr,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? const Color(0xFFCBD5E1)
+                      : const Color(0xFF334155),
                 ),
               ),
+              const SizedBox(height: 2),
             ],
-            if (event.hasVideo) ...[
-              const SizedBox(width: 8),
-              _buildVideoBadge(context, isDark, isArabic, isSmall),
-            ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? const Color(0xFF64748B)
+                          : const Color(0xFF94A3B8),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                if (event.hasVideo) ...[
+                  const SizedBox(width: 8),
+                  _buildVideoBadge(context, isDark, isArabic, isSmall),
+                ],
+              ],
+            ),
           ],
         ),
       );
@@ -119,7 +112,7 @@ class TimelineEventItem extends StatelessWidget {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
             onTap: () => _handleVideoNavigation(context),
             child: periodWidget,
           ),
@@ -799,13 +792,6 @@ class TimelineEventItem extends StatelessWidget {
     }
     if (name.isNotEmpty) return name;
     return _localizeEventType(event.type, l10n);
-  }
-
-  bool _isFirstHalfStart(MatchEventEntity event) {
-    return event.minute == '0' ||
-        event.minute == '0\'' ||
-        event.playerName.contains('بداية الشوط الأول') ||
-        event.playerName.toLowerCase().contains('first half start');
   }
 
   String _localizeEventType(String type, AppLocalizations l10n) {

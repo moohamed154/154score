@@ -272,6 +272,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           overview: resolvedOverview,
           championshipId: resolvedChampionshipId,
           halfScores: resolvedHalfScores,
+          penaltiesDetail:
+              eventsPayloadRes.penaltiesDetail ?? state.penaltiesDetail,
           liveScore1: state.liveScore1,
           liveScore2: state.liveScore2,
           liveStatus: resolvedStatus,

@@ -797,21 +797,84 @@ class MatchVideosEntity extends Equatable {
   ];
 }
 
+class PenaltyKickItemEntity extends Equatable {
+  final int order;
+  final String? playerId;
+  final String playerName;
+  final String? playerPhoto;
+  final bool isGoal;
+  final int? score;
+
+  const PenaltyKickItemEntity({
+    required this.order,
+    this.playerId,
+    required this.playerName,
+    this.playerPhoto,
+    required this.isGoal,
+    this.score,
+  });
+
+  @override
+  List<Object?> get props => [
+    order,
+    playerId,
+    playerName,
+    playerPhoto,
+    isGoal,
+    score,
+  ];
+}
+
+class PenaltyShootoutDetailEntity extends Equatable {
+  final String? homeScore;
+  final String? awayScore;
+  final List<PenaltyKickItemEntity> homeKicks;
+  final List<PenaltyKickItemEntity> awayKicks;
+
+  const PenaltyShootoutDetailEntity({
+    this.homeScore,
+    this.awayScore,
+    this.homeKicks = const [],
+    this.awayKicks = const [],
+  });
+
+  List<bool> get homeAttempts => homeKicks.map((k) => k.isGoal).toList();
+  List<bool> get awayAttempts => awayKicks.map((k) => k.isGoal).toList();
+
+  bool get hasKicks => homeKicks.isNotEmpty || awayKicks.isNotEmpty;
+
+  @override
+  List<Object?> get props => [
+    homeScore,
+    awayScore,
+    homeKicks,
+    awayKicks,
+  ];
+}
+
 class MatchEventsPayload extends Equatable {
   final List<MatchEventEntity> events;
   final MatchVideosEntity videos;
   final String? championshipId;
   final Map<String, dynamic>? halfScores;
+  final PenaltyShootoutDetailEntity? penaltiesDetail;
 
   const MatchEventsPayload({
     this.events = const [],
     this.videos = const MatchVideosEntity(),
     this.championshipId,
     this.halfScores,
+    this.penaltiesDetail,
   });
 
   @override
-  List<Object?> get props => [events, videos, championshipId, halfScores];
+  List<Object?> get props => [
+    events,
+    videos,
+    championshipId,
+    halfScores,
+    penaltiesDetail,
+  ];
 }
 
 class MatchH2HSummaryEntity extends Equatable {

@@ -87,12 +87,14 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
 
       String? championshipId;
       Map<String, dynamic>? halfScores;
+      dynamic rawPenDetail;
 
       if (parsed is List && parsed.isNotEmpty) {
         final first = parsed[0];
         if (first is Map && first['items'] is Map) {
           final items = first['items'] as Map;
           championshipId = items['championship_id']?.toString();
+          rawPenDetail = items['penalties_detail'];
           if (items['half_scores'] is Map) {
             halfScores = Map<String, dynamic>.from(items['half_scores'] as Map);
           }
@@ -103,10 +105,46 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           championshipId =
               data['championship_id']?.toString() ??
               data['championship']?['url_id']?.toString();
+          rawPenDetail = data['penalties_detail'];
           if (data['half_scores'] is Map) {
             halfScores = Map<String, dynamic>.from(data['half_scores'] as Map);
           }
         }
+      }
+
+      PenaltyShootoutDetailEntity? penaltiesDetail;
+      if (rawPenDetail is Map) {
+        List<PenaltyKickItemEntity> parseKicks(dynamic kicksRaw) {
+          if (kicksRaw is! List) return const [];
+          final list = <PenaltyKickItemEntity>[];
+          for (final k in kicksRaw) {
+            if (k is Map) {
+              list.add(
+                PenaltyKickItemEntity(
+                  order: int.tryParse(k['order']?.toString() ?? '0') ?? 0,
+                  playerId: k['player_id']?.toString(),
+                  playerName: k['player_name']?.toString() ?? '',
+                  playerPhoto: UrlHelper.normalizeImageUrl(
+                    k['player_photo']?.toString(),
+                  ),
+                  isGoal:
+                      k['is_goal'] == true ||
+                      k['score'] == 1 ||
+                      k['score'] == '1',
+                  score: int.tryParse(k['score']?.toString() ?? ''),
+                ),
+              );
+            }
+          }
+          return list;
+        }
+
+        penaltiesDetail = PenaltyShootoutDetailEntity(
+          homeScore: rawPenDetail['home_score']?.toString(),
+          awayScore: rawPenDetail['away_score']?.toString(),
+          homeKicks: parseKicks(rawPenDetail['home_kicks']),
+          awayKicks: parseKicks(rawPenDetail['away_kicks']),
+        );
       }
 
       final rawEvents = _extractRawEvents(parsed);
@@ -302,6 +340,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         videos: videos,
         championshipId: championshipId,
         halfScores: halfScores,
+        penaltiesDetail: penaltiesDetail,
       );
     } catch (_) {
       return const MatchEventsPayload();

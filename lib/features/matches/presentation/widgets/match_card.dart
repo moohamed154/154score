@@ -274,6 +274,8 @@ class MatchCard extends StatelessWidget {
               PenaltyShootoutWidget(
                 penaltyScore1: match.penaltyScore1!,
                 penaltyScore2: match.penaltyScore2!,
+                attempts1: match.penaltyAttempts1,
+                attempts2: match.penaltyAttempts2,
                 isCompact: true,
               ),
             ],
@@ -367,7 +369,7 @@ class MatchCard extends StatelessWidget {
   }) {
     final logoSize = isSmall ? 22.0 : 26.0;
 
-    return Row(
+    final teamsRow = Row(
       children: [
         // Home Team (Name on left/start, Logo on right/end next to capsule) - Tappable
         Expanded(
@@ -438,7 +440,7 @@ class MatchCard extends StatelessWidget {
           hasScores: hasScores,
           score1Str: score1Str,
           score2Str: score2Str,
-          hasPenalties: hasPenalties,
+          hasPenalties: false,
         ),
 
         SizedBox(width: isSmall ? 8 : 12),
@@ -495,6 +497,25 @@ class MatchCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ],
+    );
+
+    if (!hasPenalties) {
+      return teamsRow;
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        teamsRow,
+        const SizedBox(height: 6),
+        PenaltyShootoutWidget(
+          penaltyScore1: match.penaltyScore1!,
+          penaltyScore2: match.penaltyScore2!,
+          attempts1: match.penaltyAttempts1,
+          attempts2: match.penaltyAttempts2,
+          isCardBanner: true,
         ),
       ],
     );

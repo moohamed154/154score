@@ -11,6 +11,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
   final List<bool>? attempts1;
   final List<bool>? attempts2;
   final bool isCompact;
+  final bool isCardBanner;
 
   const PenaltyShootoutWidget({
     super.key,
@@ -19,6 +20,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
     this.attempts1,
     this.attempts2,
     this.isCompact = false,
+    this.isCardBanner = false,
   });
 
   @override
@@ -32,10 +34,53 @@ class PenaltyShootoutWidget extends StatelessWidget {
         attempts2 != null &&
         (attempts1!.isNotEmpty || attempts2!.isNotEmpty);
 
+    // ── 1. Match Card Banner Layout (Yalla Shoot style) ───────────────────
+    if (isCardBanner) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isArabic ? 'ركلات الترجيح' : 'Penalty Kicks',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (attempts1 != null && attempts1!.isNotEmpty) ...[
+                _buildAttemptSoccerBalls(attempts1!),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                '$penaltyScore1 - $penaltyScore2',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+              ),
+              if (attempts2 != null && attempts2!.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                _buildAttemptSoccerBalls(attempts2!),
+              ],
+            ],
+          ),
+        ],
+      );
+    }
+
     final title = isCompact
         ? (isArabic ? 'ر.ت' : 'PEN')
         : (isArabic ? 'ركلات الترجيح' : 'Penalty Shootout');
 
+    // ── 2. Full Shootout Pill with Dots ──────────────────────────────────
     if (hasDetailedAttempts && !isCompact) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -72,7 +117,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildAttemptDots(attempts1!, isDark),
+                _buildAttemptSoccerBalls(attempts1!),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
@@ -84,7 +129,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                _buildAttemptDots(attempts2!, isDark),
+                _buildAttemptSoccerBalls(attempts2!),
               ],
             ),
           ],
@@ -92,6 +137,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
       );
     }
 
+    // ── 3. Compact Pill ──────────────────────────────────────────────────
     if (isCompact) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -127,6 +173,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
       );
     }
 
+    // ── 4. Standard Capsule ──────────────────────────────────────────────
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -147,15 +194,14 @@ class PenaltyShootoutWidget extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             '$title: ',
-            style:
-                AppTypography.getBodySmall(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  color: isDark ? AppColors.accent : const Color(0xFF0070BA),
-                ),
+            style: AppTypography.getBodySmall(
+              isDark: isDark,
+              isArabic: isArabic,
+            ).copyWith(
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              color: isDark ? AppColors.accent : const Color(0xFF0070BA),
+            ),
           ),
           Text(
             '$penaltyScore1 : $penaltyScore2',
@@ -170,17 +216,27 @@ class PenaltyShootoutWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildAttemptDots(List<bool> attempts, bool isDark) {
+  Widget _buildAttemptSoccerBalls(List<bool> attempts) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: attempts.map((success) {
         return Container(
-          width: 7,
-          height: 7,
+          width: 14,
+          height: 14,
           margin: const EdgeInsets.symmetric(horizontal: 1.5),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: success ? AppColors.primary : AppColors.liveRed,
+            color: success ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+            border: Border.all(
+              color: success ? const Color(0xFF059669) : const Color(0xFFDC2626),
+              width: 0.6,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.sports_soccer_rounded,
+            size: 9.5,
+            color: Colors.white,
           ),
         );
       }).toList(),

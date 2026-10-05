@@ -26,6 +26,7 @@ class MatchDetailsState extends Equatable {
   final String? livePeriod;
   final String? championshipId;
   final Map<String, dynamic>? halfScores;
+  final PenaltyShootoutDetailEntity? penaltiesDetail;
   final String? errorMessage;
 
   const MatchDetailsState({
@@ -41,6 +42,7 @@ class MatchDetailsState extends Equatable {
     this.overview,
     this.championshipId,
     this.halfScores,
+    this.penaltiesDetail,
     this.liveScore1,
     this.liveScore2,
     this.livePenaltyScore1,
@@ -66,6 +68,7 @@ class MatchDetailsState extends Equatable {
     MatchOverviewDataEntity? overview,
     String? championshipId,
     Map<String, dynamic>? halfScores,
+    PenaltyShootoutDetailEntity? penaltiesDetail,
     String? liveScore1,
     String? liveScore2,
     String? livePenaltyScore1,
@@ -90,6 +93,7 @@ class MatchDetailsState extends Equatable {
       overview: overview ?? this.overview,
       championshipId: championshipId ?? this.championshipId,
       halfScores: halfScores ?? this.halfScores,
+      penaltiesDetail: penaltiesDetail ?? this.penaltiesDetail,
       liveScore1: liveScore1 ?? this.liveScore1,
       liveScore2: liveScore2 ?? this.liveScore2,
       livePenaltyScore1: livePenaltyScore1 ?? this.livePenaltyScore1,
@@ -117,6 +121,7 @@ class MatchDetailsState extends Equatable {
     overview,
     championshipId,
     halfScores,
+    penaltiesDetail,
     liveScore1,
     liveScore2,
     livePenaltyScore1,

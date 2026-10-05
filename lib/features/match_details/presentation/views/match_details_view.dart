@@ -44,6 +44,7 @@ import '../widgets/match_quick_stats_card.dart';
 import '../widgets/match_return_leg_card.dart';
 import '../widgets/stat_comparison_bar.dart';
 import '../widgets/timeline_event_item.dart';
+import '../widgets/penalty_shootout_events_card.dart';
 
 import '../../../leagues/presentation/bloc/league_bloc.dart';
 import '../../../leagues/presentation/bloc/league_event.dart';
@@ -1173,31 +1174,57 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       return _buildEventsSkeleton(context, isDark, isArabic);
     }
 
+    final hasShootout =
+        (state.penaltiesDetail != null && state.penaltiesDetail!.hasKicks) ||
+        match.hasPenalties ||
+        (state.livePenaltyScore1 != null && state.livePenaltyScore2 != null);
+
     // Filter events based on selected filter
     final displayedEvents = state.events.where((e) {
-      if (_eventFilter == _EventFilter.all) return true;
-      // Highlights: Goals, disallowed goals, penalties, red cards, yellow cards, subs, period markers, video events, VAR
+      if (_eventFilter == _EventFilter.all) {
+        // If the dedicated Shootout Box is rendered at top, don't duplicate full time / penalty shootout markers in timeline
+        if (hasShootout && e.isPeriodMarker) {
+          final name = e.playerName.trim().toLowerCase();
+          if (name.contains('ترجيح') ||
+              name.contains('shootout') ||
+              name.contains('نهاية المباراة') ||
+              name.contains('نهاية اللقاء') ||
+              name.contains('full time') ||
+              name == 'ft') {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // Highlights: ONLY Goals, Red Cards, VAR decisions, and video events
       if (e.hasVideo) return true;
+      if (e.isPeriodMarker) return false;
+
       final t = e.type.toLowerCase();
+      // Exclude substitutions
+      if (t.contains('sub')) return false;
+      // Exclude regular yellow cards (unless red card)
+      if (t.contains('yellow') && !t.contains('red')) return false;
+      // Exclude whistle/period markers
+      if (t.contains('start-end') ||
+          t.contains('period') ||
+          t.contains('whistle')) {
+        return false;
+      }
+
       return t.contains('goal') ||
-          t.contains('penalty') ||
-          t.contains('card') ||
           t.contains('red') ||
-          t.contains('yellow') ||
-          t.contains('sub') ||
           t.contains('var') ||
           t.contains('disallow') ||
-          t.contains('event') ||
-          t.contains('start-end') ||
-          t.contains('period') ||
-          t.contains('whistle') ||
           t == 'goal-x';
     }).toList();
 
-    // Fallback: If highlights filter yields empty but events exist, show all events
-    final eventsToRender = (displayedEvents.isEmpty && state.events.isNotEmpty)
-        ? state.events
-        : displayedEvents;
+    // Fallback: If highlights filter yields empty but events exist and NO shootout card, show all events
+    final eventsToRender =
+        (displayedEvents.isEmpty && state.events.isNotEmpty && !hasShootout)
+            ? state.events
+            : displayedEvents;
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -1229,8 +1256,29 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
           ),
           const SizedBox(height: AppDimensions.sm),
 
+          // ── Penalty Shootout Box (Yalla Shoot style) ─────────────────────
+          if (hasShootout) ...[
+            PenaltyShootoutEventsCard(
+              penaltiesDetail: state.penaltiesDetail,
+              penaltyScore1: state.penaltiesDetail?.homeScore ??
+                  state.livePenaltyScore1 ??
+                  match.penaltyScore1 ??
+                  '0',
+              penaltyScore2: state.penaltiesDetail?.awayScore ??
+                  state.livePenaltyScore2 ??
+                  match.penaltyScore2 ??
+                  '0',
+              fallbackAttempts1: match.penaltyAttempts1,
+              fallbackAttempts2: match.penaltyAttempts2,
+              fullTimeScore:
+                  '${state.liveScore1 ?? match.score1 ?? '0'} - ${state.liveScore2 ?? match.score2 ?? '0'}',
+              isDark: isDark,
+              isArabic: isArabic,
+            ),
+          ],
+
           // ── Events Timeline Container ────────────────────────────────────
-          if (eventsToRender.isEmpty)
+          if (eventsToRender.isEmpty && !hasShootout)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: EmptyView(
@@ -1238,7 +1286,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                 icon: Icons.timeline_rounded,
               ),
             )
-          else
+          else if (eventsToRender.isNotEmpty)
             Container(
               decoration: BoxDecoration(
                 color: isDark
