@@ -478,6 +478,7 @@ class _StandingsViewState extends State<StandingsView> {
         if (norm.isNotEmpty) favSet.add(norm.toLowerCase());
       }
     }
+    favSet.addAll(favState.cachedFavCompetitionKeys);
 
     final List<ChampionshipInfo> favoriteCards = [];
     final Set<String> addedFavIds = {};
@@ -500,7 +501,7 @@ class _StandingsViewState extends State<StandingsView> {
       }
     }
 
-    // Also include any league marked favorite directly in favSet or state
+    // Also include any league marked favorite directly in favSet in O(1)
     for (final l in _allLeagues) {
       if (!addedFavIds.contains(l.id)) {
         final lowerName = _leagueLowerName[l] ?? l.name.trim().toLowerCase();
@@ -508,8 +509,7 @@ class _StandingsViewState extends State<StandingsView> {
         final isFav = favSet.contains(l.id.toLowerCase()) ||
             (l.seasonId != null && favSet.contains(l.seasonId!.toLowerCase())) ||
             favSet.contains(lowerName) ||
-            (lowerSlug.isNotEmpty && favSet.contains(lowerSlug)) ||
-            favState.isFavoriteCompetition(id: l.id, name: l.name, slug: l.slug);
+            (lowerSlug.isNotEmpty && favSet.contains(lowerSlug));
 
         if (isFav) {
           addedFavIds.add(l.id);
@@ -523,6 +523,29 @@ class _StandingsViewState extends State<StandingsView> {
     for (final l in _allLeagues) {
       if (!addedFavIds.contains(l.id)) {
         hiddenCards.add(l);
+      }
+    }
+
+    // 4. If items are in pending transition, keep them in place while animation plays
+    if (_pendingTransitionIds.isNotEmpty) {
+      for (final pendingId in _pendingTransitionIds) {
+        if (_memoizedFavorites.any((c) => c.id == pendingId)) {
+          if (!favoriteCards.any((c) => c.id == pendingId)) {
+            final card = _leagueById[pendingId];
+            if (card != null) {
+              favoriteCards.add(card);
+              hiddenCards.removeWhere((c) => c.id == pendingId);
+            }
+          }
+        } else if (_memoizedHidden.any((c) => c.id == pendingId)) {
+          if (!hiddenCards.any((c) => c.id == pendingId)) {
+            final card = _leagueById[pendingId];
+            if (card != null) {
+              hiddenCards.add(card);
+              favoriteCards.removeWhere((c) => c.id == pendingId);
+            }
+          }
+        }
       }
     }
 
@@ -798,27 +821,6 @@ class _StandingsViewState extends State<StandingsView> {
                   List<ChampionshipInfo>.from(_memoizedHidden);
 
               final isFavoritesTab = _activeTab == StandingsTab.favorites;
-
-              // Smooth Star Animation Preservation:
-              // If an item was just toggled, keep it visible in its current tab for 320ms
-              // so the user sees the star bounce animation, after which it cleanly transitions.
-              if (_pendingTransitionIds.isNotEmpty) {
-                if (isFavoritesTab) {
-                  for (final id in _pendingTransitionIds) {
-                    if (!favoriteCards.any((c) => c.id == id)) {
-                      final item = _leagueById[id];
-                      if (item != null) favoriteCards.add(item);
-                    }
-                  }
-                } else {
-                  for (final id in _pendingTransitionIds) {
-                    if (!hiddenCards.any((c) => c.id == id)) {
-                      final item = _leagueById[id];
-                      if (item != null) hiddenCards.insert(0, item);
-                    }
-                  }
-                }
-              }
 
               // Search query filtering
               final searchQuery = _searchController.text.trim().toLowerCase();

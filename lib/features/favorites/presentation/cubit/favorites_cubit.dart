@@ -32,15 +32,13 @@ class FavoritesState extends Equatable {
   ) {
     if (favCompetitions.isEmpty) return const {};
     final keys = <String>{};
+
     for (final fav in favCompetitions) {
       final clean = fav.trim().toLowerCase();
-      if (clean.isNotEmpty) {
-        keys.add(clean);
-        final norm = LeagueResolver.normalize(clean);
-        if (norm.isNotEmpty) keys.add(norm);
-        final rId = LeagueResolver.resolveId(clean);
-        if (rId != null && rId.isNotEmpty) keys.add(rId);
-      }
+      if (clean.isEmpty) continue;
+      keys.add(clean);
+
+      // Fast title mapping
       final mappedTitle = titles[fav] ?? titles[clean];
       if (mappedTitle != null && mappedTitle.trim().isNotEmpty) {
         final cleanMapped = mappedTitle.trim().toLowerCase();
@@ -50,14 +48,22 @@ class FavoritesState extends Equatable {
         final rMapped = LeagueResolver.resolveId(cleanMapped);
         if (rMapped != null && rMapped.isNotEmpty) keys.add(rMapped);
       }
-      for (final entry in titles.entries) {
-        if (entry.value.trim().toLowerCase() == clean ||
-            LeagueResolver.normalize(entry.value).toLowerCase() == clean) {
-          final idKey = entry.key.trim().toLowerCase();
-          keys.add(idKey);
-          final rId = LeagueResolver.resolveId(idKey);
-          if (rId != null && rId.isNotEmpty) keys.add(rId);
-        }
+
+      final norm = LeagueResolver.normalize(clean);
+      if (norm.isNotEmpty) keys.add(norm);
+      final rId = LeagueResolver.resolveId(clean);
+      if (rId != null && rId.isNotEmpty) keys.add(rId);
+    }
+
+    // Fast O(M) single pass over titles instead of O(N * M) nested regex loop
+    for (final entry in titles.entries) {
+      final idKey = entry.key.trim().toLowerCase();
+      final titleVal = entry.value.trim().toLowerCase();
+      if (keys.contains(titleVal) || keys.contains(idKey)) {
+        keys.add(idKey);
+        keys.add(titleVal);
+        final rId = LeagueResolver.resolveId(idKey);
+        if (rId != null && rId.isNotEmpty) keys.add(rId);
       }
     }
     return keys;
@@ -69,13 +75,15 @@ class FavoritesState extends Equatable {
   ) {
     if (favTeams.isEmpty) return const {};
     final keys = <String>{};
+
     for (final team in favTeams) {
       final clean = team.trim().toLowerCase();
-      if (clean.isNotEmpty) {
-        keys.add(clean);
-        final cKey = TeamResolver.getCanonicalKey(clean);
-        if (cKey != null && cKey.isNotEmpty) keys.add(cKey.toLowerCase());
-      }
+      if (clean.isEmpty) continue;
+      keys.add(clean);
+
+      final cKey = TeamResolver.getCanonicalKey(clean);
+      if (cKey != null && cKey.isNotEmpty) keys.add(cKey.toLowerCase());
+
       final mappedTitle = titles[team] ?? titles[clean];
       if (mappedTitle != null && mappedTitle.trim().isNotEmpty) {
         final cleanMapped = mappedTitle.trim().toLowerCase();
@@ -85,14 +93,17 @@ class FavoritesState extends Equatable {
           keys.add(cMapped.toLowerCase());
         }
       }
-      for (final entry in titles.entries) {
-        if (entry.value.trim().toLowerCase() == clean ||
-            TeamResolver.areSameTeam(entry.value, clean)) {
-          final idKey = entry.key.trim().toLowerCase();
-          keys.add(idKey);
-          final cId = TeamResolver.getCanonicalKey(idKey);
-          if (cId != null && cId.isNotEmpty) keys.add(cId.toLowerCase());
-        }
+    }
+
+    // Fast O(M) single pass over titles
+    for (final entry in titles.entries) {
+      final idKey = entry.key.trim().toLowerCase();
+      final titleVal = entry.value.trim().toLowerCase();
+      if (keys.contains(titleVal) || keys.contains(idKey)) {
+        keys.add(idKey);
+        keys.add(titleVal);
+        final cId = TeamResolver.getCanonicalKey(idKey);
+        if (cId != null && cId.isNotEmpty) keys.add(cId.toLowerCase());
       }
     }
     return keys;
@@ -110,15 +121,23 @@ class FavoritesState extends Equatable {
     final nextTitles = competitionTitles ?? this.competitionTitles;
     final nextTeamTitles = teamTitles ?? this.teamTitles;
 
+    final shouldRebuildCompKeys =
+        favoriteCompetitions != null || competitionTitles != null;
+    final shouldRebuildTeamKeys =
+        favoriteTeams != null || teamTitles != null;
+
     return FavoritesState(
       favoriteTeams: nextTeams,
       favoriteCompetitions: nextCompetitions,
       favoriteMatches: favoriteMatches ?? this.favoriteMatches,
       competitionTitles: nextTitles,
       teamTitles: nextTeamTitles,
-      cachedFavCompetitionKeys:
-          _buildCompetitionKeys(nextCompetitions, nextTitles),
-      cachedFavTeamKeys: _buildTeamKeys(nextTeams, nextTeamTitles),
+      cachedFavCompetitionKeys: shouldRebuildCompKeys
+          ? _buildCompetitionKeys(nextCompetitions, nextTitles)
+          : cachedFavCompetitionKeys,
+      cachedFavTeamKeys: shouldRebuildTeamKeys
+          ? _buildTeamKeys(nextTeams, nextTeamTitles)
+          : cachedFavTeamKeys,
     );
   }
 
@@ -399,42 +418,49 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     final updatedList = List<String>.from(state.favoriteCompetitions);
     final updatedTitles = Map<String, String>.from(state.competitionTitles);
 
+    final canonicalName = effectiveName.isNotEmpty
+        ? effectiveName
+        : (cleanId ?? '');
+
     if (wasFav) {
+      final originalLen = updatedList.length;
+      // 1. Fast direct removal
       updatedList.removeWhere((item) {
         final itemTrim = item.trim();
-        if (cleanId != null && cleanId.isNotEmpty) {
-          if (itemTrim.toLowerCase() == cleanId.toLowerCase()) return true;
-          if (state.competitionTitles[cleanId]?.toLowerCase() == itemTrim.toLowerCase()) return true;
-          if (state.competitionTitles[itemTrim]?.toLowerCase() == cleanId.toLowerCase()) return true;
-          if (lookupTitle != null && lookupTitle.toLowerCase() == itemTrim.toLowerCase()) return true;
-        }
-        if (effectiveName.isNotEmpty && itemTrim.toLowerCase() == effectiveName.toLowerCase()) {
+        final itemLower = itemTrim.toLowerCase();
+        if (cleanId != null && cleanId.isNotEmpty && itemLower == cleanId.toLowerCase()) {
           return true;
         }
-        final mappedId = state.competitionTitles[itemTrim];
-        return LeagueResolver.areSameCompetition(
-          itemTrim,
-          effectiveName,
-          idA: mappedId,
-          idB: cleanId,
-        );
+        if (effectiveName.isNotEmpty && itemLower == effectiveName.toLowerCase()) {
+          return true;
+        }
+        if (cleanId != null && state.competitionTitles[cleanId]?.toLowerCase() == itemLower) {
+          return true;
+        }
+        if (state.competitionTitles[itemTrim]?.toLowerCase() == cleanId?.toLowerCase()) {
+          return true;
+        }
+        if (lookupTitle != null && lookupTitle.toLowerCase() == itemLower) {
+          return true;
+        }
+        return false;
       });
-    } else {
-      final canonicalName = effectiveName.isNotEmpty
-          ? effectiveName
-          : (cleanId ?? '');
 
-      if (canonicalName.isNotEmpty &&
-          !updatedList.any((item) {
-            final itemTrim = item.trim();
-            final mappedId = state.competitionTitles[itemTrim];
-            return LeagueResolver.areSameCompetition(
-              itemTrim,
-              canonicalName,
-              idA: mappedId,
-              idB: cleanId,
-            );
-          })) {
+      // 2. Fallback only if direct comparison didn't match
+      if (updatedList.length == originalLen) {
+        updatedList.removeWhere((item) {
+          final itemTrim = item.trim();
+          final mappedId = state.competitionTitles[itemTrim];
+          return LeagueResolver.areSameCompetition(
+            itemTrim,
+            effectiveName,
+            idA: mappedId,
+            idB: cleanId,
+          );
+        });
+      }
+    } else {
+      if (canonicalName.isNotEmpty && !updatedList.contains(canonicalName)) {
         updatedList.add(canonicalName);
       }
       if (cleanId != null && cleanId.isNotEmpty && canonicalName.isNotEmpty) {
@@ -447,12 +473,10 @@ class FavoritesCubit extends Cubit<FavoritesState> {
       competitionTitles: updatedTitles,
     ));
 
-    await _storage.toggleFavoriteCompetition(
-      compName: effectiveName,
-      id: cleanId,
-      name: effectiveName,
-      slug: slug,
-    );
+    await _storage.setFavoriteCompetitions(updatedList);
+    if (cleanId != null && cleanId.isNotEmpty && canonicalName.isNotEmpty) {
+      unawaited(_storage.registerCompetitionTitles({cleanId: canonicalName}));
+    }
   }
 
   Future<void> registerCompetitionTitles(Map<String, String> titles) async {
