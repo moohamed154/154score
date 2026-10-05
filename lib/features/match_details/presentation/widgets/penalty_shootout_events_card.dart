@@ -83,7 +83,11 @@ class PenaltyShootoutEventsCard extends StatelessWidget {
                 child: Align(
                   alignment: AlignmentDirectional.centerEnd,
                   child: homeAttempts.isNotEmpty
-                      ? _buildBallRow(homeAttempts)
+                      ? FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: _buildBallRow(homeAttempts),
+                        )
                       : const SizedBox.shrink(),
                 ),
               ),
@@ -106,7 +110,11 @@ class PenaltyShootoutEventsCard extends StatelessWidget {
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: awayAttempts.isNotEmpty
-                      ? _buildBallRow(awayAttempts)
+                      ? FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: _buildBallRow(awayAttempts),
+                        )
                       : const SizedBox.shrink(),
                 ),
               ),

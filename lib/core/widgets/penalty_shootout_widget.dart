@@ -55,7 +55,11 @@ class PenaltyShootoutWidget extends StatelessWidget {
                 child: Align(
                   alignment: AlignmentDirectional.centerEnd,
                   child: (attempts1 != null && attempts1!.isNotEmpty)
-                      ? _buildAttemptSoccerBalls(attempts1!)
+                      ? FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: _buildAttemptSoccerBalls(attempts1!),
+                        )
                       : const SizedBox.shrink(),
                 ),
               ),
@@ -75,7 +79,11 @@ class PenaltyShootoutWidget extends StatelessWidget {
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: (attempts2 != null && attempts2!.isNotEmpty)
-                      ? _buildAttemptSoccerBalls(attempts2!)
+                      ? FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: _buildAttemptSoccerBalls(attempts2!),
+                        )
                       : const SizedBox.shrink(),
                 ),
               ),
@@ -128,7 +136,11 @@ class PenaltyShootoutWidget extends StatelessWidget {
                 Expanded(
                   child: Align(
                     alignment: AlignmentDirectional.centerEnd,
-                    child: _buildAttemptSoccerBalls(attempts1!),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: _buildAttemptSoccerBalls(attempts1!),
+                    ),
                   ),
                 ),
                 Padding(
@@ -145,7 +157,11 @@ class PenaltyShootoutWidget extends StatelessWidget {
                 Expanded(
                   child: Align(
                     alignment: AlignmentDirectional.centerStart,
-                    child: _buildAttemptSoccerBalls(attempts2!),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: _buildAttemptSoccerBalls(attempts2!),
+                    ),
                   ),
                 ),
               ],
