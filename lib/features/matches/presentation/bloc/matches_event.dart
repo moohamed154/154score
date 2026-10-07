@@ -7,7 +7,7 @@ import '../../domain/entities/match_entity.dart';
 
 enum MatchFilterType { all, live, upcoming, finished, favorites }
 
-enum MatchesSortOrder { importance, time, league }
+enum MatchesSortOrder { championship, importance, time, importantOnly, league }
 
 extension MatchFilterTypeX on MatchFilterType {
   String? toApiString() {
@@ -24,8 +24,10 @@ extension MatchFilterTypeX on MatchFilterType {
 extension MatchesSortOrderX on MatchesSortOrder {
   String toApiString() {
     return switch (this) {
+      MatchesSortOrder.championship ||
       MatchesSortOrder.importance => 'importance',
       MatchesSortOrder.time => 'time',
+      MatchesSortOrder.importantOnly => 'important_only',
       MatchesSortOrder.league => 'league',
     };
   }
@@ -67,16 +69,24 @@ class ApplyMatchesFilterEvent extends MatchesEvent {
   final String? leagueId;
   final String? leagueTitle;
   final MatchesSortOrder? sortOrder;
+  final bool? hideFavorites;
 
   const ApplyMatchesFilterEvent({
     this.filter,
     this.leagueId,
     this.leagueTitle,
     this.sortOrder,
+    this.hideFavorites,
   });
 
   @override
-  List<Object?> get props => [filter, leagueId, leagueTitle, sortOrder];
+  List<Object?> get props => [
+    filter,
+    leagueId,
+    leagueTitle,
+    sortOrder,
+    hideFavorites,
+  ];
 }
 
 class ResetMatchesFilterEvent extends MatchesEvent {

@@ -139,6 +139,20 @@ class AppLocalizations {
       'filter_sort_importance': 'Importance',
       'filter_sort_time': 'Time',
       'filter_sort_league': 'Championship',
+      'filter_sort_championship': 'Championship',
+      'filter_hide_favorites': 'Hide favourites',
+      'filter_championship_subtitle':
+          'Matches will be organized in separate boxes for each championship',
+      'filter_time_subtitle':
+          'Matches will be listed in chronological order, starting with the soonest.',
+      'filter_important_only': 'Important ONLY',
+      'filter_important_only_subtitle':
+          'Only the most popular matches will be shown',
+      'filter_live_only': 'Live Only',
+      'filter_live_only_subtitle': 'Only live matches will be shown',
+      'filter_favorite_only': 'Favorite Only',
+      'filter_favorite_only_subtitle':
+          'Only matches of your favorite teams will be shown',
       'filter_league_header': 'Championship / League',
       'filter_all_leagues': 'All Championships',
       'filter_apply': 'Apply',
@@ -485,6 +499,19 @@ class AppLocalizations {
       'filter_sort_importance': 'الأهمية',
       'filter_sort_time': 'التوقيت',
       'filter_sort_league': 'البطولة',
+      'filter_sort_championship': 'البطولة',
+      'filter_hide_favorites': 'إخفاء المفضلة',
+      'filter_championship_subtitle':
+          'تنظيم المباريات في صناديق منفصلة لكل بطولة',
+      'filter_time_subtitle':
+          'عرض المباريات بترتيب زمني متسلسل بدءاً من الأقرب',
+      'filter_important_only': 'المهمة فقط',
+      'filter_important_only_subtitle':
+          'عرض المباريات والبطولات الأكثر شعبية فقط',
+      'filter_live_only': 'المباشر فقط',
+      'filter_live_only_subtitle': 'عرض المباريات الجارية حالياً فقط',
+      'filter_favorite_only': 'المفضلة فقط',
+      'filter_favorite_only_subtitle': 'عرض مباريات فرقك المفضلة فقط',
       'filter_league_header': 'البطولة / الدوري',
       'filter_all_leagues': 'جميع البطولات',
       'filter_apply': 'تطبيق',

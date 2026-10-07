@@ -10,6 +10,7 @@ import 'package:score154/features/matches/domain/repositories/matches_repository
 import 'package:score154/features/matches/presentation/bloc/matches_bloc.dart';
 import 'package:score154/features/matches/presentation/bloc/matches_event.dart';
 import 'package:score154/features/matches/presentation/bloc/matches_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockMatchesRepository extends Mock implements MatchesRepository {}
 
@@ -18,6 +19,9 @@ class MockWebSocketService extends Mock implements WebSocketService {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
+
   late MockMatchesRepository mockRepository;
   late MockWebSocketService mockWebSocketService;
   late MockLocalStorageService mockStorage;
@@ -37,6 +41,7 @@ void main() {
     when(() => mockStorage.getFavoriteTeams()).thenReturn([]);
     when(() => mockStorage.getMatchesFilter()).thenReturn(null);
     when(() => mockStorage.getMatchesSortOrder()).thenReturn(null);
+    when(() => mockStorage.getHideFavorites()).thenReturn(false);
     when(
       () => mockStorage.isFavoriteCompetition(
         compName: any(named: 'compName'),
@@ -48,6 +53,8 @@ void main() {
     when(() => mockStorage.setMatchesFilter(any()))
         .thenAnswer((_) async => true);
     when(() => mockStorage.setMatchesSortOrder(any()))
+        .thenAnswer((_) async => true);
+    when(() => mockStorage.setHideFavorites(any()))
         .thenAnswer((_) async => true);
   });
 

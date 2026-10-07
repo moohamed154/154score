@@ -326,7 +326,7 @@ class _MatchesViewState extends State<MatchesView> {
 
     // Extract Favorite Matches for today (pinned on top)
     final List<MatchEntity> favoriteMatches = [];
-    if (state.activeFilter != MatchFilterType.favorites) {
+    if (state.activeFilter != MatchFilterType.favorites && !state.hideFavorites) {
       for (final league in state.filteredLeagues) {
         for (final m in league.matches) {
           if (m.isFavorite && !favoriteMatches.any((fav) => fav.id == m.id)) {

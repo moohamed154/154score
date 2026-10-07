@@ -14,6 +14,7 @@ class MatchesState extends Equatable {
   final String? selectedLeagueId;
   final String? selectedLeagueTitle;
   final MatchesSortOrder sortOrder;
+  final bool hideFavorites;
   final String searchQuery;
   final String? errorMessage;
   final int liveMatchesCount;
@@ -28,7 +29,8 @@ class MatchesState extends Equatable {
     this.activeFilter = MatchFilterType.all,
     this.selectedLeagueId,
     this.selectedLeagueTitle,
-    this.sortOrder = MatchesSortOrder.importance,
+    this.sortOrder = MatchesSortOrder.championship,
+    this.hideFavorites = false,
     this.searchQuery = '',
     this.errorMessage,
     this.liveMatchesCount = 0,
@@ -39,7 +41,9 @@ class MatchesState extends Equatable {
   bool get hasActiveFilter =>
       activeFilter != MatchFilterType.all ||
       selectedLeagueId != null ||
-      sortOrder != MatchesSortOrder.importance;
+      (sortOrder != MatchesSortOrder.importance &&
+          sortOrder != MatchesSortOrder.championship) ||
+      hideFavorites;
 
   int get filteredMatchesCount =>
       filteredLeagues.fold<int>(0, (sum, l) => sum + l.matches.length);
@@ -82,6 +86,7 @@ class MatchesState extends Equatable {
     bool clearSelectedLeague = false,
     String? selectedLeagueTitle,
     MatchesSortOrder? sortOrder,
+    bool? hideFavorites,
     String? searchQuery,
     String? errorMessage,
     int? liveMatchesCount,
@@ -101,6 +106,7 @@ class MatchesState extends Equatable {
           ? null
           : (selectedLeagueTitle ?? this.selectedLeagueTitle),
       sortOrder: sortOrder ?? this.sortOrder,
+      hideFavorites: hideFavorites ?? this.hideFavorites,
       searchQuery: searchQuery ?? this.searchQuery,
       errorMessage: errorMessage ?? this.errorMessage,
       liveMatchesCount: liveMatchesCount ?? this.liveMatchesCount,
@@ -119,6 +125,7 @@ class MatchesState extends Equatable {
     selectedLeagueId,
     selectedLeagueTitle,
     sortOrder,
+    hideFavorites,
     searchQuery,
     errorMessage,
     liveMatchesCount,

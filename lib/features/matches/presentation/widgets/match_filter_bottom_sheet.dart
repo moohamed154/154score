@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -13,13 +13,15 @@ class MatchFilterBottomSheet extends StatefulWidget {
   const MatchFilterBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
+    final bloc = context.read<MatchesBloc>();
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (bottomSheetContext) {
         return BlocProvider.value(
-          value: context.read<MatchesBloc>(),
+          value: bloc,
           child: const MatchFilterBottomSheet(),
         );
       },
@@ -33,25 +35,34 @@ class MatchFilterBottomSheet extends StatefulWidget {
 class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
   late MatchFilterType _tempFilter;
   late MatchesSortOrder _tempSortOrder;
+  late bool _tempHideFavorites;
 
   @override
   void initState() {
     super.initState();
     final state = context.read<MatchesBloc>().state;
     _tempFilter = state.activeFilter;
-    _tempSortOrder = state.sortOrder;
+    _tempSortOrder = (state.sortOrder == MatchesSortOrder.importance)
+        ? MatchesSortOrder.championship
+        : state.sortOrder;
+    _tempHideFavorites = state.hideFavorites;
   }
 
   void _resetFilters() {
     setState(() {
       _tempFilter = MatchFilterType.all;
-      _tempSortOrder = MatchesSortOrder.importance;
+      _tempSortOrder = MatchesSortOrder.championship;
+      _tempHideFavorites = false;
     });
   }
 
   void _applyFilters() {
     context.read<MatchesBloc>().add(
-      ApplyMatchesFilterEvent(filter: _tempFilter, sortOrder: _tempSortOrder),
+      ApplyMatchesFilterEvent(
+        filter: _tempFilter,
+        sortOrder: _tempSortOrder,
+        hideFavorites: _tempHideFavorites,
+      ),
     );
     Navigator.of(context).pop();
   }
@@ -65,12 +76,14 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
 
     return BlocBuilder<MatchesBloc, MatchesState>(
       builder: (context, state) {
-        final hasAnyFilters =
-            _tempFilter != MatchFilterType.all ||
-            _tempSortOrder != MatchesSortOrder.importance;
+        final isDefault =
+            _tempFilter == MatchFilterType.all &&
+            (_tempSortOrder == MatchesSortOrder.championship ||
+                _tempSortOrder == MatchesSortOrder.importance) &&
+            !_tempHideFavorites;
 
         return Container(
-          constraints: BoxConstraints(maxHeight: mediaQuery.size.height * 0.88),
+          height: mediaQuery.size.height * 0.85,
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: const BorderRadius.vertical(
@@ -85,7 +98,6 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
             ],
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               // Top Drag Handle
               const SizedBox(height: 12),
@@ -130,7 +142,7 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                         ).copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
-                    if (hasAnyFilters)
+                    if (!isDefault)
                       TextButton.icon(
                         onPressed: _resetFilters,
                         icon: const Icon(Icons.refresh_rounded, size: 16),
@@ -154,7 +166,7 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
               const Divider(height: 1, thickness: 0.8),
 
               // Scrollable Options Content
-              Flexible(
+              Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
@@ -165,7 +177,121 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Section 1: Match Status
+                      // Top Row: Hide Favourites Switch (exact Yalla Shoot style)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightCard,
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusMd,
+                          ),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _tempHideFavorites
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.star_outline_rounded,
+                              size: 20,
+                              color: _tempHideFavorites
+                                  ? AppColors.liveRed
+                                  : (isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                l10n.translate('filter_hide_favorites'),
+                                style: AppTypography.getBodyMedium(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: _tempHideFavorites,
+                              activeThumbColor: AppColors.primary,
+                              activeTrackColor: AppColors.primary.withValues(
+                                alpha: 0.5,
+                              ),
+                              onChanged: (val) {
+                                setState(() {
+                                  _tempHideFavorites = val;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Section: Sort Order Mode Cards (Championship, Time, Important ONLY)
+                      _buildModeCard(
+                        context: context,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                        title: l10n.translate('filter_sort_championship'),
+                        subtitle: l10n.translate('filter_championship_subtitle'),
+                        icon: Icons.emoji_events_outlined,
+                        isSelected:
+                            _tempSortOrder == MatchesSortOrder.championship ||
+                            _tempSortOrder == MatchesSortOrder.importance,
+                        onTap: () {
+                          setState(() {
+                            _tempSortOrder = MatchesSortOrder.championship;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 10),
+
+                      _buildModeCard(
+                        context: context,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                        title: l10n.translate('filter_sort_time'),
+                        subtitle: l10n.translate('filter_time_subtitle'),
+                        icon: Icons.access_time_rounded,
+                        isSelected: _tempSortOrder == MatchesSortOrder.time,
+                        onTap: () {
+                          setState(() {
+                            _tempSortOrder = MatchesSortOrder.time;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 10),
+
+                      _buildModeCard(
+                        context: context,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                        title: l10n.translate('filter_important_only'),
+                        subtitle: l10n.translate('filter_important_only_subtitle'),
+                        icon: Icons.local_fire_department_outlined,
+                        isSelected:
+                            _tempSortOrder == MatchesSortOrder.importantOnly,
+                        onTap: () {
+                          setState(() {
+                            _tempSortOrder = MatchesSortOrder.importantOnly;
+                          });
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Section: Match Status Chips
                       _buildSectionHeader(
                         context,
                         title: l10n.translate('filter_status_header'),
@@ -173,32 +299,19 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                         isDark: isDark,
                         isArabic: isArabic,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       _buildStatusChips(
                         context,
                         isDark,
                         isArabic,
                         state.liveMatchesCount,
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // Section 2: Sort Order
-                      _buildSectionHeader(
-                        context,
-                        title: l10n.translate('filter_sort_header'),
-                        icon: Icons.sort_rounded,
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildSortOrderOptions(context, isDark, isArabic),
                     ],
                   ),
                 ),
               ),
 
-              // Bottom Action Bar
+              // Bottom Action Bar (Apply button)
               Container(
                 padding: EdgeInsets.only(
                   left: AppDimensions.lg,
@@ -251,13 +364,132 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
     );
   }
 
+  Widget _buildModeCard({
+    required BuildContext context,
+    required bool isDark,
+    required bool isArabic,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: isSelected
+          ? (isDark
+              ? AppColors.primary.withValues(alpha: 0.12)
+              : AppColors.primary.withValues(alpha: 0.08))
+          : (isDark ? AppColors.darkCard : AppColors.lightCard),
+      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primary
+                  : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              width: isSelected ? 1.8 : 0.8,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary.withValues(alpha: 0.2)
+                      : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: isSelected
+                      ? AppColors.primary
+                      : (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                        color: isSelected
+                            ? (isDark ? Colors.white : AppColors.lightTextPrimary)
+                            : (isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primary
+                          : (isDark ? Colors.white30 : Colors.black26),
+                      width: 2,
+                    ),
+                  ),
+                  child: isSelected
+                      ? Center(
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(
     BuildContext context, {
     required String title,
     required IconData icon,
     required bool isDark,
     required bool isArabic,
-    Widget? trailing,
   }) {
     return Row(
       children: [
@@ -276,7 +508,6 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
             isArabic: isArabic,
           ).copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.2),
         ),
-        if (trailing != null) ...[const Spacer(), trailing],
       ],
     );
   }
@@ -308,11 +539,6 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
         MatchFilterType.finished,
         l10n.translate('filter_finished'),
         Icons.check_circle_outline_rounded,
-      ),
-      (
-        MatchFilterType.favorites,
-        l10n.translate('filter_favorites'),
-        Icons.star_rounded,
       ),
     ];
 
@@ -351,10 +577,10 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                 color: isSelected
                     ? (isLive ? Colors.white : Colors.black)
                     : (isLive
-                          ? AppColors.liveRed
-                          : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary)),
+                        ? AppColors.liveRed
+                        : (isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary)),
               ),
               const SizedBox(width: 6),
               Text(
@@ -364,8 +590,8 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                   color: isSelected
                       ? (isLive ? Colors.white : Colors.black)
                       : (isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary),
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary),
                 ),
               ),
               if (isLive && liveCount > 0) ...[
@@ -390,101 +616,6 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                 ),
               ],
             ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildSortOrderOptions(
-    BuildContext context,
-    bool isDark,
-    bool isArabic,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    final options = [
-      (
-        MatchesSortOrder.importance,
-        l10n.translate('filter_sort_importance'),
-        Icons.auto_awesome_rounded,
-      ),
-      (
-        MatchesSortOrder.time,
-        l10n.translate('filter_sort_time'),
-        Icons.access_time_filled_rounded,
-      ),
-      (
-        MatchesSortOrder.league,
-        l10n.translate('filter_sort_league'),
-        Icons.emoji_events_rounded,
-      ),
-    ];
-
-    return Row(
-      children: options.map((opt) {
-        final isSelected = _tempSortOrder == opt.$1;
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Material(
-              color: isSelected
-                  ? (isDark
-                        ? AppColors.primary.withValues(alpha: 0.18)
-                        : AppColors.primary.withValues(alpha: 0.12))
-                  : (isDark ? AppColors.darkCard : AppColors.lightCard),
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    _tempSortOrder = opt.$1;
-                  });
-                },
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : (isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder),
-                      width: isSelected ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        opt.$3,
-                        size: 20,
-                        color: isSelected
-                            ? AppColors.primary
-                            : (isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        opt.$2,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: isSelected
-                              ? (isDark ? Colors.white : Colors.black)
-                              : (isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           ),
         );
       }).toList(),

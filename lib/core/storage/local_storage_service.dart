@@ -79,6 +79,8 @@ abstract class LocalStorageService {
   Future<bool> setMatchesFilter(String filter);
   String? getMatchesSortOrder();
   Future<bool> setMatchesSortOrder(String sortOrder);
+  bool getHideFavorites();
+  Future<bool> setHideFavorites(bool hide);
 
   // Team & Match Notifications
   bool isTeamNotificationEnabled(String teamIdOrName) => false;
@@ -148,6 +150,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyReorderTipDismissed = 'app_reorder_tip_dismissed';
   static const String _keyMatchesFilter = 'app_matches_filter';
   static const String _keyMatchesSortOrder = 'app_matches_sort_order';
+  static const String _keyHideFavorites = 'app_hide_favorites';
 
   static const List<String> defaultFeaturedCompetitions = [
     'دوري أبطال أوروبا',
@@ -724,6 +727,16 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setMatchesSortOrder(String sortOrder) {
     return _prefs.setString(_keyMatchesSortOrder, sortOrder);
+  }
+
+  @override
+  bool getHideFavorites() {
+    return _prefs.getBool(_keyHideFavorites) ?? false;
+  }
+
+  @override
+  Future<bool> setHideFavorites(bool hide) {
+    return _prefs.setBool(_keyHideFavorites, hide);
   }
 
   static const String _keyTeamNotifications = 'team_notifications';

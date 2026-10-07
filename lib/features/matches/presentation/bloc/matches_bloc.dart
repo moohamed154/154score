@@ -43,10 +43,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   }
 
   static MatchesSortOrder _parseSavedSortOrder(String? val) {
-    if (val == null) return MatchesSortOrder.importance;
+    if (val == null) return MatchesSortOrder.championship;
+    if (val == 'championship' || val == 'importance') {
+      return MatchesSortOrder.championship;
+    }
     return MatchesSortOrder.values.firstWhere(
       (e) => e.name == val,
-      orElse: () => MatchesSortOrder.importance,
+      orElse: () => MatchesSortOrder.championship,
     );
   }
 
@@ -63,6 +66,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
            sortOrder: _parseSavedSortOrder(
              localStorageService.getMatchesSortOrder(),
            ),
+           hideFavorites: localStorageService.getHideFavorites(),
            timeFormat: localStorageService.getTimeFormat(),
          ),
        ) {
@@ -108,6 +112,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final dateStr = DateFormatter.toApiDateString(event.date);
     final lang = localStorageService.getLanguage();
     final cacheKey = _cacheKey(dateStr, lang);
+    final isToday = dateStr == DateFormatter.toApiDateString(DateTime.now());
+    final ttl = isToday
+        ? const Duration(seconds: 30)
+        : const Duration(minutes: 5);
 
     // 1. SWR Instant Memory Cache: If already loaded, show cached data immediately (0ms)
     if (!event.isRefresh && _cachedDateLeagues.containsKey(cacheKey)) {
@@ -139,10 +147,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         ),
       );
 
+      // Prewarm adjacent days around this date in background
+      _preloadAdjacentDates(event.date);
+
       final cachedTime = _cachedDateTimes[cacheKey];
       final isFresh =
           cachedTime != null &&
-          DateTime.now().difference(cachedTime) < const Duration(seconds: 20);
+          DateTime.now().difference(cachedTime) < ttl;
 
       if (isFresh) {
         if (event.completer != null && !event.completer!.isCompleted) {
@@ -229,6 +240,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           );
           _syncLiveRoomsAndPoller();
           MatchNotificationTracker.instance.processLeagues(reconciledLeagues);
+
+          // Silently pre-warm adjacent days in background for instant swipes
+          _preloadAdjacentDates(event.date);
         },
         onFailure: (failure) {
           // If we already have cached data displayed, don't clobber it with an error screen on silent revalidation
@@ -249,52 +263,99 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     }
   }
 
-  /// Silently pre-warms the cache for [event.dates] in the background.
-  /// Never emits a loading/error state — invisible to the UI.
+  /// Silently preheats adjacent dates ([D-1, D+1, D-2, D+2]) in the background.
+  void _preloadAdjacentDates(DateTime centerDate) {
+    _silentBackgroundPreload([
+      centerDate.subtract(const Duration(days: 1)),
+      centerDate.add(const Duration(days: 1)),
+      centerDate.subtract(const Duration(days: 2)),
+      centerDate.add(const Duration(days: 2)),
+    ]);
+  }
+
+  /// Silently pre-warms the cache in a detached background asynchronous task.
+  /// Does NOT block the Bloc's event loop queue, guaranteeing instantaneous UI responsiveness.
+  void _silentBackgroundPreload(List<DateTime> dates) {
+    unawaited(() async {
+      final lang = localStorageService.getLanguage();
+      final offset = localStorageService.getTimezoneOffset();
+      final now = DateTime.now();
+      final todayStr = DateFormatter.toApiDateString(now);
+
+      for (final date in dates) {
+        if (isClosed) return;
+        final dateStr = DateFormatter.toApiDateString(date);
+        final cacheKey = _cacheKey(dateStr, lang);
+
+        final isToday = dateStr == todayStr;
+        final ttl = isToday
+            ? const Duration(seconds: 30)
+            : const Duration(minutes: 5);
+
+        final cachedTime = _cachedDateTimes[cacheKey];
+        final isFresh =
+            cachedTime != null &&
+            DateTime.now().difference(cachedTime) < ttl;
+        if (isFresh) continue;
+
+        try {
+          final result = await repository.getMatchesByDate(
+            date: dateStr,
+            lang: lang,
+            utcOffset: offset,
+          );
+          if (isClosed) return;
+          result.fold(
+            onSuccess: (leagues) {
+              final favMatches = localStorageService.getFavoriteMatches();
+              final populated = leagues.map((l) {
+                return l.copyWith(
+                  matches: l.matches.map((m) {
+                    return m.copyWith(isFavorite: favMatches.contains(m.id));
+                  }).toList(),
+                );
+              }).toList();
+              _cachedDateLeagues[cacheKey] = populated;
+              _cachedDateTimes[cacheKey] = DateTime.now();
+            },
+            onFailure: (_) {},
+          );
+        } catch (_) {}
+
+        // Slight stagger to avoid flooding network
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+      }
+    }());
+  }
+
+  /// Silently pre-warms the cache for [event.dates] without blocking the UI or event queue.
   Future<void> _onPreloadMatches(
     PreloadMatchesEvent event,
     Emitter<MatchesState> emit,
   ) async {
+    _silentBackgroundPreload(event.dates);
+  }
+
+  /// Returns in-memory cached leagues for [date] if available, or null.
+  List<LeagueGroupEntity>? getCachedLeaguesForDate(DateTime date) {
+    final dateStr = DateFormatter.toApiDateString(date);
     final lang = localStorageService.getLanguage();
-    final offset = localStorageService.getTimezoneOffset();
+    final cacheKey = _cacheKey(dateStr, lang);
+    return _cachedDateLeagues[cacheKey];
+  }
 
-    for (final date in event.dates) {
-      final dateStr = DateFormatter.toApiDateString(date);
-      final cacheKey = _cacheKey(dateStr, lang);
-
-      // Skip if already cached and fresh (< 60 s old)
-      final cachedTime = _cachedDateTimes[cacheKey];
-      final isFresh =
-          cachedTime != null &&
-          DateTime.now().difference(cachedTime) < const Duration(seconds: 60);
-      if (isFresh) continue;
-
-      try {
-        final result = await repository.getMatchesByDate(
-          date: dateStr,
-          lang: lang,
-          utcOffset: offset,
-        );
-        result.fold(
-          onSuccess: (leagues) {
-            final favMatches = localStorageService.getFavoriteMatches();
-            final populated = leagues.map((l) {
-              return l.copyWith(
-                matches: l.matches.map((m) {
-                  return m.copyWith(isFavorite: favMatches.contains(m.id));
-                }).toList(),
-              );
-            }).toList();
-            _cachedDateLeagues[cacheKey] = populated;
-            _cachedDateTimes[cacheKey] = DateTime.now();
-          },
-          onFailure: (_) {}, // Silently ignore — preload is best-effort
-        );
-      } catch (_) {}
-
-      // Small stagger so we don't hammer the API
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-    }
+  /// Returns filtered leagues for [date] with current active filters applied, or null.
+  List<LeagueGroupEntity>? getFilteredLeaguesForDate(DateTime date) {
+    final cached = getCachedLeaguesForDate(date);
+    if (cached == null) return null;
+    return _applyFilters(
+      leagues: cached,
+      filter: state.activeFilter,
+      leagueId: state.selectedLeagueId,
+      leagueTitle: state.selectedLeagueTitle,
+      sortOrder: state.sortOrder,
+      query: state.searchQuery,
+    );
   }
 
   void _onChangeFilter(ChangeFilterEvent event, Emitter<MatchesState> emit) {
@@ -320,9 +381,11 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final nextLeagueId = event.leagueId ?? state.selectedLeagueId;
     final nextLeagueTitle = event.leagueTitle ?? state.selectedLeagueTitle;
     final nextSortOrder = event.sortOrder ?? state.sortOrder;
+    final nextHideFavorites = event.hideFavorites ?? state.hideFavorites;
 
     unawaited(localStorageService.setMatchesFilter(nextFilter.name));
     unawaited(localStorageService.setMatchesSortOrder(nextSortOrder.name));
+    unawaited(localStorageService.setHideFavorites(nextHideFavorites));
 
     final filtered = _applyFilters(
       leagues: state.allLeagues,
@@ -330,6 +393,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       leagueId: nextLeagueId,
       leagueTitle: nextLeagueTitle,
       sortOrder: nextSortOrder,
+      hideFavorites: nextHideFavorites,
       query: state.searchQuery,
     );
 
@@ -340,6 +404,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         clearSelectedLeague: nextLeagueId == null,
         selectedLeagueTitle: nextLeagueTitle,
         sortOrder: nextSortOrder,
+        hideFavorites: nextHideFavorites,
         filteredLeagues: filtered,
       ),
     );
@@ -351,15 +416,17 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   ) {
     unawaited(localStorageService.setMatchesFilter(MatchFilterType.all.name));
     unawaited(
-      localStorageService.setMatchesSortOrder(MatchesSortOrder.importance.name),
+      localStorageService.setMatchesSortOrder(MatchesSortOrder.championship.name),
     );
+    unawaited(localStorageService.setHideFavorites(false));
 
     final filtered = _applyFilters(
       leagues: state.allLeagues,
       filter: MatchFilterType.all,
       leagueId: null,
       leagueTitle: null,
-      sortOrder: MatchesSortOrder.importance,
+      sortOrder: MatchesSortOrder.championship,
+      hideFavorites: false,
       query: state.searchQuery,
     );
 
@@ -367,7 +434,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       state.copyWith(
         activeFilter: MatchFilterType.all,
         clearSelectedLeague: true,
-        sortOrder: MatchesSortOrder.importance,
+        sortOrder: MatchesSortOrder.championship,
+        hideFavorites: false,
         filteredLeagues: filtered,
       ),
     );
@@ -452,8 +520,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     }).toList();
 
     final dateStr = DateFormatter.toApiDateString(state.selectedDate);
-    if (_cachedDateLeagues.containsKey(dateStr)) {
-      _cachedDateLeagues[dateStr] = updatedAll;
+    final lang = localStorageService.getLanguage();
+    final cacheKey = _cacheKey(dateStr, lang);
+    if (_cachedDateLeagues.containsKey(cacheKey)) {
+      _cachedDateLeagues[cacheKey] = updatedAll;
     }
 
     final filtered = _applyFilters(
@@ -495,8 +565,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     }).toList();
 
     final dateStr = DateFormatter.toApiDateString(state.selectedDate);
-    if (_cachedDateLeagues.containsKey(dateStr)) {
-      _cachedDateLeagues[dateStr] = updatedAll;
+    final lang = localStorageService.getLanguage();
+    final cacheKey = _cacheKey(dateStr, lang);
+    if (_cachedDateLeagues.containsKey(cacheKey)) {
+      _cachedDateLeagues[cacheKey] = updatedAll;
     }
 
     final filtered = _applyFilters(
@@ -743,7 +815,9 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       }).toList();
 
       final dateStr = DateFormatter.toApiDateString(state.selectedDate);
-      _cachedDateLeagues[dateStr] = updatedWithFavs;
+      final lang = localStorageService.getLanguage();
+      final cacheKey = _cacheKey(dateStr, lang);
+      _cachedDateLeagues[cacheKey] = updatedWithFavs;
 
       final liveCount = _calculateLiveCount(updatedWithFavs);
       final filtered = _applyFilters(
@@ -983,6 +1057,45 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     return hours * 60 + minutes;
   }
 
+  static bool _isImportantCompetition(String title) {
+    final lower = title.toLowerCase();
+    const importantKeywords = [
+      'أبطال أوروبا',
+      'champions league',
+      'الدوري الإنجليزي',
+      'premier league',
+      'الدوري الإسباني',
+      'la liga',
+      'الدوري الإيطالي',
+      'serie a',
+      'الدوري الألماني',
+      'bundesliga',
+      'الدوري الفرنسي',
+      'ligue 1',
+      'أبطال أفريقيا',
+      'أبطال آسيا',
+      'caf',
+      'afc',
+      'الدوري المصري',
+      'كأس عاصمة مصر',
+      'دوري روشن',
+      'الدوري السعودي',
+      'كأس العالم',
+      'world cup',
+      'كأس أمم',
+      'كوبا أمريكا',
+      'copa america',
+      'كأس ملك',
+      'كأس الاتحاد',
+      'كأس الرابطة',
+      'كأس مصر',
+      'كأس خادم الحرمين',
+      'super cup',
+      'السوبر',
+    ];
+    return importantKeywords.any((kw) => lower.contains(kw));
+  }
+
   bool _isLeagueFav(
     String? title,
     String? id,
@@ -1009,17 +1122,22 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     required String? leagueTitle,
     required MatchesSortOrder sortOrder,
     required String query,
+    bool? hideFavorites,
     List<String>? favMatches,
     List<String>? favTeams,
     List<String>? favCompetitions,
   }) {
     final cleanQuery = query.trim().toLowerCase();
-    final effectiveFavCompetitions =
-        favCompetitions ?? localStorageService.getFavoriteCompetitions();
-    final effectiveFavTeams =
-        favTeams ?? localStorageService.getFavoriteTeams();
-    final effectiveFavMatches =
-        favMatches ?? localStorageService.getFavoriteMatches();
+    final effectiveHideFavorites = hideFavorites ?? state.hideFavorites;
+    final effectiveFavCompetitions = effectiveHideFavorites
+        ? const <String>[]
+        : (favCompetitions ?? localStorageService.getFavoriteCompetitions());
+    final effectiveFavTeams = effectiveHideFavorites
+        ? const <String>[]
+        : (favTeams ?? localStorageService.getFavoriteTeams());
+    final effectiveFavMatches = effectiveHideFavorites
+        ? const <String>[]
+        : (favMatches ?? localStorageService.getFavoriteMatches());
 
     final favMatchesSet = effectiveFavMatches.toSet();
     final favTeamKeys = _extractFavTeamKeys(effectiveFavTeams);
@@ -1027,7 +1145,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         .map((c) => c.trim().toLowerCase())
         .toSet();
 
-    final result = leagues
+    var result = leagues
         .where((league) {
           // Championship / League Filter
           if (leagueId != null && leagueId.isNotEmpty) {
@@ -1112,19 +1230,10 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
               return tA.compareTo(tB);
             });
           } else {
-            // Sort matches within each league: Favorites first -> Live -> Upcoming -> Finished, tie-broken chronologically
+            // In Yalla Shoot, matches within each championship are ordered chronologically by kick-off time
             matches.sort((a, b) {
               if (a.isFavorite && !b.isFavorite) return -1;
               if (!a.isFavorite && b.isFavorite) return 1;
-
-              final pA = MatchStatusHelper.getPriority(
-                MatchStatusHelper.parseMatch(a),
-              );
-              final pB = MatchStatusHelper.getPriority(
-                MatchStatusHelper.parseMatch(b),
-              );
-              final pCmp = pA.compareTo(pB);
-              if (pCmp != 0) return pCmp;
               return _parseTimeToMinutes(a.time)
                   .compareTo(_parseTimeToMinutes(b.time));
             });
@@ -1215,7 +1324,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         return a.leagueTitle.compareTo(b.leagueTitle);
       });
     } else {
-      // MatchesSortOrder.importance: Favorites first -> Live leagues -> maintain natural API order
+      // MatchesSortOrder.championship / MatchesSortOrder.importance / MatchesSortOrder.importantOnly:
+      // Favorites first (if not hideFavorites) -> maintain natural API priority order (matching Yalla Shoot)
       final originalIndices = {
         for (int i = 0; i < leagues.length; i++) leagues[i].leagueTitle: i,
       };
@@ -1239,19 +1349,24 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         if (aIsFav && !bIsFav) return -1;
         if (!aIsFav && bIsFav) return 1;
 
-        final aHasLive = a.matches.any(
-          (m) => MatchStatusHelper.isLive(MatchStatusHelper.parseMatch(m)),
-        );
-        final bHasLive = b.matches.any(
-          (m) => MatchStatusHelper.isLive(MatchStatusHelper.parseMatch(m)),
-        );
-        if (aHasLive && !bHasLive) return -1;
-        if (!aHasLive && bHasLive) return 1;
-
         final idxA = originalIndices[a.leagueTitle] ?? 9999;
         final idxB = originalIndices[b.leagueTitle] ?? 9999;
         return idxA.compareTo(idxB);
       });
+
+      if (sortOrder == MatchesSortOrder.importantOnly) {
+        result = result.where((league) {
+          final isFav = _isLeagueFav(
+                league.leagueTitle,
+                league.leagueId,
+                favCompetitionsSet,
+                effectiveFavCompetitions,
+              ) ||
+              league.matches.any((m) => m.isFavorite);
+          if (isFav) return true;
+          return _isImportantCompetition(league.leagueTitle);
+        }).toList();
+      }
     }
 
     return result;

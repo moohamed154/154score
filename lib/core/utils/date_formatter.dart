@@ -9,9 +9,11 @@ class DateFormatter {
 
   static bool isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
+    return isSameDay(date, now);
+  }
+
+  static bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   static String formatDayHeader(DateTime date, {required bool isArabic}) {
