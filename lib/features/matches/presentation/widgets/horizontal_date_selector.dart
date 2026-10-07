@@ -5,7 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/theme/app_theme.dart';
+import 'app_date_picker_dialog.dart';
 
 class HorizontalDateSelector extends StatefulWidget {
   final DateTime selectedDate;
@@ -231,19 +231,12 @@ class _HorizontalDateSelectorState extends State<HorizontalDateSelector> {
                         AppDimensions.radiusMd,
                       ),
                       onTap: () async {
-                        final picked = await showDatePicker(
+                        final picked = await AppDatePickerDialog.show(
                           context: context,
                           initialDate: widget.selectedDate,
                           firstDate: DateTime(2020),
                           lastDate: DateTime(2030),
-                          builder: (context, child) {
-                            return Theme(
-                              data: isDark
-                                  ? AppTheme.darkTheme
-                                  : AppTheme.lightTheme,
-                              child: child!,
-                            );
-                          },
+                          isDark: isDark,
                         );
                         if (picked != null) {
                           widget.onDateSelected(picked);

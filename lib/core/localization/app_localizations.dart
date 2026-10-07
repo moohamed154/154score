@@ -763,6 +763,136 @@ class AppLocalizations {
   String get lineupUnavailableTitle => translate('lineup_unavailable_title');
   String get lineupUnavailableDesc => translate('lineup_unavailable_desc');
   String get refreshLineup => translate('refresh_lineup');
+
+  /// Formats group names (e.g. 'المجموعة A', 'المجموعة 1', 'Group A', 'A')
+  /// into the appropriate language according to active [isArabic].
+  String formatGroupName(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return raw;
+
+    // Check if it starts with "المجموعة" or "المجموعه"
+    final arMatch = RegExp(r'^المجموع[ةه]\s*(.+)$', caseSensitive: false).firstMatch(trimmed);
+    if (arMatch != null) {
+      final identifier = arMatch.group(1)?.trim() ?? '';
+      if (!isArabic) {
+        final latinId = _convertArabicLetterToLatin(identifier);
+        return 'Group $latinId';
+      } else {
+        return 'المجموعة $identifier';
+      }
+    }
+
+    // Check if it starts with "Group"
+    final enMatch = RegExp(r'^Group\s*(.+)$', caseSensitive: false).firstMatch(trimmed);
+    if (enMatch != null) {
+      final identifier = enMatch.group(1)?.trim() ?? '';
+      if (isArabic) {
+        return 'المجموعة $identifier';
+      } else {
+        return 'Group $identifier';
+      }
+    }
+
+    // Single letter/number (e.g. "A", "B", "1")
+    if (RegExp(r'^[A-Za-z0-9]$').hasMatch(trimmed)) {
+      return isArabic ? 'المجموعة $trimmed' : 'Group $trimmed';
+    }
+
+    return raw;
+  }
+
+  static String _convertArabicLetterToLatin(String input) {
+    final clean = input.replaceFirst(RegExp(r'^[:\-]\s*'), '').trim();
+    switch (clean) {
+      case 'أ':
+      case 'ا':
+      case 'الأولى':
+      case 'الاولى':
+        return 'A';
+      case 'ب':
+      case 'الثانية':
+      case 'التانية':
+        return 'B';
+      case 'ج':
+      case 'الثالثة':
+      case 'التالتة':
+        return 'C';
+      case 'د':
+      case 'الرابعة':
+        return 'D';
+      case 'هـ':
+      case 'ه':
+      case 'الخامسة':
+        return 'E';
+      case 'و':
+      case 'السادسة':
+        return 'F';
+      case 'ز':
+      case 'السابعة':
+        return 'G';
+      case 'ح':
+      case 'الثامنة':
+        return 'H';
+      case 'ط':
+      case 'التاسعة':
+        return 'I';
+      case 'ي':
+      case 'العاشرة':
+        return 'J';
+      default:
+        return clean;
+    }
+  }
+
+  /// Formats tournament knockout stage names according to [isArabic].
+  String formatStageName(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return raw;
+
+    final lower = trimmed.toLowerCase();
+
+    // Final
+    if (lower == 'final' || trimmed == 'النهائي' || trimmed == 'المباراة النهائية') {
+      return isArabic ? 'النهائي' : 'Final';
+    }
+
+    // Semi-final
+    if (lower.contains('semi') || trimmed.contains('نصف النهائي')) {
+      return isArabic ? 'نصف النهائي' : 'Semi-finals';
+    }
+
+    // Quarter-final
+    if (lower.contains('quarter') || trimmed.contains('ربع النهائي')) {
+      return isArabic ? 'ربع النهائي' : 'Quarter-finals';
+    }
+
+    // Round of 16
+    if (lower.contains('16') || trimmed.contains('16') || trimmed.contains('١٦')) {
+      return isArabic ? 'دور الـ 16' : 'Round of 16';
+    }
+
+    // Round of 32
+    if (lower.contains('32') || trimmed.contains('32') || trimmed.contains('٣٢')) {
+      return isArabic ? 'دور الـ 32' : 'Round of 32';
+    }
+
+    // Round of 64
+    if (lower.contains('64') || trimmed.contains('64') || trimmed.contains('٦٤')) {
+      return isArabic ? 'دور الـ 64' : 'Round of 64';
+    }
+
+    // 3rd place
+    if (lower.contains('3rd') || lower.contains('third') || trimmed.contains('المركز الثالث')) {
+      return isArabic ? 'تحديد المركز الثالث' : '3rd Place';
+    }
+
+    // Group stage
+    if (lower.contains('group') || trimmed.contains('المجموعات')) {
+      return isArabic ? 'مرحلة المجموعات' : 'Group Stage';
+    }
+
+    return raw;
+  }
 }
 
 class _AppLocalizationsDelegate

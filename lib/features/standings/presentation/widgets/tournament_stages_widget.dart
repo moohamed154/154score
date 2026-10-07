@@ -110,7 +110,7 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                   ),
                   child: Center(
                     child: Text(
-                      stage.stageName,
+                      l10n.formatStageName(stage.stageName),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: isSelected

@@ -331,6 +331,7 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
           standings = _standingsDataSource.parseStandings(
             rawStandings,
             defaultLeagueId: leagueId,
+            lang: lang,
           );
         } catch (_) {}
       }

@@ -532,7 +532,7 @@ class _LeagueViewState extends State<LeagueView>
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Text(
-                      groupEntry.key,
+                      AppLocalizations.of(context).formatGroupName(groupEntry.key),
                       style: AppTypography.getHeadingMedium(
                         isDark: isDark,
                         isArabic: isArabic,

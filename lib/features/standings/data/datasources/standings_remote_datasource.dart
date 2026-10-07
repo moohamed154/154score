@@ -30,7 +30,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
       ApiEndpoints.leagueStandings(leagueId),
       queryParameters: {'lang': lang},
     );
-    return parseStandings(response, defaultLeagueId: leagueId);
+    return parseStandings(response, defaultLeagueId: leagueId, lang: lang);
   }
 
   @override

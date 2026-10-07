@@ -1,11 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_dimensions.dart';
-import '../../../../core/theme/app_theme.dart';
+import 'app_date_picker_dialog.dart';
 
 /// Compact date navigation button group: [<] [📅] [>]
-/// Designed to sit cleanly in the top AppBar or toolbar.
+/// Borderless and transparent to blend smoothly with toolbar actions.
 class DateNavigationButtons extends StatelessWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateSelected;
@@ -35,121 +34,72 @@ class DateNavigationButtons extends StatelessWidget {
           d.day == selectedDate.day,
     );
 
+    final iconColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         // Previous Day Arrow (<)
-        _buildArrowButton(
-          context: context,
-          icon: Icons.chevron_left_rounded,
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.all(4),
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          icon: Icon(
+            Icons.chevron_left_rounded,
+            size: 24,
+            color: iconColor,
+          ),
           tooltip: 'اليوم السابق',
-          onTap: () {
+          onPressed: () {
             final prev = selectedDate.subtract(const Duration(days: 1));
             onDateSelected(prev);
           },
         ),
 
-        const SizedBox(width: 3),
-
         // Calendar Picker Icon Button (📅)
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: selectedDate,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2030),
-                builder: (context, child) {
-                  return Theme(
-                    data: isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
-                    child: child!,
-                  );
-                },
-              );
-              if (picked != null) {
-                onDateSelected(picked);
-              }
-            },
-            child: Container(
-              width: 32,
-              height: 32,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: !isSelectedInStandardRange
-                    ? AppColors.primary
-                    : (isDark ? AppColors.darkCard : AppColors.lightCard),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                border: Border.all(
-                  color: !isSelectedInStandardRange
-                      ? Colors.transparent
-                      : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                  width: 0.8,
-                ),
-              ),
-              child: Icon(
-                Icons.calendar_month_rounded,
-                color: !isSelectedInStandardRange
-                    ? Colors.black
-                    : (isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary),
-                size: 18,
-              ),
-            ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.all(4),
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          icon: Icon(
+            Icons.calendar_month_rounded,
+            size: 20,
+            color: !isSelectedInStandardRange ? AppColors.primary : iconColor,
           ),
+          tooltip: 'اختيار التاريخ',
+          onPressed: () async {
+            debugPrint('>>> Calendar button PRESSED!');
+            final picked = await AppDatePickerDialog.show(
+              context: context,
+              initialDate: selectedDate,
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2030),
+              isDark: isDark,
+            );
+            if (picked != null) {
+              onDateSelected(picked);
+            }
+          },
         ),
 
-        const SizedBox(width: 3),
-
         // Next Day Arrow (>)
-        _buildArrowButton(
-          context: context,
-          icon: Icons.chevron_right_rounded,
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.all(4),
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          icon: Icon(
+            Icons.chevron_right_rounded,
+            size: 24,
+            color: iconColor,
+          ),
           tooltip: 'اليوم التالي',
-          onTap: () {
+          onPressed: () {
             final next = selectedDate.add(const Duration(days: 1));
             onDateSelected(next);
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildArrowButton({
-    required BuildContext context,
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        onTap: onTap,
-        child: Container(
-          width: 30,
-          height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : AppColors.lightCard,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-              width: 0.8,
-            ),
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
-          ),
-        ),
-      ),
     );
   }
 }
