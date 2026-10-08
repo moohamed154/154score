@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Wraps [child] with a horizontal swipe detector that calls [onDateChanged]
 /// with the adjacent [DateTime] when a deliberate swipe is detected.
