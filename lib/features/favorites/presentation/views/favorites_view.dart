@@ -21,32 +21,32 @@ class FavoritesView extends StatelessWidget {
     final controller = TextEditingController();
     final popularTeams = isArabic
         ? const [
-            'الأهلي',
-            'الزمالك',
-            'ريال مدريد',
-            'برشلونة',
-            'مانشستر سيتي',
-            'ليفربول',
-            'الهلال',
-            'النصر',
-            'أرسنال',
-            'بايرن ميونخ',
-            'باريس سان جيرمان',
-            'مصر',
+            (name: 'الأهلي', id: '101745'),
+            (name: 'الزمالك', id: '80591'),
+            (name: 'ريال مدريد', id: '8633'),
+            (name: 'برشلونة', id: '8634'),
+            (name: 'مانشستر سيتي', id: '8456'),
+            (name: 'ليفربول', id: '8650'),
+            (name: 'الهلال', id: '2529'),
+            (name: 'النصر', id: '101918'),
+            (name: 'أرسنال', id: '9825'),
+            (name: 'بايرن ميونخ', id: '9823'),
+            (name: 'باريس سان جيرمان', id: '9847'),
+            (name: 'مصر', id: '10255'),
           ]
         : const [
-            'Real Madrid',
-            'Barcelona',
-            'Manchester City',
-            'Liverpool',
-            'Arsenal',
-            'Bayern Munich',
-            'Paris Saint-Germain',
-            'Al Ahly',
-            'Zamalek',
-            'Al Hilal',
-            'Al Nassr',
-            'Egypt',
+            (name: 'Real Madrid', id: '8633'),
+            (name: 'Barcelona', id: '8634'),
+            (name: 'Manchester City', id: '8456'),
+            (name: 'Liverpool', id: '8650'),
+            (name: 'Arsenal', id: '9825'),
+            (name: 'Bayern Munich', id: '9823'),
+            (name: 'Paris Saint-Germain', id: '9847'),
+            (name: 'Al Ahly', id: '101745'),
+            (name: 'Zamalek', id: '80591'),
+            (name: 'Al Hilal', id: '2529'),
+            (name: 'Al Nassr', id: '101918'),
+            (name: 'Egypt', id: '10255'),
           ];
 
     showDialog<void>(
@@ -94,9 +94,9 @@ class FavoritesView extends StatelessWidget {
                   runSpacing: 6,
                   children: popularTeams.map((team) {
                     return ActionChip(
-                      label: Text(team, style: const TextStyle(fontSize: 12)),
+                      label: Text(team.name, style: const TextStyle(fontSize: 12)),
                       onPressed: () {
-                        context.read<FavoritesCubit>().toggleTeam(team);
+                        context.read<FavoritesCubit>().toggleTeam(team.name, id: team.id);
                         Navigator.of(dialogContext).pop();
                       },
                     );
@@ -180,15 +180,15 @@ class FavoritesView extends StatelessWidget {
                   runSpacing: 8,
                   children: state.favoriteTeams.map((team) {
                     final displayTitle =
-                        TeamResolver.getLocalizedName(team, isArabic: isArabic) ??
                         state.teamTitles[team.trim()] ??
+                        TeamResolver.getLocalizedName(team, isArabic: isArabic) ??
                         team;
                     return Chip(
                       avatar: const Icon(Icons.shield_outlined, size: 18),
                       label: Text(displayTitle),
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
-                        context.read<FavoritesCubit>().toggleTeam(team);
+                        context.read<FavoritesCubit>().toggleTeam(displayTitle, id: team);
                       },
                     );
                   }).toList(),

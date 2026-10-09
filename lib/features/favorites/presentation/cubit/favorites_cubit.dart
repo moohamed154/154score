@@ -81,16 +81,21 @@ class FavoritesState extends Equatable {
       if (clean.isEmpty) continue;
       keys.add(clean);
 
-      final cKey = TeamResolver.getCanonicalKey(clean);
-      if (cKey != null && cKey.isNotEmpty) keys.add(cKey.toLowerCase());
+      // If it's not a numeric ID, allow canonical alias mapping
+      if (int.tryParse(clean) == null) {
+        final cKey = TeamResolver.getCanonicalKey(clean);
+        if (cKey != null && cKey.isNotEmpty) keys.add(cKey.toLowerCase());
+      }
 
       final mappedTitle = titles[team] ?? titles[clean];
       if (mappedTitle != null && mappedTitle.trim().isNotEmpty) {
         final cleanMapped = mappedTitle.trim().toLowerCase();
         keys.add(cleanMapped);
-        final cMapped = TeamResolver.getCanonicalKey(cleanMapped);
-        if (cMapped != null && cMapped.isNotEmpty) {
-          keys.add(cMapped.toLowerCase());
+        if (int.tryParse(cleanMapped) == null) {
+          final cMapped = TeamResolver.getCanonicalKey(cleanMapped);
+          if (cMapped != null && cMapped.isNotEmpty) {
+            keys.add(cMapped.toLowerCase());
+          }
         }
       }
     }
@@ -102,8 +107,6 @@ class FavoritesState extends Equatable {
       if (keys.contains(titleVal) || keys.contains(idKey)) {
         keys.add(idKey);
         keys.add(titleVal);
-        final cId = TeamResolver.getCanonicalKey(idKey);
-        if (cId != null && cId.isNotEmpty) keys.add(cId.toLowerCase());
       }
     }
     return keys;
@@ -204,80 +207,49 @@ class FavoritesState extends Equatable {
     final cleanId = id?.trim().toLowerCase();
     final cleanName = name?.trim();
 
+    // 1. Strict Match by ID (prevents collisions between same-named clubs across leagues)
     if (cleanId != null && cleanId.isNotEmpty) {
-      if (cachedFavTeamKeys.contains(cleanId)) return true;
-      final cId = TeamResolver.getCanonicalKey(cleanId);
-      if (cId != null && cachedFavTeamKeys.contains(cId.toLowerCase())) {
+      if (favoriteTeams.any((t) => t.trim().toLowerCase() == cleanId)) {
         return true;
       }
-      final titleForId = teamTitles[cleanId] ?? teamTitles[id?.trim()];
-      if (titleForId != null && isFavoriteTeam(name: titleForId)) return true;
+      if (cachedFavTeamKeys.contains(cleanId)) return true;
+      if (teamTitles.containsKey(cleanId)) {
+        final title = teamTitles[cleanId]!.trim().toLowerCase();
+        if (favoriteTeams.any((t) => t.trim().toLowerCase() == title)) {
+          return true;
+        }
+      }
+      for (final fav in favoriteTeams) {
+        final mapped = teamTitles[fav.trim().toLowerCase()];
+        if (mapped != null && mapped.trim().toLowerCase() == cleanId) {
+          return true;
+        }
+      }
+      // If an ID was provided, NEVER fall back to loose name matching!
+      return false;
     }
 
+    // 2. Query only has name (no ID): Check if name corresponds to a known ID
+    final knownId =
+        LocalStorageServiceImpl.knownTeamNameToId[cleanName?.toLowerCase()] ??
+        LocalStorageServiceImpl.knownTeamNameToId[cleanName];
+    if (knownId != null) {
+      if (favoriteTeams.any((t) => t.trim().toLowerCase() == knownId.toLowerCase())) {
+        return true;
+      }
+    }
+
+    // 3. Fallback name match for custom teams without IDs
     if (cleanName != null && cleanName.isNotEmpty) {
       final lowerName = cleanName.toLowerCase();
       if (cachedFavTeamKeys.contains(lowerName)) return true;
-      final cName = TeamResolver.getCanonicalKey(cleanName);
-      if (cName != null && cachedFavTeamKeys.contains(cName.toLowerCase())) {
-        return true;
+      for (final team in favoriteTeams) {
+        final cleanTeam = team.trim();
+        if (cleanTeam.toLowerCase() == lowerName) return true;
+        if (TeamResolver.areSameTeam(cleanTeam, cleanName)) return true;
       }
     }
 
-    final targets = <String>{};
-    if (cleanId != null && cleanId.isNotEmpty) {
-      targets.add(cleanId);
-      if (teamTitles.containsKey(cleanId)) {
-        targets.add(teamTitles[cleanId]!.trim().toLowerCase());
-      }
-    }
-    if (cleanName != null && cleanName.isNotEmpty) {
-      targets.add(cleanName.toLowerCase());
-      if (teamTitles.containsKey(cleanName.toLowerCase())) {
-        targets.add(teamTitles[cleanName.toLowerCase()]!.trim().toLowerCase());
-      }
-    }
-
-    final nameKey = cleanName != null && cleanName.isNotEmpty
-        ? TeamResolver.getCanonicalKey(cleanName)
-        : null;
-    final idKey = cleanId != null && cleanId.isNotEmpty
-        ? TeamResolver.getCanonicalKey(cleanId)
-        : null;
-
-    for (final team in favoriteTeams) {
-      final cleanTeam = team.trim();
-      final lowerTeam = cleanTeam.toLowerCase();
-
-      // 1. Direct target match
-      if (targets.contains(lowerTeam)) return true;
-
-      // 2. Mapped titles match
-      if (teamTitles.containsKey(cleanTeam) &&
-          targets.contains(teamTitles[cleanTeam]!.trim().toLowerCase())) {
-        return true;
-      }
-      if (teamTitles.containsKey(lowerTeam) &&
-          targets.contains(teamTitles[lowerTeam]!.trim().toLowerCase())) {
-        return true;
-      }
-
-      // 3. TeamResolver cross-lingual matching (e.g. 'مصر' == 'Egypt')
-      if (cleanName != null && cleanName.isNotEmpty &&
-          TeamResolver.areSameTeam(cleanTeam, cleanName)) {
-        return true;
-      }
-      if (cleanId != null && cleanId.isNotEmpty &&
-          TeamResolver.areSameTeam(cleanTeam, cleanId)) {
-        return true;
-      }
-
-      // 4. Canonical key matching
-      final teamKey = TeamResolver.getCanonicalKey(cleanTeam);
-      if (teamKey != null) {
-        if (nameKey != null && teamKey == nameKey) return true;
-        if (idKey != null && teamKey == idKey) return true;
-      }
-    }
     return false;
   }
 
@@ -329,9 +301,12 @@ class FavoritesCubit extends Cubit<FavoritesState> {
   }
 
   Future<void> toggleTeam(String teamName, {String? id}) async {
-    final wasFav = isTeamFavorite(id: id, name: teamName);
     final cleanName = teamName.trim();
-    final cleanId = id?.trim();
+    final cleanId = (id != null && id.trim().isNotEmpty)
+        ? id.trim()
+        : (LocalStorageServiceImpl.knownTeamNameToId[cleanName.toLowerCase()] ??
+           LocalStorageServiceImpl.knownTeamNameToId[cleanName]);
+    final wasFav = isTeamFavorite(id: cleanId, name: cleanName);
     final key = (cleanId != null && cleanId.isNotEmpty) ? cleanId : cleanName;
 
     // Optimistic UI update: 0ms lag
@@ -341,39 +316,32 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     if (wasFav) {
       updatedList.removeWhere((item) {
         final cleanItem = item.trim();
-        if (cleanName.isNotEmpty &&
-            cleanItem.toLowerCase() == cleanName.toLowerCase()) {
-          return true;
-        }
         if (cleanId != null &&
             cleanId.isNotEmpty &&
             cleanItem.toLowerCase() == cleanId.toLowerCase()) {
           return true;
         }
         if (cleanName.isNotEmpty &&
-            TeamResolver.areSameTeam(cleanItem, cleanName)) {
+            cleanItem.toLowerCase() == cleanName.toLowerCase()) {
           return true;
         }
-        if (cleanId != null &&
-            cleanId.isNotEmpty &&
-            TeamResolver.areSameTeam(cleanItem, cleanId)) {
+        if (cleanName.isNotEmpty &&
+            TeamResolver.areSameTeam(cleanItem, cleanName)) {
           return true;
         }
         return false;
       });
     } else {
-      if (cleanName.isNotEmpty && !updatedList.contains(cleanName)) {
+      if (cleanId != null && cleanId.isNotEmpty) {
+        if (!updatedList.contains(cleanId)) updatedList.add(cleanId);
+        if (cleanName.isNotEmpty) updatedTitles[cleanId] = cleanName;
+      } else if (cleanName.isNotEmpty && !updatedList.contains(cleanName)) {
         updatedList.add(cleanName);
-      } else if (cleanId != null && cleanId.isNotEmpty && !updatedList.contains(cleanId)) {
-        updatedList.add(cleanId);
-      }
-      if (cleanId != null && cleanId.isNotEmpty && cleanName.isNotEmpty) {
-        updatedTitles[cleanId] = cleanName;
       }
     }
     emit(state.copyWith(favoriteTeams: updatedList, teamTitles: updatedTitles));
 
-    await _storage.toggleFavoriteTeam(teamName, id: id);
+    await _storage.toggleFavoriteTeam(teamName, id: cleanId);
     loadFavorites();
     final isFavNow = isTeamFavorite(id: id, name: teamName);
     if (!wasFav && isFavNow) {

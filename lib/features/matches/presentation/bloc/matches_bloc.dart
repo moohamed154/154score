@@ -454,47 +454,75 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     emit(state.copyWith(searchQuery: event.query, filteredLeagues: filtered));
   }
 
-  Set<String> _extractFavTeamKeys(List<String> favTeams) {
-    final favTeamKeys = <String>{};
+  ({Set<String> ids, Set<String> names}) _extractFavTeamData(
+    List<String> favTeams,
+  ) {
+    final ids = <String>{};
+    final names = <String>{};
     for (final t in favTeams) {
       final clean = t.trim();
-      if (clean.isNotEmpty) {
-        favTeamKeys.add(clean.toLowerCase());
-        final key = TeamResolver.getCanonicalKey(clean);
-        if (key != null && key.isNotEmpty) {
-          favTeamKeys.add(key.toLowerCase());
+      if (clean.isEmpty) continue;
+      if (int.tryParse(clean) != null) {
+        ids.add(clean.toLowerCase());
+      } else {
+        final knownId =
+            LocalStorageServiceImpl.knownTeamNameToId[clean.toLowerCase()] ??
+            LocalStorageServiceImpl.knownTeamNameToId[clean];
+        if (knownId != null) {
+          ids.add(knownId.toLowerCase());
+        } else {
+          names.add(clean.toLowerCase());
+          final key = TeamResolver.getCanonicalKey(clean);
+          if (key != null && key.isNotEmpty) {
+            names.add(key.toLowerCase());
+          }
         }
       }
     }
-    return favTeamKeys;
+    return (ids: ids, names: names);
   }
 
   bool _isMatchFavoriteFast(
     MatchEntity match,
     Set<String> favMatchesSet,
-    Set<String> favTeamKeys,
+    Set<String> favTeamIds,
+    Set<String> favTeamNames,
   ) {
     if (favMatchesSet.contains(match.id)) return true;
-    if (favTeamKeys.isEmpty) return false;
+    if (favTeamIds.isEmpty && favTeamNames.isEmpty) return false;
 
-    final t1 = match.team1.trim().toLowerCase();
-    if (t1.isNotEmpty && favTeamKeys.contains(t1)) return true;
+    // 1. Strict Team ID Matching (High Priority)
+    final t1Id = match.team1Id?.trim().toLowerCase();
+    final hasT1Id = t1Id != null && t1Id.isNotEmpty;
+    if (hasT1Id && favTeamIds.contains(t1Id)) return true;
 
-    final t2 = match.team2.trim().toLowerCase();
-    if (t2.isNotEmpty && favTeamKeys.contains(t2)) return true;
+    final t2Id = match.team2Id?.trim().toLowerCase();
+    final hasT2Id = t2Id != null && t2Id.isNotEmpty;
+    if (hasT2Id && favTeamIds.contains(t2Id)) return true;
 
-    if (match.team1Id != null && match.team1Id!.trim().isNotEmpty) {
-      if (favTeamKeys.contains(match.team1Id!.trim().toLowerCase())) return true;
+    // 2. Strict ID Policy: If match has valid team IDs, DO NOT do ambiguous name matching!
+    // This prevents teams with similar names across different leagues (e.g. Al Ahly Egypt 101745 vs Al Ahli Saudi 2530)
+    // from falsely marking matches as favorites.
+    if (hasT1Id && hasT2Id) {
+      return false;
     }
-    if (match.team2Id != null && match.team2Id!.trim().isNotEmpty) {
-      if (favTeamKeys.contains(match.team2Id!.trim().toLowerCase())) return true;
+
+    // 3. Fallback to name matching ONLY if match lacks IDs and we have non-ID favorites
+    if (favTeamNames.isNotEmpty) {
+      if (!hasT1Id) {
+        final t1 = match.team1.trim().toLowerCase();
+        if (t1.isNotEmpty && favTeamNames.contains(t1)) return true;
+        final key1 = TeamResolver.getCanonicalKey(match.team1);
+        if (key1 != null && favTeamNames.contains(key1.toLowerCase())) return true;
+      }
+
+      if (!hasT2Id) {
+        final t2 = match.team2.trim().toLowerCase();
+        if (t2.isNotEmpty && favTeamNames.contains(t2)) return true;
+        final key2 = TeamResolver.getCanonicalKey(match.team2);
+        if (key2 != null && favTeamNames.contains(key2.toLowerCase())) return true;
+      }
     }
-
-    final key1 = TeamResolver.getCanonicalKey(match.team1);
-    if (key1 != null && favTeamKeys.contains(key1.toLowerCase())) return true;
-
-    final key2 = TeamResolver.getCanonicalKey(match.team2);
-    if (key2 != null && favTeamKeys.contains(key2.toLowerCase())) return true;
 
     return false;
   }
@@ -508,12 +536,17 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     final favMatches = localStorageService.getFavoriteMatches();
     final favTeams = localStorageService.getFavoriteTeams();
     final favMatchesSet = favMatches.toSet();
-    final favTeamKeys = _extractFavTeamKeys(favTeams);
+    final favTeamData = _extractFavTeamData(favTeams);
 
     final updatedAll = state.allLeagues.map((league) {
       final updatedMatches = league.matches.map((match) {
         return match.copyWith(
-          isFavorite: _isMatchFavoriteFast(match, favMatchesSet, favTeamKeys),
+          isFavorite: _isMatchFavoriteFast(
+            match,
+            favMatchesSet,
+            favTeamData.ids,
+            favTeamData.names,
+          ),
         );
       }).toList();
       return league.copyWith(matches: updatedMatches);
@@ -553,12 +586,17 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         localStorageService.getFavoriteCompetitions();
 
     final favMatchesSet = favMatches.toSet();
-    final favTeamKeys = _extractFavTeamKeys(favTeams);
+    final favTeamData = _extractFavTeamData(favTeams);
 
     final updatedAll = state.allLeagues.map((league) {
       final updatedMatches = league.matches.map((match) {
         return match.copyWith(
-          isFavorite: _isMatchFavoriteFast(match, favMatchesSet, favTeamKeys),
+          isFavorite: _isMatchFavoriteFast(
+            match,
+            favMatchesSet,
+            favTeamData.ids,
+            favTeamData.names,
+          ),
         );
       }).toList();
       return league.copyWith(matches: updatedMatches);
@@ -1140,7 +1178,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         : (favMatches ?? localStorageService.getFavoriteMatches());
 
     final favMatchesSet = effectiveFavMatches.toSet();
-    final favTeamKeys = _extractFavTeamKeys(effectiveFavTeams);
+    final favTeamData = _extractFavTeamData(effectiveFavTeams);
     final favCompetitionsSet = effectiveFavCompetitions
         .map((c) => c.trim().toLowerCase())
         .toSet();
@@ -1173,7 +1211,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
                 final isMatchFav = _isMatchFavoriteFast(
                   match,
                   favMatchesSet,
-                  favTeamKeys,
+                  favTeamData.ids,
+                  favTeamData.names,
                 );
                 return match.copyWith(isFavorite: isMatchFav);
               })

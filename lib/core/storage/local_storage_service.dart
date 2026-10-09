@@ -316,9 +316,107 @@ class LocalStorageServiceImpl implements LocalStorageService {
     return true;
   }
 
+  static const Map<String, String> knownTeamNameToId = {
+    // Al Ahly (Egypt)
+    'الأهلي': '101745',
+    'الاهلي': '101745',
+    'الأهلي المصري': '101745',
+    'الاهلي المصري': '101745',
+    'al ahly': '101745',
+    'al-ahly': '101745',
+    'ahly': '101745',
+    'el ahly': '101745',
+    // Al Ahli Saudi
+    'الأهلي السعودي': '2530',
+    'الاهلي السعودي': '2530',
+    'al ahli saudi': '2530',
+    'al-ahli saudi': '2530',
+    // Other popular clubs & nations
+    'الزمالك': '80591',
+    'zamalek': '80591',
+    'مصر': '10255',
+    'egypt': '10255',
+    'ريال مدريد': '8633',
+    'real madrid': '8633',
+    'برشلونة': '8634',
+    'barcelona': '8634',
+    'أتلتيكو مدريد': '9906',
+    'atletico madrid': '9906',
+    'مانشستر سيتي': '8456',
+    'manchester city': '8456',
+    'مانشستر يونايتد': '10260',
+    'manchester united': '10260',
+    'ليفربول': '8650',
+    'liverpool': '8650',
+    'أرسنال': '9825',
+    'arsenal': '9825',
+    'تشيلسي': '8455',
+    'chelsea': '8455',
+    'توتنهام': '8586',
+    'tottenham': '8586',
+    'بايرن ميونخ': '9823',
+    'bayern munich': '9823',
+    'بوروسيا دورتموند': '9789',
+    'borussia dortmund': '9789',
+    'يوفنتوس': '9885',
+    'juventus': '9885',
+    'ميلان': '8564',
+    'ac milan': '8564',
+    'إنتر ميلان': '8636',
+    'inter milan': '8636',
+    'باريس سان جيرمان': '9847',
+    'paris saint-germain': '9847',
+    'الهلال': '2529',
+    'al hilal': '2529',
+    'النصر': '101918',
+    'al nassr': '101918',
+    'الاتحاد': '8577',
+    'al ittihad': '8577',
+    'السعودية': '7795',
+    'saudi arabia': '7795',
+    'البرازيل': '8256',
+    'brazil': '8256',
+    'الأرجنتين': '6706',
+    'argentina': '6706',
+  };
+
   @override
   List<String> getFavoriteTeams() {
-    return _prefs.getStringList(_keyFavoriteTeams) ?? [];
+    final rawList = _prefs.getStringList(_keyFavoriteTeams) ?? [];
+    if (rawList.isEmpty) return [];
+
+    bool needsSave = false;
+    final migratedList = <String>[];
+    final titleMapToRegister = <String, String>{};
+
+    for (final item in rawList) {
+      final clean = item.trim();
+      if (clean.isEmpty) continue;
+      if (int.tryParse(clean) != null) {
+        if (!migratedList.contains(clean)) migratedList.add(clean);
+        continue;
+      }
+      final knownId =
+          knownTeamNameToId[clean.toLowerCase()] ?? knownTeamNameToId[clean];
+      if (knownId != null) {
+        if (!migratedList.contains(knownId)) {
+          migratedList.add(knownId);
+        }
+        titleMapToRegister[knownId] = clean;
+        needsSave = true;
+      } else {
+        if (!migratedList.contains(clean)) migratedList.add(clean);
+      }
+    }
+
+    if (needsSave) {
+      unawaited(_prefs.setStringList(_keyFavoriteTeams, migratedList));
+      if (titleMapToRegister.isNotEmpty) {
+        unawaited(registerTeamTitles(titleMapToRegister));
+      }
+    }
+
+    return migratedList;
   }
 
   @override
@@ -369,61 +467,51 @@ class LocalStorageServiceImpl implements LocalStorageService {
     if (list.isEmpty) return false;
 
     final cleanName = teamName.trim();
-    final cleanId = id?.trim();
+    final cleanId = (id != null && id.trim().isNotEmpty)
+        ? id.trim()
+        : (int.tryParse(cleanName) != null ? cleanName : null);
 
-    // 1. Direct match on name or ID, or via TeamResolver cross-lingual match
+    // 1. Strict Match by ID (prevents similar named clubs across leagues from colliding)
+    if (cleanId != null && cleanId.isNotEmpty) {
+      final lowerId = cleanId.toLowerCase();
+      if (list.any((fav) => fav.trim().toLowerCase() == lowerId)) {
+        return true;
+      }
+      final titles = getFavoriteTeamTitles();
+      if (titles.containsKey(lowerId)) {
+        final title = titles[lowerId]!.trim().toLowerCase();
+        if (list.any((fav) => fav.trim().toLowerCase() == title)) {
+          return true;
+        }
+      }
+      for (final fav in list) {
+        final mapped = titles[fav.trim().toLowerCase()];
+        if (mapped != null && mapped.trim().toLowerCase() == lowerId) {
+          return true;
+        }
+      }
+      // If team has an ID and did not match any favorite ID, NEVER match by name!
+      return false;
+    }
+
+    // 2. Query only has name (no ID): Check if name corresponds to a known ID
+    final knownId =
+        knownTeamNameToId[cleanName.toLowerCase()] ?? knownTeamNameToId[cleanName];
+    if (knownId != null) {
+      if (list.any((fav) => fav.trim().toLowerCase() == knownId.toLowerCase())) {
+        return true;
+      }
+    }
+
+    // 3. Fallback name match for custom teams without IDs
     for (final fav in list) {
       final cleanFav = fav.trim();
       if (cleanName.isNotEmpty &&
           cleanFav.toLowerCase() == cleanName.toLowerCase()) {
         return true;
       }
-      if (cleanId != null &&
-          cleanId.isNotEmpty &&
-          cleanFav.toLowerCase() == cleanId.toLowerCase()) {
-        return true;
-      }
       if (cleanName.isNotEmpty && TeamResolver.areSameTeam(cleanFav, cleanName)) {
         return true;
-      }
-      if (cleanId != null &&
-          cleanId.isNotEmpty &&
-          TeamResolver.areSameTeam(cleanFav, cleanId)) {
-        return true;
-      }
-    }
-
-    // 2. Check teamTitles mapping
-    final titles = getFavoriteTeamTitles();
-    if (cleanId != null && titles.containsKey(cleanId)) {
-      final mappedName = titles[cleanId]!;
-      for (final fav in list) {
-        if (fav.trim().toLowerCase() == mappedName.trim().toLowerCase() ||
-            TeamResolver.areSameTeam(fav, mappedName)) {
-          return true;
-        }
-      }
-    }
-    if (cleanName.isNotEmpty && titles.containsKey(cleanName.toLowerCase())) {
-      final mappedId = titles[cleanName.toLowerCase()]!;
-      for (final fav in list) {
-        if (fav.trim().toLowerCase() == mappedId.trim().toLowerCase() ||
-            TeamResolver.areSameTeam(fav, mappedId)) {
-          return true;
-        }
-      }
-    }
-
-    // 3. Check canonical key
-    final nameKey = cleanName.isNotEmpty ? TeamResolver.getCanonicalKey(cleanName) : null;
-    final idKey = (cleanId != null && cleanId.isNotEmpty) ? TeamResolver.getCanonicalKey(cleanId) : null;
-    if (nameKey != null || idKey != null) {
-      for (final fav in list) {
-        final favKey = TeamResolver.getCanonicalKey(fav);
-        if (favKey != null) {
-          if (nameKey != null && favKey == nameKey) return true;
-          if (idKey != null && favKey == idKey) return true;
-        }
       }
     }
 
@@ -433,50 +521,53 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> toggleFavoriteTeam(String teamName, {String? id}) async {
     final list = getFavoriteTeams().toList();
-    final isFav = isFavoriteTeam(teamName, id: id);
     final cleanName = teamName.trim();
-    final cleanId = id?.trim();
+    final cleanId = (id != null && id.trim().isNotEmpty)
+        ? id.trim()
+        : (knownTeamNameToId[cleanName.toLowerCase()] ?? knownTeamNameToId[cleanName]);
+
+    final isFav = isFavoriteTeam(cleanName, id: cleanId);
 
     if (isFav) {
       // Remove all matching variants (both languages, aliases, ID)
       list.removeWhere((item) {
         final cleanItem = item.trim();
-        if (cleanName.isNotEmpty &&
-            cleanItem.toLowerCase() == cleanName.toLowerCase()) {
-          return true;
-        }
         if (cleanId != null &&
             cleanId.isNotEmpty &&
             cleanItem.toLowerCase() == cleanId.toLowerCase()) {
           return true;
         }
         if (cleanName.isNotEmpty &&
-            TeamResolver.areSameTeam(cleanItem, cleanName)) {
+            cleanItem.toLowerCase() == cleanName.toLowerCase()) {
           return true;
         }
-        if (cleanId != null &&
-            cleanId.isNotEmpty &&
-            TeamResolver.areSameTeam(cleanItem, cleanId)) {
+        if (cleanName.isNotEmpty &&
+            TeamResolver.areSameTeam(cleanItem, cleanName)) {
           return true;
         }
         return false;
       });
     } else {
-      if (cleanName.isNotEmpty && !list.contains(cleanName)) {
+      if (cleanId != null && cleanId.isNotEmpty) {
+        if (!list.contains(cleanId)) {
+          list.add(cleanId);
+        }
+        if (cleanName.isNotEmpty) {
+          unawaited(registerTeamTitles({cleanId: cleanName}));
+        }
+      } else if (cleanName.isNotEmpty && !list.contains(cleanName)) {
         list.add(cleanName);
-      }
-      if (cleanId != null && cleanId.isNotEmpty && cleanName.isNotEmpty) {
-        unawaited(registerTeamTitles({cleanId: cleanName}));
       }
     }
     final saved = await _prefs.setStringList(_keyFavoriteTeams, list);
+    final keyToSync = (cleanId != null && cleanId.isNotEmpty) ? cleanId : cleanName;
     if (!isFav) {
-      if (cleanId != null && cleanId.isNotEmpty) {
-        unawaited(NotificationSyncService.instance.subscribeToTeam(cleanId));
+      if (keyToSync.isNotEmpty) {
+        unawaited(NotificationSyncService.instance.subscribeToTeam(keyToSync));
       }
     } else {
-      if (cleanId != null && cleanId.isNotEmpty) {
-        unawaited(NotificationSyncService.instance.unsubscribeFromTeam(cleanId));
+      if (keyToSync.isNotEmpty) {
+        unawaited(NotificationSyncService.instance.unsubscribeFromTeam(keyToSync));
       }
     }
     return saved;

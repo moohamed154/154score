@@ -379,13 +379,24 @@ class MatchNotificationTracker {
     final t2 = match.team2.toLowerCase().trim();
     final t1Id = match.team1Id?.toLowerCase().trim();
     final t2Id = match.team2Id?.toLowerCase().trim();
+    final hasT1Id = t1Id != null && t1Id.isNotEmpty;
+    final hasT2Id = t2Id != null && t2Id.isNotEmpty;
 
+    // 1. Strict ID matching
+    for (final target in targetNames) {
+      if (target.isEmpty) continue;
+      if (hasT1Id && t1Id == target) return true;
+      if (hasT2Id && t2Id == target) return true;
+    }
+
+    // 2. If match has both team IDs, do not match by fuzzy name to prevent collisions
+    if (hasT1Id && hasT2Id) return false;
+
+    // 3. Fallback name match if IDs missing on match
     for (final name in targetNames) {
       if (name.isEmpty) continue;
-      if (t1 == name || t1.contains(name) || name.contains(t1)) return true;
-      if (t2 == name || t2.contains(name) || name.contains(t2)) return true;
-      if (t1Id != null && t1Id == name) return true;
-      if (t2Id != null && t2Id == name) return true;
+      if (!hasT1Id && (t1 == name || t1.contains(name) || name.contains(t1))) return true;
+      if (!hasT2Id && (t2 == name || t2.contains(name) || name.contains(t2))) return true;
     }
 
     return false;

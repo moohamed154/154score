@@ -70,7 +70,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
       for (final team in OnboardingCatalog.teams) {
         if (!selection.selectedTeams.contains(team.ar)) continue;
-        await favorites.toggleTeam(team.nameFor(isArabic: isArabic));
+        await favorites.toggleTeam(team.nameFor(isArabic: isArabic), id: team.id);
       }
     }
 
