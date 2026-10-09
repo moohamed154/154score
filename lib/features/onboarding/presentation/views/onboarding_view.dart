@@ -207,7 +207,6 @@ class _BottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
-    final isRtl = Directionality.of(context) == TextDirection.rtl || isArabic;
 
     return BlocBuilder<OnboardingCubit, OnboardingState>(
       buildWhen: (p, c) => p.page != c.page,
@@ -234,10 +233,8 @@ class _BottomBar extends StatelessWidget {
                         ? IconButton(
                             onPressed: cubit.back,
                             tooltip: isArabic ? 'السابق' : 'Back',
-                            icon: Icon(
-                              isRtl
-                                  ? Icons.arrow_forward_rounded
-                                  : Icons.arrow_back_rounded,
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
                             ),
                           )
                         : null,

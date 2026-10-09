@@ -178,7 +178,7 @@ For low-level architectural blueprints and diagrams, see:
 
 ### 13. Onboarding & First-Launch Setup (`features/onboarding`)
 * **Branded Chips**: All team and league selection chips in the onboarding flow must display crisp logos alongside their titles (`UrlHelper.resolveTeamLogo` for clubs and `UrlHelper.resolveChampionshipLogo` with `isDark` adaptation for leagues/tournaments).
-* **RTL Arrow Direction**: The navigation back button must strictly respect RTL layout semantics (`isRtl ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded`), pointing to the right (`→`) in Arabic to reflect navigating backward to the previous screen.
+* **RTL Arrow Direction**: The navigation back button must strictly respect RTL layout semantics, pointing to the right (`→`) in Arabic to reflect navigating backward to the previous screen. In Flutter, `Icons.arrow_back_rounded` has `matchTextDirection: true` and automatically mirrors to point right (`→`) in RTL environments; never manually swap it with `Icons.arrow_forward_rounded` as that causes an unintentional double-flip.
 
 ---
 
