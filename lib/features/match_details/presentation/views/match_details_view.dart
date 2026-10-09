@@ -112,12 +112,59 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     });
   }
 
+  bool _computeIsCancelledOrPostponed({
+    MatchEntity? match,
+    MatchDetailsState? state,
+  }) {
+    final effectiveMatch = match ?? widget.initialMatch;
+    if (effectiveMatch != null) {
+      if (ScoreHelper.isCancelledOrPostponed(
+            effectiveMatch.status,
+            effectiveMatch.statusCode,
+          )) {
+        return true;
+      }
+      final phase = MatchStatusHelper.parseMatch(effectiveMatch);
+      if (MatchStatusHelper.isPostponedOrCancelled(phase)) {
+        return true;
+      }
+    }
+    if (widget.initialMatch != null) {
+      if (ScoreHelper.isCancelledOrPostponed(
+            widget.initialMatch!.status,
+            widget.initialMatch!.statusCode,
+          )) {
+        return true;
+      }
+      final phase = MatchStatusHelper.parseMatch(widget.initialMatch!);
+      if (MatchStatusHelper.isPostponedOrCancelled(phase)) {
+        return true;
+      }
+    }
+    if (state != null) {
+      if (ScoreHelper.isCancelledOrPostponed(
+            state.liveStatus,
+            state.liveStatusCode,
+          )) {
+        return true;
+      }
+      if (ScoreHelper.isCancelledOrPostponed(state.overview?.status)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   bool _computeIsStartedOrEnded({
     MatchEntity? match,
     MatchDetailsState? state,
     bool hasFinishedEvent = false,
   }) {
-    if (state != null && state.events.isNotEmpty) return true;
+    // Matches that are cancelled or postponed must NEVER display Events or Stats tabs
+    if (_computeIsCancelledOrPostponed(match: match, state: state)) {
+      return false;
+    }
+
     final effectiveMatch = match ?? widget.initialMatch;
     if (effectiveMatch == null && state == null) return false;
 
@@ -126,17 +173,20 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         : MatchPhase.unknown;
     final isLive = MatchStatusHelper.isLive(phase) ||
         (effectiveMatch?.status != null &&
-            ScoreHelper.isLiveStatus(effectiveMatch!.status)) ||
+            ScoreHelper.isLiveStatus(effectiveMatch!.status, effectiveMatch.statusCode)) ||
         (state?.liveStatus != null &&
-            ScoreHelper.isLiveStatus(state!.liveStatus));
+            ScoreHelper.isLiveStatus(state!.liveStatus, state.liveStatusCode));
     final isFinished = phase == MatchPhase.finished ||
         (effectiveMatch?.status != null &&
-            ScoreHelper.isFinishedStatus(effectiveMatch!.status)) ||
+            ScoreHelper.isFinishedStatus(effectiveMatch!.status, effectiveMatch.statusCode)) ||
         (state?.liveStatus != null &&
-            ScoreHelper.isFinishedStatus(state!.liveStatus)) ||
+            ScoreHelper.isFinishedStatus(state!.liveStatus, state.liveStatusCode)) ||
         hasFinishedEvent;
 
-    return isLive || isFinished;
+    if (isLive || isFinished) return true;
+    if (state != null && state.events.isNotEmpty) return true;
+
+    return false;
   }
 
   List<_MatchTabType> _getTabsForStatus(bool isStartedOrEnded) {
@@ -561,7 +611,71 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     String? effectiveStatus;
     String? effectiveStatusCode;
 
-    if (isLiveFromFeed) {
+    final bool isCancelledOrPostponed =
+        ScoreHelper.isCancelledOrPostponed(
+          liveFromMatches?.status,
+          liveFromMatches?.statusCode,
+        ) ||
+        ScoreHelper.isCancelledOrPostponed(
+          fallbackMatch.status,
+          fallbackMatch.statusCode,
+        ) ||
+        ScoreHelper.isCancelledOrPostponed(
+          widget.initialMatch?.status,
+          widget.initialMatch?.statusCode,
+        ) ||
+        ScoreHelper.isCancelledOrPostponed(state.overview?.status) ||
+        ScoreHelper.isCancelledOrPostponed(
+          state.liveStatus,
+          state.liveStatusCode,
+        );
+
+    if (isCancelledOrPostponed) {
+      effectiveStatus =
+          (ScoreHelper.isCancelledOrPostponed(
+                liveFromMatches?.status,
+                liveFromMatches?.statusCode,
+              )
+              ? liveFromMatches?.status
+              : null) ??
+          (ScoreHelper.isCancelledOrPostponed(
+                fallbackMatch.status,
+                fallbackMatch.statusCode,
+              )
+              ? fallbackMatch.status
+              : null) ??
+          (ScoreHelper.isCancelledOrPostponed(
+                widget.initialMatch?.status,
+                widget.initialMatch?.statusCode,
+              )
+              ? widget.initialMatch?.status
+              : null) ??
+          (ScoreHelper.isCancelledOrPostponed(state.overview?.status)
+              ? state.overview?.status
+              : null) ??
+          state.liveStatus;
+
+      effectiveStatusCode =
+          (ScoreHelper.isCancelledOrPostponed(
+                liveFromMatches?.status,
+                liveFromMatches?.statusCode,
+              )
+              ? liveFromMatches?.statusCode
+              : null) ??
+          (ScoreHelper.isCancelledOrPostponed(
+                fallbackMatch.status,
+                fallbackMatch.statusCode,
+              )
+              ? fallbackMatch.statusCode
+              : null) ??
+          (ScoreHelper.isCancelledOrPostponed(
+                widget.initialMatch?.status,
+                widget.initialMatch?.statusCode,
+              )
+              ? widget.initialMatch?.statusCode
+              : null) ??
+          state.liveStatusCode;
+    } else if (isLiveFromFeed) {
       // Prioritize live values if the match is actively in-play
       effectiveStatus =
           (ScoreHelper.isLiveStatus(state.liveStatus)
@@ -644,7 +758,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             ) ==
             true;
 
-    if (!isLiveFromFeed && !ScoreHelper.isLiveStatus(effectiveStatus)) {
+    if (!isLiveFromFeed &&
+        !isCancelledOrPostponed &&
+        !ScoreHelper.isLiveStatus(effectiveStatus)) {
       if (hasFinishedEvent ||
           (isPastMatch &&
               (effectiveScore1 != null || state.events.isNotEmpty))) {
@@ -788,7 +904,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       hasFinishedEvent: false,
     );
     _currentTabs = _getTabsForStatus(initialIsStarted);
-    context.read<MatchDetailsBloc>().add(LoadMatchDetailsEvent(widget.matchId));
+    context.read<MatchDetailsBloc>().add(
+          LoadMatchDetailsEvent(
+            widget.matchId,
+            initialStatus: widget.initialMatch?.status,
+            initialStatusCode: widget.initialMatch?.statusCode,
+          ),
+        );
   }
 
   @override
@@ -1053,7 +1175,12 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                               ? ErrorView(
                                   message: state.errorMessage,
                                   onRetry: () => context.read<MatchDetailsBloc>().add(
-                                    LoadMatchDetailsEvent(widget.matchId),
+                                    LoadMatchDetailsEvent(
+                                      widget.matchId,
+                                      initialStatus: widget.initialMatch?.status,
+                                      initialStatusCode:
+                                          widget.initialMatch?.statusCode,
+                                    ),
                                   ),
                                 )
                               : TabBarView(
@@ -2158,24 +2285,22 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                 ),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? const Color(0xFF131B2B)
-                      : const Color(0xFFEFF6FF),
+                      ? AppColors.darkCard
+                      : const Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                   border: Border.all(
                     color: isDark
-                        ? const Color(0xFF1E2D48)
-                        : const Color(0xFFBFDBFE),
+                        ? AppColors.primary.withValues(alpha: 0.3)
+                        : AppColors.primary.withValues(alpha: 0.25),
                     width: 1,
                   ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.info_outline_rounded,
-                      color: isDark
-                          ? const Color(0xFF3B82F6)
-                          : const Color(0xFF2563EB),
+                      color: AppColors.primary,
                       size: 20,
                     ),
                     const SizedBox(width: 10),
@@ -2187,8 +2312,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                           fontWeight: FontWeight.w500,
                           height: 1.45,
                           color: isDark
-                              ? const Color(0xFFCBD5E1)
-                              : const Color(0xFF1E293B),
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
                         ),
                       ),
                     ),

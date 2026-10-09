@@ -162,15 +162,35 @@ class MatchStatusHelper {
     }
 
     // 5. Postponed & Cancelled
-    if (s.contains('تأجل') ||
+    if (code == 'POSTPONED' ||
+        code == 'SUSPENDED' ||
+        code == 'INTERRUPTED' ||
+        code == 'DELAYED' ||
+        p == 'postponed' ||
+        p == 'suspended' ||
+        s.contains('تأجل') ||
+        s.contains('تاجل') ||
+        s.contains('مؤجل') ||
         s.contains('مؤجلة') ||
+        s.contains('مؤجله') ||
         s.contains('postponed') ||
-        s.contains('delayed')) {
+        s.contains('delayed') ||
+        s.contains('suspended') ||
+        s.contains('interrupted')) {
       return MatchPhase.postponed;
     }
 
-    if (s.contains('ألغيت') ||
+    if (code == 'CANCELLED' ||
+        code == 'CANCELED' ||
+        code == 'ABANDONED' ||
+        code == 'VOID' ||
+        p == 'cancelled' ||
+        s.contains('ألغيت') ||
+        s.contains('الغيت') ||
         s.contains('ملغاة') ||
+        s.contains('ملغاه') ||
+        s.contains('ألغية') ||
+        s.contains('الغية') ||
         s.contains('cancelled') ||
         s.contains('canceled') ||
         s.contains('abandoned')) {

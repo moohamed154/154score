@@ -1,7 +1,55 @@
 class ScoreHelper {
   ScoreHelper._();
 
-  static bool isLiveStatus(String? status) {
+  static bool isCancelledStatus(String? status, [String? statusCode]) {
+    final code = (statusCode ?? '').trim().toUpperCase();
+    if (code == 'CANCELLED' ||
+        code == 'CANCELED' ||
+        code == 'ABANDONED' ||
+        code == 'VOID') {
+      return true;
+    }
+    if (status == null || status.trim().isEmpty) return false;
+    final lower = status.trim().toLowerCase();
+    return lower.contains('ألغيت') ||
+        lower.contains('الغيت') ||
+        lower.contains('ملغاة') ||
+        lower.contains('ملغاه') ||
+        lower.contains('ألغية') ||
+        lower.contains('الغية') ||
+        lower.contains('cancelled') ||
+        lower.contains('canceled') ||
+        lower.contains('abandoned');
+  }
+
+  static bool isPostponedStatus(String? status, [String? statusCode]) {
+    final code = (statusCode ?? '').trim().toUpperCase();
+    if (code == 'POSTPONED' ||
+        code == 'SUSPENDED' ||
+        code == 'INTERRUPTED' ||
+        code == 'DELAYED') {
+      return true;
+    }
+    if (status == null || status.trim().isEmpty) return false;
+    final lower = status.trim().toLowerCase();
+    return lower.contains('تأجل') ||
+        lower.contains('تاجل') ||
+        lower.contains('مؤجل') ||
+        lower.contains('مؤجلة') ||
+        lower.contains('مؤجله') ||
+        lower.contains('postponed') ||
+        lower.contains('delayed') ||
+        lower.contains('suspended') ||
+        lower.contains('interrupted');
+  }
+
+  static bool isCancelledOrPostponed(String? status, [String? statusCode]) {
+    return isCancelledStatus(status, statusCode) ||
+        isPostponedStatus(status, statusCode);
+  }
+
+  static bool isLiveStatus(String? status, [String? statusCode]) {
+    if (isCancelledOrPostponed(status, statusCode)) return false;
     if (status == null) return false;
     final lower = status.toLowerCase();
     return lower.contains('live') ||
@@ -14,7 +62,8 @@ class ScoreHelper {
         lower.contains('break');
   }
 
-  static bool isFinishedStatus(String? status) {
+  static bool isFinishedStatus(String? status, [String? statusCode]) {
+    if (isCancelledOrPostponed(status, statusCode)) return false;
     if (status == null) return false;
     final lower = status.toLowerCase();
     if (lower.contains('مباشر') ||
@@ -35,13 +84,14 @@ class ScoreHelper {
         lower.contains('final');
   }
 
-  static bool isUpcomingStatus(String? status) {
+  static bool isUpcomingStatus(String? status, [String? statusCode]) {
+    if (isCancelledOrPostponed(status, statusCode)) return false;
     if (status == null) return true;
     final lower = status.toLowerCase();
     return lower.contains('not started') ||
         lower.contains('لم تبدأ') ||
         lower.contains('upcoming') ||
-        (!isLiveStatus(status) && !isFinishedStatus(status));
+        (!isLiveStatus(status, statusCode) && !isFinishedStatus(status, statusCode));
   }
 
   static String normalizeScore(String? score) {

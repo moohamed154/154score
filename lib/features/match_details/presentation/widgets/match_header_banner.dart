@@ -74,13 +74,20 @@ class MatchHeaderBanner extends StatelessWidget {
       score2: s2,
       timestamp: match.timestamp,
     );
-    final isLive =
-        MatchStatusHelper.isLive(phase) ||
-        ScoreHelper.isLiveStatus(effectiveStatus);
-    final isUpcoming = MatchStatusHelper.isUpcoming(phase);
-    final isFinished = MatchStatusHelper.isFinished(phase);
-    final isCancelled = MatchStatusHelper.isCancelled(phase);
-    final isPostponed = MatchStatusHelper.isPostponed(phase);
+    final isCancelled = MatchStatusHelper.isCancelled(phase) ||
+        ScoreHelper.isCancelledStatus(effectiveStatus, effectiveStatusCode) ||
+        ScoreHelper.isCancelledStatus(match.status, match.statusCode);
+    final isPostponed = MatchStatusHelper.isPostponed(phase) ||
+        ScoreHelper.isPostponedStatus(effectiveStatus, effectiveStatusCode) ||
+        ScoreHelper.isPostponedStatus(match.status, match.statusCode);
+    final isLive = !isCancelled &&
+        !isPostponed &&
+        (MatchStatusHelper.isLive(phase) ||
+            ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode));
+    final isUpcoming =
+        !isCancelled && !isPostponed && MatchStatusHelper.isUpcoming(phase);
+    final isFinished =
+        !isCancelled && !isPostponed && MatchStatusHelper.isFinished(phase);
 
     final score1Str = ScoreHelper.normalizeScore(s1);
     final score2Str = ScoreHelper.normalizeScore(s2);

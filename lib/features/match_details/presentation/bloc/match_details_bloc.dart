@@ -191,8 +191,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       String? resolvedChampionshipId =
           eventsPayloadRes.championshipId ?? state.championshipId;
 
-      String? resolvedStatus = state.liveStatus;
-      String? resolvedStatusCode = state.liveStatusCode;
+      String? resolvedStatus = event.initialStatus ?? state.liveStatus;
+      String? resolvedStatusCode =
+          event.initialStatusCode ?? state.liveStatusCode;
 
       final hasFinishedEvent = resolvedEvents.any((e) {
         if (!e.isPeriodMarker) return false;
@@ -222,17 +223,21 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       });
 
       final isCurrentlyLive =
-          ScoreHelper.isLiveStatus(resolvedStatus) ||
+          ScoreHelper.isLiveStatus(resolvedStatus, resolvedStatusCode) ||
           (resolvedStatusCode != null &&
               (resolvedStatusCode == 'LIVE' ||
                   resolvedStatusCode.startsWith('IN_PLAY') ||
                   resolvedStatusCode == 'HALF_TIME' ||
                   resolvedStatusCode == 'HT'));
 
-      if (!isCurrentlyLive && hasFinishedEvent) {
+      final isCancelledOrPostponed =
+          ScoreHelper.isCancelledOrPostponed(resolvedStatus, resolvedStatusCode) ||
+          ScoreHelper.isCancelledOrPostponed(state.liveStatus, state.liveStatusCode);
+
+      if (!isCurrentlyLive && !isCancelledOrPostponed && hasFinishedEvent) {
         if (resolvedStatus == null ||
             resolvedStatus.isEmpty ||
-            !ScoreHelper.isFinishedStatus(resolvedStatus)) {
+            !ScoreHelper.isFinishedStatus(resolvedStatus, resolvedStatusCode)) {
           resolvedStatus = 'انتهت';
           resolvedStatusCode = 'FINISHED';
         }
@@ -280,9 +285,22 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final knownScore1 = state.liveScore1 ?? resolvedOverview?.score1;
       final knownScore2 = state.liveScore2 ?? resolvedOverview?.score2;
 
-      resolvedStatus =
-          state.liveStatus ?? resolvedOverview?.status ?? resolvedStatus;
-      resolvedStatusCode = state.liveStatusCode ?? resolvedStatusCode;
+      final overviewStatus = resolvedOverview?.status;
+      final isOverviewCancelledOrPostponed =
+          ScoreHelper.isCancelledOrPostponed(overviewStatus);
+
+      final isCancelledOrPostponedFinal =
+          isCancelledOrPostponed ||
+          isOverviewCancelledOrPostponed ||
+          ScoreHelper.isCancelledOrPostponed(resolvedStatus, resolvedStatusCode);
+
+      if (isOverviewCancelledOrPostponed) {
+        resolvedStatus = overviewStatus;
+      } else if (!isCancelledOrPostponedFinal) {
+        resolvedStatus =
+            state.liveStatus ?? resolvedOverview?.status ?? resolvedStatus;
+        resolvedStatusCode = state.liveStatusCode ?? resolvedStatusCode;
+      }
 
       final effectiveDate = resolvedOverview?.date;
       final isPastMatch =
@@ -297,6 +315,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
               true;
 
       if (!isCurrentlyLive &&
+          !isCancelledOrPostponedFinal &&
           (hasFinishedEvent ||
               (isPastMatch &&
                   (knownScore1 != null ||
@@ -304,7 +323,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
                       resolvedEvents.isNotEmpty)))) {
         if (resolvedStatus == null ||
             resolvedStatus.isEmpty ||
-            !ScoreHelper.isFinishedStatus(resolvedStatus)) {
+            !ScoreHelper.isFinishedStatus(resolvedStatus, resolvedStatusCode)) {
           resolvedStatus = 'انتهت';
           resolvedStatusCode = 'FINISHED';
         }

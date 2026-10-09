@@ -15,15 +15,24 @@ class LoadMatchDetailsEvent extends MatchDetailsEvent {
   final String matchId;
   final bool isRefresh;
   final Completer<void>? completer;
+  final String? initialStatus;
+  final String? initialStatusCode;
 
   const LoadMatchDetailsEvent(
     this.matchId, {
     this.isRefresh = false,
     this.completer,
+    this.initialStatus,
+    this.initialStatusCode,
   });
 
   @override
-  List<Object?> get props => [matchId, isRefresh];
+  List<Object?> get props => [
+        matchId,
+        isRefresh,
+        initialStatus,
+        initialStatusCode,
+      ];
 }
 
 class ChangeTabEvent extends MatchDetailsEvent {
