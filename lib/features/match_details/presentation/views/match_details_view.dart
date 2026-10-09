@@ -28,6 +28,7 @@ import '../../../../core/storage/local_storage_service.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../standings/presentation/bloc/standings_bloc.dart';
 import '../../../standings/presentation/widgets/standings_table.dart';
+import '../../../standings/domain/entities/standings_entity.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
@@ -2758,6 +2759,76 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           final standings = state.standings!;
           final hasGroups = standings.hasMultipleGroups;
 
+          final t1Name = (match.team1.isNotEmpty
+                  ? match.team1
+                  : (widget.initialMatch?.team1 ?? ''))
+              .trim();
+          final t2Name = (match.team2.isNotEmpty
+                  ? match.team2
+                  : (widget.initialMatch?.team2 ?? ''))
+              .trim();
+          final t1Id = (match.team1Id?.isNotEmpty == true
+                  ? match.team1Id
+                  : widget.initialMatch?.team1Id)
+              ?.trim();
+          final t2Id = (match.team2Id?.isNotEmpty == true
+                  ? match.team2Id
+                  : widget.initialMatch?.team2Id)
+              ?.trim();
+
+          List<MapEntry<String, List<StandingRowEntity>>> sortedGroupEntries = [];
+          if (hasGroups) {
+            final rawEntries = standings.groups!.entries.toList();
+
+            bool rowMatchesTeam(StandingRowEntity row) {
+              final rName = row.teamName.trim().toLowerCase();
+              final rId = row.teamId?.trim();
+
+              if (t1Id != null && t1Id.isNotEmpty && rId == t1Id) return true;
+              if (t2Id != null && t2Id.isNotEmpty && rId == t2Id) return true;
+
+              if (t1Name.isNotEmpty) {
+                final target = t1Name.toLowerCase();
+                if (rName == target || rName.contains(target) || target.contains(rName)) {
+                  return true;
+                }
+              }
+              if (t2Name.isNotEmpty) {
+                final target = t2Name.toLowerCase();
+                if (rName == target || rName.contains(target) || target.contains(rName)) {
+                  return true;
+                }
+              }
+              return false;
+            }
+
+            int countMatchingTeams(MapEntry<String, List<StandingRowEntity>> entry) {
+              int count = 0;
+              for (final row in entry.value) {
+                if (rowMatchesTeam(row)) {
+                  count++;
+                }
+              }
+              return count;
+            }
+
+            final matchGroups = <MapEntry<String, List<StandingRowEntity>>>[];
+            final otherGroups = <MapEntry<String, List<StandingRowEntity>>>[];
+
+            for (final entry in rawEntries) {
+              if (countMatchingTeams(entry) > 0) {
+                matchGroups.add(entry);
+              } else {
+                otherGroups.add(entry);
+              }
+            }
+
+            matchGroups.sort(
+              (a, b) => countMatchingTeams(b).compareTo(countMatchingTeams(a)),
+            );
+            sortedGroupEntries = [...matchGroups, ...otherGroups];
+          }
+
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
@@ -2770,27 +2841,63 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               padding: const EdgeInsets.symmetric(vertical: 12),
               children: [
                 if (hasGroups) ...[
-                  ...standings.groups!.entries.map((groupEntry) {
+                  ...sortedGroupEntries.map((groupEntry) {
+                    final isMatchGroup = sortedGroupEntries.isNotEmpty &&
+                        groupEntry == sortedGroupEntries.first &&
+                        (t1Name.isNotEmpty || t2Name.isNotEmpty);
+
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                          child: Text(
-                            AppLocalizations.of(context).formatGroupName(groupEntry.key),
-                            style: AppTypography.getHeadingMedium(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(fontSize: 16),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                          child: Row(
+                            children: [
+                              Text(
+                                AppLocalizations.of(context).formatGroupName(groupEntry.key),
+                                style: AppTypography.getHeadingMedium(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(fontSize: 16),
+                              ),
+                              if (isMatchGroup) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimensions.radiusSm,
+                                    ),
+                                    border: Border.all(
+                                      color: AppColors.primary.withValues(alpha: 0.3),
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    isArabic ? 'مجموعة المباراة' : 'Match Group',
+                                    style: AppTypography.getBodySmall(
+                                      isDark: isDark,
+                                      isArabic: isArabic,
+                                    ).copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         StandingsTable(
                           rows: groupEntry.value,
                           highlightedTeamNames: [
-                            if (widget.initialMatch?.team1 != null)
-                              widget.initialMatch!.team1,
-                            if (widget.initialMatch?.team2 != null)
-                              widget.initialMatch!.team2,
+                            if (t1Name.isNotEmpty) t1Name,
+                            if (t2Name.isNotEmpty) t2Name,
                           ],
                         ),
                       ],
@@ -2800,10 +2907,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                   StandingsTable(
                     rows: standings.rows,
                     highlightedTeamNames: [
-                      if (widget.initialMatch?.team1 != null)
-                        widget.initialMatch!.team1,
-                      if (widget.initialMatch?.team2 != null)
-                        widget.initialMatch!.team2,
+                      if (t1Name.isNotEmpty) t1Name,
+                      if (t2Name.isNotEmpty) t2Name,
                     ],
                   ),
                 ],
