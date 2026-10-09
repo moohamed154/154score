@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -35,6 +34,7 @@ class _HomeViewState extends State<HomeView> {
   late final PageController _pageController;
   late final DateTime _baseDate;
   int _currentPage = _kInitialPage;
+  bool _isProgrammaticScroll = false;
 
   @override
   void initState() {
@@ -44,9 +44,7 @@ class _HomeViewState extends State<HomeView> {
 
     final matchesBloc = context.read<MatchesBloc>();
     final selected = matchesBloc.state.selectedDate;
-    final selectedMidnight = DateTime(selected.year, selected.month, selected.day);
-    final initialOffset = selectedMidnight.difference(_baseDate).inDays;
-    _currentPage = _kInitialPage + initialOffset;
+    _currentPage = _indexForDate(selected);
     _pageController = PageController(initialPage: _currentPage);
 
     if (matchesBloc.state.status == MatchesStatus.initial) {
@@ -61,12 +59,50 @@ class _HomeViewState extends State<HomeView> {
   }
 
   DateTime _dateForIndex(int pageIndex) {
-    return _baseDate.add(Duration(days: pageIndex - _kInitialPage));
+    final offset = pageIndex - _kInitialPage;
+    return DateTime(_baseDate.year, _baseDate.month, _baseDate.day + offset);
   }
 
   int _indexForDate(DateTime date) {
-    final targetMidnight = DateTime(date.year, date.month, date.day);
-    return _kInitialPage + targetMidnight.difference(_baseDate).inDays;
+    final baseUtc = DateTime.utc(_baseDate.year, _baseDate.month, _baseDate.day);
+    final targetUtc = DateTime.utc(date.year, date.month, date.day);
+    return _kInitialPage + targetUtc.difference(baseUtc).inDays;
+  }
+
+  void _goToDate(DateTime date, {bool animate = false}) {
+    final targetIndex = _indexForDate(date);
+    final bloc = context.read<MatchesBloc>();
+
+    if (targetIndex == _currentPage &&
+        DateFormatter.isSameDay(date, bloc.state.selectedDate)) {
+      return;
+    }
+
+    _isProgrammaticScroll = true;
+    _currentPage = targetIndex;
+
+    if (_pageController.hasClients) {
+      if (animate) {
+        _pageController
+            .animateToPage(
+              targetIndex,
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+            )
+            .then((_) {
+              _isProgrammaticScroll = false;
+            });
+      } else {
+        _pageController.jumpToPage(targetIndex);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _isProgrammaticScroll = false;
+        });
+      }
+    } else {
+      _isProgrammaticScroll = false;
+    }
+
+    bloc.add(LoadMatchesEvent(date: date));
   }
 
   @override
@@ -80,6 +116,9 @@ class _HomeViewState extends State<HomeView> {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(kToolbarHeight + topPadding),
         child: BlocBuilder<MatchesBloc, MatchesState>(
+          buildWhen: (prev, curr) =>
+              prev.selectedDate != curr.selectedDate ||
+              prev.hasActiveFilter != curr.hasActiveFilter,
           builder: (context, matchesState) {
             return Material(
               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -145,29 +184,11 @@ class _HomeViewState extends State<HomeView> {
                               selectedDate: matchesState.selectedDate,
                               onDateSelected: (date) {
                                 final targetIndex = _indexForDate(date);
-                                if (targetIndex != _currentPage) {
-                                  _currentPage = targetIndex;
-                                  if (_pageController.hasClients) {
-                                    final diff = (targetIndex -
-                                            (_pageController.page?.round() ??
-                                                _kInitialPage))
-                                        .abs();
-                                    if (diff == 1) {
-                                      _pageController.animateToPage(
-                                        targetIndex,
-                                        duration: const Duration(
-                                          milliseconds: 260,
-                                        ),
-                                        curve: Curves.easeOutCubic,
-                                      );
-                                    } else {
-                                      _pageController.jumpToPage(targetIndex);
-                                    }
-                                  }
-                                  context.read<MatchesBloc>().add(
-                                    LoadMatchesEvent(date: date),
-                                  );
-                                }
+                                final currentPos = _pageController.hasClients
+                                    ? (_pageController.page?.round() ?? _currentPage)
+                                    : _currentPage;
+                                final diff = (targetIndex - currentPos).abs();
+                                _goToDate(date, animate: diff == 1);
                               },
                               isDark: isDark,
                             ),
@@ -217,150 +238,176 @@ class _HomeViewState extends State<HomeView> {
             listenWhen: (prev, curr) =>
                 !DateFormatter.isSameDay(prev.selectedDate, curr.selectedDate),
             listener: (context, state) {
+              if (_isProgrammaticScroll) return;
               final targetIndex = _indexForDate(state.selectedDate);
               if (_currentPage != targetIndex) {
                 _currentPage = targetIndex;
                 if (_pageController.hasClients &&
                     (_pageController.page?.round() ?? -1) != targetIndex) {
+                  _isProgrammaticScroll = true;
                   _pageController.jumpToPage(targetIndex);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _isProgrammaticScroll = false;
+                  });
                 }
               }
             },
           ),
         ],
-        child: BlocBuilder<MatchesBloc, MatchesState>(
-          builder: (context, matchesState) {
-            // Directionality.ltr ensures left arrow corresponds to previous page
-            // and right arrow corresponds to next page smoothly.
-            return Directionality(
-              textDirection: TextDirection.ltr,
-              child: PageView.builder(
-                controller: _pageController,
-                physics: const PageScrollPhysics(
-                  parent: BouncingScrollPhysics(),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: PageView.builder(
+            controller: _pageController,
+            physics: const PageScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            onPageChanged: (pageIndex) {
+              _currentPage = pageIndex;
+              if (_isProgrammaticScroll) return;
+              final newDate = _dateForIndex(pageIndex);
+              final bloc = context.read<MatchesBloc>();
+              if (!DateFormatter.isSameDay(newDate, bloc.state.selectedDate)) {
+                bloc.add(LoadMatchesEvent(date: newDate));
+              }
+            },
+            itemBuilder: (context, index) {
+              final pageDate = _dateForIndex(index);
+              return Directionality(
+                textDirection:
+                    isArabic ? TextDirection.rtl : TextDirection.ltr,
+                child: _HomeDayPage(
+                  key: ValueKey('day_${DateFormatter.toApiDateString(pageDate)}'),
+                  pageDate: pageDate,
+                  isDark: isDark,
+                  isArabic: isArabic,
                 ),
-                onPageChanged: (pageIndex) {
-                  _currentPage = pageIndex;
-                  final newDate = _dateForIndex(pageIndex);
-                  final bloc = context.read<MatchesBloc>();
-                  if (!DateFormatter.isSameDay(newDate, bloc.state.selectedDate)) {
-                    bloc.add(LoadMatchesEvent(date: newDate));
-                  }
-                },
-                itemBuilder: (context, index) {
-                  final pageDate = _dateForIndex(index);
-                  return Directionality(
-                    textDirection:
-                        isArabic ? TextDirection.rtl : TextDirection.ltr,
-                    child: _buildDayPage(
-                      context: context,
-                      pageDate: pageDate,
-                      matchesState: matchesState,
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ),
-                  );
-                },
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildDayPage({
-    required BuildContext context,
-    required DateTime pageDate,
-    required MatchesState matchesState,
-    required bool isDark,
-    required bool isArabic,
-  }) {
-    final isSelectedDate =
-        DateFormatter.isSameDay(pageDate, matchesState.selectedDate);
+class _HomeDayPage extends StatelessWidget {
+  final DateTime pageDate;
+  final bool isDark;
+  final bool isArabic;
+
+  const _HomeDayPage({
+    super.key,
+    required this.pageDate,
+    required this.isDark,
+    required this.isArabic,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final bloc = context.read<MatchesBloc>();
 
-    final List<LeagueGroupEntity>? leagues;
-    final bool isLoading;
-    final bool isError;
-    final String? errorMessage;
+    return BlocBuilder<MatchesBloc, MatchesState>(
+      buildWhen: (prev, curr) {
+        final isThisSelected = DateFormatter.isSameDay(pageDate, curr.selectedDate);
+        final wasThisSelected = DateFormatter.isSameDay(pageDate, prev.selectedDate);
 
-    if (isSelectedDate) {
-      isLoading = (matchesState.status == MatchesStatus.loading ||
-              matchesState.status == MatchesStatus.initial) &&
-          matchesState.allLeagues.isEmpty;
-      isError = matchesState.status == MatchesStatus.error &&
-          matchesState.allLeagues.isEmpty;
-      errorMessage = matchesState.errorMessage;
-      leagues = matchesState.filteredLeagues;
-    } else {
-      // Look up cached leagues for adjacent dates to enable instant 60/120 FPS swiping
-      final cached = bloc.getFilteredLeaguesForDate(pageDate);
-      if (cached != null) {
-        isLoading = false;
-        isError = false;
-        errorMessage = null;
-        leagues = cached;
-      } else {
-        isLoading = true;
-        isError = false;
-        errorMessage = null;
-        leagues = null;
-      }
-    }
+        if (isThisSelected || wasThisSelected) return true;
 
-    final dateKey = DateFormatter.toApiDateString(pageDate);
+        if (prev.activeFilter != curr.activeFilter ||
+            prev.sortOrder != curr.sortOrder ||
+            prev.hideFavorites != curr.hideFavorites ||
+            prev.timeFormat != curr.timeFormat) {
+          return true;
+        }
 
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: () async {
-        final matchesCompleter = Completer<void>();
-        bloc.add(
-          LoadMatchesEvent(
-            date: pageDate,
-            isRefresh: true,
-            completer: matchesCompleter,
-          ),
-        );
-        try {
-          await matchesCompleter.future.timeout(const Duration(seconds: 3));
-        } catch (_) {}
+        return false;
       },
-      child: isLoading
-          ? ListView(
-              key: PageStorageKey<String>('skel_$dateKey'),
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
+      builder: (context, matchesState) {
+        final isSelectedDate =
+            DateFormatter.isSameDay(pageDate, matchesState.selectedDate);
+
+        final List<LeagueGroupEntity>? leagues;
+        final bool isLoading;
+        final bool isError;
+        final String? errorMessage;
+
+        if (isSelectedDate) {
+          isLoading = (matchesState.status == MatchesStatus.loading ||
+                  matchesState.status == MatchesStatus.initial) &&
+              matchesState.allLeagues.isEmpty;
+          isError = matchesState.status == MatchesStatus.error &&
+              matchesState.allLeagues.isEmpty;
+          errorMessage = matchesState.errorMessage;
+          leagues = matchesState.filteredLeagues;
+        } else {
+          final cached = bloc.getFilteredLeaguesForDate(pageDate);
+          if (cached != null) {
+            isLoading = false;
+            isError = false;
+            errorMessage = null;
+            leagues = cached;
+          } else {
+            isLoading = true;
+            isError = false;
+            errorMessage = null;
+            leagues = null;
+          }
+        }
+
+        final dateKey = DateFormatter.toApiDateString(pageDate);
+
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            final matchesCompleter = Completer<void>();
+            bloc.add(
+              LoadMatchesEvent(
+                date: pageDate,
+                isRefresh: true,
+                completer: matchesCompleter,
               ),
-              padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-              children: [
-                _buildMatchesSkeleton(context, isDark, isArabic, pageDate),
-              ],
-            )
-          : isError
+            );
+            try {
+              await matchesCompleter.future.timeout(const Duration(seconds: 3));
+            } catch (_) {}
+          },
+          child: isLoading
               ? ListView(
-                  key: PageStorageKey<String>('err_$dateKey'),
+                  key: PageStorageKey<String>('skel_$dateKey'),
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
                   ),
                   padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
                   children: [
-                    _buildDateHeader(pageDate, isDark, isArabic),
-                    ErrorView(
-                      message: errorMessage,
-                      onRetry: () =>
-                          bloc.add(LoadMatchesEvent(date: pageDate)),
-                    ),
+                    _buildMatchesSkeleton(context, isDark, isArabic, pageDate),
                   ],
                 )
-              : _buildMatchesContent(
-                  context: context,
-                  pageDate: pageDate,
-                  displayLeagues: leagues ?? const [],
-                  state: matchesState,
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ),
+              : isError
+                  ? ListView(
+                      key: PageStorageKey<String>('err_$dateKey'),
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+                      children: [
+                        _buildDateHeader(pageDate, isDark, isArabic),
+                        ErrorView(
+                          message: errorMessage,
+                          onRetry: () =>
+                              bloc.add(LoadMatchesEvent(date: pageDate)),
+                        ),
+                      ],
+                    )
+                  : _buildMatchesContent(
+                      context: context,
+                      pageDate: pageDate,
+                      displayLeagues: leagues ?? const [],
+                      state: matchesState,
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ),
+        );
+      },
     );
   }
 
@@ -383,7 +430,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  String _formatDate(DateTime date, bool isArabic) {
+  static String _formatDate(DateTime date, bool isArabic) {
     const englishDays = [
       'Monday',
       'Tuesday',
@@ -454,12 +501,13 @@ class _HomeViewState extends State<HomeView> {
       );
     }
 
-    // Extract Favorite Matches (pinned on top like Yalla Shoot)
+    // Extract Favorite Matches (pinned on top like Yalla Shoot) - Optimized O(N) lookup
     final List<MatchEntity> favoriteMatches = [];
+    final seenMatchIds = <String>{};
     if (state.activeFilter != MatchFilterType.favorites && !state.hideFavorites) {
       for (final league in displayLeagues) {
         for (final m in league.matches) {
-          if (m.isFavorite && !favoriteMatches.any((fav) => fav.id == m.id)) {
+          if (m.isFavorite && seenMatchIds.add(m.id)) {
             favoriteMatches.add(m);
           }
         }
@@ -511,7 +559,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildMatchesSkeleton(
+  static Widget _buildMatchesSkeleton(
     BuildContext context,
     bool isDark,
     bool isArabic, [
@@ -552,75 +600,69 @@ class _HomeViewState extends State<HomeView> {
                 : const Color(0xFFF1F5F9),
             duration: const Duration(milliseconds: 1500),
           ),
-          child: Column(
-            children: [
-              LeagueSectionWidget(
-                key: const ValueKey('sk_league_1'),
-                league: LeagueGroupEntity(
-                  leagueTitle: isArabic ? 'الدوري الإسباني' : 'La Liga',
-                  matches: const [
-                    MatchEntity(
-                      id: 'sk1',
-                      team1: 'راسينغ',
-                      team2: 'ألافيس',
-                      time: '15:00',
-                      status: 'لم تبدأ',
-                    ),
-                    MatchEntity(
-                      id: 'sk2',
-                      team1: 'أوساسونا',
-                      team2: 'إسبانيول',
-                      time: '17:15',
-                      status: 'لم تبدأ',
-                    ),
-                    MatchEntity(
-                      id: 'sk3',
-                      team1: 'أتلتيك بلباو',
-                      team2: 'إلتشي',
-                      time: '19:30',
-                      status: 'لم تبدأ',
-                    ),
-                    MatchEntity(
-                      id: 'sk4',
-                      team1: 'ريال مدريد',
-                      team2: 'رايو فاليكانو',
-                      time: '22:00',
-                      status: 'لم تبدأ',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              LeagueSectionWidget(
-                key: const ValueKey('sk_league_2'),
-                league: LeagueGroupEntity(
-                  leagueTitle: isArabic ? 'الدوري الفرنسي' : 'Ligue 1',
-                  matches: const [
-                    MatchEntity(
-                      id: 'sk5',
-                      team1: 'ستراسبورغ',
-                      team2: 'موناكو',
-                      time: '18:15',
-                      status: 'لم تبدأ',
-                    ),
-                    MatchEntity(
-                      id: 'sk6',
-                      team1: 'أوكسير',
-                      team2: 'نيس',
-                      time: '21:45',
-                      status: 'لم تبدأ',
-                    ),
-                    MatchEntity(
-                      id: 'sk7',
-                      team1: 'لوهافر',
-                      team2: 'أنجيه',
-                      time: '21:45',
-                      status: 'لم تبدأ',
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: List.generate(6, (index) {
+                return Container(
+                  height: 72,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 70,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 48,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 70,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
           ),
         ),
       ],

@@ -90,7 +90,7 @@ void main() {
           ...GlobalMaterialLocalizations.delegates,
         ],
         supportedLocales: [Locale('en')],
-        home: Scaffold(body: MatchCard(match: match)),
+        home: Scaffold(body: MatchCard(match: match, timeFormat: '12h')),
       ),
     );
 

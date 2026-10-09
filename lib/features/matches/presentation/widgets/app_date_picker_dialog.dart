@@ -91,7 +91,14 @@ class _AppDatePickerDialogState extends State<AppDatePickerDialog> {
       ),
     );
 
-    final dateTitle = DateFormat('EEEE، d MMMM', locale).format(_selectedDate);
+    String dateTitle;
+    try {
+      dateTitle = DateFormat('EEEE، d MMMM', locale).format(_selectedDate);
+    } catch (_) {
+      final dd = _selectedDate.day.toString().padLeft(2, '0');
+      final mm = _selectedDate.month.toString().padLeft(2, '0');
+      dateTitle = '$dd/$mm/${_selectedDate.year}';
+    }
 
 
     return Theme(

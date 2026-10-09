@@ -263,19 +263,28 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     }
   }
 
-  /// Silently preheats adjacent dates ([D-1, D+1, D-2, D+2]) in the background.
+  Timer? _preloadDebounceTimer;
+  int _preloadSessionId = 0;
+
+  /// Silently preheats immediate adjacent dates ([D-1, D+1]) in the background.
+  /// Debounced by 600ms so fast user interactions or date changes don't spam the network or starve the UI isolate.
   void _preloadAdjacentDates(DateTime centerDate) {
-    _silentBackgroundPreload([
-      centerDate.subtract(const Duration(days: 1)),
-      centerDate.add(const Duration(days: 1)),
-      centerDate.subtract(const Duration(days: 2)),
-      centerDate.add(const Duration(days: 2)),
-    ]);
+    _preloadDebounceTimer?.cancel();
+    final currentSession = ++_preloadSessionId;
+
+    _preloadDebounceTimer = Timer(const Duration(milliseconds: 600), () {
+      if (isClosed || currentSession != _preloadSessionId) return;
+      _silentBackgroundPreload([
+        DateTime(centerDate.year, centerDate.month, centerDate.day - 1),
+        DateTime(centerDate.year, centerDate.month, centerDate.day + 1),
+      ], currentSession);
+    });
   }
 
   /// Silently pre-warms the cache in a detached background asynchronous task.
   /// Does NOT block the Bloc's event loop queue, guaranteeing instantaneous UI responsiveness.
-  void _silentBackgroundPreload(List<DateTime> dates) {
+  void _silentBackgroundPreload(List<DateTime> dates, [int? sessionId]) {
+    final activeSession = sessionId ?? _preloadSessionId;
     unawaited(() async {
       final lang = localStorageService.getLanguage();
       final offset = localStorageService.getTimezoneOffset();
@@ -283,7 +292,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       final todayStr = DateFormatter.toApiDateString(now);
 
       for (final date in dates) {
-        if (isClosed) return;
+        if (isClosed || activeSession != _preloadSessionId) return;
         final dateStr = DateFormatter.toApiDateString(date);
         final cacheKey = _cacheKey(dateStr, lang);
 
@@ -304,7 +313,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
             lang: lang,
             utcOffset: offset,
           );
-          if (isClosed) return;
+          if (isClosed || activeSession != _preloadSessionId) return;
           result.fold(
             onSuccess: (leagues) {
               final favMatches = localStorageService.getFavoriteMatches();
@@ -323,7 +332,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
         } catch (_) {}
 
         // Slight stagger to avoid flooding network
-        await Future<void>.delayed(const Duration(milliseconds: 120));
+        await Future<void>.delayed(const Duration(milliseconds: 250));
       }
     }());
   }
@@ -1548,6 +1557,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
   @override
   Future<void> close() {
+    _preloadDebounceTimer?.cancel();
     _stopLivePoller();
     _stopFallbackPolling();
     for (final id in _joinedLiveMatchRooms) {

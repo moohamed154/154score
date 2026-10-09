@@ -94,11 +94,11 @@ class _SettingsViewState extends State<SettingsView> {
     } else if (_logoTapCount >= 10) {
       _logoTapCount = 0;
       _tapResetTimer?.cancel();
-      _showDeveloperPasswordDialog(context);
+      _showDeveloperPasswordDialog();
     }
   }
 
-  Future<void> _showDeveloperPasswordDialog(BuildContext context) async {
+  Future<void> _showDeveloperPasswordDialog() async {
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -113,11 +113,12 @@ class _SettingsViewState extends State<SettingsView> {
     );
 
     if (unlocked == true && mounted) {
-      HapticFeedback.heavyImpact();
+      unawaited(HapticFeedback.heavyImpact());
       setState(() {
         _isDeveloperModeUnlocked = true;
       });
-      sl<LocalStorageService>().setDeveloperModeEnabled(true);
+      unawaited(sl<LocalStorageService>().setDeveloperModeEnabled(true));
+      if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -151,15 +152,18 @@ class _SettingsViewState extends State<SettingsView> {
           duration: const Duration(seconds: 2),
         ),
       );
-      DeveloperToolsSheet.show(
-        context,
-        onLockDeveloperMode: () {
-          if (mounted) {
-            setState(() {
-              _isDeveloperModeUnlocked = false;
-            });
-          }
-        },
+      if (!mounted) return;
+      unawaited(
+        DeveloperToolsSheet.show(
+          context,
+          onLockDeveloperMode: () {
+            if (mounted) {
+              setState(() {
+                _isDeveloperModeUnlocked = false;
+              });
+            }
+          },
+        ),
       );
     }
   }

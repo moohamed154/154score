@@ -20,11 +20,10 @@ class DateNavigationButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final todayMidnight = DateTime(today.year, today.month, today.day);
 
     // 5-day standard range centered on Today: [-2, -1, 0, 1, 2]
     final dates = List.generate(5, (i) {
-      return todayMidnight.add(Duration(days: i - 2));
+      return DateTime(today.year, today.month, today.day + (i - 2));
     });
 
     final isSelectedInStandardRange = dates.any(
@@ -52,7 +51,11 @@ class DateNavigationButtons extends StatelessWidget {
           ),
           tooltip: 'اليوم السابق',
           onPressed: () {
-            final prev = selectedDate.subtract(const Duration(days: 1));
+            final prev = DateTime(
+              selectedDate.year,
+              selectedDate.month,
+              selectedDate.day - 1,
+            );
             onDateSelected(prev);
           },
         ),
@@ -69,7 +72,6 @@ class DateNavigationButtons extends StatelessWidget {
           ),
           tooltip: 'اختيار التاريخ',
           onPressed: () async {
-            debugPrint('>>> Calendar button PRESSED!');
             final picked = await AppDatePickerDialog.show(
               context: context,
               initialDate: selectedDate,
@@ -95,7 +97,11 @@ class DateNavigationButtons extends StatelessWidget {
           ),
           tooltip: 'اليوم التالي',
           onPressed: () {
-            final next = selectedDate.add(const Duration(days: 1));
+            final next = DateTime(
+              selectedDate.year,
+              selectedDate.month,
+              selectedDate.day + 1,
+            );
             onDateSelected(next);
           },
         ),

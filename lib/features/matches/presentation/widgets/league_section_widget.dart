@@ -35,6 +35,28 @@ class LeagueSectionWidget extends StatefulWidget {
 
 class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
   bool _isExpanded = true;
+  int _liveMatchesCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _computeLiveCount();
+  }
+
+  @override
+  void didUpdateWidget(covariant LeagueSectionWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.league != widget.league) {
+      _computeLiveCount();
+    }
+  }
+
+  void _computeLiveCount() {
+    _liveMatchesCount = widget.league.matches.where((m) {
+      final phase = MatchStatusHelper.parseMatch(m);
+      return MatchStatusHelper.isLive(phase);
+    }).length;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,10 +64,7 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
-    final liveMatches = widget.league.matches.where((m) {
-      final phase = MatchStatusHelper.parseMatch(m);
-      return MatchStatusHelper.isLive(phase);
-    }).length;
+    final liveMatches = _liveMatchesCount;
 
     final isTimeSlot =
         widget.isTimeSorted ||
@@ -171,6 +190,17 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
 
                   // League Favorite Star Button
                   BlocBuilder<FavoritesCubit, FavoritesState>(
+                    buildWhen: (prev, curr) {
+                      final prevFav = prev.isFavoriteCompetition(
+                        id: widget.league.leagueId,
+                        name: widget.league.leagueTitle,
+                      );
+                      final currFav = curr.isFavoriteCompetition(
+                        id: widget.league.leagueId,
+                        name: widget.league.leagueTitle,
+                      );
+                      return prevFav != currFav;
+                    },
                     builder: (context, favState) {
                       final isFav = favState.isFavoriteCompetition(
                         id: widget.league.leagueId,

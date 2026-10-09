@@ -97,7 +97,7 @@ void main() {
       expect(dto.leagueTitle, 'الدوري الإسباني');
       expect(
         dto.leagueLogo,
-        'https://imgs.ysscores.com/championship/48/8641690196626.png',
+        'https://imgs.ysscores.com/championship/128/8641690196626.png',
       );
       expect(dto.leagueId, '938652');
 
