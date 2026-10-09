@@ -83,35 +83,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
   LeagueBloc? _leagueBloc;
   String? _currentLeagueId;
 
-  bool _computeHasFinishedEvent(MatchDetailsState state) {
-    return state.events.any((e) {
-      if (!e.isPeriodMarker) return false;
-      final name = e.playerName.trim().toLowerCase();
-      if (name.contains('الأول') ||
-          name.contains('اول') ||
-          name.contains('1st') ||
-          name.contains('half time') ||
-          name.contains('halftime') ||
-          name.contains('ht') ||
-          name.contains('استراحة') ||
-          name.contains('بداية')) {
-        return false;
-      }
-      return name == 'نهاية المباراة' ||
-          name == 'نهاية اللقاء' ||
-          name.contains('نهاية المباراة') ||
-          name.contains('نهاية اللقاء') ||
-          name.contains('نهاية الوقت الأصلي واللقاء') ||
-          name.contains('نهاية الشوط الإضافي الثاني') ||
-          name == 'full time' ||
-          name == 'ft' ||
-          name.contains('full time') ||
-          name.contains('full-time') ||
-          name == 'match finished' ||
-          name.contains('match finished');
-    });
-  }
-
   bool _computeIsCancelledOrPostponed({
     MatchEntity? match,
     MatchDetailsState? state,
@@ -155,47 +126,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     return false;
   }
 
-  bool _computeIsStartedOrEnded({
-    MatchEntity? match,
-    MatchDetailsState? state,
-    bool hasFinishedEvent = false,
-  }) {
-    // Matches that are cancelled or postponed must NEVER display Events or Stats tabs
-    if (_computeIsCancelledOrPostponed(match: match, state: state)) {
-      return false;
-    }
-
-    final effectiveMatch = match ?? widget.initialMatch;
-    if (effectiveMatch == null && state == null) return false;
-
-    final phase = effectiveMatch != null
-        ? MatchStatusHelper.parseMatch(effectiveMatch)
-        : MatchPhase.unknown;
-    final isLive = MatchStatusHelper.isLive(phase) ||
-        (effectiveMatch?.status != null &&
-            ScoreHelper.isLiveStatus(effectiveMatch!.status, effectiveMatch.statusCode)) ||
-        (state?.liveStatus != null &&
-            ScoreHelper.isLiveStatus(state!.liveStatus, state.liveStatusCode));
-    final isFinished = phase == MatchPhase.finished ||
-        (effectiveMatch?.status != null &&
-            ScoreHelper.isFinishedStatus(effectiveMatch!.status, effectiveMatch.statusCode)) ||
-        (state?.liveStatus != null &&
-            ScoreHelper.isFinishedStatus(state!.liveStatus, state.liveStatusCode)) ||
-        hasFinishedEvent;
-
-    if (isLive || isFinished) return true;
-    if (state != null && state.events.isNotEmpty) return true;
-
-    return false;
-  }
-
-  List<_MatchTabType> _getTabsForStatus(bool isStartedOrEnded) {
-    if (isStartedOrEnded) {
+  List<_MatchTabType> _getTabsForStatus({required bool isCancelledOrPostponed}) {
+    if (isCancelledOrPostponed) {
       return const [
-        _MatchTabType.events,
         _MatchTabType.details,
         _MatchTabType.lineups,
-        _MatchTabType.stats,
         _MatchTabType.standings,
         _MatchTabType.scorers,
         _MatchTabType.assists,
@@ -203,8 +138,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       ];
     } else {
       return const [
+        _MatchTabType.events,
         _MatchTabType.details,
         _MatchTabType.lineups,
+        _MatchTabType.stats,
         _MatchTabType.standings,
         _MatchTabType.scorers,
         _MatchTabType.assists,
@@ -898,12 +835,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
   @override
   void initState() {
     super.initState();
-    final initialIsStarted = _computeIsStartedOrEnded(
+    final initialIsCancelledOrPostponed = _computeIsCancelledOrPostponed(
       match: widget.initialMatch,
       state: null,
-      hasFinishedEvent: false,
     );
-    _currentTabs = _getTabsForStatus(initialIsStarted);
+    _currentTabs = _getTabsForStatus(
+      isCancelledOrPostponed: initialIsCancelledOrPostponed,
+    );
     context.read<MatchDetailsBloc>().add(
           LoadMatchDetailsEvent(
             widget.matchId,
@@ -1056,13 +994,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                 state: state,
               );
 
-              final hasFinishedEvent = _computeHasFinishedEvent(state);
-              final isStartedOrEnded = _computeIsStartedOrEnded(
+              final isCancelledOrPostponed = _computeIsCancelledOrPostponed(
                 match: activeMatch,
                 state: state,
-                hasFinishedEvent: hasFinishedEvent,
               );
-              final activeTabs = _getTabsForStatus(isStartedOrEnded);
+              final activeTabs = _getTabsForStatus(
+                isCancelledOrPostponed: isCancelledOrPostponed,
+              );
               _currentTabs = activeTabs;
 
               final effectiveLeagueId =
@@ -1278,8 +1216,57 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         match.hasPenalties ||
         (state.livePenaltyScore1 != null && state.livePenaltyScore2 != null);
 
+    // Resolve Match Alert / Special Notice (if present)
+    String? alertText = state.alert ??
+        state.overview?.note ??
+        match.note ??
+        widget.initialMatch?.note;
+
+    if (alertText == null || alertText.trim().isEmpty) {
+      for (final sec in state.details) {
+        final lowerTitle = sec.section.toLowerCase();
+        if (lowerTitle.contains('alert') ||
+            lowerTitle.contains('notice') ||
+            lowerTitle.contains('hint') ||
+            lowerTitle.contains('تنبيه') ||
+            lowerTitle.contains('ملاحظة') ||
+            lowerTitle.contains('إلغاء') ||
+            lowerTitle.contains('تأجيل')) {
+          if (sec.items.isNotEmpty) {
+            final c = sec.items.first.content.trim();
+            if (c.isNotEmpty) {
+              alertText = c;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (alertText == null || alertText.trim().isEmpty) {
+      for (final e in state.events) {
+        final t = e.type.toLowerCase();
+        if (t == 'alert' ||
+            t == 'notice' ||
+            t == 'note' ||
+            t == 'info' ||
+            t == 'warning') {
+          if (e.playerName.trim().isNotEmpty) {
+            alertText = e.playerName.trim();
+            break;
+          }
+        }
+      }
+    }
+
     // Filter events based on selected filter
     final displayedEvents = state.events.where((e) {
+      final t = e.type.toLowerCase();
+      // Exclude alert/notice pseudo-events from timeline list
+      if (t == 'alert' || t == 'notice' || t == 'note' || t == 'info') {
+        return false;
+      }
+
       if (_eventFilter == _EventFilter.all) {
         // If the dedicated Shootout Box is rendered at top, don't duplicate full time / penalty shootout markers in timeline
         if (hasShootout && e.isPeriodMarker) {
@@ -1300,7 +1287,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       if (e.hasVideo) return true;
       if (e.isPeriodMarker) return false;
 
-      final t = e.type.toLowerCase();
       // Exclude substitutions
       if (t.contains('sub')) return false;
       // Exclude regular yellow cards (unless red card)
@@ -1333,6 +1319,12 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.all(hMargin),
         children: [
+          // ── Match Alert / Special Notice Card ─────────────────────────────
+          if (alertText != null && alertText.trim().isNotEmpty) ...[
+            _buildAlertCard(alertText, isDark: isDark),
+            const SizedBox(height: AppDimensions.md),
+          ],
+
           // ── Video Highlights Summary Chips ───────────────────────────────
           if (state.videos.hasVideo && state.videos.allChips.isNotEmpty) ...[
             _buildVideoSummaryChips(state.videos, isDark, isArabic),
@@ -1903,6 +1895,50 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     );
   }
 
+  // ── Match Alert / Special Notice Card ───────────────────────────────────────
+  Widget _buildAlertCard(String text, {required bool isDark}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 12,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        border: Border.all(
+          color: isDark
+              ? AppColors.primary.withValues(alpha: 0.3)
+              : AppColors.primary.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.primary,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text.trim(),
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                height: 1.45,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Video Highlights Summary Chips ─────────────────────────────────────────
   Widget _buildVideoSummaryChips(
     MatchVideosEntity videos,
@@ -2248,7 +2284,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         : (widget.initialMatch?.team2 ??
               _extractTeamNameFromDetails(detailsList, isHome: false));
 
-    String? noticeText = overview?.note ?? match.note ?? widget.initialMatch?.note;
+    String? noticeText = state.alert ??
+        overview?.note ??
+        match.note ??
+        widget.initialMatch?.note;
     if (noticeText == null || noticeText.trim().isEmpty) {
       for (final sec in detailsList) {
         final lowerTitle = sec.section.toLowerCase();
@@ -2282,48 +2321,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           if (noticeText != null && noticeText.trim().isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkCard
-                      : const Color(0xFFF0FDF4),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.primary.withValues(alpha: 0.3)
-                        : AppColors.primary.withValues(alpha: 0.25),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.info_outline_rounded,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        noticeText.trim(),
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          height: 1.45,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: _buildAlertCard(noticeText, isDark: isDark),
             ),
 
           // 1. First Leg / Return Leg

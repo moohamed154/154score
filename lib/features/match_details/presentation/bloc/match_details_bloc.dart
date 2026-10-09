@@ -254,6 +254,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           halfScores: resolvedHalfScores,
           penaltiesDetail:
               eventsPayloadRes.penaltiesDetail ?? state.penaltiesDetail,
+          alert: eventsPayloadRes.alert ?? state.alert,
           liveScore1: state.liveScore1,
           liveScore2: state.liveScore2,
           liveStatus: resolvedStatus,
@@ -333,6 +334,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         state.copyWith(
           details: resolvedDetails,
           overview: resolvedOverview,
+          alert: state.alert ??
+              eventsPayloadRes.alert ??
+              resolvedOverview?.note,
           championshipId: resolvedChampionshipId,
           liveStatus: resolvedStatus,
           liveStatusCode: resolvedStatusCode,
@@ -532,6 +536,10 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           liveMinute: update.minute ?? state.liveMinute,
           liveExtraTime: update.extraTime ?? state.liveExtraTime,
           livePeriod: update.period ?? state.livePeriod,
+          alert: update.rawPayload['alert']?.toString() ??
+              update.rawPayload['notice']?.toString() ??
+              update.rawPayload['note']?.toString() ??
+              state.alert,
           events: effectiveEvents,
           lineup: _enrichLineupWithEvents(state.lineup, effectiveEvents),
         ),

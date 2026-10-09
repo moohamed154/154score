@@ -858,6 +858,7 @@ class MatchEventsPayload extends Equatable {
   final String? championshipId;
   final Map<String, dynamic>? halfScores;
   final PenaltyShootoutDetailEntity? penaltiesDetail;
+  final String? alert;
 
   const MatchEventsPayload({
     this.events = const [],
@@ -865,6 +866,7 @@ class MatchEventsPayload extends Equatable {
     this.championshipId,
     this.halfScores,
     this.penaltiesDetail,
+    this.alert,
   });
 
   @override
@@ -874,6 +876,7 @@ class MatchEventsPayload extends Equatable {
     championshipId,
     halfScores,
     penaltiesDetail,
+    alert,
   ];
 }
 

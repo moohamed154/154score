@@ -32,6 +32,8 @@ Widget buildTestApp(Widget child, {double width = 390, double height = 844}) {
   when(() => storage.getFavoriteMatches()).thenReturn(const []);
   when(() => storage.getFavoriteTeamTitles()).thenReturn(const {});
   when(() => storage.getFavoriteCompetitionTitles()).thenReturn(const {});
+  when(() => storage.getFavoriteTeamLogos()).thenReturn(const {});
+  when(() => storage.getFavoriteCompetitionLogos()).thenReturn(const {});
 
   return MaterialApp(
     locale: const Locale('ar'),
@@ -159,7 +161,7 @@ void main() {
 
       await tester.pump();
 
-      expect(find.byType(Tab), findsNWidgets(6));
+      expect(find.byType(Tab), findsNWidgets(8));
     });
 
     // ── 4. Switching to التفاصيل tab ──────────────────────────────────────

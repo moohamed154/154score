@@ -88,6 +88,32 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       String? championshipId;
       Map<String, dynamic>? halfScores;
       dynamic rawPenDetail;
+      String? alert;
+
+      String? extractAlertText(dynamic val) {
+        if (val == null) return null;
+        if (val is String &&
+            val.trim().isNotEmpty &&
+            val != 'null' &&
+            val != 'false' &&
+            val != '0') {
+          return val.trim();
+        }
+        if (val is Map) {
+          final t = val['text'] ??
+              val['content'] ??
+              val['title'] ??
+              val['message'] ??
+              val['note'] ??
+              val['description'];
+          if (t != null &&
+              t.toString().trim().isNotEmpty &&
+              t.toString() != 'null') {
+            return t.toString().trim();
+          }
+        }
+        return null;
+      }
 
       dynamic rootItems;
       if (parsed is List && parsed.isNotEmpty) {
@@ -120,6 +146,26 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           halfScores =
               Map<String, dynamic>.from(rootItems['half_scores'] as Map);
         }
+        alert = extractAlertText(items['alert']) ??
+            extractAlertText(items['alert_text']) ??
+            extractAlertText(items['notice']) ??
+            extractAlertText(items['note']) ??
+            extractAlertText(items['comment']) ??
+            extractAlertText(items['warning']) ??
+            extractAlertText(items['message']) ??
+            extractAlertText(rootItems['alert']) ??
+            extractAlertText(rootItems['alert_text']) ??
+            extractAlertText(rootItems['notice']) ??
+            extractAlertText(rootItems['note']) ??
+            extractAlertText(rootItems['comment']);
+      }
+
+      if (alert == null && parsed is Map) {
+        alert = extractAlertText(parsed['alert']) ??
+            extractAlertText(parsed['alert_text']) ??
+            extractAlertText(parsed['notice']) ??
+            extractAlertText(parsed['note']) ??
+            extractAlertText(parsed['comment']);
       }
 
       PenaltyShootoutDetailEntity? penaltiesDetail;
@@ -386,6 +432,29 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         );
       }
 
+      if (alert == null) {
+        for (final e in rawEvents) {
+          final t = e['type']?.toString().toLowerCase() ?? '';
+          if (t == 'alert' ||
+              t == 'notice' ||
+              t == 'note' ||
+              t == 'info' ||
+              t == 'warning' ||
+              t == 'comment') {
+            final text = e['text'] ??
+                e['player_name'] ??
+                e['player'] ??
+                e['title'] ??
+                e['name'] ??
+                e['content'];
+            if (text != null && text.toString().trim().isNotEmpty) {
+              alert = text.toString().trim();
+              break;
+            }
+          }
+        }
+      }
+
       final normalizedEvents = MatchEventHelper.normalizeEvents(
         events,
         hasExtraTime: MatchEventHelper.hasExtraTimeInHalfScores(halfScores),
@@ -397,6 +466,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         championshipId: championshipId,
         halfScores: halfScores,
         penaltiesDetail: penaltiesDetail,
+        alert: alert,
       );
     } catch (_) {
       return const MatchEventsPayload();
@@ -1114,7 +1184,14 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           map['status']?.toString();
       final statusCode = map['status_code']?.toString() ??
           map['statusCode']?.toString();
-      String? note = map['notice']?.toString() ??
+      String? note = (map['alert'] is Map
+              ? (map['alert']['text'] ??
+                      map['alert']['content'] ??
+                      map['alert']['title'] ??
+                      map['alert']['message'])
+                  ?.toString()
+              : map['alert']?.toString()) ??
+          map['notice']?.toString() ??
           map['comment']?.toString() ??
           map['note']?.toString();
       if (note == null || note.trim().isEmpty) {
