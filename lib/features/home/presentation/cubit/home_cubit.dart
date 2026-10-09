@@ -67,10 +67,13 @@ class HomeCubit extends Cubit<HomeState> {
   static const _homeDataTtl = Duration(minutes: 5);
 
   HomeCubit({
-    required this._videosRepository,
-    required this._transfersRepository,
-    required this._localStorageService,
-  }) : super(const HomeState());
+    required VideosRepository videosRepository,
+    required TransfersRepository transfersRepository,
+    required LocalStorageService localStorageService,
+  })  : _videosRepository = videosRepository,
+        _transfersRepository = transfersRepository,
+        _localStorageService = localStorageService,
+        super(const HomeState());
 
   Future<void> loadHomeData({bool isRefresh = false}) async {
     final hasExistingData =
