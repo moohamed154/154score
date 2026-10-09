@@ -195,6 +195,9 @@ class LocalStorageServiceImpl implements LocalStorageService {
     '943231': 'دوري المؤتمر الأوروبي',
     '77059': 'كأس القارات للأندية',
     '26995682': 'كأس القارات للأندية',
+    '943009': 'الدوري المصري الممتاز',
+    '58553': 'الدوري المصري الممتاز',
+    '3894': 'الدوري المصري الممتاز',
   };
 
   static const Map<String, String> defaultNameToId = {
@@ -216,6 +219,10 @@ class LocalStorageServiceImpl implements LocalStorageService {
     'كأس الخليج تحت 17 سنة': '98026338',
     'الدوري الأوروبي': '937603',
     'كأس القارات للأندية': '77059',
+    'الدوري المصري الممتاز': '943009',
+    'الدوري المصري': '943009',
+    'دوري ora': '943009',
+    'ora': '943009',
     // English names
     'uefa champions league': '12048',
     'champions league': '12048',

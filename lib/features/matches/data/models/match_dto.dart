@@ -89,16 +89,19 @@ class MatchDto {
       }
     }
 
-    final t1 =
+    final rawT1 =
         json['team_1']?.toString() ??
         homeTeamMap?['name']?.toString() ??
         json['home_team']?.toString() ??
         'Team 1';
-    final t2 =
+    final rawT2 =
         json['team_2']?.toString() ??
         awayTeamMap?['name']?.toString() ??
         json['away_team']?.toString() ??
         'Team 2';
+
+    final t1 = (rawT1.trim() == 'دورتوند') ? 'دورتموند' : rawT1;
+    final t2 = (rawT2.trim() == 'دورتوند') ? 'دورتموند' : rawT2;
 
     final t1Id =
         json['team_1_id']?.toString() ??
@@ -130,8 +133,15 @@ class MatchDto {
         awayTeamMap?['image']?.toString() ??
         json['away_logo']?.toString();
 
-    final logo1 = UrlHelper.normalizeImageUrl(rawLogo1);
-    final logo2 = UrlHelper.normalizeImageUrl(rawLogo2);
+    final normLogo1 = UrlHelper.normalizeImageUrl(rawLogo1);
+    final logo1 = (normLogo1 != null && UrlHelper.isValidImageUrl(normLogo1))
+        ? normLogo1
+        : (UrlHelper.resolveTeamLogo(t1Id, teamName: t1) ?? normLogo1);
+
+    final normLogo2 = UrlHelper.normalizeImageUrl(rawLogo2);
+    final logo2 = (normLogo2 != null && UrlHelper.isValidImageUrl(normLogo2))
+        ? normLogo2
+        : (UrlHelper.resolveTeamLogo(t2Id, teamName: t2) ?? normLogo2);
 
     // 4. Main Match Scores
     String? s1;

@@ -503,7 +503,9 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
             ) ??
             item.logo)
         : (isTeam
-            ? (UrlHelper.resolveTeamLogo(item.id, teamName: item.title) ??
+            ? (((item.logo != null && UrlHelper.isValidImageUrl(item.logo))
+                    ? item.logo
+                    : UrlHelper.resolveTeamLogo(item.id, teamName: item.title)) ??
                 item.logo)
             : item.logo);
 

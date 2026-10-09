@@ -348,6 +348,7 @@ class TeamResolver {
     // Borussia Dortmund
     'بوروسيا دورتموند': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
     'دورتموند': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
+    'دورتوند': (canonical: 'dortmund', ar: 'دورتموند', en: 'Borussia Dortmund'),
     'borussia dortmund': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
     'dortmund': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
     'bvb': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),

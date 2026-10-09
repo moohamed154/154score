@@ -86,6 +86,7 @@ class UrlHelper {
         return 'https://imgs.ysscores.com/teams/150/$trimmed';
       } else if (trimmed.startsWith('teams/') ||
           trimmed.startsWith('player/') ||
+          trimmed.startsWith('players/') ||
           trimmed.startsWith('championship/') ||
           trimmed.startsWith('flags/') ||
           trimmed.startsWith('country/') ||
@@ -216,6 +217,14 @@ class UrlHelper {
       return currentLogo;
     }
 
+    // 3. Fall back to Section 2 CDN template: https://imgs.ysscores.com/championship/{size}/{champ_id}.png
+    final idCandidate = effectiveId ?? cleanId;
+    if (idCandidate != null &&
+        RegExp(r'^\d+$').hasMatch(idCandidate) &&
+        idCandidate != '0') {
+      return 'https://imgs.ysscores.com/championship/128/$idCandidate.png';
+    }
+
     return null;
   }
 
@@ -296,7 +305,15 @@ class UrlHelper {
       '936417' ||
       '938770' ||
       '58881' ||
-      '3746233' =>
+      '544491' ||
+      '938366' ||
+      '3746233' ||
+      'دوري ora' ||
+      'ora' ||
+      'دوري أورا' ||
+      'دوري اورا' ||
+      'الدوري المصري' ||
+      'الدوري المصري الممتاز' =>
         true,
       _ => false,
     };
@@ -314,16 +331,24 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/8641690196626.png', // LaLiga
         '3734' || '936357' || '287' =>
           'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
-        '2606' || '938769' || '286' =>
-          'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
+        '2606' || '938769' || '286' || '544491' || '938366' =>
+          'https://imgs.ysscores.com/championship/128/17883477127566.png', // Bundesliga (Shield requested by user)
         '1985' || '937873' || '2847' =>
           'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
         '7167' || '941825' || '4750' =>
           'https://imgs.ysscores.com/championship/128/5111703719091.png', // Saudi Pro League (Light/White)
         '88013' || '59771441' || '943488' =>
           'https://imgs.ysscores.com/championship/128/5481703687014.png', // Supercopa (Light/White)
-        '943009' || '3894' || '58553' =>
-          'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
+        '943009' ||
+        '3894' ||
+        '58553' ||
+        'دوري ora' ||
+        'ora' ||
+        'دوري أورا' ||
+        'دوري اورا' ||
+        'الدوري المصري' ||
+        'الدوري المصري الممتاز' =>
+          'https://imgs.ysscores.com/championship/128/17882926672499.png', // Egyptian League / دوري ORA (Dark)
         '40224' || '916145' =>
           'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
         '77783' || '911131' || '97533' || '943487' || '943601' =>
@@ -379,16 +404,24 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/8641690196626.png', // LaLiga
         '3734' || '936357' || '287' =>
           'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
-        '2606' || '938769' || '286' =>
-          'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
+        '2606' || '938769' || '286' || '544491' || '938366' =>
+          'https://imgs.ysscores.com/championship/128/17883477127566.png', // Bundesliga (Shield requested by user)
         '1985' || '937873' || '2847' =>
           'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
         '7167' || '941825' || '4750' =>
           'https://imgs.ysscores.com/championship/128/3421703719071.png', // Saudi Pro League (Dark)
         '88013' || '59771441' || '943488' =>
           'https://imgs.ysscores.com/championship/128/911703687010.png', // Supercopa (Dark)
-        '943009' || '3894' || '58553' =>
-          'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
+        '943009' ||
+        '3894' ||
+        '58553' ||
+        'دوري ora' ||
+        'ora' ||
+        'دوري أورا' ||
+        'دوري اورا' ||
+        'الدوري المصري' ||
+        'الدوري المصري الممتاز' =>
+          'https://imgs.ysscores.com/championship/128/17882925978755.png', // Egyptian League / دوري ORA (Light)
         '40224' || '916145' =>
           'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
         '77783' || '911131' || '97533' || '943487' || '943601' =>
