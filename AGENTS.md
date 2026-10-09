@@ -103,12 +103,20 @@ For low-level architectural blueprints and diagrams, see:
 
 ### 2. Match Details (`features/match_details`)
 * **Match Header Banner**: Dynamic team crests, live minute timer, score, aggregate score, venue, and referee.
+* **Match Status Integrity (Cancelled & Postponed Standard)**:
+  * **Strict Tab Filtering**: If a match is cancelled (`ألغيت` / `cancelled`) or postponed (`تأجلت` / `postponed`), **NEVER show Events (`الأحداث`) or Statistics (`الإحصائيات`) tabs**. The active tabs must strictly be `[التفاصيل, التشكيلة, الترتيب, الهدافون, الصناع, الأخبار]`.
+  * **Center Header Pill**: For cancelled/postponed matches, display the kickoff time and status badge (`ألغيت` in high-contrast red or `تأجلت`), and **NEVER display dummy `0 - 0` scores or overwrite status to `انتهت`**.
+  * **Protection from Overwrites**: `MatchDetailsBloc` and `MatchDetailsView` must strictly safeguard `ألغيت` and `تأجلت` from being overwritten by timeline placeholder events (`بداية الشوط الأول`) or elapsed calendar dates.
+* **Details Tab (`التفاصيل`) Theme & Brand Integration**:
+  * Special notices and cancellation alerts must strictly adhere to the app's primary theme: `AppColors.primary` (`#00C853`) for the `Icons.info_outline_rounded` icon and border accents, with standard themed card background (`AppColors.darkCard` / light green tint `0xFFF0FDF4`). Arbitrary colors (like blue `#3B82F6`) are strictly forbidden.
+* **Standings Group Prioritization**:
+  * In competitions with multi-group structures (e.g. World Cup, Club World Cup), the specific group containing the two playing teams is prioritized to appear first at the top of the Standings tab with a `مجموعة المباراة` badge.
 * **Tabs**:
-  1. **Events / Timeline**: Chronological match events (goals, VAR, substitutions, yellow/red cards).
+  1. **Events / Timeline**: Chronological match events (goals, VAR, substitutions, yellow/red cards) — hidden when match is cancelled or postponed.
   2. **Lineups**: Interactive tactical pitch preview (formations like 4-3-3, 4-2-3-1), starter ratings, substitutes list, and coach info.
-  3. **Statistics**: Comparative progress bars (Possession %, Shots on target, Fouls, Corners, Offsides, Passes).
+  3. **Statistics**: Comparative progress bars (Possession %, Shots on target, Fouls, Corners, Offsides, Passes) — hidden when match is cancelled or postponed.
   4. **Head-to-Head (H2H)**: Historical encounters between the two clubs.
-  5. **Standings**: Compact in-screen group/league standings table.
+  5. **Standings**: Group/league standings table with current match's group prioritized.
 * **WebSocket Room**: Auto-subscribes to `match:{id}` on init and un-subscribes on dispose.
 
 ### 3. Leagues & Competitions (`features/leagues`)
@@ -154,6 +162,8 @@ For low-level architectural blueprints and diagrams, see:
 
 ### 10. Favorites & Bookmarks (`features/favorites`)
 * **Favorites Cubit**: Central management for starred leagues, teams, and matches.
+* **Unified Star Toggle Standard**: Favoriting and unfavoriting are performed exclusively through the universal star/heart action buttons distributed across match cards, tournament headers, and club profile headers.
+* **Favorites View (`FavoritesView`)**: Pure list and management surface for user-pinned clubs and competitions. **Never add manual "إضافة" (Add) dialog buttons to the Favorites screen** as favorites originate directly from the app's browsing surfaces.
 * **Persistence**: Synchronized immediately with `LocalStorageService`.
 * **Priority Reordering**: Custom ordering reflected across Home and Standings screens.
 
@@ -185,6 +195,7 @@ For low-level architectural blueprints and diagrams, see:
 * **Memory & Image Caching**: Always use `cached_network_image` via `AppImage` with explicit `memCacheWidth` and `memCacheHeight` to prevent bitmap memory bloat.
 * **Repaint Boundaries**: Wrap animations, loaders, and custom painters with `RepaintBoundary`.
 * **Resource Disposal**: Always call `.dispose()` on `TextEditingController`, `AnimationController`, `ScrollController`, `PageController`, and cancel all `StreamSubscription` instances.
+* **Floating SnackBar Standard**: All notifications and feedback SnackBars must use floating behavior (`SnackBarBehavior.floating`), high-contrast dark card background (`Color(0xFF1E293B)`), pure white text (`Colors.white`, font weight 600), rounded border radius (`12px`), and an accent border to ensure perfect readability in both Dark and Light modes.
 
 ---
 

@@ -16,131 +16,6 @@ import '../cubit/favorites_cubit.dart';
 class FavoritesView extends StatelessWidget {
   const FavoritesView({super.key});
 
-  void _showAddTeamDialog(
-    BuildContext context,
-    AppLocalizations l10n,
-    bool isArabic,
-    bool isDark,
-  ) {
-    final controller = TextEditingController();
-    final popularTeams = isArabic
-        ? const [
-            (name: 'الأهلي', id: '101745'),
-            (name: 'الزمالك', id: '80591'),
-            (name: 'ريال مدريد', id: '8633'),
-            (name: 'برشلونة', id: '8634'),
-            (name: 'مانشستر سيتي', id: '8456'),
-            (name: 'ليفربول', id: '8650'),
-            (name: 'الهلال', id: '2529'),
-            (name: 'النصر', id: '101918'),
-            (name: 'أرسنال', id: '9825'),
-            (name: 'بايرن ميونخ', id: '9823'),
-            (name: 'باريس سان جيرمان', id: '9847'),
-            (name: 'مصر', id: '10255'),
-          ]
-        : const [
-            (name: 'Real Madrid', id: '8633'),
-            (name: 'Barcelona', id: '8634'),
-            (name: 'Manchester City', id: '8456'),
-            (name: 'Liverpool', id: '8650'),
-            (name: 'Arsenal', id: '9825'),
-            (name: 'Bayern Munich', id: '9823'),
-            (name: 'Paris Saint-Germain', id: '9847'),
-            (name: 'Al Ahly', id: '101745'),
-            (name: 'Zamalek', id: '80591'),
-            (name: 'Al Hilal', id: '2529'),
-            (name: 'Al Nassr', id: '101918'),
-            (name: 'Egypt', id: '10255'),
-          ];
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-          ),
-          title: Text(
-            isArabic ? 'إضافة فريق إلى المفضلة' : 'Add Team to Favorites',
-            style: AppTypography.getBodyLarge(
-              isDark: isDark,
-              isArabic: isArabic,
-            ).copyWith(fontWeight: FontWeight.w700),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    hintText: isArabic ? 'اسم الفريق...' : 'Team name...',
-                    prefixIcon: const Icon(Icons.shield_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                    ),
-                  ),
-                  autofocus: true,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  isArabic ? 'فرق مقترحة:' : 'Suggested Teams:',
-                  style: AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: popularTeams.map((team) {
-                    return ActionChip(
-                      label: Text(team.name, style: const TextStyle(fontSize: 12)),
-                      onPressed: () {
-                        context.read<FavoritesCubit>().toggleTeam(
-                          team.name,
-                          id: team.id,
-                          logo: UrlHelper.resolveTeamLogo(team.id, teamName: team.name),
-                        );
-                        Navigator.of(dialogContext).pop();
-                      },
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(isArabic ? 'إلغاء' : 'Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final text = controller.text.trim();
-                if (text.isNotEmpty) {
-                  final teamId = LocalStorageServiceImpl.knownTeamNameToId[text.toLowerCase()] ??
-                      LocalStorageServiceImpl.knownTeamNameToId[text];
-                  final logo = UrlHelper.resolveTeamLogo(teamId, teamName: text);
-                  context.read<FavoritesCubit>().toggleTeam(
-                    text,
-                    id: teamId,
-                    logo: logo,
-                  );
-                }
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(isArabic ? 'إضافة' : 'Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -150,13 +25,6 @@ class FavoritesView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.translate('favorites_title')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            tooltip: isArabic ? 'إضافة فريق' : 'Add Team',
-            onPressed: () => _showAddTeamDialog(context, l10n, isArabic, isDark),
-          ),
-        ],
       ),
       body: BlocBuilder<FavoritesCubit, FavoritesState>(
         builder: (context, state) {
@@ -169,23 +37,12 @@ class FavoritesView extends StatelessWidget {
             padding: const EdgeInsets.all(AppDimensions.lg),
             children: [
               // Favorite Teams Section Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.translate('favorite_teams'),
-                    style: AppTypography.getHeadingMedium(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ),
-                  ),
-                  TextButton.icon(
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: Text(isArabic ? 'إضافة' : 'Add'),
-                    onPressed: () =>
-                        _showAddTeamDialog(context, l10n, isArabic, isDark),
-                  ),
-                ],
+              Text(
+                l10n.translate('favorite_teams'),
+                style: AppTypography.getHeadingMedium(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
               ),
               const SizedBox(height: 8),
 
@@ -237,8 +94,8 @@ class FavoritesView extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
                     isArabic
-                        ? 'لم تقم بإضافة أي فريق للمفضلة بعد. اضغط على "إضافة" لتحديد فرقك المفضلة.'
-                        : 'No favorite teams added yet. Tap "Add" to select your favorite teams.',
+                        ? 'لم تقم بإضافة أي فريق للمفضلة بعد.'
+                        : 'No favorite teams added yet.',
                     style: AppTypography.getBodySmall(
                       isDark: isDark,
                       isArabic: isArabic,
