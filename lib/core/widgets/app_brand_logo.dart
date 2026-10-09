@@ -14,6 +14,9 @@ class AppBrandLogo extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final bool useRemoteBrand;
 
+  final double? opacity;
+  final Color? color;
+
   const AppBrandLogo({
     super.key,
     this.size = 40.0,
@@ -22,6 +25,8 @@ class AppBrandLogo extends StatelessWidget {
     this.borderRadius,
     this.padding,
     this.useRemoteBrand = true,
+    this.opacity,
+    this.color,
   });
 
   @override
@@ -67,41 +72,55 @@ class AppBrandLogo extends StatelessWidget {
           )
         : localFallback;
 
+    final Widget styledImage = color != null
+        ? ColorFiltered(
+            colorFilter: ColorFilter.mode(color!, BlendMode.srcIn),
+            child: imageWidget,
+          )
+        : imageWidget;
+
+    final Widget content;
     if (!withBackground) {
-      return SizedBox(width: size, height: size, child: imageWidget);
+      content = SizedBox(width: size, height: size, child: styledImage);
+    } else {
+      content = Container(
+        width: size,
+        height: size,
+        padding: effectivePadding,
+        decoration: BoxDecoration(
+          color: effectiveIsDark ? const Color(0xFF16202C) : Colors.white,
+          borderRadius: effectiveRadius,
+          border: Border.all(
+            color: effectiveIsDark
+                ? AppColors.primary.withValues(alpha: 0.35)
+                : AppColors.primary.withValues(alpha: 0.25),
+            width: 1.0,
+          ),
+          boxShadow: [
+            if (effectiveIsDark)
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.20),
+                blurRadius: size * 0.25,
+                spreadRadius: 0,
+                offset: const Offset(0, 1),
+              )
+            else
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: size * 0.20,
+                spreadRadius: 0,
+                offset: const Offset(0, 2),
+              ),
+          ],
+        ),
+        child: styledImage,
+      );
     }
 
-    return Container(
-      width: size,
-      height: size,
-      padding: effectivePadding,
-      decoration: BoxDecoration(
-        color: effectiveIsDark ? const Color(0xFF16202C) : Colors.white,
-        borderRadius: effectiveRadius,
-        border: Border.all(
-          color: effectiveIsDark
-              ? AppColors.primary.withValues(alpha: 0.35)
-              : AppColors.primary.withValues(alpha: 0.25),
-          width: 1.0,
-        ),
-        boxShadow: [
-          if (effectiveIsDark)
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.20),
-              blurRadius: size * 0.25,
-              spreadRadius: 0,
-              offset: const Offset(0, 1),
-            )
-          else
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: size * 0.20,
-              spreadRadius: 0,
-              offset: const Offset(0, 2),
-            ),
-        ],
-      ),
-      child: imageWidget,
-    );
+    if (opacity != null) {
+      return Opacity(opacity: opacity!, child: content);
+    }
+
+    return content;
   }
 }

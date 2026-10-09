@@ -140,6 +140,12 @@ class MatchesRepositoryImpl implements MatchesRepository {
     } on NetworkException catch (e) {
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
+      if (e.statusCode == 404 ||
+          e.message.contains('لا توجد مباريات') ||
+          e.message.toLowerCase().contains('no matches') ||
+          e.message.toLowerCase().contains('not found')) {
+        return const ApiSuccess(<LeagueGroupEntity>[]);
+      }
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
       return ApiFailure(ServerFailure('Failed to load matches: $e'));
@@ -172,6 +178,12 @@ class MatchesRepositoryImpl implements MatchesRepository {
     } on NetworkException catch (e) {
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
+      if (e.statusCode == 404 ||
+          e.message.contains('لا توجد مباريات') ||
+          e.message.toLowerCase().contains('no matches') ||
+          e.message.toLowerCase().contains('not found')) {
+        return const ApiSuccess(<LeagueGroupEntity>[]);
+      }
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
       return ApiFailure(ServerFailure('Failed to load live matches: $e'));
@@ -289,6 +301,16 @@ class MatchesRepositoryImpl implements MatchesRepository {
       }
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
+      if (e.statusCode == 404 ||
+          e.message.contains('لا توجد مباريات') ||
+          e.message.toLowerCase().contains('no matches') ||
+          e.message.toLowerCase().contains('not found')) {
+        _dateMatchesCache[cacheKey] = (
+          dtos: <LeagueGroupDto>[],
+          timestamp: DateTime.now(),
+        );
+        return const ApiSuccess(<LeagueGroupEntity>[]);
+      }
       if (cached != null) {
         final entities = cached.dtos
             .map((dto) => dto.toEntity(favoriteMatches: favoriteMatches))

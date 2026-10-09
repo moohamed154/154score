@@ -369,13 +369,23 @@ class _HomeDayPageState extends State<_HomeDayPage>
               errorMessage = null;
               leagues = cached;
             } else if (isSelectedDate) {
-              isLoading = (matchesState.status == MatchesStatus.loading ||
-                      matchesState.status == MatchesStatus.initial) &&
-                  matchesState.allLeagues.isEmpty;
-              isError = matchesState.status == MatchesStatus.error &&
-                  matchesState.allLeagues.isEmpty;
-              errorMessage = matchesState.errorMessage;
-              leagues = null;
+              final isNoMatchesError = matchesState.errorMessage != null &&
+                  (matchesState.errorMessage!.contains('لا توجد مباريات') ||
+                      matchesState.errorMessage!.toLowerCase().contains('no matches'));
+              if (matchesState.status == MatchesStatus.empty || isNoMatchesError) {
+                isLoading = false;
+                isError = false;
+                errorMessage = null;
+                leagues = const [];
+              } else {
+                isLoading = (matchesState.status == MatchesStatus.loading ||
+                        matchesState.status == MatchesStatus.initial) &&
+                    matchesState.allLeagues.isEmpty;
+                isError = matchesState.status == MatchesStatus.error &&
+                    matchesState.allLeagues.isEmpty;
+                errorMessage = matchesState.errorMessage;
+                leagues = null;
+              }
             } else {
               isLoading = true;
               isError = false;

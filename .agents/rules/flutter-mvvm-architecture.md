@@ -185,9 +185,12 @@ lib/
 3. **Image Optimization**:
    - Use `cached_network_image` with explicit `memCacheWidth` and `memCacheHeight` to prevent high-res bitmap memory bloat.
    - Pre-cache critical assets in `didChangeDependencies`: `precacheImage(...)`.
-4. **Repaint Boundaries**:
-   - Wrap frequently animating widgets (e.g., custom loaders, rotating icons, charts) in `RepaintBoundary` to isolate canvas repainting.
-5. **Controller & Subscription Disposal**:
+4. **Repaint Boundaries & Layer Compositing**:
+   - Wrap frequently animating widgets, charts, and multi-page items (`PageView` day/feed items) in `RepaintBoundary` so the GPU can translate layers without per-frame subtree repainting.
+5. **Gesture & Page Transition Isolation (60/120 FPS Standard)**:
+   - Never dispatch asynchronous BLoC events or state updates inside continuous touch gesture callbacks (`onPageChanged`, `onPanUpdate`).
+   - Defer state mutations until gestures settle completely (e.g. `ScrollEndNotification`) to guarantee buttery smooth transitions without frame drops or scroll locking collisions.
+6. **Controller & Subscription Disposal**:
    - Always call `.dispose()` on `TextEditingController`, `AnimationController`, `ScrollController`, `PageController`, and cancel `StreamSubscription` in `dispose()`.
 
 ---
@@ -210,7 +213,9 @@ lib/
      const Failure(this.message, {this.statusCode});
    }
    ```
-2. **Centralized Dio Interceptors**:
+2. **Temporal Resource 404 Disambiguation**:
+   - When querying temporal collections (e.g., date-based schedules like `/matches?date=...`), HTTP 404 or backend messages like `"لا توجد مباريات"` / `"no matches"` MUST be interpreted as an empty dataset success (`Success([])`), NOT as a service failure.
+3. **Centralized Dio Interceptors**:
    - Add Logging, JWT Bearer Token Injection, and Auto-Refresh interceptors in `core/network/`.
 
 ---

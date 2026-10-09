@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../constants/api_endpoints.dart';
 import '../storage/local_storage_service.dart';
 import 'league_resolver.dart';
 
@@ -11,10 +12,8 @@ class UrlHelper {
   UrlHelper._();
 
   /// Official dark and light theme logos hosted on 154Score backend.
-  static const String brandLogoDark =
-      'https://154score-api.medohs770.workers.dev/images/logo_dark.png';
-  static const String brandLogoLight =
-      'https://154score-api.medohs770.workers.dev/images/logo_light.png';
+  static const String brandLogoDark = ApiEndpoints.logoDark;
+  static const String brandLogoLight = ApiEndpoints.logoLight;
 
   /// Returns the corresponding brand logo URL based on theme mode.
   static String getBrandLogoUrl({required bool isDark}) =>

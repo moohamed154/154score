@@ -246,6 +246,25 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
           _preloadAdjacentDates(event.date);
         },
         onFailure: (failure) {
+          if (failure.statusCode == 404 ||
+              failure.message.contains('لا توجد مباريات') ||
+              failure.message.toLowerCase().contains('no matches') ||
+              failure.message.toLowerCase().contains('not found')) {
+            _cachedDateLeagues[cacheKey] = [];
+            _cachedDateTimes[cacheKey] = DateTime.now();
+            emit(
+              state.copyWith(
+                status: MatchesStatus.empty,
+                allLeagues: [],
+                filteredLeagues: [],
+                selectedDate: event.date,
+                liveMatchesCount: 0,
+                errorMessage: null,
+              ),
+            );
+            return;
+          }
+
           // If we already have cached data displayed, don't clobber it with an error screen on silent revalidation
           if (!_cachedDateLeagues.containsKey(cacheKey)) {
             emit(

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:score154/core/constants/app_colors.dart';
 import 'package:score154/core/constants/app_dimensions.dart';
+import 'package:score154/core/widgets/app_brand_logo.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 
 import 'pitch_painter.dart';
@@ -112,6 +113,21 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                         RepaintBoundary(
                           child: CustomPaint(
                             painter: PitchPainter(isDark: isDark),
+                          ),
+                        ),
+
+                        // Pitch Brand Logo Watermark (bottom-left corner, blended on grass)
+                        Positioned(
+                          left: 28,
+                          bottom: 26,
+                          child: IgnorePointer(
+                            child: AppBrandLogo(
+                              size: 34,
+                              isDark: isDark,
+                              withBackground: false,
+                              color: Colors.white,
+                              opacity: 0.40,
+                            ),
                           ),
                         ),
 

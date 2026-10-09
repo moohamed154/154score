@@ -1,4 +1,5 @@
 import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../models/match_dto.dart';
@@ -40,18 +41,27 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     dynamic response, {
     String? defaultDate,
   }) {
-    if (response is Map && response['data'] is List) {
-      final list = response['data'] as List;
-      final responseDate = response['date']?.toString() ?? defaultDate;
-      return list.map((item) {
-        if (item is Map) {
-          return LeagueGroupDto.fromJson(
-            Map<String, dynamic>.from(item),
-            date: responseDate,
-          );
-        }
-        return const LeagueGroupDto(leagueTitle: 'League', matches: []);
-      }).toList();
+    if (response is Map) {
+      if (response['success'] == false ||
+          response['status_code'] == 404 ||
+          (response['message'] != null &&
+              (response['message'].toString().contains('لا توجد مباريات') ||
+                  response['message'].toString().toLowerCase().contains('no matches')))) {
+        return const [];
+      }
+      if (response['data'] is List) {
+        final list = response['data'] as List;
+        final responseDate = response['date']?.toString() ?? defaultDate;
+        return list.map((item) {
+          if (item is Map) {
+            return LeagueGroupDto.fromJson(
+              Map<String, dynamic>.from(item),
+              date: responseDate,
+            );
+          }
+          return const LeagueGroupDto(leagueTitle: 'League', matches: []);
+        }).toList();
+      }
     } else if (response is List) {
       return response.map((item) {
         if (item is Map) {
@@ -63,7 +73,15 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
         return const LeagueGroupDto(leagueTitle: 'League', matches: []);
       }).toList();
     }
-    return [];
+    return const [];
+  }
+
+  bool _isNoMatchesException(ServerException e) {
+    if (e.statusCode == 404) return true;
+    final msg = e.message.toLowerCase();
+    return msg.contains('لا توجد مباريات') ||
+        msg.contains('no matches') ||
+        msg.contains('not found');
   }
 
   @override
@@ -84,15 +102,22 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     }
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
-    final response = await _client.get(
-      ApiEndpoints.matches,
-      queryParameters: queryParams,
-    );
+    try {
+      final response = await _client.get(
+        ApiEndpoints.matches,
+        queryParameters: queryParams,
+      );
 
-    return _parseLeagueGroups(
-      response,
-      defaultDate: date ?? DateFormatter.toApiDateString(DateTime.now()),
-    );
+      return _parseLeagueGroups(
+        response,
+        defaultDate: date ?? DateFormatter.toApiDateString(DateTime.now()),
+      );
+    } on ServerException catch (e) {
+      if (_isNoMatchesException(e)) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -111,12 +136,19 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     }
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
-    final response = await _client.get(
-      ApiEndpoints.matchesLive,
-      queryParameters: queryParams,
-    );
+    try {
+      final response = await _client.get(
+        ApiEndpoints.matchesLive,
+        queryParameters: queryParams,
+      );
 
-    return _parseLeagueGroups(response, defaultDate: date);
+      return _parseLeagueGroups(response, defaultDate: date);
+    } on ServerException catch (e) {
+      if (_isNoMatchesException(e)) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -136,11 +168,18 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     }
     if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
-    final response = await _client.get(
-      ApiEndpoints.matchesByDate(date),
-      queryParameters: queryParams,
-    );
+    try {
+      final response = await _client.get(
+        ApiEndpoints.matchesByDate(date),
+        queryParameters: queryParams,
+      );
 
-    return _parseLeagueGroups(response, defaultDate: date);
+      return _parseLeagueGroups(response, defaultDate: date);
+    } on ServerException catch (e) {
+      if (_isNoMatchesException(e)) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 }

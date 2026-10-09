@@ -94,12 +94,21 @@ For low-level architectural blueprints and diagrams, see:
 
 ## 6. Comprehensive Feature Catalog & Implementation Rules
 
-### 1. Matches (`features/matches`)
+### 1. Matches & Home View (`features/matches`, `features/home`)
 * **Horizontal Date Selector**: Allows navigating days forward and backward; highlights the current day; RTL scroll-friendly.
 * **Calendar Date Picker**: Bottom sheet / dialog to jump directly to any date.
 * **League Grouping**: Matches are partitioned by championship with expand/collapse toggle.
 * **Live Score Card**: Live pulse badge for active matches (`AppColors.liveRed`), score display, penalty shootouts, red cards, and match minute.
 * **Starred Toggle**: Quick star icon on championship headers and match cards.
+* **Horizontal Swiping & Date Navigation Isolation (60/120 FPS Standard)**:
+  * **Zero Mid-Swipe Bloc Emissions**: Never dispatch `LoadMatchesEvent` or trigger BLoC state updates inside `PageView.onPageChanged`. `onPageChanged` fires at 50% scroll offset mid-gesture, causing heavy rebuild passes, frame drops, and scroll lock collisions.
+  * **Defer to `ScrollEndNotification`**: Listen via `NotificationListener<ScrollNotification>` and only dispatch `LoadMatchesEvent(date: newDate)` once the swipe animation completely stops (`notification is ScrollEndNotification`).
+  * **Layer Composition via `RepaintBoundary`**: Wrap each day page (`_HomeDayPage`) in `RepaintBoundary` and use `AutomaticKeepAliveClientMixin` (`wantKeepAlive: true`) so the GPU compositor shifts cached layer surfaces with zero per-frame widget rasterization during horizontal swipes.
+  * **Instant In-Memory Cache (0ms)**: Memoize filtered leagues per date (`_cachedFilteredDateLeagues` / `_cachedDateLeagues`) and background-prewarm adjacent days ($D-1$, $D+1$) with debouncing (150ms). On swiping or date selection, render cached leagues immediately without flashing skeleton loaders.
+* **Empty Date Handling (404 & "لا توجد مباريات" Standard)**:
+  * **Not a Server Failure**: Backend responses returning HTTP 404, `success: false`, or `"لا توجد مباريات"` / `"no matches"` represent a scheduled day with 0 matches (**Empty State**), NOT a server error.
+  * **Repository & DataSource Mapping**: Data sources and repositories must catch 404 and "لا توجد مباريات" and return `ApiSuccess(<LeagueGroupEntity>[])` / `<LeagueGroupDto>[]`.
+  * **Pure Empty View**: The UI must render the clean `EmptyView` with the soccer ball icon and `"no_matches_date"` (`لا توجد مباريات في هذا اليوم`), and **NEVER display error screens ("حدث خطأ ما"), disconnected Wi-Fi icons, or retry buttons** for empty days.
 
 ### 2. Match Details (`features/match_details`)
 * **Match Header Banner**: Dynamic team crests, live minute timer, score, aggregate score, venue, and referee.
@@ -209,7 +218,8 @@ For low-level architectural blueprints and diagrams, see:
 * **Scoped Rebuilds**: Wrap only the specific child subtree that depends on state changes (`buildWhen` / `Selector`), never the whole screen.
 * **Optimized Scrolling**: Use `ListView.builder` / `CustomScrollView` with `itemExtent` or `prototypeItem`.
 * **Memory & Image Caching**: Always use `cached_network_image` via `AppImage` with explicit `memCacheWidth` and `memCacheHeight` to prevent bitmap memory bloat.
-* **Repaint Boundaries**: Wrap animations, loaders, and custom painters with `RepaintBoundary`.
+* **Repaint Boundaries & Layer Isolation**: Wrap animations, loaders, custom painters, and multi-page items (`_HomeDayPage` inside `PageView`) with `RepaintBoundary` so GPU compositing translates rasterized layers without per-frame subtree repainting.
+* **Gesture & Transition Isolation**: Never dispatch asynchronous state changes or trigger BLoC state emissions within active user touch gestures (e.g. `onPageChanged`, `onPanUpdate`). Always defer state emissions until gestures settle (`ScrollEndNotification` or physics idle) to preserve native 60/120 FPS transitions without frame drops.
 * **Resource Disposal**: Always call `.dispose()` on `TextEditingController`, `AnimationController`, `ScrollController`, `PageController`, and cancel all `StreamSubscription` instances.
 * **Floating SnackBar Standard**: All notifications and feedback SnackBars must use floating behavior (`SnackBarBehavior.floating`), high-contrast dark card background (`Color(0xFF1E293B)`), pure white text (`Colors.white`, font weight 600), rounded border radius (`12px`), and an accent border to ensure perfect readability in both Dark and Light modes.
 
@@ -223,6 +233,7 @@ For low-level architectural blueprints and diagrams, see:
   class Success<T> extends ApiResult<T> { final T data; const Success(this.data); }
   class Failure<T> extends ApiResult<T> { final String message; final int? statusCode; const Failure(this.message, {this.statusCode}); }
   ```
+* **Temporal Resource 404 Disambiguation**: When an endpoint queries temporal collections (e.g. `/matches?date=...` or `/matches/live`), an HTTP 404 response or backend message containing `"لا توجد مباريات"` / `"no matches"` MUST be interpreted as an empty dataset success (`ApiSuccess([])`), never as a service failure (`ApiFailure`).
 * Centralized interceptors for HMAC security authentication tokens (`X-Timestamp`, `X-Nonce`, `X-Signature`), error mapping, and logging.
 
 ---
