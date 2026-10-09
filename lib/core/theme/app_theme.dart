@@ -77,6 +77,19 @@ class AppTheme {
         ),
         unselectedLabelTextStyle: TextStyle(color: AppColors.darkTextMuted),
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF1E293B),
+        contentTextStyle: GoogleFonts.cairo(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFF334155), width: 1),
+        ),
+      ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: CupertinoPageTransitionsBuilder(),
@@ -150,6 +163,19 @@ class AppTheme {
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelTextStyle: TextStyle(color: AppColors.lightTextMuted),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF0F172A),
+        contentTextStyle: GoogleFonts.cairo(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFF1E293B), width: 1),
+        ),
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {

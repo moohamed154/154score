@@ -128,20 +128,28 @@ class _TeamViewState extends State<TeamView>
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.notifications_off_rounded, color: Colors.white, size: 20),
+                  const Icon(Icons.notifications_off_rounded, color: Color(0xFFF59E0B), size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       isArabic
                           ? 'يرجى تفعيل إذن الإشعارات من إعدادات الهاتف لتلقي التنبيهات'
                           : 'Please enable notifications in device settings to receive alerts',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
-              backgroundColor: Colors.amber.shade900,
+              backgroundColor: const Color(0xFF1E293B),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0xFFF59E0B), width: 1),
+              ),
               duration: const Duration(seconds: 4),
             ),
           );
@@ -170,7 +178,7 @@ class _TeamViewState extends State<TeamView>
               children: [
                 Icon(
                   newStatus ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
-                  color: Colors.white,
+                  color: newStatus ? AppColors.primary : const Color(0xFF94A3B8),
                   size: 20,
                 ),
                 const SizedBox(width: 10),
@@ -183,14 +191,27 @@ class _TeamViewState extends State<TeamView>
                         : (isArabic
                             ? 'تم إيقاف إشعارات مباريات $name'
                             : 'Match notifications disabled for $name'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
             ),
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            backgroundColor: newStatus ? AppColors.primary : Colors.grey.shade800,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: newStatus
+                    ? AppColors.primary.withValues(alpha: 0.5)
+                    : const Color(0xFF334155),
+                width: 1,
+              ),
+            ),
+            backgroundColor: const Color(0xFF1E293B),
           ),
         );
       }
