@@ -153,7 +153,7 @@ class _SettingsViewState extends State<SettingsView> {
                   Expanded(
                     child: Text(
                       isArabic ? 'أدوات المطور' : 'Developer Tools',
-                      style: AppTypography.getTitleMedium(
+                      style: AppTypography.getHeadingMedium(
                         isDark: isDark,
                         isArabic: isArabic,
                       ).copyWith(fontWeight: FontWeight.bold),
