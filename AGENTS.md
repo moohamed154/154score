@@ -175,7 +175,7 @@ For low-level architectural blueprints and diagrams, see:
 * **Theme Mode**: Dark, Light, System default.
 * **Language**: Arabic (primary), English.
 * **Notification Preferences**: Toggles per alert type (goals, kick-off, news).
-* **Developer Tools & Diagnostics Security**: Developer mode is protected and hidden by default. Unlocking it requires tapping the app brand logo 10 times in Settings, followed by entering the master developer password (`MOhamed_2002`). Unlocking displays the developer and diagnostics suite; locking hides it until re-authenticated.
+* **Developer Tools & Diagnostics Security**: Developer mode is protected and hidden by default. Unlocking it requires tapping the app brand logo 10 times in Settings, followed by entering the master developer password (`MOhamed_2002`). Unlocking displays the developer and diagnostics suite; locking hides it until re-authenticated. The password prompt must be encapsulated in a dedicated `StatefulWidget` so `TextEditingController` is disposed cleanly within `State.dispose()` after pop animations conclude, avoiding `used after being disposed` crashes.
 
 ### 13. Onboarding & First-Launch Setup (`features/onboarding`)
 * **Branded Chips**: All team and league selection chips in the onboarding flow must display crisp logos alongside their titles (`UrlHelper.resolveTeamLogo` for clubs and `UrlHelper.resolveChampionshipLogo` with `isDark` adaptation for leagues/tournaments).
@@ -188,6 +188,17 @@ For low-level architectural blueprints and diagrams, see:
 * Centralized registration in `core/di/injection_container.dart`:
   * **Singletons**: Core utilities (`Dio`, `LocalStorageService`, `Repositories`, `NotificationService`).
   * **Factories**: ViewModels / Cubits (`registerFactory` creates a fresh instance per screen lifecycle).
+* **Constructor Parameter Standard**: Avoid language-gated `private-named-parameters` (`required this._privateField`). Always declare clean public named constructor parameters and bind them via initializer lists:
+  ```dart
+  HomeCubit({
+    required VideosRepository videosRepository,
+    required TransfersRepository transfersRepository,
+    required LocalStorageService localStorageService,
+  })  : _videosRepository = videosRepository,
+        _transfersRepository = transfersRepository,
+        _localStorageService = localStorageService,
+        super(const HomeState());
+  ```
 * Initialized in `main.dart` before `runApp()`.
 
 ---
@@ -216,7 +227,21 @@ For low-level architectural blueprints and diagrams, see:
 
 ---
 
-## 10. Feature-First Folder Structure Template
+## 10. Shorebird Code Push & Over-The-Air (OTA) Updates
+
+* **Configuration**:
+  * Configured in `shorebird.yaml` with `app_id: 0796e137-d14c-43d3-a3cb-5145f1de0aa4`.
+  * Tracked in `pubspec.yaml` assets (`- shorebird.yaml`).
+  * Auto-update enabled by default: patches are downloaded silently in the background on app launch and applied on the next start without store reviews or user friction.
+* **Release & Patch Operations**:
+  * **Android Release**: `shorebird release android`
+  * **Android Instant Patch**: `shorebird patch android`
+  * **iOS Release / Patch**: `shorebird release ios` / `shorebird patch ios` (executed on macOS / CI with Xcode).
+* **SDK Compatibility**: Maintain `environment: sdk: '>=3.5.0 <4.0.0'` in `pubspec.yaml` to ensure seamless version solving across various Flutter and Shorebird engine versions.
+
+---
+
+## 11. Feature-First Folder Structure Template
 
 ```text
 lib/
