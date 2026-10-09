@@ -83,7 +83,9 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
             !_tempHideFavorites;
 
         return Container(
-          height: mediaQuery.size.height * 0.85,
+          constraints: BoxConstraints(
+            maxHeight: mediaQuery.size.height * 0.90,
+          ),
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: const BorderRadius.vertical(
@@ -98,6 +100,7 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
             ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Top Drag Handle
               const SizedBox(height: 12),
@@ -166,7 +169,7 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
               const Divider(height: 1, thickness: 0.8),
 
               // Scrollable Options Content
-              Expanded(
+              Flexible(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
