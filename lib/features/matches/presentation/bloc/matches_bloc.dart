@@ -30,6 +30,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   final Set<String> _joinedLiveMatchRooms = <String>{};
   int _currentPollIntervalSeconds = 30;
   final Map<String, List<LeagueGroupEntity>> _cachedDateLeagues = {};
+  final Map<String, List<LeagueGroupEntity>> _cachedFilteredDateLeagues = {};
   final Map<String, DateTime> _cachedDateTimes = {};
 
   static String _cacheKey(String dateStr, String lang) => '$dateStr-$lang';
@@ -272,7 +273,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     _preloadDebounceTimer?.cancel();
     final currentSession = ++_preloadSessionId;
 
-    _preloadDebounceTimer = Timer(const Duration(milliseconds: 600), () {
+    _preloadDebounceTimer = Timer(const Duration(milliseconds: 150), () {
       if (isClosed || currentSession != _preloadSessionId) return;
       _silentBackgroundPreload([
         DateTime(centerDate.year, centerDate.month, centerDate.day - 1),
@@ -355,9 +356,18 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
   /// Returns filtered leagues for [date] with current active filters applied, or null.
   List<LeagueGroupEntity>? getFilteredLeaguesForDate(DateTime date) {
+    final dateStr = DateFormatter.toApiDateString(date);
+    final lang = localStorageService.getLanguage();
+    final filterKey =
+        '$dateStr-$lang-${state.activeFilter.name}-${state.sortOrder.name}-${state.selectedLeagueId ?? ""}-${state.searchQuery}';
+
+    final cachedFiltered = _cachedFilteredDateLeagues[filterKey];
+    if (cachedFiltered != null) return cachedFiltered;
+
     final cached = getCachedLeaguesForDate(date);
     if (cached == null) return null;
-    return _applyFilters(
+
+    final filtered = _applyFilters(
       leagues: cached,
       filter: state.activeFilter,
       leagueId: state.selectedLeagueId,
@@ -365,6 +375,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       sortOrder: state.sortOrder,
       query: state.searchQuery,
     );
+    _cachedFilteredDateLeagues[filterKey] = filtered;
+    return filtered;
   }
 
   void _onChangeFilter(ChangeFilterEvent event, Emitter<MatchesState> emit) {

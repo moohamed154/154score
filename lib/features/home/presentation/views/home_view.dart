@@ -86,23 +86,28 @@ class _HomeViewState extends State<HomeView> {
         _pageController
             .animateToPage(
               targetIndex,
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeOutCubic,
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.fastOutSlowIn,
             )
             .then((_) {
               _isProgrammaticScroll = false;
+              if (mounted) {
+                bloc.add(LoadMatchesEvent(date: date));
+              }
             });
       } else {
         _pageController.jumpToPage(targetIndex);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _isProgrammaticScroll = false;
+          if (mounted) {
+            bloc.add(LoadMatchesEvent(date: date));
+          }
         });
       }
     } else {
       _isProgrammaticScroll = false;
+      bloc.add(LoadMatchesEvent(date: date));
     }
-
-    bloc.add(LoadMatchesEvent(date: date));
   }
 
   @override
@@ -256,33 +261,40 @@ class _HomeViewState extends State<HomeView> {
         ],
         child: Directionality(
           textDirection: TextDirection.ltr,
-          child: PageView.builder(
-            controller: _pageController,
-            physics: const PageScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            onPageChanged: (pageIndex) {
-              _currentPage = pageIndex;
-              if (_isProgrammaticScroll) return;
-              final newDate = _dateForIndex(pageIndex);
-              final bloc = context.read<MatchesBloc>();
-              if (!DateFormatter.isSameDay(newDate, bloc.state.selectedDate)) {
-                bloc.add(LoadMatchesEvent(date: newDate));
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollEndNotification) {
+                if (_isProgrammaticScroll) return false;
+                final page = _pageController.page?.round() ?? _currentPage;
+                _currentPage = page;
+                final newDate = _dateForIndex(page);
+                final bloc = context.read<MatchesBloc>();
+                if (!DateFormatter.isSameDay(newDate, bloc.state.selectedDate)) {
+                  bloc.add(LoadMatchesEvent(date: newDate));
+                }
               }
+              return false;
             },
-            itemBuilder: (context, index) {
-              final pageDate = _dateForIndex(index);
-              return Directionality(
-                textDirection:
-                    isArabic ? TextDirection.rtl : TextDirection.ltr,
-                child: _HomeDayPage(
-                  key: ValueKey('day_${DateFormatter.toApiDateString(pageDate)}'),
-                  pageDate: pageDate,
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ),
-              );
-            },
+            child: PageView.builder(
+              controller: _pageController,
+              physics: const PageScrollPhysics(),
+              onPageChanged: (pageIndex) {
+                _currentPage = pageIndex;
+              },
+              itemBuilder: (context, index) {
+                final pageDate = _dateForIndex(index);
+                return Directionality(
+                  textDirection:
+                      isArabic ? TextDirection.rtl : TextDirection.ltr,
+                  child: _HomeDayPage(
+                    key: ValueKey('day_${DateFormatter.toApiDateString(pageDate)}'),
+                    pageDate: pageDate,
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -290,7 +302,7 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
-class _HomeDayPage extends StatelessWidget {
+class _HomeDayPage extends StatefulWidget {
   final DateTime pageDate;
   final bool isDark;
   final bool isArabic;
@@ -303,58 +315,76 @@ class _HomeDayPage extends StatelessWidget {
   });
 
   @override
+  State<_HomeDayPage> createState() => _HomeDayPageState();
+}
+
+class _HomeDayPageState extends State<_HomeDayPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final bloc = context.read<MatchesBloc>();
 
-    return BlocBuilder<MatchesBloc, MatchesState>(
-      buildWhen: (prev, curr) {
-        final isThisSelected = DateFormatter.isSameDay(pageDate, curr.selectedDate);
-        final wasThisSelected = DateFormatter.isSameDay(pageDate, prev.selectedDate);
+    return RepaintBoundary(
+      child: BlocBuilder<MatchesBloc, MatchesState>(
+        buildWhen: (prev, curr) {
+          final isThisSelected =
+              DateFormatter.isSameDay(widget.pageDate, curr.selectedDate);
+          final wasThisSelected =
+              DateFormatter.isSameDay(widget.pageDate, prev.selectedDate);
 
-        if (isThisSelected || wasThisSelected) return true;
+          if (isThisSelected || wasThisSelected) return true;
 
-        if (prev.activeFilter != curr.activeFilter ||
-            prev.sortOrder != curr.sortOrder ||
-            prev.hideFavorites != curr.hideFavorites ||
-            prev.timeFormat != curr.timeFormat) {
-          return true;
-        }
+          if (prev.activeFilter != curr.activeFilter ||
+              prev.sortOrder != curr.sortOrder ||
+              prev.hideFavorites != curr.hideFavorites ||
+              prev.timeFormat != curr.timeFormat) {
+            return true;
+          }
 
-        return false;
-      },
-      builder: (context, matchesState) {
-        final isSelectedDate =
-            DateFormatter.isSameDay(pageDate, matchesState.selectedDate);
+          return false;
+        },
+        builder: (context, matchesState) {
+          final isSelectedDate =
+              DateFormatter.isSameDay(widget.pageDate, matchesState.selectedDate);
 
-        final List<LeagueGroupEntity>? leagues;
-        final bool isLoading;
-        final bool isError;
-        final String? errorMessage;
+          final List<LeagueGroupEntity>? leagues;
+          final bool isLoading;
+          final bool isError;
+          final String? errorMessage;
 
-        if (isSelectedDate) {
-          isLoading = (matchesState.status == MatchesStatus.loading ||
-                  matchesState.status == MatchesStatus.initial) &&
-              matchesState.allLeagues.isEmpty;
-          isError = matchesState.status == MatchesStatus.error &&
-              matchesState.allLeagues.isEmpty;
-          errorMessage = matchesState.errorMessage;
-          leagues = matchesState.filteredLeagues;
-        } else {
-          final cached = bloc.getFilteredLeaguesForDate(pageDate);
-          if (cached != null) {
+          if (isSelectedDate && matchesState.allLeagues.isNotEmpty) {
             isLoading = false;
             isError = false;
             errorMessage = null;
-            leagues = cached;
+            leagues = matchesState.filteredLeagues;
           } else {
-            isLoading = true;
-            isError = false;
-            errorMessage = null;
-            leagues = null;
+            final cached = bloc.getFilteredLeaguesForDate(widget.pageDate);
+            if (cached != null) {
+              isLoading = false;
+              isError = false;
+              errorMessage = null;
+              leagues = cached;
+            } else if (isSelectedDate) {
+              isLoading = (matchesState.status == MatchesStatus.loading ||
+                      matchesState.status == MatchesStatus.initial) &&
+                  matchesState.allLeagues.isEmpty;
+              isError = matchesState.status == MatchesStatus.error &&
+                  matchesState.allLeagues.isEmpty;
+              errorMessage = matchesState.errorMessage;
+              leagues = null;
+            } else {
+              isLoading = true;
+              isError = false;
+              errorMessage = null;
+              leagues = null;
+            }
           }
-        }
 
-        final dateKey = DateFormatter.toApiDateString(pageDate);
+        final dateKey = DateFormatter.toApiDateString(widget.pageDate);
 
         return RefreshIndicator(
           color: AppColors.primary,
@@ -362,7 +392,7 @@ class _HomeDayPage extends StatelessWidget {
             final matchesCompleter = Completer<void>();
             bloc.add(
               LoadMatchesEvent(
-                date: pageDate,
+                date: widget.pageDate,
                 isRefresh: true,
                 completer: matchesCompleter,
               ),
@@ -379,7 +409,12 @@ class _HomeDayPage extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
                   children: [
-                    _buildMatchesSkeleton(context, isDark, isArabic, pageDate),
+                    _buildMatchesSkeleton(
+                      context,
+                      widget.isDark,
+                      widget.isArabic,
+                      widget.pageDate,
+                    ),
                   ],
                 )
               : isError
@@ -390,26 +425,31 @@ class _HomeDayPage extends StatelessWidget {
                       ),
                       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
                       children: [
-                        _buildDateHeader(pageDate, isDark, isArabic),
+                        _buildDateHeader(
+                          widget.pageDate,
+                          widget.isDark,
+                          widget.isArabic,
+                        ),
                         ErrorView(
                           message: errorMessage,
                           onRetry: () =>
-                              bloc.add(LoadMatchesEvent(date: pageDate)),
+                              bloc.add(LoadMatchesEvent(date: widget.pageDate)),
                         ),
                       ],
                     )
                   : _buildMatchesContent(
                       context: context,
-                      pageDate: pageDate,
+                      pageDate: widget.pageDate,
                       displayLeagues: leagues ?? const [],
                       state: matchesState,
-                      isDark: isDark,
-                      isArabic: isArabic,
+                      isDark: widget.isDark,
+                      isArabic: widget.isArabic,
                     ),
         );
       },
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildDateHeader(DateTime date, bool isDark, bool isArabic) {
     return Padding(
