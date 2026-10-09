@@ -1382,35 +1382,100 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.redAccent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: Colors.redAccent.withValues(alpha: 0.4),
-                width: 0.8,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.healing, size: 12, color: Colors.redAccent),
-                const SizedBox(width: 4),
-                Text(
-                  injury.absenceReason ?? (isArabic ? 'غياب' : 'Absent'),
-                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.redAccent,
+          Builder(
+            builder: (context) {
+              final (badgeIcon, badgeColor) = _getMissingReasonVisual(injury, isDark);
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: isDark ? 0.15 : 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: badgeColor.withValues(alpha: isDark ? 0.4 : 0.3),
+                    width: 0.8,
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(badgeIcon, size: 12, color: badgeColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      injury.absenceReason ?? (isArabic ? 'غياب' : 'Absent'),
+                      style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: badgeColor,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
     );
+  }
+
+  /// Maps missing player reasons to visual icons catalog (MOBILE_ENDPOINTS.md Section 5)
+  static (IconData, Color) _getMissingReasonVisual(LineupInjuryEntity injury, bool isDark) {
+    final reason = (injury.absenceReason ?? '').toLowerCase();
+    final typeId = injury.absenceTypeId;
+
+    // 1. Suspension / Red card ban (ic_banned)
+    if (typeId == 2 ||
+        reason.contains('طرد') ||
+        reason.contains('إيقاف') ||
+        reason.contains('موقوف') ||
+        reason.contains('banned') ||
+        reason.contains('suspend') ||
+        reason.contains('red card')) {
+      return (Icons.block_rounded, isDark ? const Color(0xFFDC2626) : const Color(0xFFB91C1C));
+    }
+
+    // 2. Yellow card accumulation suspension (ic_two_yellow_cards)
+    if (typeId == 4 ||
+        reason.contains('صفراء') ||
+        reason.contains('إنذار') ||
+        reason.contains('بطاقتين') ||
+        reason.contains('two yellow') ||
+        reason.contains('yellow cards') ||
+        reason.contains('accumulation')) {
+      return (Icons.style_rounded, isDark ? const Color(0xFFFACC15) : const Color(0xFFCA8A04));
+    }
+
+    // 3. Tactical omission / Coach decision (ic_coach_order)
+    if (typeId == 3 ||
+        reason.contains('مدرب') ||
+        reason.contains('قرار') ||
+        reason.contains('فني') ||
+        reason.contains('coach') ||
+        reason.contains('tactical')) {
+      return (Icons.assignment_ind_rounded, isDark ? const Color(0xFF8B5CF6) : const Color(0xFF7C3AED));
+    }
+
+    // 4. International duty (ic_country)
+    if (typeId == 5 ||
+        reason.contains('منتخب') ||
+        reason.contains('دولي') ||
+        reason.contains('وطني') ||
+        reason.contains('country') ||
+        reason.contains('national team')) {
+      return (Icons.public_rounded, isDark ? const Color(0xFF0EA5E9) : const Color(0xFF0284C7));
+    }
+
+    // 5. Rest / Recovery (ic_rest)
+    if (typeId == 6 ||
+        reason.contains('راحة') ||
+        reason.contains('اراحة') ||
+        reason.contains('إراحة') ||
+        reason.contains('rest')) {
+      return (Icons.bedtime_rounded, isDark ? const Color(0xFF10B981) : const Color(0xFF059669));
+    }
+
+    // 6. Default: Injured player (ic_Injury)
+    return (Icons.healing_rounded, isDark ? const Color(0xFFEF4444) : const Color(0xFFDC2626));
   }
 
   static Color _getRatingColor(String ratingStr) {

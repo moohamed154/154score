@@ -225,8 +225,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     }
   }
 
-  // Events tab inner filter
-  _EventFilter _eventFilter = _EventFilter.highlights;
+  // Events tab inner filter (defaults to All Events)
+  _EventFilter _eventFilter = _EventFilter.all;
 
   bool _isSharing = false;
   final GlobalKey _screenBoundaryKey = GlobalKey();
@@ -1432,6 +1432,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             ? AppColors.darkCardElevated
             : AppColors.lightCardElevated,
         borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          width: 0.8,
+        ),
       ),
       padding: const EdgeInsets.all(3),
       child: Row(

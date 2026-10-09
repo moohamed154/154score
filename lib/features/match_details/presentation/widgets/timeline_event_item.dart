@@ -4,12 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
-import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/match_event_helper.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../domain/entities/match_details_entity.dart';
+import 'match_event_visual_icon.dart';
 
 class TimelineEventItem extends StatelessWidget {
   final MatchEventEntity event;
@@ -46,7 +46,7 @@ class TimelineEventItem extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
     final isSmall = AppDimensions.isSmallScreen(context);
-    final hPadding = isSmall ? AppDimensions.sm : AppDimensions.lg;
+    final hPadding = isSmall ? 6.0 : 8.0;
 
     final isHome = event.isHomeTeam;
     final isPeriodEvent = _isPeriodEvent(event.type, event.playerName);
@@ -61,7 +61,7 @@ class TimelineEventItem extends StatelessWidget {
       final label = _getPeriodLabel(event, l10n, isArabic);
 
       final periodWidget = Padding(
-        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -70,7 +70,7 @@ class TimelineEventItem extends StatelessWidget {
               Text(
                 scoreStr,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   color: isDark
                       ? const Color(0xFFCBD5E1)
@@ -83,12 +83,18 @@ class TimelineEventItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
+                MatchEventVisualIcon(
+                  type: MatchVisualEventType.whistle,
+                  isSmall: true,
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     label,
                     style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.w600,
                       color: isDark
                           ? const Color(0xFF64748B)
                           : const Color(0xFF94A3B8),
@@ -99,7 +105,7 @@ class TimelineEventItem extends StatelessWidget {
                   ),
                 ),
                 if (event.hasVideo) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   _buildVideoBadge(context, isDark, isArabic, isSmall),
                 ],
               ],
@@ -125,7 +131,7 @@ class TimelineEventItem extends StatelessWidget {
     final sanitizedMinute = MatchEventHelper.sanitizeMinute(event.minute);
 
     final eventRow = Padding(
-      padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -145,8 +151,8 @@ class TimelineEventItem extends StatelessWidget {
 
           // Center Minute Badge
           Container(
-            margin: EdgeInsets.symmetric(horizontal: isSmall ? 6 : 10),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
             decoration: BoxDecoration(
               color: isDark
                   ? AppColors.darkCardElevated
@@ -158,15 +164,12 @@ class TimelineEventItem extends StatelessWidget {
             ),
             child: Text(
               sanitizedMinute.isNotEmpty ? '$sanitizedMinute\'' : '•',
-              style:
-                  AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: isSmall ? 10 : 12,
-                    color: AppColors.primary,
-                  ),
+              style: TextStyle(
+                fontFamily: isArabic ? 'Cairo' : 'Inter',
+                fontWeight: FontWeight.w700,
+                fontSize: isSmall ? 10.0 : 11.5,
+                color: AppColors.primary,
+              ),
             ),
           ),
 
@@ -209,15 +212,14 @@ class TimelineEventItem extends StatelessWidget {
     required bool isSmall,
     required AppLocalizations l10n,
   }) {
-    final (icon, iconColor, eventLabel) = _getEventConfig(
+    final (visualType, iconColor, eventLabel) = _getVisualEventConfig(
       event.type,
       event.secondaryPlayerName,
       l10n,
+      isDark,
     );
 
-    final isSub =
-        event.type.toLowerCase().contains('sub') ||
-        event.type.toLowerCase().contains('تبديل');
+    final isSub = visualType == MatchVisualEventType.substitution;
     final hasSecondary =
         event.secondaryPlayerName != null &&
         event.secondaryPlayerName!.trim().isNotEmpty;
@@ -231,13 +233,10 @@ class TimelineEventItem extends StatelessWidget {
         ? event.playerName
         : event.secondaryPlayerName;
 
-    final iconWidget = Container(
-      padding: EdgeInsets.all(isSmall ? 4 : 6),
-      decoration: BoxDecoration(
-        color: iconColor.withValues(alpha: 0.15),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: isSmall ? 14 : 16, color: iconColor),
+    final iconWidget = MatchEventVisualIcon(
+      type: visualType,
+      isSmall: isSmall,
+      isDark: isDark,
     );
 
     // Substitution events: two distinct players, each with their own avatar
@@ -258,10 +257,6 @@ class TimelineEventItem extends StatelessWidget {
                       _buildScorePill(event.score!, isDark),
                       const SizedBox(width: 4),
                     ],
-                    if (event.hasVideo) ...[
-                      _buildVideoBadge(context, isDark, isArabic, isSmall),
-                      const SizedBox(width: 5),
-                    ],
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
@@ -273,27 +268,31 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                         child: Text(
                           mainPlayerName,
-                          style:
-                              AppTypography.getBodyMedium(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontSize: isSmall ? 12 : 14,
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary,
-                              ),
+                          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                            fontWeight: FontWeight.w600,
+                            fontSize: isSmall ? 11.0 : 12.0,
+                            height: 1.2,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
                           textAlign: isHome ? TextAlign.end : TextAlign.start,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.arrow_upward_rounded,
+                      size: 11,
+                      color: AppColors.primary,
+                    ),
                     _buildPlayerAvatar(
                       event.playerPhoto,
                       event.playerNumber,
                       isDark,
+                      size: 16,
                     ),
                   ]
                 : [
@@ -301,7 +300,14 @@ class TimelineEventItem extends StatelessWidget {
                       event.playerPhoto,
                       event.playerNumber,
                       isDark,
+                      size: 16,
                     ),
+                    const Icon(
+                      Icons.arrow_upward_rounded,
+                      size: 11,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 2),
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
@@ -313,27 +319,20 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                         child: Text(
                           mainPlayerName,
-                          style:
-                              AppTypography.getBodyMedium(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontSize: isSmall ? 12 : 14,
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary,
-                              ),
+                          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                            fontWeight: FontWeight.w600,
+                            fontSize: isSmall ? 11.0 : 12.0,
+                            height: 1.2,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
                           textAlign: isHome ? TextAlign.end : TextAlign.start,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
-                    if (event.hasVideo) ...[
-                      const SizedBox(width: 5),
-                      _buildVideoBadge(context, isDark, isArabic, isSmall),
-                    ],
                     if (event.score != null && event.score!.isNotEmpty) ...[
                       const SizedBox(width: 4),
                       _buildScorePill(event.score!, isDark),
@@ -359,8 +358,8 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                         child: Text(
                           subPlayerOutName,
-                          style: TextStyle(
-                            fontSize: isSmall ? 10 : 11,
+                          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                            fontSize: isSmall ? 9.5 : 10.5,
                             color: AppColors.redCard,
                             fontWeight: FontWeight.w600,
                           ),
@@ -407,8 +406,8 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                         child: Text(
                           subPlayerOutName,
-                          style: TextStyle(
-                            fontSize: isSmall ? 10 : 11,
+                          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                            fontSize: isSmall ? 9.5 : 10.5,
                             color: AppColors.redCard,
                             fontWeight: FontWeight.w600,
                           ),
@@ -430,14 +429,22 @@ class TimelineEventItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: isHome
             ? [
+                if (event.hasVideo) ...[
+                  _buildVideoBadge(context, isDark, isArabic, isSmall),
+                  const SizedBox(width: 4),
+                ],
                 Flexible(child: subWidget),
-                SizedBox(width: isSmall ? 6 : 8),
+                const SizedBox(width: 4),
                 iconWidget,
               ]
             : [
                 iconWidget,
-                SizedBox(width: isSmall ? 6 : 8),
+                const SizedBox(width: 4),
                 Flexible(child: subWidget),
+                if (event.hasVideo) ...[
+                  const SizedBox(width: 4),
+                  _buildVideoBadge(context, isDark, isArabic, isSmall),
+                ],
               ],
       );
     }
@@ -455,7 +462,7 @@ class TimelineEventItem extends StatelessWidget {
           : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Player Name & Score & Video
+        // Player Name & Score
         Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: isHome
@@ -468,10 +475,6 @@ class TimelineEventItem extends StatelessWidget {
                     _buildScorePill(event.score!, isDark),
                     const SizedBox(width: 4),
                   ],
-                  if (event.hasVideo) ...[
-                    _buildVideoBadge(context, isDark, isArabic, isSmall),
-                    const SizedBox(width: 5),
-                  ],
                   Flexible(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(4),
@@ -483,17 +486,14 @@ class TimelineEventItem extends StatelessWidget {
                       ),
                       child: Text(
                         mainPlayerName,
-                        style:
-                            AppTypography.getBodyMedium(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: isSmall ? 12 : 14,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                            ),
+                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 11.0 : 12.0,
+                          height: 1.2,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
                         textAlign: isHome ? TextAlign.end : TextAlign.start,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -513,27 +513,20 @@ class TimelineEventItem extends StatelessWidget {
                       ),
                       child: Text(
                         mainPlayerName,
-                        style:
-                            AppTypography.getBodyMedium(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: isSmall ? 12 : 14,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                            ),
+                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 11.0 : 12.0,
+                          height: 1.2,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
                         textAlign: isHome ? TextAlign.end : TextAlign.start,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                  if (event.hasVideo) ...[
-                    const SizedBox(width: 5),
-                    _buildVideoBadge(context, isDark, isArabic, isSmall),
-                  ],
                   if (event.score != null && event.score!.isNotEmpty) ...[
                     const SizedBox(width: 4),
                     _buildScorePill(event.score!, isDark),
@@ -555,16 +548,13 @@ class TimelineEventItem extends StatelessWidget {
             ),
             child: Text(
               event.secondaryPlayerName!,
-              style:
-                  AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontSize: isSmall ? 10 : 11,
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
+              style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                fontSize: isSmall ? 9.5 : 10.0,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
+              ),
               textAlign: isHome ? TextAlign.end : TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -574,12 +564,14 @@ class TimelineEventItem extends StatelessWidget {
           const SizedBox(height: 1),
           Text(
             eventLabel,
-            style: TextStyle(
-              fontSize: isSmall ? 9 : 10,
+            style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+              fontSize: isSmall ? 9.0 : 9.5,
               fontWeight: FontWeight.w600,
               color: iconColor,
             ),
             textAlign: isHome ? TextAlign.end : TextAlign.start,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ],
@@ -592,16 +584,24 @@ class TimelineEventItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: isHome
           ? [
+              if (event.hasVideo) ...[
+                _buildVideoBadge(context, isDark, isArabic, isSmall),
+                const SizedBox(width: 4),
+              ],
               Flexible(child: textWidget),
               playerAvatar,
-              SizedBox(width: isSmall ? 2 : 4),
+              const SizedBox(width: 3),
               iconWidget,
             ]
           : [
               iconWidget,
-              SizedBox(width: isSmall ? 2 : 4),
+              const SizedBox(width: 3),
               playerAvatar,
               Flexible(child: textWidget),
+              if (event.hasVideo) ...[
+                const SizedBox(width: 4),
+                _buildVideoBadge(context, isDark, isArabic, isSmall),
+              ],
             ],
     );
   }
@@ -623,7 +623,7 @@ class TimelineEventItem extends StatelessWidget {
     bool isArabic,
     bool isSmall,
   ) {
-    final size = isSmall ? 20.0 : 22.0;
+    final size = isSmall ? 18.0 : 20.0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -641,13 +641,10 @@ class TimelineEventItem extends StatelessWidget {
             ),
           ),
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 1.5),
-              child: Icon(
-                Icons.play_arrow_rounded,
-                size: isSmall ? 13 : 15,
-                color: AppColors.primary,
-              ),
+            child: Icon(
+              Icons.play_arrow_rounded,
+              size: isSmall ? 12 : 13.5,
+              color: AppColors.primary,
             ),
           ),
         ),
@@ -656,18 +653,23 @@ class TimelineEventItem extends StatelessWidget {
   }
 
   Widget _buildScorePill(String score, bool isDark) {
+    final primaryColor = isDark ? AppColors.primary : const Color(0xFF16A34A);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.15),
+        color: primaryColor.withValues(alpha: isDark ? 0.15 : 0.12),
         borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+        border: Border.all(
+          color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.25),
+          width: 0.6,
+        ),
       ),
       child: Text(
         score,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w800,
-          color: AppColors.primary,
+          color: primaryColor,
         ),
       ),
     );
@@ -677,14 +679,14 @@ class TimelineEventItem extends StatelessWidget {
     String? photo,
     int? number,
     bool isDark, {
-    double size = 22,
+    double size = 20,
   }) {
     final normalizedPhoto = UrlHelper.normalizePlayerPhotoUrl(photo);
     if (normalizedPhoto != null &&
         normalizedPhoto.isNotEmpty &&
         UrlHelper.isValidImageUrl(normalizedPhoto)) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 2.5),
         child: ClipOval(
           child: AppImage(
             imageUrl: normalizedPhoto,
@@ -698,13 +700,13 @@ class TimelineEventItem extends StatelessWidget {
     }
     if (number != null) {
       return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        margin: const EdgeInsets.symmetric(horizontal: 2.5),
+        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
         decoration: BoxDecoration(
           color: isDark
               ? AppColors.darkCardElevated
               : AppColors.lightCardElevated,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(3),
           border: Border.all(
             color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
             width: 0.5,
@@ -713,7 +715,7 @@ class TimelineEventItem extends StatelessWidget {
         child: Text(
           '$number',
           style: GoogleFonts.outfit(
-            fontSize: size <= 16 ? 8.5 : 10,
+            fontSize: size <= 16 ? 8.0 : 9.5,
             fontWeight: FontWeight.w700,
             color: isDark
                 ? AppColors.darkTextSecondary
@@ -805,19 +807,23 @@ class TimelineEventItem extends StatelessWidget {
     return type;
   }
 
-  (IconData, Color, String?) _getEventConfig(
+  (MatchVisualEventType, Color, String?) _getVisualEventConfig(
     String type,
     String? subtitle,
     AppLocalizations l10n,
+    bool isDark,
   ) {
     final lower = '$type ${subtitle ?? ''}'.toLowerCase();
+    final redColor = isDark ? AppColors.redCard : const Color(0xFFDC2626);
+    final primaryColor = isDark ? AppColors.primary : const Color(0xFF16A34A);
+    final yellowColor = isDark ? AppColors.yellowCard : const Color(0xFFCA8A04);
 
     if (lower.contains('own_goal') ||
         lower.contains('own-goal') ||
         lower.contains('هدف عكسي')) {
       return (
-        Icons.sports_soccer_rounded,
-        AppColors.redCard,
+        MatchVisualEventType.ownGoal,
+        redColor,
         l10n.isArabic ? 'هدف في مرماه' : 'Own Goal',
       );
     } else if (lower.contains('goal-x') ||
@@ -825,56 +831,87 @@ class TimelineEventItem extends StatelessWidget {
         lower.contains('إلغاء') ||
         lower.contains('disallowed')) {
       return (
-        Icons.sports_soccer_rounded,
-        AppColors.redCard,
+        MatchVisualEventType.disallowedGoal,
+        redColor,
         l10n.isArabic ? 'هدف ملغى' : 'Disallowed Goal',
       );
     } else if (lower.contains('penalty_goal') ||
         lower.contains('penalty-goal') ||
         lower.contains('ضربة جزاء') ||
-        lower.contains('ركلة جزاء ناجحة')) {
+        lower.contains('ركلة جزاء ناجحة') ||
+        lower.contains('success_penalty')) {
       return (
-        Icons.sports_soccer_rounded,
-        AppColors.primary,
+        MatchVisualEventType.successPenalty,
+        primaryColor,
         l10n.isArabic ? 'ركلة جزاء' : 'Penalty Goal',
       );
     } else if (lower.contains('missed_penalty') ||
         lower.contains('missed-penalty') ||
         lower.contains('ركلة جزاء ضائعة')) {
       return (
-        Icons.close_rounded,
-        AppColors.redCard,
+        MatchVisualEventType.missedPenalty,
+        redColor,
         l10n.isArabic ? 'ركلة جزاء ضائعة' : 'Missed Penalty',
       );
-    } else if (lower.contains('goal') || lower.contains('هدف')) {
-      return (Icons.sports_soccer_rounded, AppColors.primary, null);
+    } else if (lower.contains('crossbar') ||
+        lower.contains('shoot_crossbar') ||
+        lower.contains('post') ||
+        lower.contains('عارضة') ||
+        lower.contains('قائم')) {
+      return (
+        MatchVisualEventType.shootCrossbar,
+        isDark ? const Color(0xFFF97316) : const Color(0xFFEA580C),
+        l10n.isArabic ? 'في القائم / العارضة' : 'Crossbar / Post',
+      );
+    } else if (lower.contains('miss_chance') ||
+        lower.contains('missed_chance') ||
+        lower.contains('فرصة ضائعة')) {
+      return (
+        MatchVisualEventType.missChance,
+        isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706),
+        l10n.isArabic ? 'فرصة ضائعة' : 'Missed Chance',
+      );
     } else if (lower.contains('second_yellow') ||
         lower.contains('second-yellow') ||
-        lower.contains('صفراء ثانية')) {
+        lower.contains('yellow_red_card') ||
+        lower.contains('صفراء ثانية') ||
+        lower.contains('إنذار ثان')) {
       return (
-        Icons.rectangle_rounded,
-        AppColors.redCard,
+        MatchVisualEventType.yellowRedCard,
+        redColor,
         l10n.isArabic ? 'إنذار ثانٍ / طرد' : '2nd Yellow / Red',
       );
     } else if (lower.contains('yellow') ||
         lower.contains('صفراء') ||
         lower.contains('إنذار')) {
-      return (Icons.rectangle_rounded, AppColors.yellowCard, null);
+      return (MatchVisualEventType.yellowCard, yellowColor, null);
     } else if (lower.contains('red') ||
         lower.contains('حمراء') ||
         lower.contains('طرد')) {
-      return (Icons.rectangle_rounded, AppColors.redCard, null);
+      return (MatchVisualEventType.redCard, redColor, null);
     } else if (lower.contains('sub') || lower.contains('تبديل')) {
-      return (Icons.swap_horiz_rounded, AppColors.substitution, null);
+      return (
+        MatchVisualEventType.substitution,
+        isDark ? AppColors.substitution : const Color(0xFF0891B2),
+        null,
+      );
     } else if (lower.contains('var')) {
       return (
-        Icons.tv_rounded,
-        AppColors.varEvent,
+        MatchVisualEventType.varDecision,
+        isDark ? AppColors.varEvent : const Color(0xFF2563EB),
         l10n.translate('event_var'),
       );
-    } else if (lower.contains('injury') || lower.contains('added')) {
-      return (Icons.more_time_rounded, AppColors.accent, null);
+    } else if (lower.contains('goal') || lower.contains('هدف')) {
+      return (MatchVisualEventType.goal, primaryColor, null);
+    } else if (lower.contains('paused') ||
+        lower.contains('interrupted') ||
+        lower.contains('توقف')) {
+      return (
+        MatchVisualEventType.paused,
+        isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706),
+        l10n.isArabic ? 'توقف مؤقت' : 'Paused',
+      );
     }
-    return (Icons.sports_soccer_rounded, AppColors.primary, null);
+    return (MatchVisualEventType.goal, primaryColor, null);
   }
 }
