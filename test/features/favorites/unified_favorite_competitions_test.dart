@@ -135,5 +135,30 @@ void main() {
       expect(cubit.state.favoriteCompetitions[1], equals(first));
       expect(storage.getFavoriteCompetitions()[0], equals(second));
     });
+
+    test('6. Stage variations like "دوري أبطال أفريقيا | الأدوار الإقصائية" match when "دوري أبطال أفريقيا" is favorited', () async {
+      await cubit.toggleCompetition(id: '943487', name: 'دوري أبطال أفريقيا');
+
+      // Knockout stage title with pipe
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '97533',
+          name: 'دوري أبطال أفريقيا | الأدوار الإقصائية',
+        ),
+        isTrue,
+      );
+
+      // By seasonId
+      expect(
+        cubit.isCompetitionFavorite(id: '943487'),
+        isTrue,
+      );
+
+      // By champId
+      expect(
+        cubit.isCompetitionFavorite(id: '97533'),
+        isTrue,
+      );
+    });
   });
 }

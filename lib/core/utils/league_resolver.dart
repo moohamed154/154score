@@ -89,9 +89,12 @@ class LeagueResolver {
     'دوري أبطال آسيا للنخبة': '943501',
     'دوري أبطال آسيا': '943501',
     'afc champions league': '943501',
+    'دوري أبطال أفريقيا': '943601',
     'دوري أبطال إفريقيا': '943601',
     'caf champions league': '943601',
+    'كأس الكونفيدرالية': '943602',
     'كأس الكونفيدرالية الإفريقية': '943602',
+    'كأس الكونفدرالية': '943602',
     'caf confederation cup': '943602',
 
     // South American Competitions
@@ -348,10 +351,12 @@ class LeagueResolver {
     '58553': (ar: 'الدوري المصري الممتاز', en: 'Egyptian Premier League'),
     '894789': (ar: 'كأس العالم', en: 'FIFA World Cup'),
     '900001': (ar: 'كأس العالم', en: 'FIFA World Cup'),
+    '97533': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
     '943487': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
     '911131': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
     '77783': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
     '943601': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
+    '41791876': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
     '943602': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
     '911121': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
     '76684': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
@@ -553,6 +558,16 @@ class LeagueResolver {
       final normA = normalize(cleanA);
       final normB = normalize(cleanB);
       if (normA == normB) return true;
+    }
+
+    // 3b. Stage-tolerant base name match (e.g. "دوري أبطال أفريقيا | الأدوار الإقصائية")
+    final baseA = cleanA.contains('|') ? cleanA.split('|').first.trim() : cleanA;
+    final baseB = cleanB.contains('|') ? cleanB.split('|').first.trim() : cleanB;
+    if (baseA.isNotEmpty && baseB.isNotEmpty && (baseA != cleanA || baseB != cleanB)) {
+      if (baseA.toLowerCase() == baseB.toLowerCase() ||
+          normalize(baseA) == normalize(baseB)) {
+        return true;
+      }
     }
 
     // 4. Resolve IDs from names or IDs

@@ -489,30 +489,68 @@ class _StandingsViewState extends State<StandingsView> {
       final rKey = LeagueResolver.resolveId(key);
       final normKey = LeagueResolver.normalize(key);
 
-      final ChampionshipInfo? matched =
+      ChampionshipInfo? matched =
           _leagueById[key] ??
           _leagueById[cleanKey] ??
           _leagueByName[cleanKey] ??
           (rKey != null ? _leagueByCanonical[rKey] : null) ??
           (normKey.isNotEmpty ? _leagueByCanonical[normKey] : null);
 
+      if (matched == null) {
+        for (final l in _allLeagues) {
+          if (!addedFavIds.contains(l.id) &&
+              (l.seasonId == null || !addedFavIds.contains(l.seasonId!))) {
+            if (LeagueResolver.areSameCompetition(
+                  key,
+                  l.name,
+                  idA: rKey,
+                  idB: l.id,
+                ) ||
+                (l.seasonId != null &&
+                    LeagueResolver.areSameCompetition(
+                      key,
+                      l.name,
+                      idA: rKey,
+                      idB: l.seasonId,
+                    ))) {
+              matched = l;
+              break;
+            }
+          }
+        }
+      }
+
       if (matched != null && addedFavIds.add(matched.id)) {
+        if (matched.seasonId != null && matched.seasonId!.isNotEmpty) {
+          addedFavIds.add(matched.seasonId!);
+        }
         favoriteCards.add(matched);
       }
     }
 
     // Also include any league marked favorite directly in favSet in O(1)
     for (final l in _allLeagues) {
-      if (!addedFavIds.contains(l.id)) {
+      if (!addedFavIds.contains(l.id) &&
+          (l.seasonId == null || !addedFavIds.contains(l.seasonId!))) {
         final lowerName = _leagueLowerName[l] ?? l.name.trim().toLowerCase();
         final lowerSlug = _leagueLowerSlug[l] ?? (l.slug?.trim().toLowerCase() ?? '');
         final isFav = favSet.contains(l.id.toLowerCase()) ||
             (l.seasonId != null && favSet.contains(l.seasonId!.toLowerCase())) ||
             favSet.contains(lowerName) ||
-            (lowerSlug.isNotEmpty && favSet.contains(lowerSlug));
+            (lowerSlug.isNotEmpty && favSet.contains(lowerSlug)) ||
+            favState.isFavoriteCompetition(id: l.id, name: l.name, slug: l.slug) ||
+            (l.seasonId != null &&
+                favState.isFavoriteCompetition(
+                  id: l.seasonId,
+                  name: l.name,
+                  slug: l.slug,
+                ));
 
         if (isFav) {
           addedFavIds.add(l.id);
+          if (l.seasonId != null && l.seasonId!.isNotEmpty) {
+            addedFavIds.add(l.seasonId!);
+          }
           favoriteCards.add(l);
         }
       }
@@ -521,7 +559,8 @@ class _StandingsViewState extends State<StandingsView> {
     // 3. Hidden cards are the rest of _allLeagues
     final List<ChampionshipInfo> hiddenCards = [];
     for (final l in _allLeagues) {
-      if (!addedFavIds.contains(l.id)) {
+      if (!addedFavIds.contains(l.id) &&
+          (l.seasonId == null || !addedFavIds.contains(l.seasonId!))) {
         hiddenCards.add(l);
       }
     }
@@ -529,20 +568,20 @@ class _StandingsViewState extends State<StandingsView> {
     // 4. If items are in pending transition, keep them in place while animation plays
     if (_pendingTransitionIds.isNotEmpty) {
       for (final pendingId in _pendingTransitionIds) {
-        if (_memoizedFavorites.any((c) => c.id == pendingId)) {
-          if (!favoriteCards.any((c) => c.id == pendingId)) {
+        if (_memoizedFavorites.any((c) => c.id == pendingId || c.seasonId == pendingId)) {
+          if (!favoriteCards.any((c) => c.id == pendingId || c.seasonId == pendingId)) {
             final card = _leagueById[pendingId];
             if (card != null) {
               favoriteCards.add(card);
-              hiddenCards.removeWhere((c) => c.id == pendingId);
+              hiddenCards.removeWhere((c) => c.id == card.id || c.seasonId == card.id);
             }
           }
-        } else if (_memoizedHidden.any((c) => c.id == pendingId)) {
-          if (!hiddenCards.any((c) => c.id == pendingId)) {
+        } else if (_memoizedHidden.any((c) => c.id == pendingId || c.seasonId == pendingId)) {
+          if (!hiddenCards.any((c) => c.id == pendingId || c.seasonId == pendingId)) {
             final card = _leagueById[pendingId];
             if (card != null) {
               hiddenCards.add(card);
-              favoriteCards.removeWhere((c) => c.id == pendingId);
+              favoriteCards.removeWhere((c) => c.id == card.id || c.seasonId == card.id);
             }
           }
         }
@@ -552,6 +591,29 @@ class _StandingsViewState extends State<StandingsView> {
     _memoizedFavorites = favoriteCards;
     _memoizedHidden = hiddenCards;
     _cachedFavIds = addedFavIds;
+  }
+
+  bool _isItemFavorite(ChampionshipInfo item, FavoritesState favState) {
+    if (_cachedFavIds.contains(item.id)) return true;
+    if (item.seasonId != null && _cachedFavIds.contains(item.seasonId!)) {
+      return true;
+    }
+    if (favState.isFavoriteCompetition(
+      id: item.id,
+      name: item.name,
+      slug: item.slug,
+    )) {
+      return true;
+    }
+    if (item.seasonId != null &&
+        favState.isFavoriteCompetition(
+          id: item.seasonId,
+          name: item.name,
+          slug: item.slug,
+        )) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -718,22 +780,35 @@ class _StandingsViewState extends State<StandingsView> {
     BuildContext context,
     ChampionshipInfo item,
     List<ChampionshipInfo> currentFavorites,
+    FavoritesState favState,
   ) {
-    final willBeFav = !_cachedFavIds.contains(item.id);
+    final willBeFav = !_isItemFavorite(item, favState);
+    final targetLeagueId = (item.seasonId != null && item.seasonId!.isNotEmpty)
+        ? item.seasonId!
+        : item.id;
 
     // 1. Immediately toggle star visually and keep card in place during animation
     setState(() {
       if (willBeFav) {
         _cachedFavIds.add(item.id);
+        if (item.seasonId != null && item.seasonId!.isNotEmpty) {
+          _cachedFavIds.add(item.seasonId!);
+        }
       } else {
         _cachedFavIds.remove(item.id);
+        if (item.seasonId != null) {
+          _cachedFavIds.remove(item.seasonId!);
+        }
       }
       _pendingTransitionIds.add(item.id);
+      if (item.seasonId != null && item.seasonId!.isNotEmpty) {
+        _pendingTransitionIds.add(item.seasonId!);
+      }
     });
 
     // 2. Dispatch to FavoritesCubit (optimistic 0ms update)
     context.read<FavoritesCubit>().toggleCompetition(
-      id: item.id,
+      id: targetLeagueId,
       name: item.name,
       slug: item.slug,
       logo: item.logo,
@@ -766,7 +841,9 @@ class _StandingsViewState extends State<StandingsView> {
     list.insert(newIndex, moved);
     _memoizedFavorites = List<ChampionshipInfo>.from(list);
     final identifiers = list
-        .map((e) => e.id.isNotEmpty ? e.id : e.name)
+        .map((e) => (e.seasonId != null && e.seasonId!.isNotEmpty)
+            ? e.seasonId!
+            : (e.id.isNotEmpty ? e.id : e.name))
         .toList();
     _lastPartitionFavKeys = List<String>.from(identifiers);
     context.read<FavoritesCubit>().setFavoriteCompetitions(identifiers);
@@ -948,7 +1025,7 @@ class _StandingsViewState extends State<StandingsView> {
                                   itemExtent: 64.0,
                                   itemBuilder: (context, index) {
                                     final item = searchList[index];
-                                    final isFav = _cachedFavIds.contains(item.id);
+                                    final isFav = _isItemFavorite(item, favState);
                                     return _buildChampionshipCard(
                                       key: ValueKey('search_${item.id}'),
                                       context: context,
@@ -964,6 +1041,7 @@ class _StandingsViewState extends State<StandingsView> {
                                         context,
                                         item,
                                         favoriteCards,
+                                        favState,
                                       ),
                                     );
                                   },
@@ -998,7 +1076,7 @@ class _StandingsViewState extends State<StandingsView> {
                                   },
                                   itemBuilder: (context, index) {
                                     final item = favoriteCards[index];
-                                    final isFav = _cachedFavIds.contains(item.id);
+                                    final isFav = _isItemFavorite(item, favState);
                                     return _buildChampionshipCard(
                                       key: ValueKey('fav_${item.id}'),
                                       context: context,
@@ -1015,6 +1093,7 @@ class _StandingsViewState extends State<StandingsView> {
                                             context,
                                             item,
                                             favoriteCards,
+                                            favState,
                                           ),
                                     );
                                   },
@@ -1039,7 +1118,7 @@ class _StandingsViewState extends State<StandingsView> {
                                   itemExtent: 64.0,
                                   itemBuilder: (context, index) {
                                     final item = hiddenCards[index];
-                                    final isFav = _cachedFavIds.contains(item.id);
+                                    final isFav = _isItemFavorite(item, favState);
                                     return _buildChampionshipCard(
                                       key: ValueKey('hidden_${item.id}'),
                                       context: context,
@@ -1056,6 +1135,7 @@ class _StandingsViewState extends State<StandingsView> {
                                             context,
                                             item,
                                             favoriteCards,
+                                            favState,
                                           ),
                                     );
                                   },
