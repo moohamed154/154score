@@ -102,221 +102,66 @@ class _SettingsViewState extends State<SettingsView> {
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final controller = TextEditingController();
-    bool obscureText = true;
-    String? errorMessage;
 
-    await showDialog<bool>(
+    final unlocked = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
-      builder: (dialogCtx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            void verifyAndSubmit() {
-              final input = controller.text.trim();
-              if (input == _kDeveloperPassword) {
-                Navigator.of(dialogCtx).pop(true);
-              } else {
-                HapticFeedback.vibrate();
-                setDialogState(() {
-                  errorMessage = isArabic
-                      ? 'كلمة المرور غير صحيحة ❌'
-                      : 'Incorrect password ❌';
-                });
-              }
-            }
+      builder: (dialogCtx) => _DeveloperPasswordDialog(
+        isDark: isDark,
+        isArabic: isArabic,
+      ),
+    );
 
-            return AlertDialog(
-              backgroundColor:
-                  isDark ? AppColors.darkCard : AppColors.lightCard,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                side: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+    if (unlocked == true && mounted) {
+      HapticFeedback.heavyImpact();
+      setState(() {
+        _isDeveloperModeUnlocked = true;
+      });
+      sl<LocalStorageService>().setDeveloperModeEnabled(true);
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isArabic
+                      ? '🎉 تم تفعيل أدوات المطور والتشخيص بنجاح!'
+                      : '🎉 Developer Tools unlocked successfully!',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.admin_panel_settings_rounded,
-                      color: AppColors.primary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      isArabic ? 'أدوات المطور' : 'Developer Tools',
-                      style: AppTypography.getHeadingMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isArabic
-                        ? 'يرجى إدخال كلمة مرور المطور لتفعيل القائمة:'
-                        : 'Enter the developer password to unlock:',
-                    style: AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    obscureText: obscureText,
-                    autofocus: true,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => verifyAndSubmit(),
-                    onChanged: (_) {
-                      if (errorMessage != null) {
-                        setDialogState(() {
-                          errorMessage = null;
-                        });
-                      }
-                    },
-                    decoration: InputDecoration(
-                      hintText: isArabic ? 'كلمة المرور' : 'Password',
-                      prefixIcon:
-                          const Icon(Icons.lock_outline_rounded, size: 20),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscureText
-                              ? Icons.visibility_off_rounded
-                              : Icons.visibility_rounded,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          setDialogState(() {
-                            obscureText = !obscureText;
-                          });
-                        },
-                      ),
-                      errorText: errorMessage,
-                      filled: true,
-                      fillColor: isDark
-                          ? AppColors.darkBackground
-                          : AppColors.lightBackground,
-                      border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusMd),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : AppColors.lightBorder,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusMd),
-                        borderSide: const BorderSide(
-                          color: AppColors.primary,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogCtx).pop(false),
-                  child: Text(
-                    isArabic ? 'إلغاء' : 'Cancel',
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                  ),
-                ),
-                FilledButton(
-                  onPressed: verifyAndSubmit,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusSm),
-                    ),
-                  ),
-                  child: Text(isArabic ? 'تأكيد' : 'Confirm'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    ).then((unlocked) {
-      controller.dispose();
-      if (unlocked == true && mounted) {
-        HapticFeedback.heavyImpact();
-        setState(() {
-          _isDeveloperModeUnlocked = true;
-        });
-        sl<LocalStorageService>().setDeveloperModeEnabled(true);
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    isArabic
-                        ? '🎉 تم تفعيل أدوات المطور والتشخيص بنجاح!'
-                        : '🎉 Developer Tools unlocked successfully!',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF1E293B),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: AppColors.primary, width: 1),
-            ),
-            duration: const Duration(seconds: 2),
+            ],
           ),
-        );
-        DeveloperToolsSheet.show(
-          context,
-          onLockDeveloperMode: () {
-            if (mounted) {
-              setState(() {
-                _isDeveloperModeUnlocked = false;
-              });
-            }
-          },
-        );
-      }
-    });
+          backgroundColor: const Color(0xFF1E293B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: AppColors.primary, width: 1),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      DeveloperToolsSheet.show(
+        context,
+        onLockDeveloperMode: () {
+          if (mounted) {
+            setState(() {
+              _isDeveloperModeUnlocked = false;
+            });
+          }
+        },
+      );
+    }
   }
 
   @override
@@ -1043,3 +888,192 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 }
+
+class _DeveloperPasswordDialog extends StatefulWidget {
+  final bool isDark;
+  final bool isArabic;
+
+  const _DeveloperPasswordDialog({
+    required this.isDark,
+    required this.isArabic,
+  });
+
+  @override
+  State<_DeveloperPasswordDialog> createState() =>
+      _DeveloperPasswordDialogState();
+}
+
+class _DeveloperPasswordDialogState extends State<_DeveloperPasswordDialog> {
+  late final TextEditingController _controller;
+  bool _obscureText = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _verifyAndSubmit() {
+    final input = _controller.text.trim();
+    if (input == _SettingsViewState._kDeveloperPassword) {
+      Navigator.of(context).pop(true);
+    } else {
+      HapticFeedback.vibrate();
+      setState(() {
+        _errorMessage = widget.isArabic
+            ? 'كلمة المرور غير صحيحة ❌'
+            : 'Incorrect password ❌';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final isArabic = widget.isArabic;
+
+    return AlertDialog(
+      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.admin_panel_settings_rounded,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              isArabic ? 'أدوات المطور' : 'Developer Tools',
+              style: AppTypography.getHeadingMedium(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isArabic
+                  ? 'يرجى إدخال كلمة مرور المطور لتفعيل القائمة:'
+                  : 'Enter the developer password to unlock:',
+              style: AppTypography.getBodySmall(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              obscureText: _obscureText,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _verifyAndSubmit(),
+              onChanged: (_) {
+                if (_errorMessage != null) {
+                  setState(() {
+                    _errorMessage = null;
+                  });
+                }
+              },
+              decoration: InputDecoration(
+                hintText: isArabic ? 'كلمة المرور' : 'Password',
+                prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureText
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureText = !_obscureText;
+                    });
+                  },
+                ),
+                errorText: _errorMessage,
+                filled: true,
+                fillColor: isDark
+                    ? AppColors.darkBackground
+                    : AppColors.lightBackground,
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusMd),
+                  borderSide: BorderSide(
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusMd),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            isArabic ? 'إلغاء' : 'Cancel',
+            style: TextStyle(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+        ),
+        FilledButton(
+          onPressed: _verifyAndSubmit,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(AppDimensions.radiusSm),
+            ),
+          ),
+          child: Text(isArabic ? 'تأكيد' : 'Confirm'),
+        ),
+      ],
+    );
+  }
+}
+
