@@ -98,6 +98,7 @@ class _LeagueViewState extends State<LeagueView>
                   );
 
                   return LeagueHeaderCard(
+                    leagueId: widget.leagueId,
                     title: title,
                     logo: state.leagueLogo ?? widget.initialLogo,
                     country: state.country,

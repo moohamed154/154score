@@ -4,10 +4,13 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/league_resolver.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/starred_button.dart';
 
 class LeagueHeaderCard extends StatelessWidget {
+  final String? leagueId;
   final String title;
   final String? logo;
   final String? country;
@@ -17,6 +20,7 @@ class LeagueHeaderCard extends StatelessWidget {
 
   const LeagueHeaderCard({
     super.key,
+    this.leagueId,
     required this.title,
     this.logo,
     this.country,
@@ -25,6 +29,18 @@ class LeagueHeaderCard extends StatelessWidget {
     this.onFavoriteTap,
   });
 
+  static String formatSeason(String rawSeason, bool isArabic) {
+    final trimmed = rawSeason.trim();
+    if (trimmed.isEmpty) return '';
+    if (isArabic) {
+      final lower = trimmed.toLowerCase();
+      if (lower == 'current' || lower == 'current season') {
+        return 'الموسم الحالي';
+      }
+    }
+    return trimmed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -32,6 +48,12 @@ class LeagueHeaderCard extends StatelessWidget {
     final isArabic = l10n.isArabic;
     final isSmall = AppDimensions.isSmallScreen(context);
     final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    final resolvedLogo = UrlHelper.resolveChampionshipLogo(
+      leagueId ?? LeagueResolver.resolveId(title),
+      currentLogo: logo,
+      isDark: isDark,
+    );
 
     return Container(
       margin: EdgeInsets.all(hMargin),
@@ -51,7 +73,7 @@ class LeagueHeaderCard extends StatelessWidget {
             height: isSmall ? 52 : 64,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: isDark ? Colors.transparent : Colors.white,
+              color: isDark ? AppColors.darkCardElevated : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               border: Border.all(
                 color: isDark
@@ -68,7 +90,7 @@ class LeagueHeaderCard extends StatelessWidget {
               ],
             ),
             child: AppImage(
-              imageUrl: logo,
+              imageUrl: resolvedLogo,
               fit: BoxFit.contain,
               placeholderIcon: Icons.emoji_events_outlined,
             ),
@@ -135,7 +157,7 @@ class LeagueHeaderCard extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            season!,
+                            formatSeason(season!, isArabic),
                             style:
                                 AppTypography.getBodySmall(
                                   isDark: isDark,

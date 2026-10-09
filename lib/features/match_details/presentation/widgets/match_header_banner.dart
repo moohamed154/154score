@@ -117,8 +117,11 @@ class MatchHeaderBanner extends StatelessWidget {
                     LeagueResolver.resolveId(match.leagueTitle);
                 if (lId != null && lId.isNotEmpty) {
                   final logo =
-                      match.leagueLogo ??
-                      UrlHelper.resolveChampionshipLogo(lId);
+                      UrlHelper.resolveChampionshipLogo(
+                        lId,
+                        currentLogo: match.leagueLogo,
+                        isDark: isDark,
+                      );
                   context.push(
                     '/league/$lId',
                     extra: {'title': match.leagueTitle, 'logo': logo},

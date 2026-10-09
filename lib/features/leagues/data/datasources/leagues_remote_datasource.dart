@@ -318,9 +318,19 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
       logo = profileMap['logo']?.toString();
       country = profileMap['country']?.toString();
       if (profileMap['current_season'] is Map) {
-        season =
+        final rawSeason =
             profileMap['current_season']['season_name']?.toString() ??
             profileMap['current_season']['name']?.toString();
+        if (rawSeason != null) {
+          final trimmed = rawSeason.trim();
+          if (lang == 'ar' &&
+              (trimmed.toLowerCase() == 'current' ||
+                  trimmed.toLowerCase() == 'current season')) {
+            season = 'الموسم الحالي';
+          } else {
+            season = trimmed;
+          }
+        }
       }
 
       // Parse standings from profile if present

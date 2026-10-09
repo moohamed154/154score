@@ -102,8 +102,11 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                           LeagueResolver.resolveId(widget.league.leagueTitle);
                       if (lId != null && lId.isNotEmpty) {
                         final logo =
-                            widget.league.leagueLogo ??
-                            UrlHelper.resolveChampionshipLogo(lId);
+                            UrlHelper.resolveChampionshipLogo(
+                              lId,
+                              currentLogo: widget.league.leagueLogo,
+                              isDark: isDark,
+                            );
                         context.push(
                           '/league/$lId',
                           extra: {

@@ -206,13 +206,52 @@ class UrlHelper {
                cleanId)
             : null);
 
-    // 1. First check if we have a theme-tailored logo for this competition
+    // 1. If currentLogo matches one of the known theme pairs, ensure the right variant is used for the active theme
+    if (currentLogo != null) {
+      if (currentLogo.contains('17882926672499') || currentLogo.contains('17882925978755')) {
+        return isDark
+            ? 'https://imgs.ysscores.com/championship/128/17882926672499.png'
+            : 'https://imgs.ysscores.com/championship/128/17882925978755.png';
+      }
+      if (currentLogo.contains('3141696514284') || currentLogo.contains('5171696546919')) {
+        return isDark
+            ? 'https://imgs.ysscores.com/championship/128/3141696514284.png'
+            : 'https://imgs.ysscores.com/championship/128/5171696546919.png';
+      }
+      if (currentLogo.contains('5111703719091') || currentLogo.contains('3421703719071')) {
+        return isDark
+            ? 'https://imgs.ysscores.com/championship/128/5111703719091.png'
+            : 'https://imgs.ysscores.com/championship/128/3421703719071.png';
+      }
+      if (currentLogo.contains('5481703687014') || currentLogo.contains('911703687010')) {
+        return isDark
+            ? 'https://imgs.ysscores.com/championship/128/5481703687014.png'
+            : 'https://imgs.ysscores.com/championship/128/911703687010.png';
+      }
+      if (currentLogo.contains('17638081914419') || currentLogo.contains('17638081961987')) {
+        return isDark
+            ? 'https://imgs.ysscores.com/championship/128/17638081914419.png'
+            : 'https://imgs.ysscores.com/championship/128/17638081961987.png';
+      }
+      if (currentLogo.contains('17638085863023') || currentLogo.contains('17638085806160')) {
+        return isDark
+            ? 'https://imgs.ysscores.com/championship/128/17638085863023.png'
+            : 'https://imgs.ysscores.com/championship/128/17638085806160.png';
+      }
+      if (currentLogo.contains('7571723239230') || currentLogo.contains('1191723239247')) {
+        return isDark
+            ? 'https://imgs.ysscores.com/championship/128/7571723239230.png'
+            : 'https://imgs.ysscores.com/championship/128/1191723239247.png';
+      }
+    }
+
+    // 2. Check if we have a theme-tailored logo for this competition
     final themed = _getThemedChampionshipLogo(effectiveId ?? cleanId, isDark: isDark);
     if (themed != null) {
       return themed;
     }
 
-    // 2. Fall back to currentLogo if valid
+    // 3. Fall back to currentLogo if valid
     if (currentLogo != null && isValidImageUrl(currentLogo)) {
       return currentLogo;
     }
