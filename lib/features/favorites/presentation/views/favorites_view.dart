@@ -5,7 +5,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/team_resolver.dart';
+import '../../../../core/utils/url_helper.dart';
+import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../cubit/favorites_cubit.dart';
 
@@ -179,12 +183,29 @@ class FavoritesView extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: state.favoriteTeams.map((team) {
+                    final cleanTeam = team.trim();
                     final displayTitle =
-                        state.teamTitles[team.trim()] ??
-                        TeamResolver.getLocalizedName(team, isArabic: isArabic) ??
-                        team;
+                        state.teamTitles[cleanTeam] ??
+                        TeamResolver.getLocalizedName(cleanTeam, isArabic: isArabic) ??
+                        cleanTeam;
+                    final teamId = int.tryParse(cleanTeam) != null
+                        ? cleanTeam
+                        : LocalStorageServiceImpl.knownTeamNameToId[cleanTeam.toLowerCase()];
+                    final teamLogo = UrlHelper.resolveTeamLogo(teamId, size: 48);
+
                     return Chip(
-                      avatar: const Icon(Icons.shield_outlined, size: 18),
+                      avatar: teamLogo != null
+                          ? ClipOval(
+                              child: AppImage(
+                                imageUrl: teamLogo,
+                                width: 20,
+                                height: 20,
+                                borderRadius: 10,
+                                fit: BoxFit.contain,
+                                placeholderIcon: Icons.shield_outlined,
+                              ),
+                            )
+                          : const Icon(Icons.shield_outlined, size: 18),
                       label: Text(displayTitle),
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
@@ -227,15 +248,48 @@ class FavoritesView extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: state.favoriteCompetitions.map((comp) {
-                    final displayTitle =
-                        state.competitionTitles[comp.trim()] ?? comp;
+                    final cleanComp = comp.trim();
+                    final displayTitle = () {
+                      final fromTitles = state.competitionTitles[cleanComp];
+                      if (fromTitles != null &&
+                          fromTitles.isNotEmpty &&
+                          int.tryParse(fromTitles) == null) {
+                        return LeagueResolver.resolveTitle(fromTitles, isArabic: isArabic);
+                      }
+                      final resolved = LeagueResolver.resolveTitle(cleanComp, isArabic: isArabic);
+                      if (resolved.isNotEmpty && int.tryParse(resolved) == null) {
+                        return resolved;
+                      }
+                      final fallback = LocalStorageServiceImpl.defaultKnownTitles[cleanComp];
+                      if (fallback != null && fallback.isNotEmpty) {
+                        return LeagueResolver.resolveTitle(fallback, isArabic: isArabic);
+                      }
+                      return cleanComp;
+                    }();
+
+                    final logoUrl = UrlHelper.resolveChampionshipLogo(cleanComp, isDark: isDark) ??
+                        UrlHelper.resolveChampionshipLogo(LeagueResolver.resolveId(cleanComp), isDark: isDark) ??
+                        UrlHelper.resolveChampionshipLogo(LeagueResolver.resolveId(displayTitle), isDark: isDark);
+
                     return Chip(
-                      avatar: const Icon(Icons.emoji_events_outlined, size: 18),
+                      avatar: logoUrl != null
+                          ? ClipOval(
+                              child: AppImage(
+                                imageUrl: logoUrl,
+                                width: 20,
+                                height: 20,
+                                borderRadius: 10,
+                                fit: BoxFit.contain,
+                                placeholderIcon: Icons.emoji_events_outlined,
+                              ),
+                            )
+                          : const Icon(Icons.emoji_events_outlined, size: 18),
                       label: Text(displayTitle),
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
                         context.read<FavoritesCubit>().toggleCompetition(
-                          name: comp,
+                          id: cleanComp,
+                          name: displayTitle,
                         );
                       },
                     );

@@ -186,40 +186,181 @@ class UrlHelper {
   }
 
   /// Resolves canonical championship logo for known competitions if current logo is missing or broken.
+  /// Supports light and dark mode logo variants.
   static String? resolveChampionshipLogo(
     String? leagueId, {
     String? currentLogo,
+    bool isDark = true,
   }) {
     if (currentLogo != null && isValidImageUrl(currentLogo)) {
       return currentLogo;
     }
-    return switch (leagueId) {
-      '12048' || '943230' || '288' || '904988' => 'https://imgs.ysscores.com/championship/128/5171696546919.png', // UEFA Champions League
-      '6811' || '937599' || '284' => 'https://imgs.ysscores.com/championship/128/3411694791422.png', // Premier League
-      '1933' || '938652' || '285' => 'https://imgs.ysscores.com/championship/128/8641690196626.png', // LaLiga
-      '3734' || '936357' || '287' => 'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
-      '2606' || '938769' || '286' => 'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
-      '1985' || '937873' || '2847' => 'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
-      '7167' || '941825' || '4750' => 'https://imgs.ysscores.com/championship/128/5111703719091.png', // Saudi Pro League
-      '88013' || '59771441' => 'https://imgs.ysscores.com/championship/128/5481703687014.png', // Supercopa
-      '943009' || '3894' => 'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
-      '40224' || '916145' => 'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
-      _ => null,
-    };
+    if (isDark) {
+      return switch (leagueId) {
+        '12048' || '943230' || '288' || '904988' =>
+          'https://imgs.ysscores.com/championship/128/5171696546919.png', // UCL Light/White
+        '6811' || '937599' || '284' =>
+          'https://imgs.ysscores.com/championship/128/3411694791422.png', // Premier League
+        '1933' || '938652' || '285' =>
+          'https://imgs.ysscores.com/championship/128/8641690196626.png', // LaLiga
+        '3734' || '936357' || '287' =>
+          'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
+        '2606' || '938769' || '286' =>
+          'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
+        '1985' || '937873' || '2847' =>
+          'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
+        '7167' || '941825' || '4750' =>
+          'https://imgs.ysscores.com/championship/128/5111703719091.png', // Saudi Pro League (Light/White)
+        '88013' || '59771441' || '943488' =>
+          'https://imgs.ysscores.com/championship/128/5481703687014.png', // Supercopa (Light/White)
+        '943009' || '3894' || '58553' =>
+          'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
+        '40224' || '916145' =>
+          'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
+        '77783' || '911131' || '97533' || '943487' || '943601' =>
+          'https://imgs.ysscores.com/championship/128/17638081914419.png', // CAF Champions League
+        '89249' || '943229' || '937603' =>
+          'https://imgs.ysscores.com/championship/128/8221723403400.png', // Europa League
+        '31250' || '943231' || '937604' =>
+          'https://imgs.ysscores.com/championship/128/1861696546605.png', // Conference League
+        '894789' || '900001' =>
+          'https://imgs.ysscores.com/championship/128/1231702394244.png', // World Cup
+        '9609' || '938426' =>
+          'https://imgs.ysscores.com/championship/128/5141711141225.png', // King Cup
+        '842143' || '26995682' || '77059' =>
+          'https://imgs.ysscores.com/championship/128/2121751062605.png', // Intercontinental Cup
+        '76684' || '911121' || '41791876' || '943602' =>
+          'https://imgs.ysscores.com/championship/128/17638085863023.png', // CAF Confederation Cup
+        '855126' || '943983' =>
+          'https://imgs.ysscores.com/championship/128/7731723924630.png', // AFC Champions League Elite
+        '854128' || '944055' =>
+          'https://imgs.ysscores.com/championship/128/9381723924846.png', // AFC Champions League 2
+        '596133' || '57789573' =>
+          'https://imgs.ysscores.com/championship/128/3971729441035.png', // Gulf Club Champions League
+        '6682' || '939779' =>
+          'https://imgs.ysscores.com/championship/128/7571723239230.png', // Turkish Super Lig
+        '54416' || '938823' =>
+          'https://imgs.ysscores.com/championship/128/7301690383928.png', // Portuguese Primeira Liga
+        '89492' || '908818' =>
+          'https://imgs.ysscores.com/championship/128/1231702394244.png', // FA Cup
+        '47742' || '938001' =>
+          'https://imgs.ysscores.com/championship/128/4131693315629.png', // EFL Cup
+        '17027' || '938423' =>
+          'https://imgs.ysscores.com/championship/128/1221691618877.png', // Coppa Italia
+        '45529' || '936417' =>
+          'https://imgs.ysscores.com/championship/128/1351691680796.png', // DFB-Pokal
+        '58881' || '3746233' =>
+          'https://imgs.ysscores.com/championship/128/1931696032876.png', // Egypt Cup
+        _ => null,
+      };
+    } else {
+      // Light mode: use dark/colored silhouette variants for contrast on light background
+      return switch (leagueId) {
+        '12048' || '943230' || '288' || '904988' =>
+          'https://imgs.ysscores.com/championship/128/3141696514284.png', // UCL Dark Navy
+        '6811' || '937599' || '284' =>
+          'https://imgs.ysscores.com/championship/128/3411694791422.png', // Premier League
+        '1933' || '938652' || '285' =>
+          'https://imgs.ysscores.com/championship/128/8641690196626.png', // LaLiga
+        '3734' || '936357' || '287' =>
+          'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
+        '2606' || '938769' || '286' =>
+          'https://imgs.ysscores.com/championship/128/6171690288722.png', // Bundesliga
+        '1985' || '937873' || '2847' =>
+          'https://imgs.ysscores.com/championship/128/9551719862665.png', // Ligue 1
+        '7167' || '941825' || '4750' =>
+          'https://imgs.ysscores.com/championship/128/3421703719071.png', // Saudi Pro League (Dark)
+        '88013' || '59771441' || '943488' =>
+          'https://imgs.ysscores.com/championship/128/911703687010.png', // Supercopa (Dark)
+        '943009' || '3894' || '58553' =>
+          'https://imgs.ysscores.com/championship/128/451723403406.png', // Egyptian League
+        '40224' || '916145' =>
+          'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
+        '77783' || '911131' || '97533' || '943487' || '943601' =>
+          'https://imgs.ysscores.com/championship/128/17638081961987.png', // CAF Champions League
+        '89249' || '943229' || '937603' =>
+          'https://imgs.ysscores.com/championship/128/8221723403400.png', // Europa League
+        '31250' || '943231' || '937604' =>
+          'https://imgs.ysscores.com/championship/128/1861696546605.png', // Conference League
+        '894789' || '900001' =>
+          'https://imgs.ysscores.com/championship/128/1231702394244.png', // World Cup
+        '9609' || '938426' =>
+          'https://imgs.ysscores.com/championship/128/5141711141225.png', // King Cup
+        '842143' || '26995682' || '77059' =>
+          'https://imgs.ysscores.com/championship/128/2121751062605.png', // Intercontinental Cup
+        '76684' || '911121' || '41791876' || '943602' =>
+          'https://imgs.ysscores.com/championship/128/17638085806160.png', // CAF Confederation Cup
+        '855126' || '943983' =>
+          'https://imgs.ysscores.com/championship/128/7731723924630.png', // AFC Champions League Elite
+        '854128' || '944055' =>
+          'https://imgs.ysscores.com/championship/128/9381723924846.png', // AFC Champions League 2
+        '596133' || '57789573' =>
+          'https://imgs.ysscores.com/championship/128/3971729441035.png', // Gulf Club Champions League
+        '6682' || '939779' =>
+          'https://imgs.ysscores.com/championship/128/1191723239247.png', // Turkish Super Lig (Dark)
+        '54416' || '938823' =>
+          'https://imgs.ysscores.com/championship/128/7301690383928.png', // Portuguese Primeira Liga
+        '89492' || '908818' =>
+          'https://imgs.ysscores.com/championship/128/1231702394244.png', // FA Cup
+        '47742' || '938001' =>
+          'https://imgs.ysscores.com/championship/128/4131693315629.png', // EFL Cup
+        '17027' || '938423' =>
+          'https://imgs.ysscores.com/championship/128/1221691618877.png', // Coppa Italia
+        '45529' || '936417' =>
+          'https://imgs.ysscores.com/championship/128/1351691680796.png', // DFB-Pokal
+        '58881' || '3746233' =>
+          'https://imgs.ysscores.com/championship/128/1931696032876.png', // Egypt Cup
+        _ => null,
+      };
+    }
   }
 
+  static const Map<String, String> _knownTeamLogos = {
+    '101745': 'https://imgs.ysscores.com/teams/64/9591694714907.png', // الأهلي
+    '80591': 'https://imgs.ysscores.com/teams/64/7971694082496.png', // الزمالك
+    '10255': 'https://imgs.ysscores.com/teams/64/9301763071949.png', // مصر
+    '8633': 'https://imgs.ysscores.com/teams/64/1871690196746.png', // ريال مدريد
+    '8634': 'https://imgs.ysscores.com/teams/64/9541690196746.png', // برشلونة
+    '9906': 'https://imgs.ysscores.com/teams/64/1431719588699.png', // أتلتيكو مدريد
+    '8456': 'https://imgs.ysscores.com/teams/64/4481690118308.png', // مانشستر سيتي
+    '10260': 'https://imgs.ysscores.com/teams/64/4871690119302.png', // مانشستر يونايتد
+    '8650': 'https://imgs.ysscores.com/teams/64/4081724601375.png', // ليفربول
+    '9825': 'https://imgs.ysscores.com/teams/64/1701690118820.png', // أرسنال
+    '8455': 'https://imgs.ysscores.com/teams/64/2571690118280.png', // تشيلسي
+    '8586': 'https://imgs.ysscores.com/teams/64/2501692467226.png', // توتنهام
+    '9823': 'https://imgs.ysscores.com/teams/64/2351690288818.png', // بايرن ميونخ
+    '9789': 'https://imgs.ysscores.com/teams/64/4201690288818.png', // بوروسيا دورتموند
+    '9885': 'https://imgs.ysscores.com/teams/64/9331690283003.png', // يوفنتوس
+    '8564': 'https://imgs.ysscores.com/teams/64/3181690283002.png', // ميلان
+    '8636': 'https://imgs.ysscores.com/teams/64/3101690283003.png', // إنتر ميلان
+    '9847': 'https://imgs.ysscores.com/teams/64/4461690287785.png', // باريس سان جيرمان
+    '2529': 'https://imgs.ysscores.com/teams/64/8761690298716.png', // الهلال
+    '101918': 'https://imgs.ysscores.com/teams/64/1371747772080.png', // النصر
+    '8577': 'https://imgs.ysscores.com/teams/64/2231690298782.png', // الاتحاد
+    '7795': 'https://imgs.ysscores.com/teams/64/7171763086301.png', // السعودية
+    '8256': 'https://imgs.ysscores.com/teams/64/4331763069849.png', // البرازيل
+    '6706': 'https://imgs.ysscores.com/teams/64/2861763067235.png', // الأرجنتين
+    '2530': 'https://imgs.ysscores.com/teams/64/9091751485160.png', // الأهلي السعودي
+  };
+
   /// Resolves deterministic team logo URL given a team ID or filename.
-  static String? resolveTeamLogo(String? teamId, {int size = 64}) {
-    if (teamId == null) return null;
-    final clean = teamId.trim();
-    if (clean.isEmpty || clean == 'null' || clean == '0') return null;
-    if (clean.endsWith('.png') ||
-        clean.endsWith('.jpg') ||
-        clean.endsWith('.jpeg') ||
-        clean.endsWith('.webp')) {
-      return 'https://imgs.ysscores.com/teams/$size/$clean';
+  static String? resolveTeamLogo(String? teamId, {int size = 64, String? teamName}) {
+    final clean = teamId?.trim();
+    if (clean != null && _knownTeamLogos.containsKey(clean)) {
+      return _knownTeamLogos[clean];
     }
-    return 'https://imgs.ysscores.com/teams/$size/$clean.png';
+    if (clean != null && clean.isNotEmpty) {
+      if (clean.startsWith('http://') || clean.startsWith('https://')) {
+        return normalizeImageUrl(clean);
+      }
+      if (clean.endsWith('.png') ||
+          clean.endsWith('.jpg') ||
+          clean.endsWith('.jpeg') ||
+          clean.endsWith('.webp')) {
+        return normalizeImageUrl('https://imgs.ysscores.com/teams/$size/$clean');
+      }
+    }
+    return null;
   }
 
   /// Normalizes video URLs from various API fields and video providers.

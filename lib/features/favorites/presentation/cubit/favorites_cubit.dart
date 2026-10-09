@@ -225,23 +225,39 @@ class FavoritesState extends Equatable {
           return true;
         }
       }
-      // If an ID was provided, NEVER fall back to loose name matching!
+      // Check legacy non-numeric items in favoriteTeams
+      if (cleanName != null && cleanName.isNotEmpty) {
+        for (final fav in favoriteTeams) {
+          if (int.tryParse(fav.trim()) == null &&
+              (fav.trim().toLowerCase() == cleanName.toLowerCase() ||
+               TeamResolver.areSameTeam(fav, cleanName))) {
+            return true;
+          }
+        }
+      }
       return false;
     }
 
-    // 2. Query only has name (no ID): Check if name corresponds to a known ID
-    final knownId =
-        LocalStorageServiceImpl.knownTeamNameToId[cleanName?.toLowerCase()] ??
-        LocalStorageServiceImpl.knownTeamNameToId[cleanName];
-    if (knownId != null) {
-      if (favoriteTeams.any((t) => t.trim().toLowerCase() == knownId.toLowerCase())) {
-        return true;
-      }
-    }
-
-    // 3. Fallback name match for custom teams without IDs
+    // 2. Query only has name (no ID): Check if name or translated name maps to a stored ID
     if (cleanName != null && cleanName.isNotEmpty) {
       final lowerName = cleanName.toLowerCase();
+      final arLoc = TeamResolver.getLocalizedName(cleanName, isArabic: true)?.toLowerCase();
+      final enLoc = TeamResolver.getLocalizedName(cleanName, isArabic: false)?.toLowerCase();
+
+      for (final candidate in [lowerName, if (arLoc != null) arLoc, if (enLoc != null) enLoc]) {
+        final knownId = LocalStorageServiceImpl.knownTeamNameToId[candidate];
+        if (knownId != null &&
+            favoriteTeams.any((t) => t.trim().toLowerCase() == knownId.toLowerCase())) {
+          return true;
+        }
+        final mappedId = teamTitles[candidate]?.toLowerCase();
+        if (mappedId != null &&
+            favoriteTeams.any((t) => t.trim().toLowerCase() == mappedId)) {
+          return true;
+        }
+      }
+
+      // 3. Fallback name match for custom teams without IDs
       if (cachedFavTeamKeys.contains(lowerName)) return true;
       for (final team in favoriteTeams) {
         final cleanTeam = team.trim();

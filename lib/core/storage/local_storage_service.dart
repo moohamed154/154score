@@ -183,9 +183,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
     '894789': 'كأس العالم',
     '943487': 'دوري أبطال أفريقيا',
     '911131': 'دوري أبطال أفريقيا',
-    '98026338': 'كأس الخليج تحت 17 سنة',
     '937603': 'الدوري الأوروبي',
+    '943229': 'الدوري الأوروبي',
+    '943231': 'دوري المؤتمر الأوروبي',
     '77059': 'كأس القارات للأندية',
+    '26995682': 'كأس القارات للأندية',
   };
 
   static const Map<String, String> defaultNameToId = {
@@ -471,13 +473,14 @@ class LocalStorageServiceImpl implements LocalStorageService {
         ? id.trim()
         : (int.tryParse(cleanName) != null ? cleanName : null);
 
+    final titles = getFavoriteTeamTitles();
+
     // 1. Strict Match by ID (prevents similar named clubs across leagues from colliding)
     if (cleanId != null && cleanId.isNotEmpty) {
       final lowerId = cleanId.toLowerCase();
       if (list.any((fav) => fav.trim().toLowerCase() == lowerId)) {
         return true;
       }
-      final titles = getFavoriteTeamTitles();
       if (titles.containsKey(lowerId)) {
         final title = titles[lowerId]!.trim().toLowerCase();
         if (list.any((fav) => fav.trim().toLowerCase() == title)) {
@@ -490,15 +493,32 @@ class LocalStorageServiceImpl implements LocalStorageService {
           return true;
         }
       }
-      // If team has an ID and did not match any favorite ID, NEVER match by name!
+      // Check legacy non-numeric items in list
+      if (cleanName.isNotEmpty) {
+        for (final fav in list) {
+          if (int.tryParse(fav.trim()) == null &&
+              (fav.trim().toLowerCase() == cleanName.toLowerCase() ||
+               TeamResolver.areSameTeam(fav, cleanName))) {
+            return true;
+          }
+        }
+      }
+      // If team has an ID and all stored favorites are IDs, NEVER match other IDs!
       return false;
     }
 
-    // 2. Query only has name (no ID): Check if name corresponds to a known ID
-    final knownId =
-        knownTeamNameToId[cleanName.toLowerCase()] ?? knownTeamNameToId[cleanName];
-    if (knownId != null) {
-      if (list.any((fav) => fav.trim().toLowerCase() == knownId.toLowerCase())) {
+    // 2. Query only has name (no ID): Check known IDs and cross-lingual titles
+    final arLoc = TeamResolver.getLocalizedName(cleanName, isArabic: true)?.toLowerCase();
+    final enLoc = TeamResolver.getLocalizedName(cleanName, isArabic: false)?.toLowerCase();
+    final lowerName = cleanName.toLowerCase();
+
+    for (final candidate in [lowerName, if (arLoc != null) arLoc, if (enLoc != null) enLoc]) {
+      final knownId = knownTeamNameToId[candidate];
+      if (knownId != null && list.any((fav) => fav.trim().toLowerCase() == knownId.toLowerCase())) {
+        return true;
+      }
+      final mappedId = titles[candidate];
+      if (mappedId != null && list.any((fav) => fav.trim().toLowerCase() == mappedId.toLowerCase())) {
         return true;
       }
     }
@@ -507,7 +527,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
     for (final fav in list) {
       final cleanFav = fav.trim();
       if (cleanName.isNotEmpty &&
-          cleanFav.toLowerCase() == cleanName.toLowerCase()) {
+          cleanFav.toLowerCase() == lowerName) {
         return true;
       }
       if (cleanName.isNotEmpty && TeamResolver.areSameTeam(cleanFav, cleanName)) {
@@ -627,7 +647,15 @@ class LocalStorageServiceImpl implements LocalStorageService {
   String resolveCompetitionTitle(String compOrId) {
     final trimmed = compOrId.trim();
     final titles = getFavoriteCompetitionTitles();
-    return titles[trimmed] ?? trimmed;
+    if (titles.containsKey(trimmed) &&
+        int.tryParse(titles[trimmed]!) == null) {
+      return titles[trimmed]!;
+    }
+    final resolved = LeagueResolver.resolveTitle(trimmed, isArabic: true);
+    if (resolved.isNotEmpty && int.tryParse(resolved) == null) {
+      return resolved;
+    }
+    return defaultKnownTitles[trimmed] ?? (titles[trimmed] ?? trimmed);
   }
 
   @override
