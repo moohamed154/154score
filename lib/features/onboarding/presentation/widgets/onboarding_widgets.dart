@@ -3,6 +3,9 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/league_resolver.dart';
+import '../../../../core/utils/url_helper.dart';
+import '../../../../core/widgets/app_image.dart';
 import '../../domain/entities/onboarding_catalog.dart';
 
 /// Max content width so the flow stays readable on tablets / landscape.
@@ -201,6 +204,7 @@ class OnboardingChips extends StatelessWidget {
     required this.isArabic,
     required this.isDark,
     required this.onToggle,
+    this.isLeague = false,
   });
 
   final List<OnboardingItem> items;
@@ -208,6 +212,7 @@ class OnboardingChips extends StatelessWidget {
   final bool isArabic;
   final bool isDark;
   final ValueChanged<OnboardingItem> onToggle;
+  final bool isLeague;
 
   @override
   Widget build(BuildContext context) {
@@ -216,10 +221,38 @@ class OnboardingChips extends StatelessWidget {
       runSpacing: AppDimensions.sm,
       children: items.map((item) {
         final isSelected = selected.contains(item.ar);
+        final logoUrl = isLeague
+            ? UrlHelper.resolveChampionshipLogo(
+                item.id ?? LeagueResolver.resolveId(item.ar),
+                isDark: isDark,
+              )
+            : UrlHelper.resolveTeamLogo(
+                item.id,
+                teamName: item.ar,
+              );
+
+        Widget? avatar;
+        if (logoUrl != null && logoUrl.isNotEmpty) {
+          avatar = ClipRRect(
+            borderRadius: BorderRadius.circular(isLeague ? 4 : 10),
+            child: AppImage(
+              imageUrl: logoUrl,
+              width: 20,
+              height: 20,
+              borderRadius: isLeague ? 4 : 10,
+              fit: BoxFit.contain,
+              placeholderIcon: isLeague
+                  ? Icons.emoji_events_outlined
+                  : Icons.shield_outlined,
+            ),
+          );
+        }
+
         return FilterChip(
+          avatar: avatar,
           label: Text(item.nameFor(isArabic: isArabic)),
           selected: isSelected,
-          showCheckmark: true,
+          showCheckmark: isSelected,
           checkmarkColor: Colors.white,
           selectedColor: AppColors.primary,
           backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -233,6 +266,7 @@ class OnboardingChips extends StatelessWidget {
             isArabic: isArabic,
           ).copyWith(
             fontWeight: FontWeight.w600,
+            fontSize: 13,
             color: isSelected
                 ? Colors.white
                 : (isDark

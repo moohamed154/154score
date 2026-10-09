@@ -176,6 +176,10 @@ For low-level architectural blueprints and diagrams, see:
 * **Language**: Arabic (primary), English.
 * **Notification Preferences**: Toggles per alert type (goals, kick-off, news).
 
+### 13. Onboarding & First-Launch Setup (`features/onboarding`)
+* **Branded Chips**: All team and league selection chips in the onboarding flow must display crisp logos alongside their titles (`UrlHelper.resolveTeamLogo` for clubs and `UrlHelper.resolveChampionshipLogo` with `isDark` adaptation for leagues/tournaments).
+* **RTL Arrow Direction**: The navigation back button must strictly respect RTL layout semantics (`isRtl ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded`), pointing to the right (`→`) in Arabic to reflect navigating backward to the previous screen.
+
 ---
 
 ## 7. Dependency Injection & Service Locator (`get_it`)

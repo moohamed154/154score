@@ -91,6 +91,9 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch LocaleCubit and ThemeCubit so onboarding immediately reacts to user language/theme selection
+    context.watch<LocaleCubit>();
+    context.watch<ThemeCubit>();
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -131,7 +134,6 @@ class _OnboardingViewState extends State<OnboardingView> {
                 ),
               ),
               _BottomBar(
-                l10n: l10n,
                 isDark: isDark,
                 finishing: _finishing,
                 onFinish: () => _finish(applySelections: true),
@@ -192,20 +194,21 @@ class _TopBar extends StatelessWidget {
 
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
-    required this.l10n,
     required this.isDark,
     required this.finishing,
     required this.onFinish,
   });
 
-  final AppLocalizations l10n;
   final bool isDark;
   final bool finishing;
   final VoidCallback onFinish;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
+    final isRtl = Directionality.of(context) == TextDirection.rtl || isArabic;
+
     return BlocBuilder<OnboardingCubit, OnboardingState>(
       buildWhen: (p, c) => p.page != c.page,
       builder: (context, state) {
@@ -226,11 +229,13 @@ class _BottomBar extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 48,
+                    height: 48,
                     child: state.page > 0
                         ? IconButton(
                             onPressed: cubit.back,
+                            tooltip: isArabic ? 'السابق' : 'Back',
                             icon: Icon(
-                              isArabic
+                              isRtl
                                   ? Icons.arrow_forward_rounded
                                   : Icons.arrow_back_rounded,
                             ),
@@ -442,6 +447,7 @@ class _LeaguesPage extends StatelessWidget {
             selected: state.selectedLeagues,
             isArabic: isArabic,
             isDark: isDark,
+            isLeague: true,
             onToggle: (item) =>
                 context.read<OnboardingCubit>().toggleLeague(item.ar),
           );
