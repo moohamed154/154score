@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../storage/local_storage_service.dart';
+import 'league_resolver.dart';
+
 class UrlHelper {
   UrlHelper._();
 
@@ -192,13 +195,119 @@ class UrlHelper {
     String? currentLogo,
     bool isDark = true,
   }) {
+    final cleanId = leagueId?.trim();
+    final effectiveId = (cleanId != null && _isKnownChampionshipId(cleanId))
+        ? cleanId
+        : (cleanId != null
+            ? (LeagueResolver.resolveId(cleanId) ??
+               LocalStorageServiceImpl.defaultNameToId[cleanId.toLowerCase()] ??
+               LocalStorageServiceImpl.defaultNameToId[cleanId] ??
+               cleanId)
+            : null);
+
+    // 1. First check if we have a theme-tailored logo for this competition
+    final themed = _getThemedChampionshipLogo(effectiveId ?? cleanId, isDark: isDark);
+    if (themed != null) {
+      return themed;
+    }
+
+    // 2. Fall back to currentLogo if valid
     if (currentLogo != null && isValidImageUrl(currentLogo)) {
       return currentLogo;
     }
+
+    return null;
+  }
+
+  static bool _isKnownChampionshipId(String id) {
+    return switch (id) {
+      '12048' ||
+      '943230' ||
+      '288' ||
+      '904988' ||
+      '6811' ||
+      '937599' ||
+      '284' ||
+      '1933' ||
+      '938652' ||
+      '285' ||
+      '3734' ||
+      '936357' ||
+      '287' ||
+      '2606' ||
+      '938769' ||
+      '286' ||
+      '1985' ||
+      '937873' ||
+      '2847' ||
+      '7167' ||
+      '941825' ||
+      '4750' ||
+      '88013' ||
+      '59771441' ||
+      '943488' ||
+      '943009' ||
+      '3894' ||
+      '58553' ||
+      '40224' ||
+      '916145' ||
+      '77783' ||
+      '911131' ||
+      '97533' ||
+      '943487' ||
+      '943601' ||
+      '89249' ||
+      '943229' ||
+      '937603' ||
+      '31250' ||
+      '943231' ||
+      '937604' ||
+      '894789' ||
+      '900001' ||
+      '9609' ||
+      '938426' ||
+      '842143' ||
+      '26995682' ||
+      '77059' ||
+      '76684' ||
+      '911121' ||
+      '41791876' ||
+      '943602' ||
+      '855126' ||
+      '943983' ||
+      '854128' ||
+      '944055' ||
+      '596133' ||
+      '57789573' ||
+      '6682' ||
+      '939779' ||
+      '54416' ||
+      '938823' ||
+      '89492' ||
+      '908818' ||
+      '937601' ||
+      '47742' ||
+      '938001' ||
+      '937600' ||
+      '17027' ||
+      '938423' ||
+      '936358' ||
+      '45529' ||
+      '936417' ||
+      '938770' ||
+      '58881' ||
+      '3746233' =>
+        true,
+      _ => false,
+    };
+  }
+
+  static String? _getThemedChampionshipLogo(String? leagueId, {required bool isDark}) {
+    if (leagueId == null) return null;
     if (isDark) {
       return switch (leagueId) {
         '12048' || '943230' || '288' || '904988' =>
-          'https://imgs.ysscores.com/championship/128/5171696546919.png', // UCL Light/White
+          'https://imgs.ysscores.com/championship/128/3141696514284.png', // UCL White on Dark
         '6811' || '937599' || '284' =>
           'https://imgs.ysscores.com/championship/128/3411694791422.png', // Premier League
         '1933' || '938652' || '285' =>
@@ -218,7 +327,7 @@ class UrlHelper {
         '40224' || '916145' =>
           'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
         '77783' || '911131' || '97533' || '943487' || '943601' =>
-          'https://imgs.ysscores.com/championship/128/17638081914419.png', // CAF Champions League
+          'https://imgs.ysscores.com/championship/128/17638081914419.png', // CAF Champions League (Light/Gold)
         '89249' || '943229' || '937603' =>
           'https://imgs.ysscores.com/championship/128/8221723403400.png', // Europa League
         '31250' || '943231' || '937604' =>
@@ -227,10 +336,16 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/1231702394244.png', // World Cup
         '9609' || '938426' =>
           'https://imgs.ysscores.com/championship/128/5141711141225.png', // King Cup
-        '842143' || '26995682' || '77059' =>
+        '842143' ||
+        '26995682' ||
+        '77059' ||
+        'كأس القارات للأندية' ||
+        'كأس القارات' ||
+        'intercontinental cup' ||
+        'fifa intercontinental cup' =>
           'https://imgs.ysscores.com/championship/128/2121751062605.png', // Intercontinental Cup
         '76684' || '911121' || '41791876' || '943602' =>
-          'https://imgs.ysscores.com/championship/128/17638085863023.png', // CAF Confederation Cup
+          'https://imgs.ysscores.com/championship/128/17638085863023.png', // CAF Confederation Cup (Light)
         '855126' || '943983' =>
           'https://imgs.ysscores.com/championship/128/7731723924630.png', // AFC Champions League Elite
         '854128' || '944055' =>
@@ -238,16 +353,16 @@ class UrlHelper {
         '596133' || '57789573' =>
           'https://imgs.ysscores.com/championship/128/3971729441035.png', // Gulf Club Champions League
         '6682' || '939779' =>
-          'https://imgs.ysscores.com/championship/128/7571723239230.png', // Turkish Super Lig
+          'https://imgs.ysscores.com/championship/128/7571723239230.png', // Turkish Super Lig (Light)
         '54416' || '938823' =>
           'https://imgs.ysscores.com/championship/128/7301690383928.png', // Portuguese Primeira Liga
-        '89492' || '908818' =>
+        '89492' || '908818' || '937601' =>
           'https://imgs.ysscores.com/championship/128/1231702394244.png', // FA Cup
-        '47742' || '938001' =>
+        '47742' || '938001' || '937600' =>
           'https://imgs.ysscores.com/championship/128/4131693315629.png', // EFL Cup
-        '17027' || '938423' =>
+        '17027' || '938423' || '936358' =>
           'https://imgs.ysscores.com/championship/128/1221691618877.png', // Coppa Italia
-        '45529' || '936417' =>
+        '45529' || '936417' || '938770' =>
           'https://imgs.ysscores.com/championship/128/1351691680796.png', // DFB-Pokal
         '58881' || '3746233' =>
           'https://imgs.ysscores.com/championship/128/1931696032876.png', // Egypt Cup
@@ -257,7 +372,7 @@ class UrlHelper {
       // Light mode: use dark/colored silhouette variants for contrast on light background
       return switch (leagueId) {
         '12048' || '943230' || '288' || '904988' =>
-          'https://imgs.ysscores.com/championship/128/3141696514284.png', // UCL Dark Navy
+          'https://imgs.ysscores.com/championship/128/5171696546919.png', // UCL Dark Navy on Light
         '6811' || '937599' || '284' =>
           'https://imgs.ysscores.com/championship/128/3411694791422.png', // Premier League
         '1933' || '938652' || '285' =>
@@ -277,7 +392,7 @@ class UrlHelper {
         '40224' || '916145' =>
           'https://imgs.ysscores.com/championship/128/751691418644.png', // Brazilian League
         '77783' || '911131' || '97533' || '943487' || '943601' =>
-          'https://imgs.ysscores.com/championship/128/17638081961987.png', // CAF Champions League
+          'https://imgs.ysscores.com/championship/128/17638081961987.png', // CAF Champions League (Dark)
         '89249' || '943229' || '937603' =>
           'https://imgs.ysscores.com/championship/128/8221723403400.png', // Europa League
         '31250' || '943231' || '937604' =>
@@ -286,10 +401,16 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/1231702394244.png', // World Cup
         '9609' || '938426' =>
           'https://imgs.ysscores.com/championship/128/5141711141225.png', // King Cup
-        '842143' || '26995682' || '77059' =>
+        '842143' ||
+        '26995682' ||
+        '77059' ||
+        'كأس القارات للأندية' ||
+        'كأس القارات' ||
+        'intercontinental cup' ||
+        'fifa intercontinental cup' =>
           'https://imgs.ysscores.com/championship/128/2121751062605.png', // Intercontinental Cup
         '76684' || '911121' || '41791876' || '943602' =>
-          'https://imgs.ysscores.com/championship/128/17638085806160.png', // CAF Confederation Cup
+          'https://imgs.ysscores.com/championship/128/17638085806160.png', // CAF Confederation Cup (Dark)
         '855126' || '943983' =>
           'https://imgs.ysscores.com/championship/128/7731723924630.png', // AFC Champions League Elite
         '854128' || '944055' =>
@@ -300,13 +421,13 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/1191723239247.png', // Turkish Super Lig (Dark)
         '54416' || '938823' =>
           'https://imgs.ysscores.com/championship/128/7301690383928.png', // Portuguese Primeira Liga
-        '89492' || '908818' =>
+        '89492' || '908818' || '937601' =>
           'https://imgs.ysscores.com/championship/128/1231702394244.png', // FA Cup
-        '47742' || '938001' =>
+        '47742' || '938001' || '937600' =>
           'https://imgs.ysscores.com/championship/128/4131693315629.png', // EFL Cup
-        '17027' || '938423' =>
+        '17027' || '938423' || '936358' =>
           'https://imgs.ysscores.com/championship/128/1221691618877.png', // Coppa Italia
-        '45529' || '936417' =>
+        '45529' || '936417' || '938770' =>
           'https://imgs.ysscores.com/championship/128/1351691680796.png', // DFB-Pokal
         '58881' || '3746233' =>
           'https://imgs.ysscores.com/championship/128/1931696032876.png', // Egypt Cup
@@ -343,11 +464,20 @@ class UrlHelper {
     '2530': 'https://imgs.ysscores.com/teams/64/9091751485160.png', // الأهلي السعودي
   };
 
-  /// Resolves deterministic team logo URL given a team ID or filename.
+  /// Resolves deterministic team logo URL given a team ID, filename, or team name.
   static String? resolveTeamLogo(String? teamId, {int size = 64, String? teamName}) {
     final clean = teamId?.trim();
     if (clean != null && _knownTeamLogos.containsKey(clean)) {
       return _knownTeamLogos[clean];
+    }
+    // Check if clean or teamName is a known team name in LocalStorageServiceImpl.knownTeamNameToId
+    final nameCandidate = teamName ?? clean;
+    if (nameCandidate != null) {
+      final mappedId = LocalStorageServiceImpl.knownTeamNameToId[nameCandidate.toLowerCase()] ??
+          LocalStorageServiceImpl.knownTeamNameToId[nameCandidate];
+      if (mappedId != null && _knownTeamLogos.containsKey(mappedId)) {
+        return _knownTeamLogos[mappedId];
+      }
     }
     if (clean != null && clean.isNotEmpty) {
       if (clean.startsWith('http://') || clean.startsWith('https://')) {

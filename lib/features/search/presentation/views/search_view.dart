@@ -496,9 +496,16 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
     if (isPlayer) fallbackIcon = Icons.person_rounded;
 
     final effectiveLogo = isChampionship
-        ? (UrlHelper.resolveChampionshipLogo(item.id, currentLogo: item.logo) ??
-              item.logo)
-        : item.logo;
+        ? (UrlHelper.resolveChampionshipLogo(
+              item.id,
+              currentLogo: item.logo,
+              isDark: isDark,
+            ) ??
+            item.logo)
+        : (isTeam
+            ? (UrlHelper.resolveTeamLogo(item.id, teamName: item.title) ??
+                item.logo)
+            : item.logo);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

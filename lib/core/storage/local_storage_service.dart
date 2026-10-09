@@ -41,6 +41,8 @@ abstract class LocalStorageService {
   bool isFavoriteTeam(String teamName, {String? id});
   Map<String, String> getFavoriteTeamTitles();
   Future<bool> registerTeamTitles(Map<String, String> titles);
+  Map<String, String> getFavoriteTeamLogos() => const {};
+  Future<bool> registerTeamLogos(Map<String, String> logos) async => false;
   String resolveTeamTitle(String teamOrId, {bool? isArabic});
 
   List<String> getFavoriteCompetitions();
@@ -60,6 +62,8 @@ abstract class LocalStorageService {
   });
   Map<String, String> getFavoriteCompetitionTitles();
   Future<bool> registerCompetitionTitles(Map<String, String> titles);
+  Map<String, String> getFavoriteCompetitionLogos() => const {};
+  Future<bool> registerCompetitionLogos(Map<String, String> logos) async => false;
   String resolveCompetitionTitle(String compOrId);
 
   List<String> getFavoriteMatches();
@@ -142,9 +146,12 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyTimezoneAuto = 'app_timezone_auto';
   static const String _keyFavoriteTeams = 'app_favorite_teams';
   static const String _keyFavoriteTeamTitles = 'app_favorite_team_titles';
+  static const String _keyFavoriteTeamLogos = 'app_favorite_team_logos';
   static const String _keyFavoriteCompetitions = 'app_favorite_competitions';
   static const String _keyFavoriteCompetitionTitles =
       'app_favorite_competition_titles';
+  static const String _keyFavoriteCompetitionLogos =
+      'app_favorite_competition_logos';
   static const String _keyFavoriteMatches = 'app_favorite_matches';
   static const String _keyCachedRankings = 'app_cached_rankings';
   static const String _keyReorderTipDismissed = 'app_reorder_tip_dismissed';
@@ -453,6 +460,32 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
+  Map<String, String> getFavoriteTeamLogos() {
+    final res = <String, String>{};
+    final raw = _prefs.getString(_keyFavoriteTeamLogos);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) {
+          decoded.forEach((k, v) {
+            if (k != null && v != null) {
+              res[k.toString()] = v.toString();
+            }
+          });
+        }
+      } catch (_) {}
+    }
+    return res;
+  }
+
+  @override
+  Future<bool> registerTeamLogos(Map<String, String> logos) async {
+    final current = getFavoriteTeamLogos();
+    current.addAll(logos);
+    return _prefs.setString(_keyFavoriteTeamLogos, jsonEncode(current));
+  }
+
+  @override
   String resolveTeamTitle(String teamOrId, {bool? isArabic}) {
     final trimmed = teamOrId.trim();
     if (isArabic != null) {
@@ -641,6 +674,32 @@ class LocalStorageServiceImpl implements LocalStorageService {
       }
     });
     return _prefs.setString(_keyFavoriteCompetitionTitles, jsonEncode(current));
+  }
+
+  @override
+  Map<String, String> getFavoriteCompetitionLogos() {
+    final res = <String, String>{};
+    final raw = _prefs.getString(_keyFavoriteCompetitionLogos);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) {
+          decoded.forEach((k, v) {
+            if (k != null && v != null) {
+              res[k.toString()] = v.toString();
+            }
+          });
+        }
+      } catch (_) {}
+    }
+    return res;
+  }
+
+  @override
+  Future<bool> registerCompetitionLogos(Map<String, String> logos) async {
+    final current = getFavoriteCompetitionLogos();
+    current.addAll(logos);
+    return _prefs.setString(_keyFavoriteCompetitionLogos, jsonEncode(current));
   }
 
   @override

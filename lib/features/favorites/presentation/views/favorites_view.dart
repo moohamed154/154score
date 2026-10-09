@@ -100,7 +100,11 @@ class FavoritesView extends StatelessWidget {
                     return ActionChip(
                       label: Text(team.name, style: const TextStyle(fontSize: 12)),
                       onPressed: () {
-                        context.read<FavoritesCubit>().toggleTeam(team.name, id: team.id);
+                        context.read<FavoritesCubit>().toggleTeam(
+                          team.name,
+                          id: team.id,
+                          logo: UrlHelper.resolveTeamLogo(team.id, teamName: team.name),
+                        );
                         Navigator.of(dialogContext).pop();
                       },
                     );
@@ -118,7 +122,14 @@ class FavoritesView extends StatelessWidget {
               onPressed: () {
                 final text = controller.text.trim();
                 if (text.isNotEmpty) {
-                  context.read<FavoritesCubit>().toggleTeam(text);
+                  final teamId = LocalStorageServiceImpl.knownTeamNameToId[text.toLowerCase()] ??
+                      LocalStorageServiceImpl.knownTeamNameToId[text];
+                  final logo = UrlHelper.resolveTeamLogo(teamId, teamName: text);
+                  context.read<FavoritesCubit>().toggleTeam(
+                    text,
+                    id: teamId,
+                    logo: logo,
+                  );
                 }
                 Navigator.of(dialogContext).pop();
               },
@@ -191,7 +202,14 @@ class FavoritesView extends StatelessWidget {
                     final teamId = int.tryParse(cleanTeam) != null
                         ? cleanTeam
                         : LocalStorageServiceImpl.knownTeamNameToId[cleanTeam.toLowerCase()];
-                    final teamLogo = UrlHelper.resolveTeamLogo(teamId, size: 48);
+                    final teamLogo = state.teamLogos[cleanTeam] ??
+                        (teamId != null ? state.teamLogos[teamId] : null) ??
+                        state.teamLogos[displayTitle] ??
+                        UrlHelper.resolveTeamLogo(
+                          teamId,
+                          size: 48,
+                          teamName: displayTitle,
+                        );
 
                     return Chip(
                       avatar: teamLogo != null
@@ -267,7 +285,9 @@ class FavoritesView extends StatelessWidget {
                       return cleanComp;
                     }();
 
-                    final logoUrl = UrlHelper.resolveChampionshipLogo(cleanComp, isDark: isDark) ??
+                    final logoUrl = state.competitionLogos[cleanComp] ??
+                        state.competitionLogos[displayTitle] ??
+                        UrlHelper.resolveChampionshipLogo(cleanComp, isDark: isDark) ??
                         UrlHelper.resolveChampionshipLogo(LeagueResolver.resolveId(cleanComp), isDark: isDark) ??
                         UrlHelper.resolveChampionshipLogo(LeagueResolver.resolveId(displayTitle), isDark: isDark);
 

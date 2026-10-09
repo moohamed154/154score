@@ -132,7 +132,12 @@ class MatchHeaderBanner extends StatelessWidget {
                   children: [
                     if (match.leagueLogo != null) ...[
                       AppImage(
-                        imageUrl: match.leagueLogo,
+                        imageUrl: UrlHelper.resolveChampionshipLogo(
+                          match.leagueId ??
+                              LeagueResolver.resolveId(match.leagueTitle),
+                          currentLogo: match.leagueLogo,
+                          isDark: isDark,
+                        ),
                         width: 18,
                         height: 18,
                         borderRadius: 4,

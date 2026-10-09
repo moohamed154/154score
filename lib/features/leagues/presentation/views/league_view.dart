@@ -107,6 +107,7 @@ class _LeagueViewState extends State<LeagueView>
                       context.read<FavoritesCubit>().toggleCompetition(
                         id: widget.leagueId,
                         name: title,
+                        logo: state.leagueLogo ?? widget.initialLogo,
                       );
                     },
                   );

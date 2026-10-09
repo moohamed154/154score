@@ -263,6 +263,7 @@ class TeamHeaderCard extends StatelessWidget {
                         context.read<FavoritesCubit>().toggleTeam(
                           name,
                           id: profile?.teamId,
+                          logo: logo,
                         );
                       },
                     );

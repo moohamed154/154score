@@ -736,6 +736,7 @@ class _StandingsViewState extends State<StandingsView> {
       id: item.id,
       name: item.name,
       slug: item.slug,
+      logo: item.logo,
     );
 
     // 3. Smooth transition: After spring bounce animation (300ms) completes,

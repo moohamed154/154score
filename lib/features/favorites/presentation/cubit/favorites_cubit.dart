@@ -6,6 +6,7 @@ import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/team_resolver.dart';
+import '../../../../core/utils/url_helper.dart';
 
 class FavoritesState extends Equatable {
   final List<String> favoriteTeams;
@@ -13,6 +14,8 @@ class FavoritesState extends Equatable {
   final List<String> favoriteMatches;
   final Map<String, String> competitionTitles;
   final Map<String, String> teamTitles;
+  final Map<String, String> teamLogos;
+  final Map<String, String> competitionLogos;
   final Set<String> cachedFavCompetitionKeys;
   final Set<String> cachedFavTeamKeys;
 
@@ -22,6 +25,8 @@ class FavoritesState extends Equatable {
     this.favoriteMatches = const [],
     this.competitionTitles = const {},
     this.teamTitles = const {},
+    this.teamLogos = const {},
+    this.competitionLogos = const {},
     this.cachedFavCompetitionKeys = const {},
     this.cachedFavTeamKeys = const {},
   });
@@ -118,11 +123,15 @@ class FavoritesState extends Equatable {
     List<String>? favoriteMatches,
     Map<String, String>? competitionTitles,
     Map<String, String>? teamTitles,
+    Map<String, String>? teamLogos,
+    Map<String, String>? competitionLogos,
   }) {
     final nextTeams = favoriteTeams ?? this.favoriteTeams;
     final nextCompetitions = favoriteCompetitions ?? this.favoriteCompetitions;
     final nextTitles = competitionTitles ?? this.competitionTitles;
     final nextTeamTitles = teamTitles ?? this.teamTitles;
+    final nextTeamLogos = teamLogos ?? this.teamLogos;
+    final nextCompetitionLogos = competitionLogos ?? this.competitionLogos;
 
     final shouldRebuildCompKeys =
         favoriteCompetitions != null || competitionTitles != null;
@@ -135,6 +144,8 @@ class FavoritesState extends Equatable {
       favoriteMatches: favoriteMatches ?? this.favoriteMatches,
       competitionTitles: nextTitles,
       teamTitles: nextTeamTitles,
+      teamLogos: nextTeamLogos,
+      competitionLogos: nextCompetitionLogos,
       cachedFavCompetitionKeys: shouldRebuildCompKeys
           ? _buildCompetitionKeys(nextCompetitions, nextTitles)
           : cachedFavCompetitionKeys,
@@ -282,6 +293,8 @@ class FavoritesState extends Equatable {
     favoriteMatches,
     competitionTitles,
     teamTitles,
+    teamLogos,
+    competitionLogos,
   ];
 }
 
@@ -300,6 +313,8 @@ class FavoritesCubit extends Cubit<FavoritesState> {
         favoriteMatches: _storage.getFavoriteMatches(),
         competitionTitles: _storage.getFavoriteCompetitionTitles(),
         teamTitles: _storage.getFavoriteTeamTitles(),
+        teamLogos: _storage.getFavoriteTeamLogos(),
+        competitionLogos: _storage.getFavoriteCompetitionLogos(),
       ),
     );
   }
@@ -316,7 +331,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     return state.isFavoriteMatch(matchId);
   }
 
-  Future<void> toggleTeam(String teamName, {String? id}) async {
+  Future<void> toggleTeam(String teamName, {String? id, String? logo}) async {
     final cleanName = teamName.trim();
     final cleanId = (id != null && id.trim().isNotEmpty)
         ? id.trim()
@@ -328,6 +343,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     // Optimistic UI update: 0ms lag
     final updatedList = List<String>.from(state.favoriteTeams);
     final updatedTitles = Map<String, String>.from(state.teamTitles);
+    final updatedLogos = Map<String, String>.from(state.teamLogos);
 
     if (wasFav) {
       updatedList.removeWhere((item) {
@@ -354,8 +370,28 @@ class FavoritesCubit extends Cubit<FavoritesState> {
       } else if (cleanName.isNotEmpty && !updatedList.contains(cleanName)) {
         updatedList.add(cleanName);
       }
+
+      final resolvedLogo = (logo != null && logo.trim().isNotEmpty)
+          ? logo.trim()
+          : UrlHelper.resolveTeamLogo(cleanId, teamName: cleanName);
+      if (resolvedLogo != null && resolvedLogo.isNotEmpty) {
+        if (cleanId != null && cleanId.isNotEmpty) {
+          updatedLogos[cleanId] = resolvedLogo;
+        }
+        if (cleanName.isNotEmpty) {
+          updatedLogos[cleanName] = resolvedLogo;
+        }
+        unawaited(_storage.registerTeamLogos({
+          if (cleanId != null && cleanId.isNotEmpty) cleanId: resolvedLogo,
+          if (cleanName.isNotEmpty) cleanName: resolvedLogo,
+        }));
+      }
     }
-    emit(state.copyWith(favoriteTeams: updatedList, teamTitles: updatedTitles));
+    emit(state.copyWith(
+      favoriteTeams: updatedList,
+      teamTitles: updatedTitles,
+      teamLogos: updatedLogos,
+    ));
 
     await _storage.toggleFavoriteTeam(teamName, id: cleanId);
     loadFavorites();
@@ -379,6 +415,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     String? id,
     String? name,
     String? slug,
+    String? logo,
   }) async {
     final cleanId = id?.trim();
     final lookupTitle = (cleanId != null && cleanId.isNotEmpty)
@@ -401,6 +438,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     // Optimistic UI update: 0ms lag
     final updatedList = List<String>.from(state.favoriteCompetitions);
     final updatedTitles = Map<String, String>.from(state.competitionTitles);
+    final updatedLogos = Map<String, String>.from(state.competitionLogos);
 
     final canonicalName = effectiveName.isNotEmpty
         ? effectiveName
@@ -450,11 +488,33 @@ class FavoritesCubit extends Cubit<FavoritesState> {
       if (cleanId != null && cleanId.isNotEmpty && canonicalName.isNotEmpty) {
         updatedTitles[cleanId] = canonicalName;
       }
+
+      final resolvedLogo = (logo != null && logo.trim().isNotEmpty)
+          ? logo.trim()
+          : (UrlHelper.resolveChampionshipLogo(cleanId ?? canonicalName) ??
+             UrlHelper.resolveChampionshipLogo(canonicalName));
+      if (resolvedLogo != null && resolvedLogo.isNotEmpty) {
+        final logoMap = <String, String>{};
+        if (cleanId != null && cleanId.isNotEmpty) {
+          logoMap[cleanId] = resolvedLogo;
+          updatedLogos[cleanId] = resolvedLogo;
+        }
+        if (canonicalName.isNotEmpty) {
+          logoMap[canonicalName] = resolvedLogo;
+          updatedLogos[canonicalName] = resolvedLogo;
+        }
+        if (effectiveName.isNotEmpty) {
+          logoMap[effectiveName] = resolvedLogo;
+          updatedLogos[effectiveName] = resolvedLogo;
+        }
+        unawaited(_storage.registerCompetitionLogos(logoMap));
+      }
     }
 
     emit(state.copyWith(
       favoriteCompetitions: updatedList,
       competitionTitles: updatedTitles,
+      competitionLogos: updatedLogos,
     ));
 
     await _storage.setFavoriteCompetitions(updatedList);

@@ -123,7 +123,12 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                           )
                         else
                           AppImage(
-                            imageUrl: widget.league.leagueLogo,
+                            imageUrl: UrlHelper.resolveChampionshipLogo(
+                              widget.league.leagueId ??
+                                  LeagueResolver.resolveId(widget.league.leagueTitle),
+                              currentLogo: widget.league.leagueLogo,
+                              isDark: isDark,
+                            ),
                             width: 24,
                             height: 24,
                             borderRadius: 4,
@@ -178,6 +183,7 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                           context.read<FavoritesCubit>().toggleCompetition(
                             id: widget.league.leagueId,
                             name: widget.league.leagueTitle,
+                            logo: widget.league.leagueLogo,
                           );
                         },
                       );

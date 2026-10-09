@@ -851,6 +851,7 @@ class MatchCard extends StatelessWidget {
                           context.read<FavoritesCubit>().toggleTeam(
                                 match.team1,
                                 id: match.team1Id,
+                                logo: match.team1Logo,
                               );
                         },
                       ),
@@ -858,6 +859,7 @@ class MatchCard extends StatelessWidget {
                         context.read<FavoritesCubit>().toggleTeam(
                               match.team1,
                               id: match.team1Id,
+                              logo: match.team1Logo,
                             );
                       },
                     ),
@@ -892,6 +894,7 @@ class MatchCard extends StatelessWidget {
                           context.read<FavoritesCubit>().toggleTeam(
                                 match.team2,
                                 id: match.team2Id,
+                                logo: match.team2Logo,
                               );
                         },
                       ),
@@ -899,6 +902,7 @@ class MatchCard extends StatelessWidget {
                         context.read<FavoritesCubit>().toggleTeam(
                               match.team2,
                               id: match.team2Id,
+                              logo: match.team2Logo,
                             );
                       },
                     ),
@@ -969,6 +973,7 @@ class MatchCard extends StatelessWidget {
                             context.read<FavoritesCubit>().toggleCompetition(
                               id: match.leagueId,
                               name: match.leagueTitle,
+                              logo: match.leagueLogo,
                             );
                           },
                         ),
@@ -976,6 +981,7 @@ class MatchCard extends StatelessWidget {
                           context.read<FavoritesCubit>().toggleCompetition(
                             id: match.leagueId,
                             name: match.leagueTitle,
+                            logo: match.leagueLogo,
                           );
                         },
                       ),
