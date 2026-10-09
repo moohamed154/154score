@@ -43,7 +43,23 @@ class _SettingsViewState extends State<SettingsView> {
     super.dispose();
   }
 
+  static const String _kDeveloperPassword = 'MOhamed_2002';
+
   void _onLogoTap(BuildContext context) {
+    if (_isDeveloperModeUnlocked) {
+      DeveloperToolsSheet.show(
+        context,
+        onLockDeveloperMode: () {
+          if (mounted) {
+            setState(() {
+              _isDeveloperModeUnlocked = false;
+            });
+          }
+        },
+      );
+      return;
+    }
+
     _tapResetTimer?.cancel();
     _tapResetTimer = Timer(const Duration(seconds: 2), () {
       _logoTapCount = 0;
@@ -61,42 +77,246 @@ class _SettingsViewState extends State<SettingsView> {
             AppLocalizations.of(context).isArabic
                 ? 'باقي $remaining نقرات لتفعيل أدوات المطور والتشخيص 🛠️'
                 : '$remaining more taps to activate Developer Mode 🛠️',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: const Color(0xFF1E293B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFF334155), width: 1),
           ),
           duration: const Duration(milliseconds: 900),
-          behavior: SnackBarBehavior.floating,
         ),
       );
     } else if (_logoTapCount >= 10) {
       _logoTapCount = 0;
       _tapResetTimer?.cancel();
-      HapticFeedback.heavyImpact();
-      setState(() {
-        _isDeveloperModeUnlocked = true;
-      });
-      sl<LocalStorageService>().setDeveloperModeEnabled(true);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).isArabic
-                ? '🎉 تم تفعيل أدوات المطور والتشخيص بنجاح!'
-                : '🎉 Developer Tools unlocked successfully!',
-          ),
-          backgroundColor: AppColors.uclGreen,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      DeveloperToolsSheet.show(
-        context,
-        onLockDeveloperMode: () {
-          if (mounted) {
-            setState(() {
-              _isDeveloperModeUnlocked = false;
-            });
-          }
-        },
-      );
+      _showDeveloperPasswordDialog(context);
     }
+  }
+
+  Future<void> _showDeveloperPasswordDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final isArabic = l10n.isArabic;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final controller = TextEditingController();
+    bool obscureText = true;
+    String? errorMessage;
+
+    await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            void verifyAndSubmit() {
+              final input = controller.text.trim();
+              if (input == _kDeveloperPassword) {
+                Navigator.of(dialogCtx).pop(true);
+              } else {
+                HapticFeedback.vibrate();
+                setDialogState(() {
+                  errorMessage = isArabic
+                      ? 'كلمة المرور غير صحيحة ❌'
+                      : 'Incorrect password ❌';
+                });
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor:
+                  isDark ? AppColors.darkCard : AppColors.lightCard,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                side: BorderSide(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.admin_panel_settings_rounded,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      isArabic ? 'أدوات المطور' : 'Developer Tools',
+                      style: AppTypography.getTitleMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isArabic
+                        ? 'يرجى إدخال كلمة مرور المطور لتفعيل القائمة:'
+                        : 'Enter the developer password to unlock:',
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller,
+                    obscureText: obscureText,
+                    autofocus: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => verifyAndSubmit(),
+                    onChanged: (_) {
+                      if (errorMessage != null) {
+                        setDialogState(() {
+                          errorMessage = null;
+                        });
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: isArabic ? 'كلمة المرور' : 'Password',
+                      prefixIcon:
+                          const Icon(Icons.lock_outline_rounded, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscureText
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            obscureText = !obscureText;
+                          });
+                        },
+                      ),
+                      errorText: errorMessage,
+                      filled: true,
+                      fillColor: isDark
+                          ? AppColors.darkBackground
+                          : AppColors.lightBackground,
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppDimensions.radiusMd),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppDimensions.radiusMd),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(false),
+                  child: Text(
+                    isArabic ? 'إلغاء' : 'Cancel',
+                    style: TextStyle(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ),
+                FilledButton(
+                  onPressed: verifyAndSubmit,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.radiusSm),
+                    ),
+                  ),
+                  child: Text(isArabic ? 'تأكيد' : 'Confirm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((unlocked) {
+      controller.dispose();
+      if (unlocked == true && mounted) {
+        HapticFeedback.heavyImpact();
+        setState(() {
+          _isDeveloperModeUnlocked = true;
+        });
+        sl<LocalStorageService>().setDeveloperModeEnabled(true);
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isArabic
+                        ? '🎉 تم تفعيل أدوات المطور والتشخيص بنجاح!'
+                        : '🎉 Developer Tools unlocked successfully!',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF1E293B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.primary, width: 1),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        DeveloperToolsSheet.show(
+          context,
+          onLockDeveloperMode: () {
+            if (mounted) {
+              setState(() {
+                _isDeveloperModeUnlocked = false;
+              });
+            }
+          },
+        );
+      }
+    });
   }
 
   @override
@@ -691,9 +911,27 @@ class _SettingsViewState extends State<SettingsView> {
                       setState(() {
                         _isDeveloperModeUnlocked = false;
                       });
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('🔒 تم قفل وإخفاء أدوات المطور.'),
+                        SnackBar(
+                          content: Text(
+                            isArabic
+                                ? '🔒 تم قفل وإخفاء أدوات المطور.'
+                                : '🔒 Developer Mode locked and hidden.',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          backgroundColor: const Color(0xFF1E293B),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(
+                              color: AppColors.liveRed,
+                              width: 1,
+                            ),
+                          ),
                         ),
                       );
                     },

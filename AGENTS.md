@@ -175,6 +175,7 @@ For low-level architectural blueprints and diagrams, see:
 * **Theme Mode**: Dark, Light, System default.
 * **Language**: Arabic (primary), English.
 * **Notification Preferences**: Toggles per alert type (goals, kick-off, news).
+* **Developer Tools & Diagnostics Security**: Developer mode is protected and hidden by default. Unlocking it requires tapping the app brand logo 10 times in Settings, followed by entering the master developer password (`MOhamed_2002`). Unlocking displays the developer and diagnostics suite; locking hides it until re-authenticated.
 
 ### 13. Onboarding & First-Launch Setup (`features/onboarding`)
 * **Branded Chips**: All team and league selection chips in the onboarding flow must display crisp logos alongside their titles (`UrlHelper.resolveTeamLogo` for clubs and `UrlHelper.resolveChampionshipLogo` with `isDark` adaptation for leagues/tournaments).
