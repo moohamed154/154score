@@ -11,6 +11,8 @@ class AppUpdateDto extends AppUpdateEntity {
     required super.downloadUrlAndroid,
     required super.downloadUrlIos,
     required super.releaseNotes,
+    super.releaseNotesAr,
+    super.releaseNotesEn,
     super.fileSizeBytes,
   });
 
@@ -18,6 +20,20 @@ class AppUpdateDto extends AppUpdateEntity {
     // Safely extract nested data map whether it is Map<String, dynamic> or Map<dynamic, dynamic>
     final rawData = json['data'];
     final Map<dynamic, dynamic> map = (rawData is Map) ? rawData : json;
+
+    final releaseNotesAr = (map['release_notes_ar'] ??
+            map['releaseNotesAr'] ??
+            '')
+        .toString();
+    final releaseNotesEn = (map['release_notes_en'] ??
+            map['releaseNotesEn'] ??
+            '')
+        .toString();
+    final generalNotes = (map['release_notes'] ??
+            map['releaseNotes'] ??
+            map['message'] ??
+            (releaseNotesAr.isNotEmpty ? releaseNotesAr : releaseNotesEn))
+        .toString();
 
     return AppUpdateDto(
       latestVersion: (map['latest_version'] ?? map['latestVersion'] ?? '1.0.0').toString(),
@@ -53,12 +69,9 @@ class AppUpdateDto extends AppUpdateEntity {
               map['update_url_ios'] ??
               '')
           .toString(),
-      releaseNotes: (map['release_notes'] ??
-              map['releaseNotes'] ??
-              map['release_notes_ar'] ??
-              map['message'] ??
-              '')
-          .toString(),
+      releaseNotes: generalNotes,
+      releaseNotesAr: releaseNotesAr,
+      releaseNotesEn: releaseNotesEn,
       fileSizeBytes: int.tryParse(
             (map['file_size_bytes'] ?? map['fileSizeBytes'] ?? 0).toString(),
           ) ??
@@ -76,6 +89,8 @@ class AppUpdateDto extends AppUpdateEntity {
     'download_url_android': downloadUrlAndroid,
     'download_url_ios': downloadUrlIos,
     'release_notes': releaseNotes,
+    'release_notes_ar': releaseNotesAr,
+    'release_notes_en': releaseNotesEn,
     'file_size_bytes': fileSizeBytes,
   };
 }

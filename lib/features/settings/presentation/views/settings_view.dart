@@ -14,6 +14,9 @@ import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../../onboarding/domain/repositories/onboarding_repository.dart';
+import '../../../app_update/presentation/viewmodels/app_update_cubit.dart';
+import '../../../app_update/presentation/viewmodels/app_update_state.dart';
+import '../../../app_update/presentation/views/app_update_dialog.dart';
 import '../cubit/settings_cubits.dart';
 import '../widgets/debug_console_sheet.dart';
 import '../widgets/developer_tools_sheet.dart';
@@ -163,6 +166,92 @@ class _SettingsViewState extends State<SettingsView> {
               });
             }
           },
+        ),
+      );
+    }
+  }
+
+  Future<void> _onCheckForUpdate(BuildContext context) async {
+    final cubit = context.read<AppUpdateCubit>();
+    unawaited(HapticFeedback.selectionClick());
+
+    await cubit.checkForUpdate();
+    if (!context.mounted) return;
+
+    final state = cubit.state;
+    if (state.hasUpdate) {
+      unawaited(AppUpdateDialog.show(context));
+    } else if (state.status == AppUpdateStatus.upToDate) {
+      final isArabic = AppLocalizations.of(context).isArabic;
+      final ver = state.currentAppVersion.isNotEmpty ? state.currentAppVersion : '1.0.1';
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isArabic
+                      ? 'أنت تستخدم أحدث إصدار من التطبيق ($ver) ✅'
+                      : 'You are using the latest version ($ver) ✅',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1E293B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: AppColors.primary, width: 1),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else if (state.status == AppUpdateStatus.initial) {
+      final isArabic = AppLocalizations.of(context).isArabic;
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.info_outline_rounded,
+                color: Colors.orangeAccent,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isArabic
+                      ? 'تعذر التحقق من التحديثات، يرجى التأكد من اتصال الإنترنت'
+                      : 'Could not check for updates. Please verify your connection.',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1E293B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.orangeAccent, width: 1),
+          ),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -813,12 +902,19 @@ class _SettingsViewState extends State<SettingsView> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '154Score v1.0.0',
-                            style: AppTypography.getBodyLarge(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(fontWeight: FontWeight.w700),
+                          BlocBuilder<AppUpdateCubit, AppUpdateState>(
+                            builder: (context, updateState) {
+                              final ver = updateState.currentAppVersion.isNotEmpty
+                                  ? updateState.currentAppVersion
+                                  : '1.0.1';
+                              return Text(
+                                '154Score v$ver',
+                                style: AppTypography.getBodyLarge(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(fontWeight: FontWeight.w700),
+                              );
+                            },
                           ),
                           Text(
                             'Powered by 154Dev',
@@ -839,6 +935,122 @@ class _SettingsViewState extends State<SettingsView> {
                     isDark: isDark,
                     isArabic: isArabic,
                   ).copyWith(height: 1.4),
+                ),
+                const SizedBox(height: 16),
+                Divider(
+                  height: 1,
+                  thickness: 0.8,
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+                const SizedBox(height: 10),
+                BlocBuilder<AppUpdateCubit, AppUpdateState>(
+                  builder: (context, updateState) {
+                    final isChecking = updateState.isChecking;
+                    return InkWell(
+                      onTap: isChecking ? null : () => _onCheckForUpdate(context),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(
+                                child: isChecking
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.system_update_rounded,
+                                        size: 20,
+                                        color: AppColors.primary,
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    isArabic ? 'البحث عن تحديثات' : 'Check for Updates',
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? AppColors.darkTextPrimary
+                                          : const Color(0xFF0F172A),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    isChecking
+                                        ? (isArabic
+                                            ? 'جاري التحقق من التحديثات...'
+                                            : 'Checking for updates...')
+                                        : (updateState.hasUpdate
+                                            ? (isArabic
+                                                ? 'تحديث جديد متوفر!'
+                                                : 'New update available!')
+                                            : (isArabic
+                                                ? 'أنت تستخدم أحدث إصدار'
+                                                : 'App is up to date')),
+                                    style: TextStyle(
+                                      color: updateState.hasUpdate
+                                          ? AppColors.primary
+                                          : (isDark
+                                              ? AppColors.darkTextSecondary
+                                              : const Color(0xFF64748B)),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (updateState.hasUpdate)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  isArabic ? 'تحديث' : 'Update',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              )
+                            else
+                              Icon(
+                                isArabic
+                                    ? Icons.chevron_left_rounded
+                                    : Icons.chevron_right_rounded,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : const Color(0xFF64748B),
+                                size: 20,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

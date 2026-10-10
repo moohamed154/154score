@@ -10,6 +10,8 @@ class AppUpdateEntity extends Equatable {
   final String downloadUrlAndroid;
   final String downloadUrlIos;
   final String releaseNotes;
+  final String releaseNotesAr;
+  final String releaseNotesEn;
   final int fileSizeBytes;
 
   const AppUpdateEntity({
@@ -22,8 +24,23 @@ class AppUpdateEntity extends Equatable {
     required this.downloadUrlAndroid,
     required this.downloadUrlIos,
     required this.releaseNotes,
+    this.releaseNotesAr = '',
+    this.releaseNotesEn = '',
     this.fileSizeBytes = 0,
   });
+
+  /// Get localized release notes based on current app language
+  String localizedReleaseNotes(bool isArabic) {
+    if (isArabic) {
+      if (releaseNotesAr.trim().isNotEmpty) return releaseNotesAr;
+      if (releaseNotes.trim().isNotEmpty) return releaseNotes;
+      return releaseNotesEn;
+    } else {
+      if (releaseNotesEn.trim().isNotEmpty) return releaseNotesEn;
+      if (releaseNotes.trim().isNotEmpty) return releaseNotes;
+      return releaseNotesAr;
+    }
+  }
 
   /// Check if the server version is newer than current app version
   bool hasUpdate({
@@ -98,6 +115,8 @@ class AppUpdateEntity extends Equatable {
     downloadUrlAndroid,
     downloadUrlIos,
     releaseNotes,
+    releaseNotesAr,
+    releaseNotesEn,
     fileSizeBytes,
   ];
 }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../viewmodels/app_update_cubit.dart';
 import '../viewmodels/app_update_state.dart';
 
@@ -43,6 +44,7 @@ class AppUpdateDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isArabic = AppLocalizations.of(context).isArabic;
 
     return BlocBuilder<AppUpdateCubit, AppUpdateState>(
       builder: (context, state) {
@@ -56,10 +58,12 @@ class AppUpdateDialog extends StatelessWidget {
         final textColor = isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A);
         final mutedColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
 
+        final releaseNotesText = updateInfo?.localizedReleaseNotes(isArabic) ?? '';
+
         return PopScope(
           canPop: !isCompulsory && !isDownloading,
           child: Directionality(
-            textDirection: TextDirection.rtl,
+            textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
             child: Material(
               type: MaterialType.transparency,
               child: Dialog(
@@ -98,8 +102,8 @@ class AppUpdateDialog extends StatelessWidget {
                             children: [
                               Text(
                                 isCompulsory
-                                    ? 'تحديث إجباري مطلوب'
-                                    : 'تحديث جديد متوفر',
+                                    ? (isArabic ? 'تحديث إجباري مطلوب' : 'Mandatory Update Required')
+                                    : (isArabic ? 'تحديث جديد متوفر' : 'New Update Available'),
                                 style: TextStyle(
                                   color: textColor,
                                   fontSize: 17,
@@ -108,7 +112,9 @@ class AppUpdateDialog extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'الإصدار ${updateInfo?.latestVersion ?? ''} (الحالي: ${state.currentAppVersion})',
+                                isArabic
+                                    ? 'الإصدار ${updateInfo?.latestVersion ?? ''} (الحالي: ${state.currentAppVersion})'
+                                    : 'Version ${updateInfo?.latestVersion ?? ''} (Current: ${state.currentAppVersion})',
                                 style: TextStyle(
                                   color: mutedColor,
                                   fontSize: 12,
@@ -123,11 +129,11 @@ class AppUpdateDialog extends StatelessWidget {
                     const SizedBox(height: 18),
 
                     // 2. Release Notes
-                    if ((updateInfo?.releaseNotes.isNotEmpty ?? false) &&
+                    if (releaseNotesText.trim().isNotEmpty &&
                         !isDownloading &&
                         state.status != AppUpdateStatus.downloadFailed) ...[
                       Text(
-                        'ما الجديد في هذا التحديث:',
+                        isArabic ? 'ما الجديد في هذا التحديث:' : "What's new in this update:",
                         style: TextStyle(
                           color: textColor,
                           fontSize: 13,
@@ -148,7 +154,7 @@ class AppUpdateDialog extends StatelessWidget {
                         child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
                           child: Text(
-                            updateInfo!.releaseNotes,
+                            releaseNotesText,
                             style: TextStyle(
                               color: isDark
                                   ? const Color(0xFFCBD5E1)
@@ -190,7 +196,7 @@ class AppUpdateDialog extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            _formatProgressBytes(state.receivedBytes, state.totalBytes),
+                            _formatProgressBytes(state.receivedBytes, state.totalBytes, isArabic),
                             style: TextStyle(
                               color: mutedColor,
                               fontSize: 12,
@@ -256,7 +262,7 @@ class AppUpdateDialog extends StatelessWidget {
                               ),
                               onPressed: () => Navigator.of(context).pop(),
                               child: Text(
-                                'لاحقاً',
+                                isArabic ? 'لاحقاً' : 'Later',
                                 style: TextStyle(
                                   color: mutedColor,
                                   fontSize: 14,
@@ -295,7 +301,7 @@ class AppUpdateDialog extends StatelessWidget {
                               }
                             },
                             child: Text(
-                              _getActionTitle(state),
+                              _getActionTitle(state, isArabic),
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -330,21 +336,22 @@ class AppUpdateDialog extends StatelessWidget {
     return AppColors.primary;
   }
 
-  static String _getActionTitle(AppUpdateState state) {
-    if (state.isDownloading) return 'جاري التحميل...';
-    if (state.status == AppUpdateStatus.readyToInstall) return 'تثبيت الآن';
-    if (state.status == AppUpdateStatus.installFailed) return 'إعادة محاولة التثبيت';
-    if (state.status == AppUpdateStatus.downloadFailed) return 'إعادة المحاولة';
-    return 'تحديث الآن';
+  static String _getActionTitle(AppUpdateState state, bool isArabic) {
+    if (state.isDownloading) return isArabic ? 'جاري التحميل...' : 'Downloading...';
+    if (state.status == AppUpdateStatus.readyToInstall) return isArabic ? 'تثبيت الآن' : 'Install Now';
+    if (state.status == AppUpdateStatus.installFailed) return isArabic ? 'إعادة محاولة التثبيت' : 'Retry Install';
+    if (state.status == AppUpdateStatus.downloadFailed) return isArabic ? 'إعادة المحاولة' : 'Retry';
+    return isArabic ? 'تحديث الآن' : 'Update Now';
   }
 
-  static String _formatProgressBytes(int received, int total) {
+  static String _formatProgressBytes(int received, int total, bool isArabic) {
+    final unit = isArabic ? 'ميجابايت' : 'MB';
     if (total <= 0) {
       final receivedMb = (received / (1024 * 1024)).toStringAsFixed(1);
-      return '$receivedMb ميجابايت';
+      return '$receivedMb $unit';
     }
     final receivedMb = (received / (1024 * 1024)).toStringAsFixed(1);
     final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
-    return '$receivedMb / $totalMb ميجابايت';
+    return '$receivedMb / $totalMb $unit';
   }
 }
