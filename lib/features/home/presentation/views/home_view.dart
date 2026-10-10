@@ -21,6 +21,9 @@ import '../../../matches/presentation/widgets/date_navigation_buttons.dart';
 import '../../../matches/presentation/widgets/league_section_widget.dart';
 import '../../../matches/presentation/widgets/match_filter_bottom_sheet.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
+import '../../../app_update/presentation/viewmodels/app_update_cubit.dart';
+import '../../../app_update/presentation/viewmodels/app_update_state.dart';
+import '../../../app_update/presentation/views/app_update_dialog.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -50,6 +53,17 @@ class _HomeViewState extends State<HomeView> {
     if (matchesBloc.state.status == MatchesStatus.initial) {
       matchesBloc.add(LoadMatchesEvent(date: selected));
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final updateCubit = context.read<AppUpdateCubit>();
+        if (updateCubit.state.hasUpdate) {
+          AppUpdateDialog.show(context);
+        } else {
+          updateCubit.checkForUpdate();
+        }
+      }
+    });
   }
 
   @override
@@ -221,6 +235,13 @@ class _HomeViewState extends State<HomeView> {
 
       body: MultiBlocListener(
         listeners: [
+          BlocListener<AppUpdateCubit, AppUpdateState>(
+            listenWhen: (prev, curr) =>
+                prev.status != curr.status && curr.hasUpdate,
+            listener: (context, state) {
+              AppUpdateDialog.show(context);
+            },
+          ),
           BlocListener<FavoritesCubit, FavoritesState>(
             listener: (context, favState) {
               final bloc = context.read<MatchesBloc>();

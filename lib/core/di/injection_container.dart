@@ -73,6 +73,11 @@ import '../../features/maintenance/data/repositories/maintenance_repository_impl
 import '../../features/maintenance/domain/repositories/maintenance_repository.dart';
 import '../../features/maintenance/presentation/viewmodels/maintenance_cubit.dart';
 
+import '../../features/app_update/data/datasources/app_update_remote_datasource.dart';
+import '../../features/app_update/data/repositories/app_update_repository_impl.dart';
+import '../../features/app_update/domain/repositories/app_update_repository.dart';
+import '../../features/app_update/presentation/viewmodels/app_update_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -126,6 +131,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<PlayerRemoteDataSource>(
     () => PlayerRemoteDataSourceImpl(sl()),
   );
+  sl.registerLazySingleton<AppUpdateRemoteDataSource>(
+    () => AppUpdateRemoteDataSourceImpl(apiClient: sl()),
+  );
 
   // 3. Repositories
   sl.registerLazySingleton<MatchesRepository>(
@@ -153,6 +161,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<SearchRepository>(() => SearchRepository(sl()));
   sl.registerLazySingleton<NotificationsRepository>(
     () => NotificationsRepositoryImpl(apiClient: sl(), localStorage: sl()),
+  );
+  sl.registerLazySingleton<AppUpdateRepository>(
+    () => AppUpdateRepositoryImpl(remoteDataSource: sl()),
   );
 
   // 4. ViewModels / Blocs / Cubits
@@ -257,4 +268,11 @@ Future<void> initDependencies() async {
     () => MaintenanceRepositoryImpl(sl()),
   );
   sl.registerFactory<MaintenanceCubit>(() => MaintenanceCubit(sl()));
+
+  sl.registerFactory<AppUpdateCubit>(
+    () => AppUpdateCubit(
+      appUpdateRepository: sl(),
+      dio: sl<ApiClient>().dio,
+    ),
+  );
 }

@@ -20,6 +20,7 @@ import '../features/settings/presentation/cubit/settings_cubits.dart';
 import '../features/standings/presentation/bloc/standings_bloc.dart';
 import '../features/transfers/presentation/bloc/transfers_bloc.dart';
 import '../features/videos/presentation/bloc/videos_bloc.dart';
+import '../features/app_update/presentation/viewmodels/app_update_cubit.dart';
 import 'router/app_router.dart';
 
 import '../core/websocket/websocket_service.dart';
@@ -114,6 +115,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<FavoritesCubit>(create: (_) => sl<FavoritesCubit>()),
         BlocProvider<TimezoneCubit>(create: (_) => sl<TimezoneCubit>()),
         BlocProvider<NewsLanguageCubit>(create: (_) => sl<NewsLanguageCubit>()),
+        BlocProvider<AppUpdateCubit>(create: (_) => sl<AppUpdateCubit>()),
       ],
       child: ForegroundNotificationListener(
         child: BlocBuilder<ThemeCubit, ThemeMode>(

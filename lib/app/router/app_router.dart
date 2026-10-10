@@ -60,6 +60,8 @@ Page<dynamic> _buildCupertinoPage({
 class AppRouter {
   AppRouter._();
 
+  static GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
+
   static String? _pendingRoute;
 
   /// Retrieves and clears any pending route queued during splash / launch.
