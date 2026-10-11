@@ -62,6 +62,24 @@ class ScoreHelper {
         lower.contains('break');
   }
 
+  static bool isHalftimeStatus(String? status, [String? statusCode]) {
+    final code = (statusCode ?? '').trim().toUpperCase();
+    if (code == 'HALF_TIME' || code == 'HT') return true;
+    if (status == null) return false;
+    final lower = status.toLowerCase();
+    return lower.contains('استراحة') ||
+        lower.contains('break') ||
+        lower.contains('half time');
+  }
+
+  static bool isExtraTimeStatus(String? status, [String? statusCode]) {
+    final code = (statusCode ?? '').trim().toUpperCase();
+    if (code == 'EXTRA_TIME' || code == 'ET') return true;
+    if (status == null) return false;
+    final lower = status.toLowerCase();
+    return lower.contains('إضافي') || lower.contains('extra time');
+  }
+
   static bool isFinishedStatus(String? status, [String? statusCode]) {
     if (isCancelledOrPostponed(status, statusCode)) return false;
     if (status == null) return false;

@@ -61,9 +61,26 @@
             android:stopWithTask="false"
             android:exported="false" />
 
+        <!-- Stop Live Match Tracking Action Receiver -->
+        <receiver
+            android:name=".liveactivity.StopTrackingReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.hamdy.app154score.ACTION_STOP_TRACKING" />
+            </intent-filter>
+        </receiver>
 
-
-        <!-- Firebase Cloud Messaging Default Configuration -->
+        <!-- Home Screen Live Match App Widget Provider -->
+        <receiver
+            android:name=".liveactivity.LiveMatchWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_live_match_info" />
+        </receiver>        <!-- Firebase Cloud Messaging Default Configuration -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="match_notifications_v3" />

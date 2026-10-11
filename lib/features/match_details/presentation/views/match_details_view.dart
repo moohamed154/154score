@@ -51,6 +51,8 @@ import '../../../leagues/presentation/bloc/league_bloc.dart';
 import '../../../leagues/presentation/bloc/league_event.dart';
 import '../../../leagues/presentation/bloc/league_state.dart';
 import '../../../leagues/presentation/widgets/top_scorers_table.dart';
+import '../../../live_activity/presentation/cubit/live_activity_cubit.dart';
+import '../../../live_activity/presentation/widgets/live_activity_toggle_button.dart';
 
 // Filter for Events tab: الأبرز (Highlights) vs كل الأحداث (All Events)
 enum _EventFilter { highlights, all }
@@ -950,6 +952,29 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               );
             },
           ),
+          BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
+            builder: (context, state) {
+              final activeMatch = _resolveActiveMatch(
+                fallbackMatch: fallbackMatch,
+                liveFromMatches: liveFromMatches,
+                state: state,
+              );
+              return LiveActivityToggleButton(
+                match: activeMatch,
+                liveScore1: activeMatch.score1,
+                liveScore2: activeMatch.score2,
+                liveMinute: activeMatch.minute ??
+                    state.liveMinute ??
+                    liveFromMatches?.minute,
+                liveStatus: activeMatch.status,
+                liveStatusCode: activeMatch.statusCode,
+                livePeriod: activeMatch.period ??
+                    state.livePeriod ??
+                    liveFromMatches?.period,
+                compact: true,
+              );
+            },
+          ),
           _isSharing
               ? const Center(
                   child: Padding(
@@ -986,7 +1011,24 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         child: Container(
           color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
           child: BlocConsumer<MatchDetailsBloc, MatchDetailsState>(
-            listener: (context, state) {},
+            listener: (context, state) {
+              final activeMatch = _resolveActiveMatch(
+                fallbackMatch: fallbackMatch,
+                liveFromMatches: liveFromMatches,
+                state: state,
+              );
+              context.read<LiveActivityCubit>().updateTracking(
+                match: activeMatch,
+                liveScore1: activeMatch.score1,
+                liveScore2: activeMatch.score2,
+                liveMinute: activeMatch.minute ?? state.liveMinute,
+                liveStatus: activeMatch.status,
+                liveStatusCode: activeMatch.statusCode,
+                livePeriod: activeMatch.period ?? state.livePeriod,
+                penaltyScore1: activeMatch.penaltyScore1,
+                penaltyScore2: activeMatch.penaltyScore2,
+              );
+            },
             builder: (context, state) {
               final activeMatch = _resolveActiveMatch(
                 fallbackMatch: fallbackMatch,
@@ -1058,6 +1100,27 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                                 liveFromMatches?.period,
                             penaltyScore1: activeMatch.penaltyScore1,
                             penaltyScore2: activeMatch.penaltyScore2,
+                          ),
+                        ),
+
+                        // ── Lock Screen Live Activity Button ───────────────────────
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          child: Center(
+                            child: LiveActivityToggleButton(
+                              match: activeMatch,
+                              liveScore1: activeMatch.score1,
+                              liveScore2: activeMatch.score2,
+                              liveMinute: activeMatch.minute ??
+                                  state.liveMinute ??
+                                  liveFromMatches?.minute,
+                              liveStatus: activeMatch.status,
+                              liveStatusCode: activeMatch.statusCode,
+                              livePeriod: activeMatch.period ??
+                                  state.livePeriod ??
+                                  liveFromMatches?.period,
+                              compact: false,
+                            ),
                           ),
                         ),
 

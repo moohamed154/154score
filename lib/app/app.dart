@@ -21,6 +21,8 @@ import '../features/standings/presentation/bloc/standings_bloc.dart';
 import '../features/transfers/presentation/bloc/transfers_bloc.dart';
 import '../features/videos/presentation/bloc/videos_bloc.dart';
 import '../features/app_update/presentation/viewmodels/app_update_cubit.dart';
+import '../features/live_activity/presentation/cubit/live_activity_cubit.dart';
+import 'package:flutter/services.dart';
 import 'router/app_router.dart';
 
 import '../core/websocket/websocket_service.dart';
@@ -37,6 +39,15 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Listen to native lock screen notification/widget tap navigation
+    const MethodChannel('com.hamdy.app154score/navigation')
+        .setMethodCallHandler((call) async {
+      if (call.method == 'navigateToMatch' && call.arguments != null) {
+        AppRouter.navigateToMatch(call.arguments.toString());
+      }
+    });
+
     try {
       sl<WebSocketService>().connect();
     } catch (_) {}
@@ -116,6 +127,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<TimezoneCubit>(create: (_) => sl<TimezoneCubit>()),
         BlocProvider<NewsLanguageCubit>(create: (_) => sl<NewsLanguageCubit>()),
         BlocProvider<AppUpdateCubit>(create: (_) => sl<AppUpdateCubit>()),
+        BlocProvider<LiveActivityCubit>(create: (_) => sl<LiveActivityCubit>()),
       ],
       child: ForegroundNotificationListener(
         child: BlocBuilder<ThemeCubit, ThemeMode>(

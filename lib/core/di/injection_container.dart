@@ -78,6 +78,12 @@ import '../../features/app_update/data/repositories/app_update_repository_impl.d
 import '../../features/app_update/domain/repositories/app_update_repository.dart';
 import '../../features/app_update/presentation/viewmodels/app_update_cubit.dart';
 
+import '../../features/live_activity/data/datasources/live_activity_platform_datasource.dart';
+import '../../features/live_activity/data/datasources/live_activity_remote_datasource.dart';
+import '../../features/live_activity/data/repositories/live_activity_repository_impl.dart';
+import '../../features/live_activity/domain/repositories/live_activity_repository.dart';
+import '../../features/live_activity/presentation/cubit/live_activity_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -274,5 +280,23 @@ Future<void> initDependencies() async {
       appUpdateRepository: sl(),
       dio: sl<ApiClient>().dio,
     ),
+  );
+
+  // Live Activities & Lock Screen Score Tracking
+  sl.registerLazySingleton<LiveActivityPlatformDataSource>(
+    () => LiveActivityPlatformDataSourceImpl(),
+  );
+  sl.registerLazySingleton<LiveActivityRemoteDataSource>(
+    () => LiveActivityRemoteDataSourceImpl(apiClient: sl()),
+  );
+  sl.registerLazySingleton<LiveActivityRepository>(
+    () => LiveActivityRepositoryImpl(
+      platformDataSource: sl(),
+      remoteDataSource: sl(),
+      localStorage: sl(),
+    ),
+  );
+  sl.registerLazySingleton<LiveActivityCubit>(
+    () => LiveActivityCubit(repository: sl()),
   );
 }

@@ -164,4 +164,12 @@ class ApiEndpoints {
       '/notifications/match_reminder_background_task';
   static const String matchReminderBackgroundTaskFallback =
       '/api/notifications/match_reminder_background_task';
+
+  // 10. Live Activities & Lock Screen Operations
+  static const String liveActivityRegister = '/live-activity/register';
+  static const String liveActivityRegisterFallback = '/api/live-activity/register';
+  static const String liveActivityUpdateToken = '/live-activity/update-token';
+  static const String liveActivityUpdateTokenFallback = '/api/live-activity/update-token';
+  static const String liveActivityStop = '/live-activity/stop';
+  static const String liveActivityStopFallback = '/api/live-activity/stop';
 }

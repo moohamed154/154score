@@ -155,6 +155,32 @@ class ApiClient {
     }
   }
 
+  Future<Response> post(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      final response = await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+      return response;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      if (e is ServerException || e is NetworkException) {
+        rethrow;
+      }
+      throw ServerException('Unexpected error occurred: $e');
+    }
+  }
+
   Exception _handleDioError(DioException error) {
     final requestId = _extractRequestId(error);
     switch (error.type) {

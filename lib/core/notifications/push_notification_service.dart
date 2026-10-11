@@ -14,10 +14,18 @@ import '../security/security_signer.dart';
 import 'notification_service.dart';
 import 'notification_sync_service.dart';
 
+import 'package:flutter/services.dart';
+
 /// Top-level background message handler for FCM
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('[FCM] Background push received: ${message.messageId}');
+  if (message.data['type'] == 'live_activity_update') {
+    try {
+      const MethodChannel('com.hamdy.app154score/live_activity')
+          .invokeMethod('updateLiveActivity', message.data);
+    } catch (_) {}
+  }
 }
 
 /// Central service managing push notifications, OS permissions,
@@ -246,6 +254,14 @@ class PushNotificationService {
 
   /// Displays an in-app heads-up notification when received while the app is active in foreground.
   Future<void> handleForegroundPayload(Map<String, dynamic> data) async {
+    if (data['type'] == 'live_activity_update') {
+      try {
+        const MethodChannel('com.hamdy.app154score/live_activity')
+            .invokeMethod('updateLiveActivity', data);
+      } catch (_) {}
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final appLang = prefs.getString('app_language') ?? 'ar';
     final localizedTitle =

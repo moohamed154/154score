@@ -38,8 +38,10 @@ import flutter_local_notifications
     // 5. Setup native APNs MethodChannel directly on root FlutterViewController
     if let controller = window?.rootViewController as? FlutterViewController {
       setupApnsChannel(binaryMessenger: controller.binaryMessenger)
+      setupLiveActivityChannel(binaryMessenger: controller.binaryMessenger)
     } else if let registrar = self.registrar(forPlugin: "ApnsNotificationPlugin") {
       setupApnsChannel(binaryMessenger: registrar.messenger())
+      setupLiveActivityChannel(binaryMessenger: registrar.messenger())
     }
 
     return didLaunch
@@ -59,6 +61,40 @@ import flutter_local_notifications
         result(true)
       default:
         result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  private func setupLiveActivityChannel(binaryMessenger: FlutterBinaryMessenger) {
+    let liveActivityChannel = FlutterMethodChannel(name: "com.hamdy.app154score/live_activity", binaryMessenger: binaryMessenger)
+    if #available(iOS 16.1, *) {
+      LiveActivityManager.shared.setMethodChannel(liveActivityChannel)
+      liveActivityChannel.setMethodCallHandler { (call, result) in
+        switch call.method {
+        case "areActivitiesEnabled":
+          result(LiveActivityManager.shared.areActivitiesEnabled())
+        case "startLiveActivity":
+          let args = call.arguments as? [String: Any] ?? [:]
+          LiveActivityManager.shared.startLiveActivity(data: args, result: result)
+        case "updateLiveActivity":
+          let args = call.arguments as? [String: Any] ?? [:]
+          LiveActivityManager.shared.updateLiveActivity(data: args, result: result)
+        case "stopLiveActivity":
+          let args = call.arguments as? [String: Any] ?? [:]
+          LiveActivityManager.shared.stopLiveActivity(data: args, result: result)
+        case "getActiveActivities":
+          LiveActivityManager.shared.getActiveActivities(result: result)
+        default:
+          result(FlutterMethodNotImplemented)
+        }
+      }
+    } else {
+      liveActivityChannel.setMethodCallHandler { (call, result) in
+        if call.method == "areActivitiesEnabled" {
+          result(false)
+        } else {
+          result(FlutterError(code: "UNSUPPORTED_OS", message: "Live Activities require iOS 16.1+", details: nil))
+        }
       }
     }
   }
