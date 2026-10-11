@@ -19,6 +19,10 @@
 		A15400012E00000100000001 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A15400022E00000100000001 /* GoogleService-Info.plist */; };
 		A15400032E00000100000001 /* LiveMatchActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A15400042E00000100000001 /* LiveMatchActivityAttributes.swift */; };
 		A15400072E00000100000001 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A15400082E00000100000001 /* LiveActivityManager.swift */; };
+		B15400012E00000100000001 /* LiveMatchActivityWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15400042E00000100000001 /* LiveMatchActivityWidgetBundle.swift */; };
+		B15400022E00000100000001 /* LiveMatchActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15400052E00000100000001 /* LiveMatchActivityWidget.swift */; };
+		B15400032E00000100000001 /* LiveMatchActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A15400042E00000100000001 /* LiveMatchActivityAttributes.swift */; };
+		B15400092E00000100000001 /* LiveActivities.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B15400082E00000100000001 /* LiveActivities.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,6 +32,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
+		};
+		B154000A2E00000100000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B15400072E00000100000001;
+			remoteInfo = LiveActivities;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -40,6 +51,17 @@
 			files = (
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B154000B2E00000100000001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B15400092E00000100000001 /* LiveActivities.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -65,6 +87,10 @@
 		A15400022E00000100000001 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A15400042E00000100000001 /* LiveMatchActivityAttributes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LiveMatchActivityAttributes.swift; sourceTree = "<group>"; };
 		A15400082E00000100000001 /* LiveActivityManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
+		B15400042E00000100000001 /* LiveMatchActivityWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveMatchActivityWidgetBundle.swift; sourceTree = "<group>"; };
+		B15400052E00000100000001 /* LiveMatchActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveMatchActivityWidget.swift; sourceTree = "<group>"; };
+		B15400062E00000100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B15400082E00000100000001 /* LiveActivities.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LiveActivities.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +99,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B154000C2E00000100000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -102,6 +135,7 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
+				B154000D2E00000100000001 /* LiveActivities */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
@@ -112,6 +146,7 @@
 		97C146EF1CF9000F007C117D /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				B15400082E00000100000001 /* LiveActivities.appex */,
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 			);
@@ -135,6 +170,16 @@
 				A15400082E00000100000001 /* LiveActivityManager.swift */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		B154000D2E00000100000001 /* LiveActivities */ = {
+			isa = PBXGroup;
+			children = (
+				B15400042E00000100000001 /* LiveMatchActivityWidgetBundle.swift */,
+				B15400052E00000100000001 /* LiveMatchActivityWidget.swift */,
+				B15400062E00000100000001 /* Info.plist */,
+			);
+			path = LiveActivities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -167,10 +212,12 @@
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				B154000B2E00000100000001 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B15400102E00000100000001 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -179,6 +226,23 @@
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B15400072E00000100000001 /* LiveActivities */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B15400112E00000100000001 /* Build configuration list for PBXNativeTarget "LiveActivities" */;
+			buildPhases = (
+				B154000E2E00000100000001 /* Sources */,
+				B154000C2E00000100000001 /* Frameworks */,
+				B154000F2E00000100000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LiveActivities;
+			productName = LiveActivities;
+			productReference = B15400082E00000100000001 /* LiveActivities.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -190,6 +254,10 @@
 				LastUpgradeCheck = 1510;
 				ORGANIZATIONNAME = "";
 				TargetAttributes = {
+					B15400072E00000100000001 = {
+						CreatedOnToolsVersion = 15.0;
+						DevelopmentTeam = "0000000000";
+					};
 					331C8080294A63A400263BE5 = {
 						CreatedOnToolsVersion = 14.0;
 						TestTargetID = 97C146ED1CF9000F007C117D;
@@ -241,6 +309,13 @@
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				A15400012E00000100000001 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B154000F2E00000100000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -301,6 +376,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B154000E2E00000100000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B15400012E00000100000001 /* LiveMatchActivityWidgetBundle.swift in Sources */,
+				B15400022E00000100000001 /* LiveMatchActivityWidget.swift in Sources */,
+				B15400032E00000100000001 /* LiveMatchActivityAttributes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -308,6 +393,11 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		B15400102E00000100000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B15400072E00000100000001 /* LiveActivities */;
+			targetProxy = B154000A2E00000100000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -641,6 +731,76 @@
 			};
 			name = Release;
 		};
+		B15400122E00000100000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "0000000000";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LiveActivities/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hamdy.app154score.LiveActivities";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B15400132E00000100000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "0000000000";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LiveActivities/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hamdy.app154score.LiveActivities";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B15400142E00000100000001 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "0000000000";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LiveActivities/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hamdy.app154score.LiveActivities";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Profile;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -670,6 +830,16 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B15400112E00000100000001 /* Build configuration list for PBXNativeTarget "LiveActivities" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B15400122E00000100000001 /* Debug */,
+				B15400132E00000100000001 /* Release */,
+				B15400142E00000100000001 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

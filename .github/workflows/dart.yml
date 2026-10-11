@@ -56,6 +56,8 @@ jobs:
           APP_PATH=$(find build -name "Runner.app" -type d | head -n 1)
           if [ -n "$APP_PATH" ]; then
             echo "Found Runner.app at: $APP_PATH"
+            echo "Inspecting PlugIns directory:"
+            ls -la "$APP_PATH/PlugIns" || echo "PlugIns directory not yet populated"
             mkdir -p build/ios/ipa/Payload
             cp -R "$APP_PATH" build/ios/ipa/Payload/
             (cd build/ios/ipa && zip -r -y Runner.ipa Payload)
