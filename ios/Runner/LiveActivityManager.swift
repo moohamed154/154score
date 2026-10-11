@@ -1,5 +1,5 @@
 #if canImport(ActivityKit)
-import ActivityKit
+@preconcurrency import ActivityKit
 import Flutter
 import Foundation
 
