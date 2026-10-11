@@ -64,7 +64,6 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A15400022E00000100000001 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A15400042E00000100000001 /* LiveMatchActivityAttributes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LiveMatchActivityAttributes.swift; sourceTree = "<group>"; };
-		A15400062E00000100000001 /* LiveMatchActivityWidget.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LiveMatchActivityWidget.swift; sourceTree = "<group>"; };
 		A15400082E00000100000001 /* LiveActivityManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -133,7 +132,6 @@
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				A15400022E00000100000001 /* GoogleService-Info.plist */,
 				A15400042E00000100000001 /* LiveMatchActivityAttributes.swift */,
-				A15400062E00000100000001 /* LiveMatchActivityWidget.swift */,
 				A15400082E00000100000001 /* LiveActivityManager.swift */,
 			);
 			path = Runner;
