@@ -1,3 +1,4 @@
+#if canImport(ActivityKit) && canImport(WidgetKit) && canImport(SwiftUI)
 import ActivityKit
 import SwiftUI
 import WidgetKit
@@ -269,6 +270,7 @@ struct StatusBadgeView: View {
 }
 
 // ── Reusable Team Logo Component ──────────────────────────────────────────────
+@available(iOS 16.1, *)
 struct TeamLogoView: View {
     let url: String
     let fallbackText: String
@@ -303,3 +305,4 @@ struct TeamLogoView: View {
         }
     }
 }
+#endif

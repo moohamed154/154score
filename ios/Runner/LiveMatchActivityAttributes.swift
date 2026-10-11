@@ -1,6 +1,8 @@
+#if canImport(ActivityKit)
 import ActivityKit
 import Foundation
 
+@available(iOS 16.1, *)
 public struct LiveMatchActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         public var matchId: String
@@ -82,3 +84,4 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
         self.awayTeam = awayTeam
     }
 }
+#endif

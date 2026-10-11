@@ -67,6 +67,7 @@ import flutter_local_notifications
 
   private func setupLiveActivityChannel(binaryMessenger: FlutterBinaryMessenger) {
     let liveActivityChannel = FlutterMethodChannel(name: "com.hamdy.app154score/live_activity", binaryMessenger: binaryMessenger)
+    #if canImport(ActivityKit)
     if #available(iOS 16.1, *) {
       LiveActivityManager.shared.setMethodChannel(liveActivityChannel)
       liveActivityChannel.setMethodCallHandler { (call, result) in
@@ -97,6 +98,15 @@ import flutter_local_notifications
         }
       }
     }
+    #else
+    liveActivityChannel.setMethodCallHandler { (call, result) in
+      if call.method == "areActivitiesEnabled" {
+        result(false)
+      } else {
+        result(FlutterError(code: "UNSUPPORTED_OS", message: "Live Activities require iOS 16.1+", details: nil))
+      }
+    }
+    #endif
   }
 
   override func application(

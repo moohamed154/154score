@@ -1,3 +1,4 @@
+#if canImport(ActivityKit)
 import ActivityKit
 import Flutter
 import Foundation
@@ -36,7 +37,11 @@ public class LiveActivityManager {
         for existing in Activity<LiveMatchActivityAttributes>.activities {
             if existing.attributes.matchId == matchId {
                 Task {
-                    await existing.end(dismissalPolicy: .immediate)
+                    if #available(iOS 16.2, *) {
+                        await existing.end(nil, dismissalPolicy: .immediate)
+                    } else {
+                        await existing.end(using: nil, dismissalPolicy: .immediate)
+                    }
                 }
             }
         }
@@ -50,11 +55,21 @@ public class LiveActivityManager {
         let initialContentState = buildContentState(from: data)
 
         do {
-            let activity = try Activity.request(
-                attributes: attributes,
-                content: .init(state: initialContentState, staleDate: nil),
-                pushType: .token
-            )
+            let activity: Activity<LiveMatchActivityAttributes>
+            if #available(iOS 16.2, *) {
+                let content = ActivityContent(state: initialContentState, staleDate: nil)
+                activity = try Activity.request(
+                    attributes: attributes,
+                    content: content,
+                    pushType: .token
+                )
+            } else {
+                activity = try Activity.request(
+                    attributes: attributes,
+                    contentState: initialContentState,
+                    pushType: .token
+                )
+            }
 
             // Listen for push token updates & rotation
             Task {
@@ -101,7 +116,12 @@ public class LiveActivityManager {
         let updatedState = buildContentState(from: data)
 
         Task {
-            await activity.update(ActivityContent(state: updatedState, staleDate: nil))
+            if #available(iOS 16.2, *) {
+                let content = ActivityContent(state: updatedState, staleDate: nil)
+                await activity.update(content)
+            } else {
+                await activity.update(using: updatedState)
+            }
             DispatchQueue.main.async {
                 result(true)
             }
@@ -127,7 +147,11 @@ public class LiveActivityManager {
 
         Task {
             for act in targetActivities {
-                await act.end(dismissalPolicy: .immediate)
+                if #available(iOS 16.2, *) {
+                    await act.end(nil, dismissalPolicy: .immediate)
+                } else {
+                    await act.end(using: nil, dismissalPolicy: .immediate)
+                }
             }
             DispatchQueue.main.async {
                 result(true)
@@ -166,3 +190,4 @@ public class LiveActivityManager {
         )
     }
 }
+#endif
