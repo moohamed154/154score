@@ -58,6 +58,26 @@ jobs:
             echo "Found Runner.app at: $APP_PATH"
             echo "Inspecting PlugIns directory:"
             ls -la "$APP_PATH/PlugIns" || echo "PlugIns directory not yet populated"
+
+            RUNNER_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_PATH/Info.plist" 2>/dev/null || echo "1.0.1")
+            RUNNER_BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP_PATH/Info.plist" 2>/dev/null || echo "2")
+            echo "Runner version: $RUNNER_VERSION, build: $RUNNER_BUILD"
+
+            EXT_PLIST="$APP_PATH/PlugIns/LiveActivities.appex/Info.plist"
+            if [ -f "$EXT_PLIST" ]; then
+              /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $RUNNER_VERSION" "$EXT_PLIST" || \
+              /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $RUNNER_VERSION" "$EXT_PLIST"
+
+              /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $RUNNER_BUILD" "$EXT_PLIST" || \
+              /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $RUNNER_BUILD" "$EXT_PLIST"
+
+              /usr/libexec/PlistBuddy -c "Set :CFBundlePackageType XPC!" "$EXT_PLIST" || \
+              /usr/libexec/PlistBuddy -c "Add :CFBundlePackageType string XPC!" "$EXT_PLIST"
+
+              echo "LiveActivities.appex Info.plist synchronized successfully:"
+              /usr/libexec/PlistBuddy -c "Print" "$EXT_PLIST"
+            fi
+
             mkdir -p build/ios/ipa/Payload
             cp -R "$APP_PATH" build/ios/ipa/Payload/
             (cd build/ios/ipa && zip -r -y Runner.ipa Payload)
