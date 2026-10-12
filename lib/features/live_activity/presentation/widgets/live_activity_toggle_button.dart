@@ -174,7 +174,7 @@ class LiveActivityToggleButton extends StatelessWidget {
     final cubit = context.read<LiveActivityCubit>();
     final isArabic = l10n.isArabic;
 
-    await cubit.toggleTracking(
+    final success = await cubit.toggleTracking(
       match: match,
       liveScore1: liveScore1,
       liveScore2: liveScore2,
@@ -185,6 +185,31 @@ class LiveActivityToggleButton extends StatelessWidget {
     );
 
     if (context.mounted) {
+      if (!success && !isTracking) {
+        final errorMsg = cubit.state.errorMessage ??
+            (isArabic
+                ? 'تعذر بدء العرض على شاشة القفل. تأكد من تفعيل الأنشطة الحالية في إعدادات الهاتف.'
+                : 'Failed to start Live Activity. Check device settings.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              errorMsg,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red.shade800,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
       final msg = isTracking
           ? (isArabic
               ? 'تم إيقاف عرض المباراة على شاشة القفل'

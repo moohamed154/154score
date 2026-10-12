@@ -22,7 +22,7 @@ public class LiveActivityManager {
 
     public func startLiveActivity(data: [String: Any], result: @escaping FlutterResult) {
         guard areActivitiesEnabled() else {
-            result(FlutterError(code: "ACTIVITIES_DISABLED", message: "Live Activities are disabled on this device", details: nil))
+            result(FlutterError(code: "ACTIVITIES_DISABLED", message: "الأنشطة الحالية معطلة. يرجى تفعيل (الأنشطة الحالية - Live Activities) لتطبيق 154 SCORE من إعدادات الهاتف", details: nil))
             return
         }
 
@@ -59,17 +59,35 @@ public class LiveActivityManager {
             let activity: Activity<LiveMatchActivityAttributes>
             if #available(iOS 16.2, *) {
                 let content = ActivityContent(state: initialContentState, staleDate: nil)
-                activity = try Activity.request(
-                    attributes: attributes,
-                    content: content,
-                    pushType: .token
-                )
+                do {
+                    activity = try Activity.request(
+                        attributes: attributes,
+                        content: content,
+                        pushType: .token
+                    )
+                } catch {
+                    print("[LiveActivityManager] Push token request failed (\(error.localizedDescription)), falling back to pushType: nil")
+                    activity = try Activity.request(
+                        attributes: attributes,
+                        content: content,
+                        pushType: nil
+                    )
+                }
             } else {
-                activity = try Activity.request(
-                    attributes: attributes,
-                    contentState: initialContentState,
-                    pushType: .token
-                )
+                do {
+                    activity = try Activity.request(
+                        attributes: attributes,
+                        contentState: initialContentState,
+                        pushType: .token
+                    )
+                } catch {
+                    print("[LiveActivityManager] Push token request failed (\(error.localizedDescription)), falling back to pushType: nil")
+                    activity = try Activity.request(
+                        attributes: attributes,
+                        contentState: initialContentState,
+                        pushType: nil
+                    )
+                }
             }
 
             let activityId = activity.id
