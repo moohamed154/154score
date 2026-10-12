@@ -173,6 +173,7 @@ object LiveMatchNotificationManager {
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
+            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(collapsedView)
             .setCustomBigContentView(expandedView)
             .setContentIntent(pendingContentIntent)
@@ -185,7 +186,23 @@ object LiveMatchNotificationManager {
             .setCategory(NotificationCompat.CATEGORY_STATUS)
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(matchId.hashCode(), builder.build())
+        try {
+            notificationManager.notify(matchId.hashCode(), builder.build())
+        } catch (e: Exception) {
+            android.util.Log.e("LiveMatchNotification", "Error showing custom RemoteViews notification: ${e.message}", e)
+            try {
+                val fallbackBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle("$homeTeam vs $awayTeam")
+                    .setContentText("$homeScore - $awayScore | $statusText")
+                    .setContentIntent(pendingContentIntent)
+                    .setOngoing(!isFinished)
+                    .setShowWhen(false)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                notificationManager.notify(matchId.hashCode(), fallbackBuilder.build())
+            } catch (_: Exception) {}
+        }
 
         // Update home screen widget
         LiveMatchWidgetProvider.updateAllWidgets(context, data)

@@ -35,8 +35,10 @@
             android:textSize="10sp"
             android:textStyle="bold"
             android:background="@drawable/bg_status_badge"
-            android:paddingHorizontal="6dp"
-            android:paddingVertical="2dp" />
+            android:paddingLeft="6dp"
+            android:paddingRight="6dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp" />
     </LinearLayout>
 
     <!-- Match Scores Row -->
