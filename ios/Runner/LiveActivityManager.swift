@@ -59,11 +59,25 @@ public class LiveActivityManager {
             let homeLogoUrl = data["homeLogo"] as? String ?? ""
             let awayLogoUrl = data["awayLogo"] as? String ?? ""
 
+            // Asynchronously pre-fetch compact 28x28 thumbnails
             if (mutableData["homeLogoBase64"] as? String ?? "").isEmpty && !homeLogoUrl.isEmpty {
                 mutableData["homeLogoBase64"] = await self.fetchThumbnailBase64(from: homeLogoUrl)
             }
             if (mutableData["awayLogoBase64"] as? String ?? "").isEmpty && !awayLogoUrl.isEmpty {
                 mutableData["awayLogoBase64"] = await self.fetchThumbnailBase64(from: awayLogoUrl)
+            }
+
+            // Enforce ActivityKit 4KB ContentState hard budget:
+            // Ensure sum of base64 images is strictly <= 2000 characters
+            let hBase64 = mutableData["homeLogoBase64"] as? String ?? ""
+            let aBase64 = mutableData["awayLogoBase64"] as? String ?? ""
+            if (hBase64.count + aBase64.count) > 2000 {
+                if aBase64.count > 1000 {
+                    mutableData["awayLogoBase64"] = ""
+                }
+                if (hBase64.count + (mutableData["awayLogoBase64"] as? String ?? "").count) > 2000 {
+                    mutableData["homeLogoBase64"] = ""
+                }
             }
 
             let initialContentState = self.buildContentState(from: mutableData)
@@ -79,12 +93,27 @@ public class LiveActivityManager {
                             pushType: .token
                         )
                     } catch {
-                        print("[LiveActivityManager] Push token request failed (\(error.localizedDescription)), falling back to pushType: nil")
-                        activity = try Activity.request(
-                            attributes: attributes,
-                            content: content,
-                            pushType: nil
-                        )
+                        print("[LiveActivityManager] Push token request failed (\(error.localizedDescription)), trying pushType: nil or fallback")
+                        do {
+                            activity = try Activity.request(
+                                attributes: attributes,
+                                content: content,
+                                pushType: nil
+                            )
+                        } catch {
+                            // Secondary fallback: strip base64 to guarantee 0% failure from payload size
+                            print("[LiveActivityManager] Payload size error, stripping base64 images and retrying...")
+                            var strippedData = mutableData
+                            strippedData["homeLogoBase64"] = ""
+                            strippedData["awayLogoBase64"] = ""
+                            let strippedState = self.buildContentState(from: strippedData)
+                            let strippedContent = ActivityContent(state: strippedState, staleDate: nil)
+                            activity = try Activity.request(
+                                attributes: attributes,
+                                content: strippedContent,
+                                pushType: nil
+                            )
+                        }
                     }
                 } else {
                     do {
@@ -159,6 +188,15 @@ public class LiveActivityManager {
                 mutableData["awayLogoBase64"] = await self.fetchThumbnailBase64(from: awayLogoUrl)
             }
 
+            let hBase64 = mutableData["homeLogoBase64"] as? String ?? ""
+            let aBase64 = mutableData["awayLogoBase64"] as? String ?? ""
+            if (hBase64.count + aBase64.count) > 2000 {
+                mutableData["awayLogoBase64"] = ""
+                if hBase64.count > 1200 {
+                    mutableData["homeLogoBase64"] = ""
+                }
+            }
+
             let updatedState = self.buildContentState(from: mutableData)
             if #available(iOS 16.2, *) {
                 let content = ActivityContent(state: updatedState, staleDate: nil)
@@ -209,18 +247,29 @@ public class LiveActivityManager {
         guard let url = URL(string: urlString), !urlString.isEmpty else { return "" }
         do {
             let config = URLSessionConfiguration.default
-            config.timeoutIntervalForRequest = 2.5
-            config.timeoutIntervalForResource = 3.5
+            config.timeoutIntervalForRequest = 2.0
+            config.timeoutIntervalForResource = 3.0
             let session = URLSession(configuration: config)
             let (data, _) = try await session.data(from: url)
             guard let image = UIImage(data: data) else { return "" }
-            let targetSize = CGSize(width: 44, height: 44)
+            
+            // Render 28x28 thumbnail with widget background fill to preserve circular contrast
+            let targetSize = CGSize(width: 28, height: 28)
             let renderer = UIGraphicsImageRenderer(size: targetSize)
             let resized = renderer.image { _ in
+                UIColor(red: 0.08, green: 0.10, blue: 0.14, alpha: 1.0).setFill()
+                UIRectFill(CGRect(origin: .zero, size: targetSize))
                 image.draw(in: CGRect(origin: .zero, size: targetSize))
             }
-            guard let pngData = resized.pngData() else { return "" }
-            return pngData.base64EncodedString()
+            
+            // Compress with JPEG (0.45 quality produces ~600-800 bytes, well within 4KB ActivityKit budget)
+            guard let jpgData = resized.jpegData(compressionQuality: 0.45) else { return "" }
+            let base64 = jpgData.base64EncodedString()
+            if base64.count > 1000 {
+                guard let lowerJpg = resized.jpegData(compressionQuality: 0.25) else { return "" }
+                return lowerJpg.base64EncodedString()
+            }
+            return base64
         } catch {
             print("[LiveActivityManager] Failed to fetch thumbnail for \(urlString): \(error.localizedDescription)")
             return ""

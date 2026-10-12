@@ -4,16 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#10141D"
-    android:padding="14dp">
+    android:background="@drawable/bg_notification_card"
+    android:padding="12dp">
 
-    <!-- Header: League & Status/Minute -->
+    <!-- Header: League Name & Status Badge -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="12dp">
+        android:gravity="center_vertical">
 
         <TextView
             android:id="@+id/tv_expanded_league_name"
@@ -21,8 +20,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="154 SCORE"
-            android:textColor="#94A3B8"
-            android:textSize="12sp"
+            android:textColor="#D1D5DB"
+            android:textSize="11sp"
             android:textStyle="bold"
             android:singleLine="true" />
 
@@ -32,33 +31,35 @@
             android:layout_height="wrap_content"
             android:text="65'"
             android:textColor="#00E676"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:background="#1A00E676"
+            android:background="@drawable/bg_status_badge"
             android:paddingHorizontal="8dp"
             android:paddingVertical="3dp" />
     </LinearLayout>
 
-    <!-- Match Scores Row -->
+    <!-- Middle: Home Team | Center (Kickoff Time or Scores) | Away Team -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp">
 
-        <!-- Home Team -->
+        <!-- Home Team (Horizontal: Logo then Name) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:orientation="horizontal"
+            android:gravity="center_vertical|start">
 
             <ImageView
                 android:id="@+id/iv_expanded_home_logo"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:layout_marginBottom="6dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginEnd="8dp"
                 android:src="@mipmap/ic_launcher" />
 
             <TextView
@@ -69,20 +70,48 @@
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:gravity="center"
                 android:maxLines="2"
                 android:ellipsize="end" />
         </LinearLayout>
 
-        <!-- Large Center Scores -->
+        <!-- Center: Scores or Kickoff Time -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:layout_marginHorizontal="16dp">
+            android:layout_marginHorizontal="10dp">
 
+            <!-- Kickoff View (When match hasn't started) -->
             <LinearLayout
+                android:id="@+id/layout_expanded_kickoff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_expanded_clock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--:--"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_expanded_kickoff_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="موعد الانطلاق"
+                    android:textColor="#94A3B8"
+                    android:textSize="9sp" />
+            </LinearLayout>
+
+            <!-- Score View (When match is Live or Finished) -->
+            <LinearLayout
+                android:id="@+id/layout_expanded_score"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -94,7 +123,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textColor="#FFFFFF"
-                    android:textSize="32sp"
+                    android:textSize="26sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -102,7 +131,7 @@
                     android:layout_height="wrap_content"
                     android:text=" - "
                     android:textColor="#64748B"
-                    android:textSize="24sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -111,7 +140,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textColor="#FFFFFF"
-                    android:textSize="32sp"
+                    android:textSize="26sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -119,26 +148,21 @@
                 android:id="@+id/tv_expanded_penalties"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=""
+                android:text="ركلات الترجيح: 0 - 0"
                 android:textColor="#F59E0B"
-                android:textSize="11sp"
-                android:visibility="gone" />
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:layout_marginTop="2dp" />
         </LinearLayout>
 
-        <!-- Away Team -->
+        <!-- Away Team (Horizontal: Name then Logo) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <ImageView
-                android:id="@+id/iv_expanded_away_logo"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:layout_marginBottom="6dp"
-                android:src="@mipmap/ic_launcher" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical|end">
 
             <TextView
                 android:id="@+id/tv_expanded_away_team"
@@ -148,38 +172,59 @@
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:gravity="center"
+                android:gravity="end"
                 android:maxLines="2"
                 android:ellipsize="end" />
+
+            <ImageView
+                android:id="@+id/iv_expanded_away_logo"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="8dp"
+                android:src="@mipmap/ic_launcher" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Footer Action Row -->
+    <!-- Footer: App Branding (App Logo + Live Updates) on Left | Details on Right -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="12dp">
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="5dp"
+                android:src="@mipmap/ic_launcher" />
+
+            <TextView
+                android:id="@+id/tv_expanded_footer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="154Score • تحديث فوري مباشر"
+                android:textColor="#94A3B8"
+                android:textSize="9sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
         <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="154Score Live"
-            android:textColor="#64748B"
-            android:textSize="10sp" />
-
-        <Button
-            android:id="@+id/btn_stop_tracking"
+            android:id="@+id/tv_expanded_details"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:text="إيقاف التتبع"
-            android:textColor="#EF4444"
-            android:textSize="11sp"
-            android:background="#1AEF4444"
-            android:paddingHorizontal="10dp"
-            style="?android:attr/borderlessButtonStyle" />
+            android:layout_height="wrap_content"
+            android:text="اضغط للتفاصيل ↗"
+            android:textColor="#00E676"
+            android:textSize="9sp"
+            android:textStyle="bold" />
     </LinearLayout>
-
 </LinearLayout>

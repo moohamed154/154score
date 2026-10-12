@@ -7,6 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
+import android.graphics.RectF
 import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
@@ -20,7 +26,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 object LiveMatchNotificationManager {
-    private const val CHANNEL_ID = "live_match_tracking_channel_v1"
+    // Upgraded to v3 to ensure high importance & lockscreen visibility on all devices
+    private const val CHANNEL_ID = "live_match_tracking_channel_v3"
     private const val CHANNEL_NAME = "Live Match Lock Screen Scores"
     private const val CHANNEL_DESC = "Ongoing lock-screen football match live scores and minute updates"
 
@@ -36,11 +43,13 @@ object LiveMatchNotificationManager {
                 val channel = NotificationChannel(
                     CHANNEL_ID,
                     CHANNEL_NAME,
-                    NotificationManager.IMPORTANCE_LOW
+                    NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
                     description = CHANNEL_DESC
-                    setShowBadge(false)
+                    setShowBadge(true)
                     lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+                    enableVibration(false)
+                    setSound(null, null)
                 }
                 notificationManager.createNotificationChannel(channel)
             }
@@ -53,15 +62,21 @@ object LiveMatchNotificationManager {
         val matchId = data["matchId"]?.toString() ?: return
         activeTrackedMatches[matchId] = data
 
-        val homeTeam = data["homeTeam"]?.toString() ?: "Home"
-        val awayTeam = data["awayTeam"]?.toString() ?: "Away"
-        val homeScore = data["homeScore"]?.toString() ?: "0"
-        val awayScore = data["awayScore"]?.toString() ?: "0"
-        val leagueName = data["leagueName"]?.toString() ?: "154 SCORE"
-        val minute = data["minute"]?.toString() ?: ""
-        val status = data["status"]?.toString() ?: "مباشر"
+        val isArabic = data["isArabic"] == true || data["isArabic"]?.toString() == "true"
+        val isLive = data["isLive"] == true || data["isLive"]?.toString() == "true"
         val isFinished = data["isFinished"] == true || data["isFinished"]?.toString() == "true"
         val isHalftime = data["isHalftime"] == true || data["isHalftime"]?.toString() == "true"
+        val isUpcoming = !isLive && !isFinished
+
+        val homeTeam = data["homeTeam"]?.toString() ?: if (isArabic) "المستضيف" else "Home"
+        val awayTeam = data["awayTeam"]?.toString() ?: if (isArabic) "الضيف" else "Away"
+        val homeScore = data["homeScore"]?.toString() ?: "0"
+        val awayScore = data["awayScore"]?.toString() ?: "0"
+        val leagueName = data["leagueName"]?.toString() ?: if (isArabic) "154 سبورت" else "154 SCORE"
+        val minute = data["minute"]?.toString() ?: ""
+        val clock = data["clock"]?.toString() ?: ""
+        val status = data["status"]?.toString() ?: if (isArabic) "مباشر" else "LIVE"
+
         val hasPenalties = data["hasPenalties"] == true || data["hasPenalties"]?.toString() == "true"
         val penaltyHome = data["penaltyHome"]?.toString() ?: ""
         val penaltyAway = data["penaltyAway"]?.toString() ?: ""
@@ -70,10 +85,11 @@ object LiveMatchNotificationManager {
         val awayLogoUrl = data["awayLogo"]?.toString() ?: ""
 
         val statusText = when {
-            isFinished -> "انتهت"
-            isHalftime -> "استراحة"
+            isFinished -> if (isArabic) "انتهت" else "FT"
+            isHalftime -> if (isArabic) "استراحة" else "HT"
             minute.isNotEmpty() -> "$minute'"
-            else -> status
+            isUpcoming -> if (isArabic) "لم تبدأ" else "Upcoming"
+            else -> if (isArabic) status else "LIVE"
         }
 
         // Tap-through Intent to open Match Details
@@ -89,26 +105,23 @@ object LiveMatchNotificationManager {
             PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
         )
 
-        // Stop Tracking Intent
-        val stopIntent = Intent(context, StopTrackingReceiver::class.java).apply {
-            action = StopTrackingReceiver.ACTION_STOP_TRACKING
-            putExtra("match_id", matchId)
-        }
-        val pendingStopIntent = PendingIntent.getBroadcast(
-            context,
-            matchId.hashCode() + 1000,
-            stopIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
-        )
-
         // Collapsed RemoteViews
         val collapsedView = RemoteViews(context.packageName, R.layout.notification_live_match).apply {
             setTextViewText(R.id.tv_league_name, leagueName)
             setTextViewText(R.id.tv_status_badge, statusText)
             setTextViewText(R.id.tv_home_team, homeTeam)
             setTextViewText(R.id.tv_away_team, awayTeam)
-            setTextViewText(R.id.tv_home_score, homeScore)
-            setTextViewText(R.id.tv_away_score, awayScore)
+
+            if (isUpcoming) {
+                setViewVisibility(R.id.layout_collapsed_kickoff, View.VISIBLE)
+                setViewVisibility(R.id.layout_collapsed_score, View.GONE)
+                setTextViewText(R.id.tv_collapsed_clock, clock.ifEmpty { "--:--" })
+            } else {
+                setViewVisibility(R.id.layout_collapsed_kickoff, View.GONE)
+                setViewVisibility(R.id.layout_collapsed_score, View.VISIBLE)
+                setTextViewText(R.id.tv_home_score, homeScore)
+                setTextViewText(R.id.tv_away_score, awayScore)
+            }
         }
 
         // Expanded RemoteViews
@@ -117,16 +130,35 @@ object LiveMatchNotificationManager {
             setTextViewText(R.id.tv_expanded_status_badge, statusText)
             setTextViewText(R.id.tv_expanded_home_team, homeTeam)
             setTextViewText(R.id.tv_expanded_away_team, awayTeam)
-            setTextViewText(R.id.tv_expanded_home_score, homeScore)
-            setTextViewText(R.id.tv_expanded_away_score, awayScore)
-            setOnClickPendingIntent(R.id.btn_stop_tracking, pendingStopIntent)
+
+            if (isUpcoming) {
+                setViewVisibility(R.id.layout_expanded_kickoff, View.VISIBLE)
+                setViewVisibility(R.id.layout_expanded_score, View.GONE)
+                setTextViewText(R.id.tv_expanded_clock, clock.ifEmpty { "--:--" })
+                setTextViewText(R.id.tv_expanded_kickoff_label, if (isArabic) "موعد الانطلاق" else "Kickoff Time")
+            } else {
+                setViewVisibility(R.id.layout_expanded_kickoff, View.GONE)
+                setViewVisibility(R.id.layout_expanded_score, View.VISIBLE)
+                setTextViewText(R.id.tv_expanded_home_score, homeScore)
+                setTextViewText(R.id.tv_expanded_away_score, awayScore)
+            }
 
             if (hasPenalties && penaltyHome.isNotEmpty()) {
                 setViewVisibility(R.id.tv_expanded_penalties, View.VISIBLE)
-                setTextViewText(R.id.tv_expanded_penalties, "ركلات الترجيح: $penaltyHome - $penaltyAway")
+                val penLabel = if (isArabic) "ركلات الترجيح" else "Penalties"
+                setTextViewText(R.id.tv_expanded_penalties, "$penLabel: $penaltyHome - $penaltyAway")
             } else {
                 setViewVisibility(R.id.tv_expanded_penalties, View.GONE)
             }
+
+            // Footer localization
+            val footerText = if (isArabic) {
+                if (isLive) "154Score • تحديث فوري مباشر" else "154Score مباشر"
+            } else {
+                if (isLive) "154Score • Live Updates" else "154Score Live"
+            }
+            setTextViewText(R.id.tv_expanded_footer, footerText)
+            setTextViewText(R.id.tv_expanded_details, if (isArabic) "اضغط للتفاصيل ↗" else "Details ↗")
         }
 
         // Load cached logos immediately if available
@@ -147,8 +179,10 @@ object LiveMatchNotificationManager {
             .setOngoing(!isFinished)
             .setAutoCancel(isFinished)
             .setOnlyAlertOnce(true)
+            .setShowWhen(false)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(matchId.hashCode(), builder.build())
@@ -192,11 +226,34 @@ object LiveMatchNotificationManager {
                 connection.doInput = true
                 connection.connect()
                 val input: InputStream = connection.inputStream
-                val bitmap = BitmapFactory.decodeStream(input)
-                onLoaded(bitmap)
+                val originalBitmap = BitmapFactory.decodeStream(input)
+                val circular = originalBitmap?.let { toCircularBitmap(it) }
+                onLoaded(circular ?: originalBitmap)
             } catch (_: Exception) {
                 onLoaded(null)
             }
         }
+    }
+
+    private fun toCircularBitmap(bitmap: Bitmap): Bitmap {
+        val size = Math.min(bitmap.width, bitmap.height)
+        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        val paint = Paint().apply {
+            isAntiAlias = true
+            isFilterBitmap = true
+        }
+        val rect = Rect(0, 0, size, size)
+        val rectF = RectF(rect)
+        canvas.drawOval(rectF, paint)
+        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        val srcRect = Rect(
+            (bitmap.width - size) / 2,
+            (bitmap.height - size) / 2,
+            (bitmap.width + size) / 2,
+            (bitmap.height + size) / 2
+        )
+        canvas.drawBitmap(bitmap, srcRect, rect, paint)
+        return output
     }
 }

@@ -4,16 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#10141D"
-    android:padding="12dp">
+    android:background="@drawable/bg_notification_card"
+    android:padding="8dp">
 
-    <!-- Header: League & Status/Minute -->
+    <!-- Header: League Name & Status Badge -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="4dp">
 
         <TextView
             android:id="@+id/tv_league_name"
@@ -22,7 +22,7 @@
             android:layout_weight="1"
             android:text="154 SCORE"
             android:textColor="#94A3B8"
-            android:textSize="11sp"
+            android:textSize="10sp"
             android:textStyle="bold"
             android:singleLine="true" />
 
@@ -32,9 +32,9 @@
             android:layout_height="wrap_content"
             android:text="65'"
             android:textColor="#00E676"
-            android:textSize="11sp"
+            android:textSize="10sp"
             android:textStyle="bold"
-            android:background="#1A00E676"
+            android:background="@drawable/bg_status_badge"
             android:paddingHorizontal="6dp"
             android:paddingVertical="2dp" />
     </LinearLayout>
@@ -56,9 +56,9 @@
 
             <ImageView
                 android:id="@+id/iv_home_logo"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_marginEnd="8dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="6dp"
                 android:src="@mipmap/ic_launcher" />
 
             <TextView
@@ -67,45 +67,69 @@
                 android:layout_height="wrap_content"
                 android:text="Home"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:maxLines="1"
+                android:singleLine="true"
                 android:ellipsize="end" />
         </LinearLayout>
 
-        <!-- Scores -->
+        <!-- Center: Scores or Kickoff -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginHorizontal="12dp">
+            android:layout_marginHorizontal="8dp">
 
-            <TextView
-                android:id="@+id/tv_home_score"
+            <LinearLayout
+                android:id="@+id/layout_collapsed_kickoff"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0"
-                android:textColor="#FFFFFF"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:visibility="gone">
 
-            <TextView
+                <TextView
+                    android:id="@+id/tv_collapsed_clock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--:--"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_collapsed_score"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" - "
-                android:textColor="#64748B"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal"
+                android:gravity="center">
 
-            <TextView
-                android:id="@+id/tv_away_score"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textColor="#FFFFFF"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tv_home_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" - "
+                    android:textColor="#64748B"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_away_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Away Team -->
@@ -122,18 +146,18 @@
                 android:layout_height="wrap_content"
                 android:text="Away"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end" />
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:gravity="end" />
 
             <ImageView
                 android:id="@+id/iv_away_logo"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_marginStart="8dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="6dp"
                 android:src="@mipmap/ic_launcher" />
         </LinearLayout>
     </LinearLayout>
-
 </LinearLayout>
