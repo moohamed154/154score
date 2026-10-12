@@ -45,16 +45,25 @@ public struct LiveMatchActivityWidget: Widget {
                 // Expanded Center
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 2) {
-                        HStack(spacing: 8) {
-                            Text(context.state.homeScore)
-                                .font(.system(size: 22, weight: .black, design: .rounded))
+                        if !context.state.isLive && !context.state.isFinished {
+                            Text(context.state.clock.isEmpty ? "--:--" : context.state.clock)
+                                .font(.system(size: 20, weight: .black, design: .rounded))
                                 .foregroundColor(.white)
-                            Text("-")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.gray)
-                            Text(context.state.awayScore)
-                                .font(.system(size: 22, weight: .black, design: .rounded))
-                                .foregroundColor(.white)
+                            Text("موعد الانطلاق")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(Color(white: 0.65))
+                        } else {
+                            HStack(spacing: 8) {
+                                Text(context.state.homeScore)
+                                    .font(.system(size: 22, weight: .black, design: .rounded))
+                                    .foregroundColor(.white)
+                                Text("-")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.gray)
+                                Text(context.state.awayScore)
+                                    .font(.system(size: 22, weight: .black, design: .rounded))
+                                    .foregroundColor(.white)
+                            }
                         }
 
                         // Status / Clock Pill
@@ -86,25 +95,40 @@ public struct LiveMatchActivityWidget: Widget {
                 HStack(spacing: 4) {
                     TeamLogoView(url: context.state.homeLogo, fallbackText: context.state.homeTeam)
                         .frame(width: 18, height: 18)
-                    Text(context.state.homeScore)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                    if context.state.isLive || context.state.isFinished {
+                        Text(context.state.homeScore)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
                 }
             } compactTrailing: {
-                // Compact Trailing: Away Score & Logo
+                // Compact Trailing: Away Score / Kickoff Time & Logo
                 HStack(spacing: 4) {
-                    Text(context.state.awayScore)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                    if !context.state.isLive && !context.state.isFinished {
+                        Text(context.state.clock.isEmpty ? "لم تبدأ" : context.state.clock)
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.45))
+                    } else {
+                        Text(context.state.awayScore)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
                     TeamLogoView(url: context.state.awayLogo, fallbackText: context.state.awayTeam)
                         .frame(width: 18, height: 18)
                 }
             } minimal: {
-                // Minimal: Live Score or Crest
-                Text("\(context.state.homeScore)-\(context.state.awayScore)")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.45))
+                // Minimal: Live Score or Kickoff Time
+                if !context.state.isLive && !context.state.isFinished {
+                    Text(context.state.clock.isEmpty ? "VS" : context.state.clock)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.45))
+                } else {
+                    Text("\(context.state.homeScore)-\(context.state.awayScore)")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.45))
+                }
             }
+            .widgetURL(URL(string: "score154://match/\(context.state.matchId)"))
         }
     }
 }
@@ -134,7 +158,7 @@ struct LockScreenLiveActivityView: View {
                     StatusBadgeView(state: state)
                 }
 
-                // Middle: Home Team | Scores | Away Team
+                // Middle: Home Team | Center (Kickoff Time or Scores) | Away Team
                 HStack(alignment: .center) {
                     // Home Team
                     HStack(spacing: 8) {
@@ -148,27 +172,37 @@ struct LockScreenLiveActivityView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                    // Scores
-                    VStack(spacing: 2) {
-                        HStack(spacing: 8) {
-                            Text(state.homeScore)
-                                .font(.system(size: 28, weight: .black, design: .rounded))
+                    // Center: Kickoff Time OR Live/Finished Score
+                    VStack(spacing: 3) {
+                        if !state.isLive && !state.isFinished {
+                            // Match hasn't started yet: Show kickoff time prominently
+                            Text(state.clock.isEmpty ? "--:--" : state.clock)
+                                .font(.system(size: 24, weight: .black, design: .rounded))
                                 .foregroundColor(.white)
-                            Text("-")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(Color(white: 0.5))
-                            Text(state.awayScore)
-                                .font(.system(size: 28, weight: .black, design: .rounded))
-                                .foregroundColor(.white)
-                        }
+                            Text("موعد الانطلاق")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(Color(white: 0.65))
+                        } else {
+                            HStack(spacing: 8) {
+                                Text(state.homeScore)
+                                    .font(.system(size: 28, weight: .black, design: .rounded))
+                                    .foregroundColor(.white)
+                                Text("-")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(Color(white: 0.5))
+                                Text(state.awayScore)
+                                    .font(.system(size: 28, weight: .black, design: .rounded))
+                                    .foregroundColor(.white)
+                            }
 
-                        if state.hasPenalties {
-                            Text("(\(state.penaltyHome) - \(state.penaltyAway))")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(Color(red: 0.96, green: 0.65, blue: 0.14))
+                            if state.hasPenalties {
+                                Text("(\(state.penaltyHome) - \(state.penaltyAway))")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(Color(red: 0.96, green: 0.65, blue: 0.14))
+                            }
                         }
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 8)
 
                     // Away Team
                     HStack(spacing: 8) {
@@ -210,6 +244,7 @@ struct LockScreenLiveActivityView: View {
                     )
             )
         }
+        .widgetURL(URL(string: "score154://match/\(state.matchId)"))
     }
 }
 

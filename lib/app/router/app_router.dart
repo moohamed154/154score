@@ -211,6 +211,74 @@ class AppRouter {
     navigatorKey: _rootNavigatorKey,
     observers: [DebugConsoleRouteObserver()],
     initialLocation: '/splash',
+    redirect: (context, state) {
+      final uriStr = state.uri.toString();
+      // Handle custom scheme deep links e.g. score154://match/12345
+      if (state.uri.scheme == 'score154' || uriStr.startsWith('score154:')) {
+        if (uriStr.contains('match/')) {
+          final id = uriStr.split('match/').last.split('?').first.split('/').first.trim();
+          if (id.isNotEmpty) {
+            return '/match/$id';
+          }
+        } else if (uriStr.contains('news/')) {
+          final id = uriStr.split('news/').last.split('?').first.split('/').first.trim();
+          if (id.isNotEmpty) {
+            return '/news/$id';
+          }
+        }
+        return '/';
+      }
+      return null;
+    },
+    errorBuilder: (context, state) {
+      final uriStr = state.uri.toString();
+      if (uriStr.contains('match/')) {
+        final id = uriStr.split('match/').last.split('?').first.split('/').first.trim();
+        if (id.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            navigateToMatch(id);
+          });
+          return const Scaffold(
+            backgroundColor: Color(0xFF0F172A),
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        }
+      } else if (uriStr.contains('news/')) {
+        final id = uriStr.split('news/').last.split('?').first.split('/').first.trim();
+        if (id.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            navigateToNews(id);
+          });
+          return const Scaffold(
+            backgroundColor: Color(0xFF0F172A),
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        }
+      }
+      return Scaffold(
+        backgroundColor: const Color(0xFF0F172A),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'الصفحة غير موجودة',
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => context.go('/'),
+                child: const Text('العودة للرئيسية'),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

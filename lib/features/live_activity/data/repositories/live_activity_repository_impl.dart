@@ -75,6 +75,23 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       final effectiveMinute = (liveMinute ?? match.minute ?? '').replaceAll("'", '').trim();
       final effectivePeriod = livePeriod ?? match.period ?? 'live';
 
+      String effectiveClock = (match.time ?? '').trim();
+      if (effectiveClock.isEmpty && match.timestamp != null && match.timestamp! > 0) {
+        final dt = DateTime.fromMillisecondsSinceEpoch(match.timestamp! * 1000);
+        final hour = dt.hour.toString().padLeft(2, '0');
+        final min = dt.minute.toString().padLeft(2, '0');
+        effectiveClock = '$hour:$min';
+      }
+      if (effectiveClock.contains(':')) {
+        final parts = effectiveClock.split(':');
+        if (parts.length >= 2) {
+          effectiveClock = '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
+        }
+      }
+      if (effectiveClock.isEmpty && effectiveMinute.isNotEmpty) {
+        effectiveClock = "$effectiveMinute'";
+      }
+
       final payload = {
         'matchId': cleanMatchId,
         'homeTeam': match.team1,
@@ -87,7 +104,7 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'statusCode': effectiveStatusCode,
         'period': effectivePeriod,
         'minute': effectiveMinute,
-        'clock': match.time ?? (effectiveMinute.isNotEmpty ? "$effectiveMinute'" : ''),
+        'clock': effectiveClock,
         'leagueName': match.leagueTitle ?? '',
         'leagueLogo': match.leagueLogo ?? '',
         'penaltyHome': match.penaltyScore1 ?? '',
@@ -149,6 +166,23 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       final p1 = penaltyScore1 ?? match.penaltyScore1 ?? '';
       final p2 = penaltyScore2 ?? match.penaltyScore2 ?? '';
 
+      String effectiveClock = (match.time ?? '').trim();
+      if (effectiveClock.isEmpty && match.timestamp != null && match.timestamp! > 0) {
+        final dt = DateTime.fromMillisecondsSinceEpoch(match.timestamp! * 1000);
+        final hour = dt.hour.toString().padLeft(2, '0');
+        final min = dt.minute.toString().padLeft(2, '0');
+        effectiveClock = '$hour:$min';
+      }
+      if (effectiveClock.contains(':')) {
+        final parts = effectiveClock.split(':');
+        if (parts.length >= 2) {
+          effectiveClock = '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
+        }
+      }
+      if (effectiveClock.isEmpty && effectiveMinute.isNotEmpty) {
+        effectiveClock = "$effectiveMinute'";
+      }
+
       final payload = {
         'matchId': cleanMatchId,
         'homeTeam': match.team1,
@@ -161,7 +195,7 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'statusCode': effectiveStatusCode,
         'period': effectivePeriod,
         'minute': effectiveMinute,
-        'clock': match.time ?? (effectiveMinute.isNotEmpty ? "$effectiveMinute'" : ''),
+        'clock': effectiveClock,
         'leagueName': match.leagueTitle ?? '',
         'leagueLogo': match.leagueLogo ?? '',
         'penaltyHome': p1,
