@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:score154/core/constants/app_colors.dart';
 
 import '../../core/di/injection_container.dart';
 import '../../core/utils/league_resolver.dart';
@@ -130,7 +131,8 @@ class AppRouter {
         if (str.startsWith('{') && str.endsWith('}')) {
           data = (jsonDecode(str) as Map).cast<String, dynamic>();
         } else if (str.contains('/match/')) {
-          final id = str.split('/match/').last.split('?').first.split('/').first;
+          final id =
+              str.split('/match/').last.split('?').first.split('/').first;
           navigateToMatch(id);
           return;
         } else if (str.contains('/news/')) {
@@ -153,28 +155,44 @@ class AppRouter {
       // Check if data contains nested data or payload strings/maps
       if (data['data'] is Map) {
         data = {...data, ...(data['data'] as Map).cast<String, dynamic>()};
-      } else if (data['data'] is String && (data['data'] as String).trim().startsWith('{')) {
+      } else if (data['data'] is String &&
+          (data['data'] as String).trim().startsWith('{')) {
         try {
-          final inner = (jsonDecode(data['data'] as String) as Map).cast<String, dynamic>();
+          final inner = (jsonDecode(data['data'] as String) as Map)
+              .cast<String, dynamic>();
           data = {...data, ...inner};
         } catch (_) {}
       }
 
-      if (data['payload'] is String && (data['payload'] as String).trim().startsWith('{')) {
+      if (data['payload'] is String &&
+          (data['payload'] as String).trim().startsWith('{')) {
         try {
-          final inner = (jsonDecode(data['payload'] as String) as Map).cast<String, dynamic>();
+          final inner = (jsonDecode(data['payload'] as String) as Map)
+              .cast<String, dynamic>();
           data = {...data, ...inner};
         } catch (_) {}
       }
 
-      final type = (data['type'] ?? data['event_type'] ?? '').toString().toLowerCase();
+      final type =
+          (data['type'] ?? data['event_type'] ?? '').toString().toLowerCase();
 
-      final rawMatchId = (data['match_id'] ?? data['matchId'] ?? data['matchID'] ?? data['match'])?.toString();
-      final rawArticleId = (data['article_id'] ?? data['articleId'] ?? data['news_id'] ?? data['newsId'] ?? data['article'])?.toString();
+      final rawMatchId = (data['match_id'] ??
+              data['matchId'] ??
+              data['matchID'] ??
+              data['match'])
+          ?.toString();
+      final rawArticleId = (data['article_id'] ??
+              data['articleId'] ??
+              data['news_id'] ??
+              data['newsId'] ??
+              data['article'])
+          ?.toString();
       final genericId = data['id']?.toString();
 
       if (type == 'news' || (rawArticleId != null && rawArticleId.isNotEmpty)) {
-        final targetNewsId = (rawArticleId != null && rawArticleId.isNotEmpty) ? rawArticleId : genericId;
+        final targetNewsId = (rawArticleId != null && rawArticleId.isNotEmpty)
+            ? rawArticleId
+            : genericId;
         if (targetNewsId != null && targetNewsId.isNotEmpty) {
           navigateToNews(targetNewsId);
           return;
@@ -186,7 +204,10 @@ class AppRouter {
         return;
       }
 
-      if (genericId != null && genericId.isNotEmpty && genericId != 'alert' && genericId != 'live') {
+      if (genericId != null &&
+          genericId.isNotEmpty &&
+          genericId != 'alert' &&
+          genericId != 'live') {
         if (type == 'news') {
           navigateToNews(genericId);
         } else {
@@ -216,12 +237,26 @@ class AppRouter {
       // Handle custom scheme deep links e.g. score154://match/12345
       if (state.uri.scheme == 'score154' || uriStr.startsWith('score154:')) {
         if (uriStr.contains('match/')) {
-          final id = uriStr.split('match/').last.split('?').first.split('/').first.trim();
+          final id = uriStr
+              .split('match/')
+              .last
+              .split('?')
+              .first
+              .split('/')
+              .first
+              .trim();
           if (id.isNotEmpty) {
             return '/match/$id';
           }
         } else if (uriStr.contains('news/')) {
-          final id = uriStr.split('news/').last.split('?').first.split('/').first.trim();
+          final id = uriStr
+              .split('news/')
+              .last
+              .split('?')
+              .first
+              .split('/')
+              .first
+              .trim();
           if (id.isNotEmpty) {
             return '/news/$id';
           }
@@ -233,7 +268,14 @@ class AppRouter {
     errorBuilder: (context, state) {
       final uriStr = state.uri.toString();
       if (uriStr.contains('match/')) {
-        final id = uriStr.split('match/').last.split('?').first.split('/').first.trim();
+        final id = uriStr
+            .split('match/')
+            .last
+            .split('?')
+            .first
+            .split('/')
+            .first
+            .trim();
         if (id.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             navigateToMatch(id);
@@ -246,7 +288,8 @@ class AppRouter {
           );
         }
       } else if (uriStr.contains('news/')) {
-        final id = uriStr.split('news/').last.split('?').first.split('/').first.trim();
+        final id =
+            uriStr.split('news/').last.split('?').first.split('/').first.trim();
         if (id.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             navigateToNews(id);
@@ -267,7 +310,10 @@ class AppRouter {
             children: [
               const Text(
                 'الصفحة غير موجودة',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -490,8 +536,7 @@ class AppRouter {
           var id = state.pathParameters['id'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
           final tabParam = state.uri.queryParameters['tab'];
-          final initialTab =
-              extra?['tab'] as int? ??
+          final initialTab = extra?['tab'] as int? ??
               (tabParam != null ? int.tryParse(tabParam) ?? 0 : 0);
           final title = extra?['title']?.toString();
           if ((id == '0' || id.isEmpty) && title != null) {
@@ -519,15 +564,12 @@ class AppRouter {
           final slug = state.pathParameters['slug'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
           final tabParam = state.uri.queryParameters['tab'];
-          final initialTab =
-              extra?['tab'] as int? ??
+          final initialTab = extra?['tab'] as int? ??
               (tabParam != null ? int.tryParse(tabParam) ?? 0 : 0);
-          final title =
-              extra?['title']?.toString() ??
+          final title = extra?['title']?.toString() ??
               (slug.isNotEmpty ? UrlHelper.slugToName(slug) : null);
           if (id == '0' || id.isEmpty) {
-            id =
-                LeagueResolver.resolveId(title) ??
+            id = LeagueResolver.resolveId(title) ??
                 LeagueResolver.resolveId(slug) ??
                 id;
           }
@@ -574,8 +616,7 @@ class AppRouter {
           final id = state.pathParameters['id'] ?? '';
           final slug = state.pathParameters['slug'] ?? '';
           final extra = state.extra as Map<String, dynamic>?;
-          final name =
-              extra?['name']?.toString() ??
+          final name = extra?['name']?.toString() ??
               (slug.isNotEmpty ? UrlHelper.slugToName(slug) : null);
           return _buildCupertinoPage(
             state: state,
