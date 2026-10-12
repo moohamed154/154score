@@ -22,7 +22,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('[FCM] Background push received: ${message.messageId}');
   if (message.data['type'] == 'live_activity_update') {
     try {
-      const MethodChannel('com.hamdy.app154score/live_activity')
+      await const MethodChannel('com.hamdy.app154score/live_activity')
           .invokeMethod('updateLiveActivity', message.data);
     } catch (_) {}
   }
@@ -256,7 +256,7 @@ class PushNotificationService {
   Future<void> handleForegroundPayload(Map<String, dynamic> data) async {
     if (data['type'] == 'live_activity_update') {
       try {
-        const MethodChannel('com.hamdy.app154score/live_activity')
+        await const MethodChannel('com.hamdy.app154score/live_activity')
             .invokeMethod('updateLiveActivity', data);
       } catch (_) {}
       return;

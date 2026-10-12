@@ -900,7 +900,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go('/home');
+              context.go('/');
             }
           },
         ),

@@ -19,7 +19,7 @@ public struct LiveMatchActivityWidget: Widget {
                 // Expanded Leading
                 DynamicIslandExpandedRegion(.leading) {
                     HStack(spacing: 6) {
-                        TeamLogoView(url: context.state.homeLogo, fallbackText: context.state.homeTeam)
+                        TeamLogoView(base64: context.state.homeLogoBase64, fallbackText: context.state.homeTeam)
                             .frame(width: 28, height: 28)
                         Text(context.state.homeTeam)
                             .font(.system(size: 13, weight: .bold))
@@ -36,7 +36,7 @@ public struct LiveMatchActivityWidget: Widget {
                             .font(.system(size: 13, weight: .bold))
                             .foregroundColor(.white)
                             .lineLimit(1)
-                        TeamLogoView(url: context.state.awayLogo, fallbackText: context.state.awayTeam)
+                        TeamLogoView(base64: context.state.awayLogoBase64, fallbackText: context.state.awayTeam)
                             .frame(width: 28, height: 28)
                     }
                     .padding(.trailing, 8)
@@ -49,7 +49,7 @@ public struct LiveMatchActivityWidget: Widget {
                             Text(context.state.clock.isEmpty ? "--:--" : context.state.clock)
                                 .font(.system(size: 20, weight: .black, design: .rounded))
                                 .foregroundColor(.white)
-                            Text("موعد الانطلاق")
+                            Text(context.state.isArabic ? "موعد الانطلاق" : "Kickoff")
                                 .font(.system(size: 9, weight: .medium))
                                 .foregroundColor(Color(white: 0.65))
                         } else {
@@ -82,7 +82,7 @@ public struct LiveMatchActivityWidget: Widget {
                         }
                         Spacer()
                         if context.state.hasPenalties {
-                            Text("ركلات الترجيح: \(context.state.penaltyHome) - \(context.state.penaltyAway)")
+                            Text(context.state.isArabic ? "ركلات الترجيح: \(context.state.penaltyHome) - \(context.state.penaltyAway)" : "Penalties: \(context.state.penaltyHome) - \(context.state.penaltyAway)")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(Color(red: 0.96, green: 0.65, blue: 0.14))
                         }
@@ -93,7 +93,7 @@ public struct LiveMatchActivityWidget: Widget {
             } compactLeading: {
                 // Compact Leading: Home Logo & Score
                 HStack(spacing: 4) {
-                    TeamLogoView(url: context.state.homeLogo, fallbackText: context.state.homeTeam)
+                    TeamLogoView(base64: context.state.homeLogoBase64, fallbackText: context.state.homeTeam)
                         .frame(width: 18, height: 18)
                     if context.state.isLive || context.state.isFinished {
                         Text(context.state.homeScore)
@@ -105,7 +105,7 @@ public struct LiveMatchActivityWidget: Widget {
                 // Compact Trailing: Away Score / Kickoff Time & Logo
                 HStack(spacing: 4) {
                     if !context.state.isLive && !context.state.isFinished {
-                        Text(context.state.clock.isEmpty ? "لم تبدأ" : context.state.clock)
+                        Text(context.state.clock.isEmpty ? (context.state.isArabic ? "لم تبدأ" : "Upcoming") : context.state.clock)
                             .font(.system(size: 11, weight: .bold, design: .rounded))
                             .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.45))
                     } else {
@@ -113,7 +113,7 @@ public struct LiveMatchActivityWidget: Widget {
                             .font(.system(size: 13, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
                     }
-                    TeamLogoView(url: context.state.awayLogo, fallbackText: context.state.awayTeam)
+                    TeamLogoView(base64: context.state.awayLogoBase64, fallbackText: context.state.awayTeam)
                         .frame(width: 18, height: 18)
                 }
             } minimal: {
@@ -133,6 +133,21 @@ public struct LiveMatchActivityWidget: Widget {
     }
 }
 
+// ── App Logo Helper ───────────────────────────────────────────────────────────
+@available(iOS 16.1, *)
+private struct AppLogoHelper {
+    static let image: UIImage? = {
+        if let img = UIImage(named: "AppLogo") {
+            return img
+        }
+        if let path = Bundle.main.path(forResource: "AppLogo", ofType: "png"),
+           let img = UIImage(contentsOfFile: path) {
+            return img
+        }
+        return nil
+    }()
+}
+
 // ── Lock Screen Live Activity Main Card View ──────────────────────────────────
 @available(iOS 16.1, *)
 struct LockScreenLiveActivityView: View {
@@ -147,7 +162,7 @@ struct LockScreenLiveActivityView: View {
                         Image(systemName: "sportscourt.fill")
                             .font(.system(size: 10))
                             .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.45))
-                        Text(state.leagueName.isEmpty ? "154 SCORE" : state.leagueName)
+                        Text(state.leagueName.isEmpty ? (state.isArabic ? "154 سبورت" : "154 SCORE") : state.leagueName)
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(Color(white: 0.85))
                             .lineLimit(1)
@@ -162,7 +177,7 @@ struct LockScreenLiveActivityView: View {
                 HStack(alignment: .center) {
                     // Home Team
                     HStack(spacing: 8) {
-                        TeamLogoView(url: state.homeLogo, fallbackText: state.homeTeam)
+                        TeamLogoView(base64: state.homeLogoBase64, fallbackText: state.homeTeam)
                             .frame(width: 36, height: 36)
                         Text(state.homeTeam)
                             .font(.system(size: 14, weight: .bold))
@@ -179,7 +194,7 @@ struct LockScreenLiveActivityView: View {
                             Text(state.clock.isEmpty ? "--:--" : state.clock)
                                 .font(.system(size: 24, weight: .black, design: .rounded))
                                 .foregroundColor(.white)
-                            Text("موعد الانطلاق")
+                            Text(state.isArabic ? "موعد الانطلاق" : "Kickoff Time")
                                 .font(.system(size: 9, weight: .medium))
                                 .foregroundColor(Color(white: 0.65))
                         } else {
@@ -211,24 +226,33 @@ struct LockScreenLiveActivityView: View {
                             .foregroundColor(.white)
                             .lineLimit(2)
                             .multilineTextAlignment(.trailing)
-                        TeamLogoView(url: state.awayLogo, fallbackText: state.awayTeam)
+                        TeamLogoView(base64: state.awayLogoBase64, fallbackText: state.awayTeam)
                             .frame(width: 36, height: 36)
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
 
-                // Footer: App branding and subtle tap hint
+                // Footer: App branding with App Logo on bottom left, and subtle tap hint on right
                 HStack {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(state.isLive ? Color(red: 0.0, green: 0.85, blue: 0.45) : Color.gray)
-                            .frame(width: 5, height: 5)
-                        Text(state.isLive ? "تحديث فوري مباشر" : "154Score Live")
+                    HStack(spacing: 6) {
+                        if let appLogo = AppLogoHelper.image {
+                            Image(uiImage: appLogo)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 14, height: 14)
+                                .clipShape(RoundedRectangle(cornerRadius: 3.5))
+                        } else {
+                            Circle()
+                                .fill(state.isLive ? Color(red: 0.0, green: 0.85, blue: 0.45) : Color.gray)
+                                .frame(width: 6, height: 6)
+                        }
+
+                        Text(state.isArabic ? (state.isLive ? "154Score • تحديث فوري مباشر" : "154Score مباشر") : (state.isLive ? "154Score • Live Updates" : "154Score Live"))
                             .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(Color(white: 0.6))
+                            .foregroundColor(Color(white: 0.65))
                     }
                     Spacer()
-                    Text("اضغط للتفاصيل ↗")
+                    Text(state.isArabic ? "اضغط للتفاصيل ↗" : "Details ↗")
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.45))
                 }
@@ -273,13 +297,29 @@ struct StatusBadgeView: View {
 
     private var badgeText: String {
         if state.isFinished {
-            return "انتهت"
+            return state.isArabic ? "انتهت" : "FT"
         } else if state.isHalftime {
-            return "استراحة"
+            return state.isArabic ? "استراحة" : "HT"
         } else if !state.minute.isEmpty {
             return "\(state.minute)'"
         } else {
-            return state.status
+            if state.isArabic {
+                return state.status
+            } else {
+                switch state.status {
+                case "مباشر": return "LIVE"
+                case "لم تبدأ": return "Upcoming"
+                case "تأجلت": return "Postponed"
+                case "ألغيت": return "Cancelled"
+                case "استراحة": return "HT"
+                case "انتهت": return "FT"
+                default:
+                    if !state.statusCode.isEmpty {
+                        return state.statusCode
+                    }
+                    return state.isLive ? "LIVE" : state.status
+                }
+            }
         }
     }
 
@@ -307,24 +347,17 @@ struct StatusBadgeView: View {
 // ── Reusable Team Logo Component ──────────────────────────────────────────────
 @available(iOS 16.1, *)
 struct TeamLogoView: View {
-    let url: String
+    let base64: String
     let fallbackText: String
 
     var body: some View {
-        if let validUrl = URL(string: url), !url.isEmpty {
-            AsyncImage(url: validUrl) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .clipShape(Circle())
-                case .failure(_), .empty:
-                    fallbackView
-                @unknown default:
-                    fallbackView
-                }
-            }
+        if !base64.isEmpty,
+           let data = Data(base64Encoded: base64),
+           let uiImage = UIImage(data: data) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .clipShape(Circle())
         } else {
             fallbackView
         }

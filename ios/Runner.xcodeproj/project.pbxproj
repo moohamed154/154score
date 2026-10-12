@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B15400152E00000100000001 /* AppLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = B15400162E00000100000001 /* AppLogo.png */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -175,6 +176,7 @@
 		B154000D2E00000100000001 /* LiveActivities */ = {
 			isa = PBXGroup;
 			children = (
+				B15400162E00000100000001 /* AppLogo.png */,
 				B15400042E00000100000001 /* LiveMatchActivityWidgetBundle.swift */,
 				B15400052E00000100000001 /* LiveMatchActivityWidget.swift */,
 				B15400062E00000100000001 /* Info.plist */,
@@ -317,6 +319,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B15400152E00000100000001 /* AppLogo.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

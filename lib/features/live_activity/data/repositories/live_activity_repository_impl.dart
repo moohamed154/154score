@@ -5,6 +5,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/score_helper.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../../domain/entities/live_activity_entity.dart';
 import '../../domain/repositories/live_activity_repository.dart';
@@ -92,12 +93,21 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         effectiveClock = "$effectiveMinute'";
       }
 
+      final resolvedHomeLogo = UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
+          UrlHelper.normalizeImageUrl(match.team1Logo) ??
+          match.team1Logo ??
+          '';
+      final resolvedAwayLogo = UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
+          UrlHelper.normalizeImageUrl(match.team2Logo) ??
+          match.team2Logo ??
+          '';
+
       final payload = {
         'matchId': cleanMatchId,
         'homeTeam': match.team1,
         'awayTeam': match.team2,
-        'homeLogo': match.team1Logo ?? '',
-        'awayLogo': match.team2Logo ?? '',
+        'homeLogo': resolvedHomeLogo,
+        'awayLogo': resolvedAwayLogo,
         'homeScore': ScoreHelper.normalizeScore(effectiveScore1),
         'awayScore': ScoreHelper.normalizeScore(effectiveScore2),
         'status': effectiveStatus,
@@ -114,6 +124,7 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'isFinished': ScoreHelper.isFinishedStatus(effectiveStatus, effectiveStatusCode),
         'isHalftime': ScoreHelper.isHalftimeStatus(effectiveStatus, effectiveStatusCode),
         'isExtraTime': ScoreHelper.isExtraTimeStatus(effectiveStatus, effectiveStatusCode),
+        'isArabic': localStorage.getLanguage() != 'en',
       };
 
       final nativeResult = await platformDataSource.startLiveActivity(payload);
@@ -183,12 +194,21 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         effectiveClock = "$effectiveMinute'";
       }
 
+      final resolvedHomeLogo = UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
+          UrlHelper.normalizeImageUrl(match.team1Logo) ??
+          match.team1Logo ??
+          '';
+      final resolvedAwayLogo = UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
+          UrlHelper.normalizeImageUrl(match.team2Logo) ??
+          match.team2Logo ??
+          '';
+
       final payload = {
         'matchId': cleanMatchId,
         'homeTeam': match.team1,
         'awayTeam': match.team2,
-        'homeLogo': match.team1Logo ?? '',
-        'awayLogo': match.team2Logo ?? '',
+        'homeLogo': resolvedHomeLogo,
+        'awayLogo': resolvedAwayLogo,
         'homeScore': ScoreHelper.normalizeScore(effectiveScore1),
         'awayScore': ScoreHelper.normalizeScore(effectiveScore2),
         'status': effectiveStatus,
@@ -205,6 +225,7 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'isFinished': ScoreHelper.isFinishedStatus(effectiveStatus, effectiveStatusCode),
         'isHalftime': ScoreHelper.isHalftimeStatus(effectiveStatus, effectiveStatusCode),
         'isExtraTime': ScoreHelper.isExtraTimeStatus(effectiveStatus, effectiveStatusCode),
+        'isArabic': localStorage.getLanguage() != 'en',
       };
 
       await platformDataSource.updateLiveActivity(payload);

@@ -2,6 +2,7 @@
 @preconcurrency import ActivityKit
 import Flutter
 import Foundation
+import UIKit
 
 @available(iOS 16.1, *)
 @MainActor
@@ -53,72 +54,85 @@ public class LiveActivityManager {
             awayTeam: awayTeam
         )
 
-        let initialContentState = buildContentState(from: data)
+        Task { @MainActor in
+            var mutableData = data
+            let homeLogoUrl = data["homeLogo"] as? String ?? ""
+            let awayLogoUrl = data["awayLogo"] as? String ?? ""
 
-        do {
-            let activity: Activity<LiveMatchActivityAttributes>
-            if #available(iOS 16.2, *) {
-                let content = ActivityContent(state: initialContentState, staleDate: nil)
-                do {
-                    activity = try Activity.request(
-                        attributes: attributes,
-                        content: content,
-                        pushType: .token
-                    )
-                } catch {
-                    print("[LiveActivityManager] Push token request failed (\(error.localizedDescription)), falling back to pushType: nil")
-                    activity = try Activity.request(
-                        attributes: attributes,
-                        content: content,
-                        pushType: nil
-                    )
-                }
-            } else {
-                do {
-                    activity = try Activity.request(
-                        attributes: attributes,
-                        contentState: initialContentState,
-                        pushType: .token
-                    )
-                } catch {
-                    print("[LiveActivityManager] Push token request failed (\(error.localizedDescription)), falling back to pushType: nil")
-                    activity = try Activity.request(
-                        attributes: attributes,
-                        contentState: initialContentState,
-                        pushType: nil
-                    )
-                }
+            if (mutableData["homeLogoBase64"] as? String ?? "").isEmpty && !homeLogoUrl.isEmpty {
+                mutableData["homeLogoBase64"] = await self.fetchThumbnailBase64(from: homeLogoUrl)
+            }
+            if (mutableData["awayLogoBase64"] as? String ?? "").isEmpty && !awayLogoUrl.isEmpty {
+                mutableData["awayLogoBase64"] = await self.fetchThumbnailBase64(from: awayLogoUrl)
             }
 
-            let activityId = activity.id
-            let pushTokenUpdates = activity.pushTokenUpdates
+            let initialContentState = self.buildContentState(from: mutableData)
 
-            // Listen for push token updates & rotation
-            Task { @MainActor [weak self] in
-                for await pushTokenData in pushTokenUpdates {
-                    let tokenString = pushTokenData.map { String(format: "%02.2hhx", $0) }.joined()
-                    print("[LiveActivityManager] Push token received for activity \(activityId): \(tokenString)")
-                    self?.methodChannel?.invokeMethod("onPushTokenRotated", arguments: [
-                        "activityId": activityId,
-                        "matchId": matchId,
-                        "pushToken": tokenString
-                    ])
+            do {
+                let activity: Activity<LiveMatchActivityAttributes>
+                if #available(iOS 16.2, *) {
+                    let content = ActivityContent(state: initialContentState, staleDate: nil)
+                    do {
+                        activity = try Activity.request(
+                            attributes: attributes,
+                            content: content,
+                            pushType: .token
+                        )
+                    } catch {
+                        print("[LiveActivityManager] Push token request failed (\(error.localizedDescription)), falling back to pushType: nil")
+                        activity = try Activity.request(
+                            attributes: attributes,
+                            content: content,
+                            pushType: nil
+                        )
+                    }
+                } else {
+                    do {
+                        activity = try Activity.request(
+                            attributes: attributes,
+                            contentState: initialContentState,
+                            pushType: .token
+                        )
+                    } catch {
+                        print("[LiveActivityManager] Push token request failed (\(error.localizedDescription)), falling back to pushType: nil")
+                        activity = try Activity.request(
+                            attributes: attributes,
+                            contentState: initialContentState,
+                            pushType: nil
+                        )
+                    }
                 }
-            }
 
-            var initialTokenString = ""
-            if let tokenData = activity.pushToken {
-                initialTokenString = tokenData.map { String(format: "%02.2hhx", $0) }.joined()
-            }
+                let activityId = activity.id
+                let pushTokenUpdates = activity.pushTokenUpdates
 
-            result([
-                "activityId": activity.id,
-                "matchId": matchId,
-                "pushToken": initialTokenString
-            ])
-        } catch {
-            print("[LiveActivityManager] Failed to start live activity: \(error.localizedDescription)")
-            result(FlutterError(code: "START_FAILED", message: error.localizedDescription, details: nil))
+                // Listen for push token updates & rotation
+                Task { @MainActor [weak self] in
+                    for await pushTokenData in pushTokenUpdates {
+                        let tokenString = pushTokenData.map { String(format: "%02.2hhx", $0) }.joined()
+                        print("[LiveActivityManager] Push token received for activity \(activityId): \(tokenString)")
+                        self?.methodChannel?.invokeMethod("onPushTokenRotated", arguments: [
+                            "activityId": activityId,
+                            "matchId": matchId,
+                            "pushToken": tokenString
+                        ])
+                    }
+                }
+
+                var initialTokenString = ""
+                if let tokenData = activity.pushToken {
+                    initialTokenString = tokenData.map { String(format: "%02.2hhx", $0) }.joined()
+                }
+
+                result([
+                    "activityId": activity.id,
+                    "matchId": matchId,
+                    "pushToken": initialTokenString
+                ])
+            } catch {
+                print("[LiveActivityManager] Failed to start live activity: \(error.localizedDescription)")
+                result(FlutterError(code: "START_FAILED", message: error.localizedDescription, details: nil))
+            }
         }
     }
 
@@ -133,9 +147,19 @@ public class LiveActivityManager {
             return
         }
 
-        let updatedState = buildContentState(from: data)
-
         Task { @MainActor in
+            var mutableData = data
+            let homeLogoUrl = data["homeLogo"] as? String ?? ""
+            let awayLogoUrl = data["awayLogo"] as? String ?? ""
+
+            if (mutableData["homeLogoBase64"] as? String ?? "").isEmpty && !homeLogoUrl.isEmpty {
+                mutableData["homeLogoBase64"] = await self.fetchThumbnailBase64(from: homeLogoUrl)
+            }
+            if (mutableData["awayLogoBase64"] as? String ?? "").isEmpty && !awayLogoUrl.isEmpty {
+                mutableData["awayLogoBase64"] = await self.fetchThumbnailBase64(from: awayLogoUrl)
+            }
+
+            let updatedState = self.buildContentState(from: mutableData)
             if #available(iOS 16.2, *) {
                 let content = ActivityContent(state: updatedState, staleDate: nil)
                 await activity.update(content)
@@ -150,12 +174,13 @@ public class LiveActivityManager {
         let matchId = data["matchId"] as? String
         let activityId = data["activityId"] as? String
 
-        var targetActivities: [Activity<LiveMatchActivityAttributes>] = []
-
+        let targetActivities: [Activity<LiveMatchActivityAttributes>]
         if let matchId = matchId, !matchId.isEmpty {
             targetActivities = Activity<LiveMatchActivityAttributes>.activities.filter { $0.attributes.matchId == matchId }
         } else if let activityId = activityId, !activityId.isEmpty {
             targetActivities = Activity<LiveMatchActivityAttributes>.activities.filter { $0.id == activityId }
+        } else {
+            targetActivities = Activity<LiveMatchActivityAttributes>.activities
         }
 
         guard !targetActivities.isEmpty else {
@@ -180,16 +205,41 @@ public class LiveActivityManager {
         result(activeMatchIds)
     }
 
+    private func fetchThumbnailBase64(from urlString: String) async -> String {
+        guard let url = URL(string: urlString), !urlString.isEmpty else { return "" }
+        do {
+            let config = URLSessionConfiguration.default
+            config.timeoutIntervalForRequest = 2.5
+            config.timeoutIntervalForResource = 3.5
+            let session = URLSession(configuration: config)
+            let (data, _) = try await session.data(from: url)
+            guard let image = UIImage(data: data) else { return "" }
+            let targetSize = CGSize(width: 44, height: 44)
+            let renderer = UIGraphicsImageRenderer(size: targetSize)
+            let resized = renderer.image { _ in
+                image.draw(in: CGRect(origin: .zero, size: targetSize))
+            }
+            guard let pngData = resized.pngData() else { return "" }
+            return pngData.base64EncodedString()
+        } catch {
+            print("[LiveActivityManager] Failed to fetch thumbnail for \(urlString): \(error.localizedDescription)")
+            return ""
+        }
+    }
+
     private func buildContentState(from data: [String: Any]) -> LiveMatchActivityAttributes.ContentState {
+        let isArabic = data["isArabic"] as? Bool ?? true
         return LiveMatchActivityAttributes.ContentState(
             matchId: data["matchId"] as? String ?? "",
-            homeTeam: data["homeTeam"] as? String ?? "Home",
-            awayTeam: data["awayTeam"] as? String ?? "Away",
+            homeTeam: data["homeTeam"] as? String ?? (isArabic ? "المستضيف" : "Home"),
+            awayTeam: data["awayTeam"] as? String ?? (isArabic ? "الضيف" : "Away"),
             homeLogo: data["homeLogo"] as? String ?? "",
             awayLogo: data["awayLogo"] as? String ?? "",
+            homeLogoBase64: data["homeLogoBase64"] as? String ?? "",
+            awayLogoBase64: data["awayLogoBase64"] as? String ?? "",
             homeScore: "\(data["homeScore"] ?? "0")",
             awayScore: "\(data["awayScore"] ?? "0")",
-            status: data["status"] as? String ?? "مباشر",
+            status: data["status"] as? String ?? (isArabic ? "مباشر" : "LIVE"),
             statusCode: data["statusCode"] as? String ?? "LIVE",
             period: data["period"] as? String ?? "live",
             minute: data["minute"] as? String ?? "",
@@ -202,7 +252,8 @@ public class LiveActivityManager {
             isLive: data["isLive"] as? Bool ?? true,
             isFinished: data["isFinished"] as? Bool ?? false,
             isHalftime: data["isHalftime"] as? Bool ?? false,
-            isExtraTime: data["isExtraTime"] as? Bool ?? false
+            isExtraTime: data["isExtraTime"] as? Bool ?? false,
+            isArabic: isArabic
         )
     }
 }

@@ -10,6 +10,8 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
         public var awayTeam: String
         public var homeLogo: String
         public var awayLogo: String
+        public var homeLogoBase64: String
+        public var awayLogoBase64: String
         public var homeScore: String
         public var awayScore: String
         public var status: String
@@ -26,6 +28,7 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
         public var isFinished: Bool
         public var isHalftime: Bool
         public var isExtraTime: Bool
+        public var isArabic: Bool
 
         public init(
             matchId: String,
@@ -33,6 +36,8 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
             awayTeam: String,
             homeLogo: String,
             awayLogo: String,
+            homeLogoBase64: String = "",
+            awayLogoBase64: String = "",
             homeScore: String,
             awayScore: String,
             status: String,
@@ -48,13 +53,16 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
             isLive: Bool = true,
             isFinished: Bool = false,
             isHalftime: Bool = false,
-            isExtraTime: Bool = false
+            isExtraTime: Bool = false,
+            isArabic: Bool = true
         ) {
             self.matchId = matchId
             self.homeTeam = homeTeam
             self.awayTeam = awayTeam
             self.homeLogo = homeLogo
             self.awayLogo = awayLogo
+            self.homeLogoBase64 = homeLogoBase64
+            self.awayLogoBase64 = awayLogoBase64
             self.homeScore = homeScore
             self.awayScore = awayScore
             self.status = status
@@ -71,6 +79,7 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
             self.isFinished = isFinished
             self.isHalftime = isHalftime
             self.isExtraTime = isExtraTime
+            self.isArabic = isArabic
         }
     }
 

@@ -263,6 +263,9 @@ class AppRouter {
         }
         return '/';
       }
+      if (uriStr == '/home' || state.uri.path == '/home') {
+        return '/';
+      }
       return null;
     },
     errorBuilder: (context, state) {
