@@ -257,12 +257,13 @@ public class LiveActivityManager {
             let config = URLSessionConfiguration.default
             config.timeoutIntervalForRequest = 8.0
             config.timeoutIntervalForResource = 12.0
+            config.httpAdditionalHeaders = ["User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) 154Score/1.0"]
             let session = URLSession(configuration: config)
             let (data, _) = try await session.data(from: url)
             guard let image = UIImage(data: data) else { return "" }
             
-            // Render compact 24x24 thumbnail with widget background fill to preserve circular contrast
-            let targetSize = CGSize(width: 24, height: 24)
+            // Render compact 28x28 thumbnail with widget background fill to preserve circular contrast
+            let targetSize = CGSize(width: 28, height: 28)
             let renderer = UIGraphicsImageRenderer(size: targetSize)
             let resized = renderer.image { _ in
                 UIColor(red: 0.08, green: 0.10, blue: 0.14, alpha: 1.0).setFill()
@@ -286,6 +287,7 @@ public class LiveActivityManager {
 
     private func buildContentState(from data: [String: Any]) -> LiveMatchActivityAttributes.ContentState {
         let isArabic = data["isArabic"] as? Bool ?? true
+        let startTs = (data["startTimestamp"] as? NSNumber)?.doubleValue ?? (data["startTimestamp"] as? Double ?? 0.0)
         return LiveMatchActivityAttributes.ContentState(
             matchId: data["matchId"] as? String ?? "",
             homeTeam: data["homeTeam"] as? String ?? (isArabic ? "المستضيف" : "Home"),
@@ -310,7 +312,8 @@ public class LiveActivityManager {
             isFinished: data["isFinished"] as? Bool ?? false,
             isHalftime: data["isHalftime"] as? Bool ?? false,
             isExtraTime: data["isExtraTime"] as? Bool ?? false,
-            isArabic: isArabic
+            isArabic: isArabic,
+            startTimestamp: startTs
         )
     }
 }

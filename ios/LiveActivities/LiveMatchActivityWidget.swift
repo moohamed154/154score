@@ -280,11 +280,23 @@ struct StatusBadgeView: View {
                 Circle()
                     .fill(Color(red: 0.95, green: 0.22, blue: 0.22))
                     .frame(width: 6, height: 6)
-            }
 
-            Text(badgeText)
-                .font(.system(size: 11, weight: .bold))
-                .foregroundColor(badgeColor)
+                if state.startTimestamp > 0 {
+                    let startDate = Date(timeIntervalSince1970: state.startTimestamp)
+                    Text(timerInterval: startDate...startDate.addingTimeInterval(55 * 60), countsDown: false)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(badgeColor)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text(badgeText)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(badgeColor)
+                }
+            } else {
+                Text(badgeText)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(badgeColor)
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 3)

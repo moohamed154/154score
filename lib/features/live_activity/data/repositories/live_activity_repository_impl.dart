@@ -1,5 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui';
+
+import 'package:dio/dio.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_result.dart';
@@ -13,6 +18,7 @@ import '../datasources/live_activity_platform_datasource.dart';
 import '../datasources/live_activity_remote_datasource.dart';
 
 class LiveActivityRepositoryImpl implements LiveActivityRepository {
+  static final Map<String, String> _logoBase64Cache = {};
   final LiveActivityPlatformDataSource platformDataSource;
   final LiveActivityRemoteDataSource remoteDataSource;
   final LocalStorageService localStorage;
@@ -45,6 +51,52 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
     _trackingStoppedSub = platformDataSource.onTrackingStoppedStream.listen((matchId) {
       stopTrackingMatch(matchId);
     });
+  }
+
+  Future<String> _getLogoBase64(String url) async {
+    final clean = url.trim();
+    if (clean.isEmpty) return '';
+    if (_logoBase64Cache.containsKey(clean)) return _logoBase64Cache[clean]!;
+    try {
+      return await _fetchLogoBase64Internal(clean).timeout(
+        const Duration(milliseconds: 1500),
+        onTimeout: () => '',
+      );
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Future<String> _fetchLogoBase64Internal(String clean) async {
+    try {
+      Uint8List? bytes;
+      try {
+        final dio = Dio(
+          BaseOptions(
+            connectTimeout: const Duration(milliseconds: 1500),
+            receiveTimeout: const Duration(milliseconds: 1500),
+            headers: {'User-Agent': 'Mozilla/5.0 (Mobile; 154Score)'},
+          ),
+        );
+        final res = await dio.get<List<int>>(clean, options: Options(responseType: ResponseType.bytes));
+        if (res.data != null) bytes = Uint8List.fromList(res.data!);
+      } catch (_) {}
+
+      if (bytes == null || bytes.isEmpty) return '';
+
+      final codec = await instantiateImageCodec(bytes, targetWidth: 28, targetHeight: 28);
+      final frame = await codec.getNextFrame();
+      final byteData = await frame.image.toByteData(format: ImageByteFormat.png);
+      if (byteData == null) return '';
+      final b64 = base64Encode(byteData.buffer.asUint8List());
+      if (b64.isNotEmpty && b64.length <= 1400) {
+        _logoBase64Cache[clean] = b64;
+        return b64;
+      }
+      return '';
+    } catch (_) {
+      return '';
+    }
   }
 
   @override
@@ -93,14 +145,29 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         effectiveClock = "$effectiveMinute'";
       }
 
-      final resolvedHomeLogo = UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
-          UrlHelper.normalizeImageUrl(match.team1Logo) ??
+      final resolvedHomeLogo = UrlHelper.normalizeImageUrl(match.team1Logo) ??
+          UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
           match.team1Logo ??
           '';
-      final resolvedAwayLogo = UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
-          UrlHelper.normalizeImageUrl(match.team2Logo) ??
+      final resolvedAwayLogo = UrlHelper.normalizeImageUrl(match.team2Logo) ??
+          UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
           match.team2Logo ??
           '';
+
+      final homeBase64 = await _getLogoBase64(resolvedHomeLogo);
+      final awayBase64 = await _getLogoBase64(resolvedAwayLogo);
+
+      double startTimestamp = 0.0;
+      final minuteDigits = effectiveMinute.replaceAll(RegExp(r'[^0-9]'), '');
+      final minuteNum = int.tryParse(minuteDigits) ?? 0;
+      if (ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode) && minuteNum > 0) {
+        startTimestamp = DateTime.now().subtract(Duration(minutes: minuteNum)).millisecondsSinceEpoch / 1000.0;
+      }
+
+      bool isArabic = true;
+      try {
+        isArabic = localStorage.getLanguage() != 'en';
+      } catch (_) {}
 
       final payload = {
         'matchId': cleanMatchId,
@@ -108,6 +175,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'awayTeam': match.team2,
         'homeLogo': resolvedHomeLogo,
         'awayLogo': resolvedAwayLogo,
+        'homeLogoBase64': homeBase64,
+        'awayLogoBase64': awayBase64,
         'homeScore': ScoreHelper.normalizeScore(effectiveScore1),
         'awayScore': ScoreHelper.normalizeScore(effectiveScore2),
         'status': effectiveStatus,
@@ -124,7 +193,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'isFinished': ScoreHelper.isFinishedStatus(effectiveStatus, effectiveStatusCode),
         'isHalftime': ScoreHelper.isHalftimeStatus(effectiveStatus, effectiveStatusCode),
         'isExtraTime': ScoreHelper.isExtraTimeStatus(effectiveStatus, effectiveStatusCode),
-        'isArabic': localStorage.getLanguage() != 'en',
+        'isArabic': isArabic,
+        'startTimestamp': startTimestamp,
       };
 
       final nativeResult = await platformDataSource.startLiveActivity(payload);
@@ -194,14 +264,29 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         effectiveClock = "$effectiveMinute'";
       }
 
-      final resolvedHomeLogo = UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
-          UrlHelper.normalizeImageUrl(match.team1Logo) ??
+      final resolvedHomeLogo = UrlHelper.normalizeImageUrl(match.team1Logo) ??
+          UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
           match.team1Logo ??
           '';
-      final resolvedAwayLogo = UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
-          UrlHelper.normalizeImageUrl(match.team2Logo) ??
+      final resolvedAwayLogo = UrlHelper.normalizeImageUrl(match.team2Logo) ??
+          UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
           match.team2Logo ??
           '';
+
+      final homeBase64 = await _getLogoBase64(resolvedHomeLogo);
+      final awayBase64 = await _getLogoBase64(resolvedAwayLogo);
+
+      double startTimestamp = 0.0;
+      final minuteDigits = effectiveMinute.replaceAll(RegExp(r'[^0-9]'), '');
+      final minuteNum = int.tryParse(minuteDigits) ?? 0;
+      if (ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode) && minuteNum > 0) {
+        startTimestamp = DateTime.now().subtract(Duration(minutes: minuteNum)).millisecondsSinceEpoch / 1000.0;
+      }
+
+      bool isArabic = true;
+      try {
+        isArabic = localStorage.getLanguage() != 'en';
+      } catch (_) {}
 
       final payload = {
         'matchId': cleanMatchId,
@@ -209,6 +294,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'awayTeam': match.team2,
         'homeLogo': resolvedHomeLogo,
         'awayLogo': resolvedAwayLogo,
+        'homeLogoBase64': homeBase64,
+        'awayLogoBase64': awayBase64,
         'homeScore': ScoreHelper.normalizeScore(effectiveScore1),
         'awayScore': ScoreHelper.normalizeScore(effectiveScore2),
         'status': effectiveStatus,
@@ -225,7 +312,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'isFinished': ScoreHelper.isFinishedStatus(effectiveStatus, effectiveStatusCode),
         'isHalftime': ScoreHelper.isHalftimeStatus(effectiveStatus, effectiveStatusCode),
         'isExtraTime': ScoreHelper.isExtraTimeStatus(effectiveStatus, effectiveStatusCode),
-        'isArabic': localStorage.getLanguage() != 'en',
+        'isArabic': isArabic,
+        'startTimestamp': startTimestamp,
       };
 
       await platformDataSource.updateLiveActivity(payload);

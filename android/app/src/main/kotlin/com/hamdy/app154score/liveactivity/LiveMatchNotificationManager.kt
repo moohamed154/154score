@@ -161,6 +161,55 @@ object LiveMatchNotificationManager {
             setTextViewText(R.id.tv_expanded_details, if (isArabic) "اضغط للتفاصيل ↗" else "Details ↗")
         }
 
+        val homeLogoBase64 = data["homeLogoBase64"]?.toString() ?: ""
+        val awayLogoBase64 = data["awayLogoBase64"]?.toString() ?: ""
+
+        // Prioritize instant Base64 club logos from Flutter
+        if (homeLogoBase64.isNotEmpty()) {
+            try {
+                val bytes = android.util.Base64.decode(homeLogoBase64, android.util.Base64.DEFAULT)
+                val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                if (bmp != null) {
+                    val circular = toCircularBitmap(bmp)
+                    bitmapCache[homeLogoUrl.ifEmpty { "home_$matchId" }] = circular
+                    collapsedView.setImageViewBitmap(R.id.iv_home_logo, circular)
+                    expandedView.setImageViewBitmap(R.id.iv_expanded_home_logo, circular)
+                }
+            } catch (_: Exception) {}
+        }
+        if (awayLogoBase64.isNotEmpty()) {
+            try {
+                val bytes = android.util.Base64.decode(awayLogoBase64, android.util.Base64.DEFAULT)
+                val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                if (bmp != null) {
+                    val circular = toCircularBitmap(bmp)
+                    bitmapCache[awayLogoUrl.ifEmpty { "away_$matchId" }] = circular
+                    collapsedView.setImageViewBitmap(R.id.iv_away_logo, circular)
+                    expandedView.setImageViewBitmap(R.id.iv_expanded_away_logo, circular)
+                }
+            } catch (_: Exception) {}
+        }
+
+        // Live lock-screen minute Chronometer ticking
+        val minuteDigits = minute.filter { it.isDigit() }
+        val minuteNum = minuteDigits.toIntOrNull() ?: 0
+        if (isLive && !isHalftime && !isFinished && minuteNum > 0) {
+            val elapsedMillis = minuteNum * 60 * 1000L
+            val baseTime = android.os.SystemClock.elapsedRealtime() - elapsedMillis
+            collapsedView.setViewVisibility(R.id.tv_status_badge, View.GONE)
+            collapsedView.setViewVisibility(R.id.chronometer_status_badge, View.VISIBLE)
+            collapsedView.setChronometer(R.id.chronometer_status_badge, baseTime, "%s'", true)
+
+            expandedView.setViewVisibility(R.id.tv_expanded_status_badge, View.GONE)
+            expandedView.setViewVisibility(R.id.chronometer_expanded_status_badge, View.VISIBLE)
+            expandedView.setChronometer(R.id.chronometer_expanded_status_badge, baseTime, "%s'", true)
+        } else {
+            collapsedView.setViewVisibility(R.id.chronometer_status_badge, View.GONE)
+            collapsedView.setViewVisibility(R.id.tv_status_badge, View.VISIBLE)
+            expandedView.setViewVisibility(R.id.chronometer_expanded_status_badge, View.GONE)
+            expandedView.setViewVisibility(R.id.tv_expanded_status_badge, View.VISIBLE)
+        }
+
         // Load cached logos immediately if available
         bitmapCache[homeLogoUrl]?.let {
             collapsedView.setImageViewBitmap(R.id.iv_home_logo, it)
@@ -238,8 +287,9 @@ object LiveMatchNotificationManager {
             try {
                 val url = URL(urlString)
                 val connection = url.openConnection() as HttpURLConnection
-                connection.connectTimeout = 4000
-                connection.readTimeout = 4000
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) 154Score/1.0")
                 connection.doInput = true
                 connection.connect()
                 val input: InputStream = connection.inputStream

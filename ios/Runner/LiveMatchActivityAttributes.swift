@@ -29,6 +29,7 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
         public var isHalftime: Bool
         public var isExtraTime: Bool
         public var isArabic: Bool
+        public var startTimestamp: Double
 
         public init(
             matchId: String,
@@ -54,7 +55,8 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
             isFinished: Bool = false,
             isHalftime: Bool = false,
             isExtraTime: Bool = false,
-            isArabic: Bool = true
+            isArabic: Bool = true,
+            startTimestamp: Double = 0.0
         ) {
             self.matchId = matchId
             self.homeTeam = homeTeam
@@ -80,6 +82,7 @@ public struct LiveMatchActivityAttributes: ActivityAttributes {
             self.isHalftime = isHalftime
             self.isExtraTime = isExtraTime
             self.isArabic = isArabic
+            self.startTimestamp = startTimestamp
         }
     }
 

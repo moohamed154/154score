@@ -128,6 +128,10 @@ abstract class LocalStorageService {
   Future<bool> markNotificationAsRead(String id);
   Future<bool> markAllNotificationsAsRead(List<String> ids);
 
+  // Tracked Live Activity Matches
+  List<String> getTrackedLiveMatchIds() => [];
+  Future<bool> setTrackedLiveMatchIds(List<String> ids) async => false;
+
   // Developer / Debugging Mode
   bool isDeveloperModeEnabled();
   Future<bool> setDeveloperModeEnabled(bool enabled);
@@ -1235,5 +1239,17 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setDeveloperModeEnabled(bool enabled) {
     return _prefs.setBool(_keyDeveloperMode, enabled);
+  }
+
+  static const String _keyTrackedLiveMatches = '154score_tracked_live_matches';
+
+  @override
+  List<String> getTrackedLiveMatchIds() {
+    return _prefs.getStringList(_keyTrackedLiveMatches) ?? [];
+  }
+
+  @override
+  Future<bool> setTrackedLiveMatchIds(List<String> ids) {
+    return _prefs.setStringList(_keyTrackedLiveMatches, ids);
   }
 }

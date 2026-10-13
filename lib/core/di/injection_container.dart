@@ -297,6 +297,11 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerLazySingleton<LiveActivityCubit>(
-    () => LiveActivityCubit(repository: sl()),
+    () => LiveActivityCubit(
+      repository: sl(),
+      matchesRepository: sl(),
+      localStorage: sl(),
+      webSocketService: sl(),
+    ),
   );
 }
