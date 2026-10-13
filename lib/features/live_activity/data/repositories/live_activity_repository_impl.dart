@@ -9,6 +9,9 @@ import 'package:dio/dio.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/live_clock_sync.dart';
+import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../matches/domain/entities/match_entity.dart';
@@ -122,89 +125,15 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
   }) async {
     try {
       final cleanMatchId = match.id.replaceAll('match:', '').trim();
-      final effectiveScore1 = liveScore1 ?? match.score1 ?? '0';
-      final effectiveScore2 = liveScore2 ?? match.score2 ?? '0';
-      final effectiveStatus = liveStatus ?? match.status ?? 'مباشر';
-      final effectiveStatusCode = liveStatusCode ?? match.statusCode ?? 'LIVE';
-      final effectiveMinute = (liveMinute ?? match.minute ?? '').replaceAll("'", '').trim();
-      final effectivePeriod = livePeriod ?? match.period ?? 'live';
-
-      String effectiveClock = (match.time ?? '').trim();
-      if (effectiveClock.isEmpty && match.timestamp != null && match.timestamp! > 0) {
-        final dt = DateTime.fromMillisecondsSinceEpoch(match.timestamp! * 1000);
-        final hour = dt.hour.toString().padLeft(2, '0');
-        final min = dt.minute.toString().padLeft(2, '0');
-        effectiveClock = '$hour:$min';
-      }
-      if (effectiveClock.contains(':')) {
-        final parts = effectiveClock.split(':');
-        if (parts.length >= 2) {
-          effectiveClock = '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
-        }
-      }
-      if (effectiveClock.isEmpty && effectiveMinute.isNotEmpty) {
-        effectiveClock = "$effectiveMinute'";
-      }
-
-      final resolvedHomeLogo = UrlHelper.normalizeImageUrl(match.team1Logo) ??
-          UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
-          match.team1Logo ??
-          '';
-      final resolvedAwayLogo = UrlHelper.normalizeImageUrl(match.team2Logo) ??
-          UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
-          match.team2Logo ??
-          '';
-
-      final homeBase64 = await _getLogoBase64(resolvedHomeLogo);
-      final awayBase64 = await _getLogoBase64(resolvedAwayLogo);
-
-      double startTimestamp = 0.0;
-      final minuteDigits = effectiveMinute.replaceAll(RegExp(r'[^0-9]'), '');
-      final minuteNum = int.tryParse(minuteDigits) ?? 0;
-      if (ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode) && minuteNum > 0) {
-        final cached = _matchTimestamps[cleanMatchId];
-        if (cached != null && cached.minute == minuteNum && cached.startTimestamp > 0) {
-          startTimestamp = cached.startTimestamp;
-        } else {
-          startTimestamp = DateTime.now().subtract(Duration(minutes: minuteNum)).millisecondsSinceEpoch / 1000.0;
-          _matchTimestamps[cleanMatchId] = (minute: minuteNum, startTimestamp: startTimestamp);
-        }
-      } else {
-        _matchTimestamps.remove(cleanMatchId);
-      }
-
-      bool isArabic = true;
-      try {
-        isArabic = localStorage.getLanguage() != 'en';
-      } catch (_) {}
-
-      final payload = {
-        'matchId': cleanMatchId,
-        'homeTeam': match.team1,
-        'awayTeam': match.team2,
-        'homeLogo': resolvedHomeLogo,
-        'awayLogo': resolvedAwayLogo,
-        'homeLogoBase64': homeBase64,
-        'awayLogoBase64': awayBase64,
-        'homeScore': ScoreHelper.normalizeScore(effectiveScore1),
-        'awayScore': ScoreHelper.normalizeScore(effectiveScore2),
-        'status': effectiveStatus,
-        'statusCode': effectiveStatusCode,
-        'period': effectivePeriod,
-        'minute': effectiveMinute,
-        'clock': effectiveClock,
-        'leagueName': match.leagueTitle ?? '',
-        'leagueLogo': match.leagueLogo ?? '',
-        'penaltyHome': match.penaltyScore1 ?? '',
-        'penaltyAway': match.penaltyScore2 ?? '',
-        'hasPenalties': (match.penaltyScore1 != null && match.penaltyScore1!.isNotEmpty),
-        'isLive': ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode),
-        'isFinished': ScoreHelper.isFinishedStatus(effectiveStatus, effectiveStatusCode),
-        'isHalftime': ScoreHelper.isHalftimeStatus(effectiveStatus, effectiveStatusCode),
-        'isExtraTime': ScoreHelper.isExtraTimeStatus(effectiveStatus, effectiveStatusCode),
-        'isArabic': isArabic,
-        'startTimestamp': startTimestamp,
-      };
+      final payload = await _buildPayload(
+        match: match,
+        liveScore1: liveScore1,
+        liveScore2: liveScore2,
+        liveMinute: liveMinute,
+        liveStatus: liveStatus,
+        liveStatusCode: liveStatusCode,
+        livePeriod: livePeriod,
+      );
 
       final nativeResult = await platformDataSource.startLiveActivity(payload);
       final activityId = nativeResult['activityId']?.toString() ?? 'act_$cleanMatchId';
@@ -246,95 +175,236 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
     String? penaltyScore2,
   }) async {
     try {
-      final cleanMatchId = match.id.replaceAll('match:', '').trim();
-      final effectiveScore1 = liveScore1 ?? match.score1 ?? '0';
-      final effectiveScore2 = liveScore2 ?? match.score2 ?? '0';
-      final effectiveStatus = liveStatus ?? match.status ?? 'مباشر';
-      final effectiveStatusCode = liveStatusCode ?? match.statusCode ?? 'LIVE';
-      final effectiveMinute = (liveMinute ?? match.minute ?? '').replaceAll("'", '').trim();
-      final effectivePeriod = livePeriod ?? match.period ?? 'live';
-      final p1 = penaltyScore1 ?? match.penaltyScore1 ?? '';
-      final p2 = penaltyScore2 ?? match.penaltyScore2 ?? '';
-
-      String effectiveClock = (match.time ?? '').trim();
-      if (effectiveClock.isEmpty && match.timestamp != null && match.timestamp! > 0) {
-        final dt = DateTime.fromMillisecondsSinceEpoch(match.timestamp! * 1000);
-        final hour = dt.hour.toString().padLeft(2, '0');
-        final min = dt.minute.toString().padLeft(2, '0');
-        effectiveClock = '$hour:$min';
-      }
-      if (effectiveClock.contains(':')) {
-        final parts = effectiveClock.split(':');
-        if (parts.length >= 2) {
-          effectiveClock = '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
-        }
-      }
-      if (effectiveClock.isEmpty && effectiveMinute.isNotEmpty) {
-        effectiveClock = "$effectiveMinute'";
-      }
-
-      final resolvedHomeLogo = UrlHelper.normalizeImageUrl(match.team1Logo) ??
-          UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
-          match.team1Logo ??
-          '';
-      final resolvedAwayLogo = UrlHelper.normalizeImageUrl(match.team2Logo) ??
-          UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
-          match.team2Logo ??
-          '';
-
-      final homeBase64 = await _getLogoBase64(resolvedHomeLogo);
-      final awayBase64 = await _getLogoBase64(resolvedAwayLogo);
-
-      double startTimestamp = 0.0;
-      final minuteDigits = effectiveMinute.replaceAll(RegExp(r'[^0-9]'), '');
-      final minuteNum = int.tryParse(minuteDigits) ?? 0;
-      if (ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode) && minuteNum > 0) {
-        final cached = _matchTimestamps[cleanMatchId];
-        if (cached != null && cached.minute == minuteNum && cached.startTimestamp > 0) {
-          startTimestamp = cached.startTimestamp;
-        } else {
-          startTimestamp = DateTime.now().subtract(Duration(minutes: minuteNum)).millisecondsSinceEpoch / 1000.0;
-          _matchTimestamps[cleanMatchId] = (minute: minuteNum, startTimestamp: startTimestamp);
-        }
-      } else {
-        _matchTimestamps.remove(cleanMatchId);
-      }
-
-      bool isArabic = true;
-      try {
-        isArabic = localStorage.getLanguage() != 'en';
-      } catch (_) {}
-
-      final payload = {
-        'matchId': cleanMatchId,
-        'homeTeam': match.team1,
-        'awayTeam': match.team2,
-        'homeLogo': resolvedHomeLogo,
-        'awayLogo': resolvedAwayLogo,
-        'homeLogoBase64': homeBase64,
-        'awayLogoBase64': awayBase64,
-        'homeScore': ScoreHelper.normalizeScore(effectiveScore1),
-        'awayScore': ScoreHelper.normalizeScore(effectiveScore2),
-        'status': effectiveStatus,
-        'statusCode': effectiveStatusCode,
-        'period': effectivePeriod,
-        'minute': effectiveMinute,
-        'clock': effectiveClock,
-        'leagueName': match.leagueTitle ?? '',
-        'leagueLogo': match.leagueLogo ?? '',
-        'penaltyHome': p1,
-        'penaltyAway': p2,
-        'hasPenalties': (p1.isNotEmpty && p2.isNotEmpty),
-        'isLive': ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode),
-        'isFinished': ScoreHelper.isFinishedStatus(effectiveStatus, effectiveStatusCode),
-        'isHalftime': ScoreHelper.isHalftimeStatus(effectiveStatus, effectiveStatusCode),
-        'isExtraTime': ScoreHelper.isExtraTimeStatus(effectiveStatus, effectiveStatusCode),
-        'isArabic': isArabic,
-        'startTimestamp': startTimestamp,
-      };
+      final payload = await _buildPayload(
+        match: match,
+        liveScore1: liveScore1,
+        liveScore2: liveScore2,
+        liveMinute: liveMinute,
+        liveStatus: liveStatus,
+        liveStatusCode: liveStatusCode,
+        livePeriod: livePeriod,
+        penaltyScore1: penaltyScore1,
+        penaltyScore2: penaltyScore2,
+      );
 
       await platformDataSource.updateLiveActivity(payload);
     } catch (_) {}
+  }
+
+  Future<Map<String, dynamic>> _buildPayload({
+    required MatchEntity match,
+    String? liveScore1,
+    String? liveScore2,
+    String? liveMinute,
+    String? liveStatus,
+    String? liveStatusCode,
+    String? livePeriod,
+    String? penaltyScore1,
+    String? penaltyScore2,
+  }) async {
+    final cleanMatchId = match.id.replaceAll('match:', '').trim();
+    final effectiveScore1 = liveScore1 ?? match.score1 ?? '0';
+    final effectiveScore2 = liveScore2 ?? match.score2 ?? '0';
+    final effectiveStatus = liveStatus ?? match.status ?? 'مباشر';
+    final effectiveStatusCode = liveStatusCode ?? match.statusCode ?? 'LIVE';
+    final effectiveMinute = (liveMinute ?? match.minute ?? '').replaceAll("'", '').trim();
+    final effectivePeriod = livePeriod ?? match.period ?? 'live';
+    final p1 = penaltyScore1 ?? match.penaltyScore1 ?? '';
+    final p2 = penaltyScore2 ?? match.penaltyScore2 ?? '';
+
+    bool isArabic = true;
+    try {
+      isArabic = localStorage.getLanguage() != 'en';
+    } catch (_) {}
+
+    final clockData = _resolveMatchCardData(
+      match: match,
+      effectiveScore1: effectiveScore1,
+      effectiveScore2: effectiveScore2,
+      effectiveStatus: effectiveStatus,
+      effectiveStatusCode: effectiveStatusCode,
+      effectiveMinute: effectiveMinute,
+      effectivePeriod: effectivePeriod,
+      isArabic: isArabic,
+    );
+
+    final resolvedHomeLogo = UrlHelper.normalizeImageUrl(match.team1Logo) ??
+        UrlHelper.resolveTeamLogo(match.team1Id, teamName: match.team1) ??
+        match.team1Logo ??
+        '';
+    final resolvedAwayLogo = UrlHelper.normalizeImageUrl(match.team2Logo) ??
+        UrlHelper.resolveTeamLogo(match.team2Id, teamName: match.team2) ??
+        match.team2Logo ??
+        '';
+
+    final homeBase64 = await _getLogoBase64(resolvedHomeLogo);
+    final awayBase64 = await _getLogoBase64(resolvedAwayLogo);
+
+    return {
+      'matchId': cleanMatchId,
+      'homeTeam': match.team1,
+      'awayTeam': match.team2,
+      'homeLogo': resolvedHomeLogo,
+      'awayLogo': resolvedAwayLogo,
+      'homeLogoBase64': homeBase64,
+      'awayLogoBase64': awayBase64,
+      'homeScore': ScoreHelper.normalizeScore(effectiveScore1),
+      'awayScore': ScoreHelper.normalizeScore(effectiveScore2),
+      'status': effectiveStatus,
+      'statusCode': effectiveStatusCode,
+      'period': effectivePeriod,
+      'minute': clockData.displayMinute,
+      'clock': clockData.displayClock,
+      'leagueName': match.leagueTitle ?? '',
+      'leagueLogo': match.leagueLogo ?? '',
+      'penaltyHome': p1,
+      'penaltyAway': p2,
+      'hasPenalties': (p1.isNotEmpty && p2.isNotEmpty),
+      'isLive': clockData.isLive,
+      'isFinished': clockData.isFinished,
+      'isHalftime': clockData.isHalftime,
+      'isExtraTime': clockData.isExtraTime,
+      'isArabic': isArabic,
+      'startTimestamp': clockData.startTimestamp,
+    };
+  }
+
+  ({
+    int minute,
+    int second,
+    String displayMinute,
+    String displayClock,
+    bool isLive,
+    bool isFinished,
+    bool isHalftime,
+    bool isExtraTime,
+    double startTimestamp,
+  }) _resolveMatchCardData({
+    required MatchEntity match,
+    required String effectiveScore1,
+    required String effectiveScore2,
+    required String effectiveStatus,
+    required String effectiveStatusCode,
+    required String effectiveMinute,
+    required String effectivePeriod,
+    required bool isArabic,
+  }) {
+    final cleanMatchId = match.id.replaceAll('match:', '').trim();
+
+    // 1. Resolve phase matching MatchCard exactly
+    final phase = MatchStatusHelper.parseStatus(
+      effectiveStatus,
+      statusCode: effectiveStatusCode,
+      period: effectivePeriod,
+      minute: effectiveMinute,
+      extraTime: match.extraTime,
+      time: match.time,
+      date: match.date,
+      score1: effectiveScore1,
+      score2: effectiveScore2,
+      timestamp: match.timestamp,
+    );
+    final isLive = MatchStatusHelper.isLive(phase);
+    final isFinished = MatchStatusHelper.isFinished(phase);
+    final isHalftime = phase == MatchPhase.halfTime;
+    final isExtraTime = phase == MatchPhase.extraTime;
+
+    // 2. Parse raw minute and seconds if present
+    int minNum = 0;
+    int secNum = 0;
+    if (effectiveMinute.isNotEmpty && effectiveMinute != 'null') {
+      final clean = effectiveMinute.replaceAll("'", '').trim();
+      if (clean.contains('+')) {
+        final parts = clean.split('+');
+        minNum = int.tryParse(parts[0].trim()) ?? 0;
+      } else if (clean.contains(':')) {
+        final parts = clean.split(':');
+        minNum = int.tryParse(parts[0].trim()) ?? 0;
+        if (parts.length > 1) {
+          secNum = int.tryParse(parts[1].trim()) ?? 0;
+        }
+      } else {
+        minNum = int.tryParse(clean) ?? 0;
+      }
+    }
+
+    // 3. Consult LiveClockSync (in-memory sync registry used by MatchCard and MatchHeaderBanner)
+    final syncedClock = LiveClockSync.getLiveClock(cleanMatchId);
+    if (syncedClock != null) {
+      if (syncedClock.minute >= minNum && minNum > 0) {
+        minNum = syncedClock.minute;
+        secNum = syncedClock.second;
+      } else if (minNum == 0 && (syncedClock.minute > 0 || syncedClock.second > 0)) {
+        minNum = syncedClock.minute;
+        secNum = syncedClock.second;
+      }
+    } else if (minNum == 0 && isLive) {
+      // Calculate live clock from kickoff timestamp / time (same as CircularLiveClock)
+      final estimated = MatchStatusHelper.calculateLiveClock(
+        time: match.time,
+        status: effectiveStatus,
+        period: effectivePeriod,
+        timestamp: match.timestamp,
+        htTime: match.htTime,
+      );
+      minNum = estimated.minute;
+      secNum = estimated.second;
+    }
+
+    // 4. Resolve Kickoff / Display clock (matching MatchCard upcoming formatting)
+    String activeFormat = '24h';
+    try {
+      activeFormat = localStorage.getTimeFormat();
+    } catch (_) {}
+
+    String displayClock = '';
+    if (match.time != null && match.time!.isNotEmpty && match.time != '-') {
+      displayClock = DateFormatter.formatDisplayTime(
+        match.time!,
+        timeFormat: activeFormat,
+        isArabic: isArabic,
+      );
+    } else if (match.timestamp != null && match.timestamp! > 0) {
+      final dt = DateTime.fromMillisecondsSinceEpoch(match.timestamp! * 1000);
+      final raw = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      displayClock = DateFormatter.formatDisplayTime(
+        raw,
+        timeFormat: activeFormat,
+        isArabic: isArabic,
+      );
+    }
+    if (displayClock == '-' || displayClock.isEmpty) {
+      displayClock = match.time ?? '--:--';
+    }
+
+    // 5. Calculate anchor startTimestamp with exact seconds precision
+    double startTimestamp = 0.0;
+    if (isLive && !isHalftime && !isFinished && (minNum > 0 || secNum > 0)) {
+      final totalElapsedSec = minNum * 60 + secNum;
+      final cached = _matchTimestamps[cleanMatchId];
+      if (cached != null && cached.minute == minNum && cached.startTimestamp > 0) {
+        startTimestamp = cached.startTimestamp;
+      } else {
+        startTimestamp = DateTime.now().subtract(Duration(seconds: totalElapsedSec)).millisecondsSinceEpoch / 1000.0;
+        _matchTimestamps[cleanMatchId] = (minute: minNum, startTimestamp: startTimestamp);
+      }
+    } else {
+      _matchTimestamps.remove(cleanMatchId);
+    }
+
+    final displayMinute = minNum > 0 ? '$minNum' : effectiveMinute;
+
+    return (
+      minute: minNum,
+      second: secNum,
+      displayMinute: displayMinute,
+      displayClock: displayClock,
+      isLive: isLive,
+      isFinished: isFinished,
+      isHalftime: isHalftime,
+      isExtraTime: isExtraTime,
+      startTimestamp: startTimestamp,
+    );
   }
 
   @override

@@ -192,25 +192,31 @@ object LiveMatchNotificationManager {
         }
 
         // Live lock-screen minute Chronometer ticking
+        val startTimestamp = (data["startTimestamp"] as? Number)?.toDouble() ?: 0.0
         val minuteDigits = minute.filter { it.isDigit() }
         val minuteNum = minuteDigits.toIntOrNull() ?: 0
-        if (isLive && !isHalftime && !isFinished && minuteNum > 0) {
+        if (isLive && !isHalftime && !isFinished && (startTimestamp > 0 || minuteNum > 0)) {
             val cachedBase = chronometerBaseCache[matchId]
             val baseTime = if (cachedBase != null && cachedBase.first == minuteNum) {
                 cachedBase.second
             } else {
-                val elapsedMillis = minuteNum * 60 * 1000L
-                val computed = android.os.SystemClock.elapsedRealtime() - elapsedMillis
+                val computed = if (startTimestamp > 0) {
+                    val elapsedSinceStart = System.currentTimeMillis() - (startTimestamp * 1000).toLong()
+                    android.os.SystemClock.elapsedRealtime() - elapsedSinceStart
+                } else {
+                    val elapsedMillis = minuteNum * 60 * 1000L
+                    android.os.SystemClock.elapsedRealtime() - elapsedMillis
+                }
                 chronometerBaseCache[matchId] = Pair(minuteNum, computed)
                 computed
             }
             collapsedView.setViewVisibility(R.id.tv_status_badge, View.GONE)
             collapsedView.setViewVisibility(R.id.chronometer_status_badge, View.VISIBLE)
-            collapsedView.setChronometer(R.id.chronometer_status_badge, baseTime, "%s'", true)
+            collapsedView.setChronometer(R.id.chronometer_status_badge, baseTime, null, true)
 
             expandedView.setViewVisibility(R.id.tv_expanded_status_badge, View.GONE)
             expandedView.setViewVisibility(R.id.chronometer_expanded_status_badge, View.VISIBLE)
-            expandedView.setChronometer(R.id.chronometer_expanded_status_badge, baseTime, "%s'", true)
+            expandedView.setChronometer(R.id.chronometer_expanded_status_badge, baseTime, null, true)
         } else {
             chronometerBaseCache.remove(matchId)
             collapsedView.setViewVisibility(R.id.chronometer_status_badge, View.GONE)
