@@ -313,7 +313,8 @@ public class LiveActivityManager {
             isHalftime: data["isHalftime"] as? Bool ?? false,
             isExtraTime: data["isExtraTime"] as? Bool ?? false,
             isArabic: isArabic,
-            startTimestamp: startTs
+            startTimestamp: startTs,
+            matchClock: data["matchClock"] as? String ?? ""
         )
     }
 }

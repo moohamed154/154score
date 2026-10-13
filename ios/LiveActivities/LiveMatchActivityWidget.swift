@@ -283,10 +283,27 @@ struct StatusBadgeView: View {
 
                 if state.startTimestamp > 0 {
                     let startDate = Date(timeIntervalSince1970: state.startTimestamp)
-                    Text(timerInterval: startDate...startDate.addingTimeInterval(180 * 60), countsDown: false)
+                    let elapsed = Date().timeIntervalSince(startDate)
+                    if #available(iOS 18.0, *) {
+                        Text(Date.now, format: .timer(countingUpIn: startDate..<startDate.addingTimeInterval(180 * 60), showsHours: false))
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(badgeColor)
+                            .multilineTextAlignment(.center)
+                    } else if elapsed >= 3600 && !state.matchClock.isEmpty {
+                        Text(state.matchClock)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(badgeColor)
+                            .multilineTextAlignment(.center)
+                    } else {
+                        Text(timerInterval: startDate...startDate.addingTimeInterval(180 * 60), countsDown: false)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(badgeColor)
+                            .multilineTextAlignment(.center)
+                    }
+                } else if !state.matchClock.isEmpty {
+                    Text(state.matchClock)
                         .font(.system(size: 11, weight: .bold))
                         .foregroundColor(badgeColor)
-                        .multilineTextAlignment(.center)
                 } else {
                     Text(badgeText)
                         .font(.system(size: 11, weight: .bold))

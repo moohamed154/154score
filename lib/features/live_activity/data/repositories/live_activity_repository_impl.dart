@@ -255,6 +255,7 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       'period': effectivePeriod,
       'minute': clockData.displayMinute,
       'clock': clockData.displayClock,
+      'matchClock': clockData.matchClock,
       'leagueName': match.leagueTitle ?? '',
       'leagueLogo': match.leagueLogo ?? '',
       'penaltyHome': p1,
@@ -274,6 +275,7 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
     int second,
     String displayMinute,
     String displayClock,
+    String matchClock,
     bool isLive,
     bool isFinished,
     bool isHalftime,
@@ -394,11 +396,16 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
 
     final displayMinute = minNum > 0 ? '$minNum' : effectiveMinute;
 
+    final mm = minNum.toString().padLeft(2, '0');
+    final ss = secNum.toString().padLeft(2, '0');
+    final matchClock = minNum > 0 ? '$mm:$ss' : (secNum > 0 ? '00:$ss' : '');
+
     return (
       minute: minNum,
       second: secNum,
       displayMinute: displayMinute,
       displayClock: displayClock,
+      matchClock: matchClock,
       isLive: isLive,
       isFinished: isFinished,
       isHalftime: isHalftime,

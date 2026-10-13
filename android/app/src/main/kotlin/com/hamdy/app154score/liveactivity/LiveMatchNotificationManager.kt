@@ -191,11 +191,27 @@ object LiveMatchNotificationManager {
             } catch (_: Exception) {}
         }
 
-        // Live lock-screen minute Chronometer ticking
+        // Live lock-screen minute Chronometer ticking & minute:second formatting (e.g. 65:30 instead of 01:05:30)
+        val matchClock = data["matchClock"]?.toString() ?: ""
         val startTimestamp = (data["startTimestamp"] as? Number)?.toDouble() ?: 0.0
         val minuteDigits = minute.filter { it.isDigit() }
         val minuteNum = minuteDigits.toIntOrNull() ?: 0
-        if (isLive && !isHalftime && !isFinished && (startTimestamp > 0 || minuteNum > 0)) {
+
+        // Format MM:SS without hour rollover (e.g. 65:30, 90:00)
+        val formattedMinSecClock: String = if (matchClock.isNotEmpty()) {
+            matchClock
+        } else if (isLive && !isHalftime && !isFinished && startTimestamp > 0) {
+            val elapsedSec = Math.max(0L, (System.currentTimeMillis() - (startTimestamp * 1000).toLong()) / 1000)
+            val mm = elapsedSec / 60
+            val ss = elapsedSec % 60
+            String.format("%02d:%02d", mm, ss)
+        } else if (minuteNum > 0) {
+            String.format("%02d:00", minuteNum)
+        } else {
+            ""
+        }
+
+        if (isLive && !isHalftime && !isFinished && minuteNum < 60 && (startTimestamp > 0 || minuteNum > 0)) {
             val cachedBase = chronometerBaseCache[matchId]
             val baseTime = if (cachedBase != null && cachedBase.first == minuteNum) {
                 cachedBase.second
@@ -219,6 +235,13 @@ object LiveMatchNotificationManager {
             expandedView.setChronometer(R.id.chronometer_expanded_status_badge, baseTime, null, true)
         } else {
             chronometerBaseCache.remove(matchId)
+            val finalStatusText = if (isLive && !isHalftime && !isFinished && formattedMinSecClock.isNotEmpty()) {
+                formattedMinSecClock
+            } else {
+                statusText
+            }
+            collapsedView.setTextViewText(R.id.tv_status_badge, finalStatusText)
+            expandedView.setTextViewText(R.id.tv_expanded_status_badge, finalStatusText)
             collapsedView.setViewVisibility(R.id.chronometer_status_badge, View.GONE)
             collapsedView.setViewVisibility(R.id.tv_status_badge, View.VISIBLE)
             expandedView.setViewVisibility(R.id.chronometer_expanded_status_badge, View.GONE)
