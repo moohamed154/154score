@@ -283,7 +283,7 @@ struct StatusBadgeView: View {
 
                 if state.startTimestamp > 0 {
                     let startDate = Date(timeIntervalSince1970: state.startTimestamp)
-                    Text(timerInterval: startDate...startDate.addingTimeInterval(55 * 60), countsDown: false)
+                    Text(timerInterval: startDate...startDate.addingTimeInterval(180 * 60), countsDown: false)
                         .font(.system(size: 11, weight: .bold))
                         .foregroundColor(badgeColor)
                         .multilineTextAlignment(.center)

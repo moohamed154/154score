@@ -19,6 +19,7 @@ import '../datasources/live_activity_remote_datasource.dart';
 
 class LiveActivityRepositoryImpl implements LiveActivityRepository {
   static final Map<String, String> _logoBase64Cache = {};
+  static final Map<String, ({int minute, double startTimestamp})> _matchTimestamps = {};
   final LiveActivityPlatformDataSource platformDataSource;
   final LiveActivityRemoteDataSource remoteDataSource;
   final LocalStorageService localStorage;
@@ -161,7 +162,15 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       final minuteDigits = effectiveMinute.replaceAll(RegExp(r'[^0-9]'), '');
       final minuteNum = int.tryParse(minuteDigits) ?? 0;
       if (ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode) && minuteNum > 0) {
-        startTimestamp = DateTime.now().subtract(Duration(minutes: minuteNum)).millisecondsSinceEpoch / 1000.0;
+        final cached = _matchTimestamps[cleanMatchId];
+        if (cached != null && cached.minute == minuteNum && cached.startTimestamp > 0) {
+          startTimestamp = cached.startTimestamp;
+        } else {
+          startTimestamp = DateTime.now().subtract(Duration(minutes: minuteNum)).millisecondsSinceEpoch / 1000.0;
+          _matchTimestamps[cleanMatchId] = (minute: minuteNum, startTimestamp: startTimestamp);
+        }
+      } else {
+        _matchTimestamps.remove(cleanMatchId);
       }
 
       bool isArabic = true;
@@ -280,7 +289,15 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       final minuteDigits = effectiveMinute.replaceAll(RegExp(r'[^0-9]'), '');
       final minuteNum = int.tryParse(minuteDigits) ?? 0;
       if (ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode) && minuteNum > 0) {
-        startTimestamp = DateTime.now().subtract(Duration(minutes: minuteNum)).millisecondsSinceEpoch / 1000.0;
+        final cached = _matchTimestamps[cleanMatchId];
+        if (cached != null && cached.minute == minuteNum && cached.startTimestamp > 0) {
+          startTimestamp = cached.startTimestamp;
+        } else {
+          startTimestamp = DateTime.now().subtract(Duration(minutes: minuteNum)).millisecondsSinceEpoch / 1000.0;
+          _matchTimestamps[cleanMatchId] = (minute: minuteNum, startTimestamp: startTimestamp);
+        }
+      } else {
+        _matchTimestamps.remove(cleanMatchId);
       }
 
       bool isArabic = true;
@@ -307,7 +324,7 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
         'leagueLogo': match.leagueLogo ?? '',
         'penaltyHome': p1,
         'penaltyAway': p2,
-        'hasPenalties': p1.isNotEmpty && p2.isNotEmpty,
+        'hasPenalties': (p1.isNotEmpty && p2.isNotEmpty),
         'isLive': ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode),
         'isFinished': ScoreHelper.isFinishedStatus(effectiveStatus, effectiveStatusCode),
         'isHalftime': ScoreHelper.isHalftimeStatus(effectiveStatus, effectiveStatusCode),
@@ -324,6 +341,7 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
   Future<ApiResult<bool>> stopTrackingMatch(String matchId) async {
     try {
       final cleanMatchId = matchId.replaceAll('match:', '').trim();
+      _matchTimestamps.remove(cleanMatchId);
       await platformDataSource.stopLiveActivity(matchId: cleanMatchId);
       unawaited(remoteDataSource.stopActivity(matchId: cleanMatchId));
       return const ApiSuccess(true);

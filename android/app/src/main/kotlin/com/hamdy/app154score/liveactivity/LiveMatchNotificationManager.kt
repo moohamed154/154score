@@ -34,6 +34,7 @@ object LiveMatchNotificationManager {
     private val executor = Executors.newFixedThreadPool(2)
     private val bitmapCache = ConcurrentHashMap<String, Bitmap>()
     val activeTrackedMatches = ConcurrentHashMap<String, Map<String, Any>>()
+    private val chronometerBaseCache = ConcurrentHashMap<String, Pair<Int, Long>>()
 
     fun initChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -194,8 +195,15 @@ object LiveMatchNotificationManager {
         val minuteDigits = minute.filter { it.isDigit() }
         val minuteNum = minuteDigits.toIntOrNull() ?: 0
         if (isLive && !isHalftime && !isFinished && minuteNum > 0) {
-            val elapsedMillis = minuteNum * 60 * 1000L
-            val baseTime = android.os.SystemClock.elapsedRealtime() - elapsedMillis
+            val cachedBase = chronometerBaseCache[matchId]
+            val baseTime = if (cachedBase != null && cachedBase.first == minuteNum) {
+                cachedBase.second
+            } else {
+                val elapsedMillis = minuteNum * 60 * 1000L
+                val computed = android.os.SystemClock.elapsedRealtime() - elapsedMillis
+                chronometerBaseCache[matchId] = Pair(minuteNum, computed)
+                computed
+            }
             collapsedView.setViewVisibility(R.id.tv_status_badge, View.GONE)
             collapsedView.setViewVisibility(R.id.chronometer_status_badge, View.VISIBLE)
             collapsedView.setChronometer(R.id.chronometer_status_badge, baseTime, "%s'", true)
@@ -204,6 +212,7 @@ object LiveMatchNotificationManager {
             expandedView.setViewVisibility(R.id.chronometer_expanded_status_badge, View.VISIBLE)
             expandedView.setChronometer(R.id.chronometer_expanded_status_badge, baseTime, "%s'", true)
         } else {
+            chronometerBaseCache.remove(matchId)
             collapsedView.setViewVisibility(R.id.chronometer_status_badge, View.GONE)
             collapsedView.setViewVisibility(R.id.tv_status_badge, View.VISIBLE)
             expandedView.setViewVisibility(R.id.chronometer_expanded_status_badge, View.GONE)
@@ -277,6 +286,7 @@ object LiveMatchNotificationManager {
 
     fun stopTracking(context: Context, matchId: String) {
         activeTrackedMatches.remove(matchId)
+        chronometerBaseCache.remove(matchId)
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(matchId.hashCode())
         LiveMatchWidgetProvider.clearWidget(context)
