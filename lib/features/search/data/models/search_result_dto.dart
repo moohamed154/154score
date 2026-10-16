@@ -4,9 +4,8 @@ import '../../domain/entities/search_result_entity.dart';
 class SearchResultDto {
   static SearchResultsEntity fromJson(Map<String, dynamic> json, String query) {
     final rawData = json['data'];
-    final Map<String, dynamic> data = (rawData is Map)
-        ? Map<String, dynamic>.from(rawData)
-        : json;
+    final Map<String, dynamic> data =
+        (rawData is Map) ? Map<String, dynamic>.from(rawData) : json;
 
     final championships = _mapList(
       data['championships'] as List<dynamic>? ??

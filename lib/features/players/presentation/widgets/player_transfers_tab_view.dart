@@ -156,16 +156,15 @@ class PlayerTransfersTabView extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       _formatDateRange(tr),
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                            fontSize: 11,
-                          ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -205,14 +204,13 @@ class PlayerTransfersTabView extends StatelessWidget {
                   if (tr.fee.isNotEmpty && tr.fee != tr.type)
                     Text(
                       tr.fee,
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: Colors.green,
-                          ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.green,
+                      ),
                     ),
                 ],
               ),

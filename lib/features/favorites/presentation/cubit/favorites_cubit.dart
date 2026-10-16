@@ -135,8 +135,7 @@ class FavoritesState extends Equatable {
 
     final shouldRebuildCompKeys =
         favoriteCompetitions != null || competitionTitles != null;
-    final shouldRebuildTeamKeys =
-        favoriteTeams != null || teamTitles != null;
+    final shouldRebuildTeamKeys = favoriteTeams != null || teamTitles != null;
 
     return FavoritesState(
       favoriteTeams: nextTeams,
@@ -163,8 +162,10 @@ class FavoritesState extends Equatable {
       if (cachedFavCompetitionKeys.contains(cleanId)) return true;
       final rId = LeagueResolver.resolveId(cleanId);
       if (rId != null && cachedFavCompetitionKeys.contains(rId)) return true;
-      final titleForId = competitionTitles[cleanId] ?? competitionTitles[id?.trim()];
-      if (titleForId != null && isFavoriteCompetition(name: titleForId)) return true;
+      final titleForId =
+          competitionTitles[cleanId] ?? competitionTitles[id?.trim()];
+      if (titleForId != null && isFavoriteCompetition(name: titleForId))
+        return true;
     }
 
     final cleanName = name?.trim();
@@ -241,7 +242,7 @@ class FavoritesState extends Equatable {
         for (final fav in favoriteTeams) {
           if (int.tryParse(fav.trim()) == null &&
               (fav.trim().toLowerCase() == cleanName.toLowerCase() ||
-               TeamResolver.areSameTeam(fav, cleanName))) {
+                  TeamResolver.areSameTeam(fav, cleanName))) {
             return true;
           }
         }
@@ -252,13 +253,20 @@ class FavoritesState extends Equatable {
     // 2. Query only has name (no ID): Check if name or translated name maps to a stored ID
     if (cleanName != null && cleanName.isNotEmpty) {
       final lowerName = cleanName.toLowerCase();
-      final arLoc = TeamResolver.getLocalizedName(cleanName, isArabic: true)?.toLowerCase();
-      final enLoc = TeamResolver.getLocalizedName(cleanName, isArabic: false)?.toLowerCase();
+      final arLoc = TeamResolver.getLocalizedName(cleanName, isArabic: true)
+          ?.toLowerCase();
+      final enLoc = TeamResolver.getLocalizedName(cleanName, isArabic: false)
+          ?.toLowerCase();
 
-      for (final candidate in [lowerName, if (arLoc != null) arLoc, if (enLoc != null) enLoc]) {
+      for (final candidate in [
+        lowerName,
+        if (arLoc != null) arLoc,
+        if (enLoc != null) enLoc
+      ]) {
         final knownId = LocalStorageServiceImpl.knownTeamNameToId[candidate];
         if (knownId != null &&
-            favoriteTeams.any((t) => t.trim().toLowerCase() == knownId.toLowerCase())) {
+            favoriteTeams
+                .any((t) => t.trim().toLowerCase() == knownId.toLowerCase())) {
           return true;
         }
         final mappedId = teamTitles[candidate]?.toLowerCase();
@@ -288,14 +296,14 @@ class FavoritesState extends Equatable {
 
   @override
   List<Object?> get props => [
-    favoriteTeams,
-    favoriteCompetitions,
-    favoriteMatches,
-    competitionTitles,
-    teamTitles,
-    teamLogos,
-    competitionLogos,
-  ];
+        favoriteTeams,
+        favoriteCompetitions,
+        favoriteMatches,
+        competitionTitles,
+        teamTitles,
+        teamLogos,
+        competitionLogos,
+      ];
 }
 
 class FavoritesCubit extends Cubit<FavoritesState> {
@@ -336,7 +344,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     final cleanId = (id != null && id.trim().isNotEmpty)
         ? id.trim()
         : (LocalStorageServiceImpl.knownTeamNameToId[cleanName.toLowerCase()] ??
-           LocalStorageServiceImpl.knownTeamNameToId[cleanName]);
+            LocalStorageServiceImpl.knownTeamNameToId[cleanName]);
     final wasFav = isTeamFavorite(id: cleanId, name: cleanName);
     final key = (cleanId != null && cleanId.isNotEmpty) ? cleanId : cleanName;
 
@@ -419,7 +427,8 @@ class FavoritesCubit extends Cubit<FavoritesState> {
   }) async {
     final cleanId = id?.trim();
     final lookupTitle = (cleanId != null && cleanId.isNotEmpty)
-        ? (state.competitionTitles[cleanId] ?? _storage.resolveCompetitionTitle(cleanId))
+        ? (state.competitionTitles[cleanId] ??
+            _storage.resolveCompetitionTitle(cleanId))
         : null;
     final effectiveName = (name != null && name.trim().isNotEmpty)
         ? name.trim()
@@ -440,9 +449,8 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     final updatedTitles = Map<String, String>.from(state.competitionTitles);
     final updatedLogos = Map<String, String>.from(state.competitionLogos);
 
-    final canonicalName = effectiveName.isNotEmpty
-        ? effectiveName
-        : (cleanId ?? '');
+    final canonicalName =
+        effectiveName.isNotEmpty ? effectiveName : (cleanId ?? '');
 
     if (wasFav) {
       final originalLen = updatedList.length;
@@ -450,16 +458,21 @@ class FavoritesCubit extends Cubit<FavoritesState> {
       updatedList.removeWhere((item) {
         final itemTrim = item.trim();
         final itemLower = itemTrim.toLowerCase();
-        if (cleanId != null && cleanId.isNotEmpty && itemLower == cleanId.toLowerCase()) {
+        if (cleanId != null &&
+            cleanId.isNotEmpty &&
+            itemLower == cleanId.toLowerCase()) {
           return true;
         }
-        if (effectiveName.isNotEmpty && itemLower == effectiveName.toLowerCase()) {
+        if (effectiveName.isNotEmpty &&
+            itemLower == effectiveName.toLowerCase()) {
           return true;
         }
-        if (cleanId != null && state.competitionTitles[cleanId]?.toLowerCase() == itemLower) {
+        if (cleanId != null &&
+            state.competitionTitles[cleanId]?.toLowerCase() == itemLower) {
           return true;
         }
-        if (state.competitionTitles[itemTrim]?.toLowerCase() == cleanId?.toLowerCase()) {
+        if (state.competitionTitles[itemTrim]?.toLowerCase() ==
+            cleanId?.toLowerCase()) {
           return true;
         }
         if (lookupTitle != null && lookupTitle.toLowerCase() == itemLower) {
@@ -492,7 +505,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
       final resolvedLogo = (logo != null && logo.trim().isNotEmpty)
           ? logo.trim()
           : (UrlHelper.resolveChampionshipLogo(cleanId ?? canonicalName) ??
-             UrlHelper.resolveChampionshipLogo(canonicalName));
+              UrlHelper.resolveChampionshipLogo(canonicalName));
       if (resolvedLogo != null && resolvedLogo.isNotEmpty) {
         final logoMap = <String, String>{};
         if (cleanId != null && cleanId.isNotEmpty) {
@@ -560,4 +573,3 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     loadFavorites();
   }
 }
-

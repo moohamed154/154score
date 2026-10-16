@@ -63,7 +63,9 @@ void main() {
       dataSource = MatchDetailsRemoteDataSourceImpl(mockClient);
     });
 
-    test('1. Parses confirmed lineup with formations, coaches, starters, subs, and injuries', () async {
+    test(
+        '1. Parses confirmed lineup with formations, coaches, starters, subs, and injuries',
+        () async {
       when(
         () => mockClient.get(
           any(),
@@ -219,7 +221,9 @@ void main() {
       expect(result, isNull);
     });
 
-    test('3.1 Parses probable lineup with 0 substitutes as isConfirmed == false and تشكيلة متوقعة', () async {
+    test(
+        '3.1 Parses probable lineup with 0 substitutes as isConfirmed == false and تشكيلة متوقعة',
+        () async {
       when(
         () => mockClient.get(
           any(),
@@ -279,7 +283,9 @@ void main() {
       expect(result.formationTypeText, 'تشكيلة متوقعة');
     });
 
-    test('4. Strips "أخبار نادي" and "اخبار نادي" prefixes from team names cleanly', () async {
+    test(
+        '4. Strips "أخبار نادي" and "اخبار نادي" prefixes from team names cleanly',
+        () async {
       when(
         () => mockClient.get(
           any(),
@@ -313,7 +319,9 @@ void main() {
       expect(result?.away?.displayName, 'ريال بيتيس');
     });
 
-    test('5. Strips "News" suffix in English team names while preserving names like "Newcastle"', () async {
+    test(
+        '5. Strips "News" suffix in English team names while preserving names like "Newcastle"',
+        () async {
       when(
         () => mockClient.get(
           any(),
@@ -347,7 +355,9 @@ void main() {
       expect(result?.away?.displayName, 'Newcastle United');
     });
 
-    test('6. Auto-heals missing striker (\'S\') when API returns 10 players, resulting in 11 players in tactical order', () async {
+    test(
+        '6. Auto-heals missing striker (\'S\') when API returns 10 players, resulting in 11 players in tactical order',
+        () async {
       when(
         () => mockClient.get(
           ApiEndpoints.matchLineups('5795441'),

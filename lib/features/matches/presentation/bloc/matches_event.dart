@@ -25,7 +25,8 @@ extension MatchesSortOrderX on MatchesSortOrder {
   String toApiString() {
     return switch (this) {
       MatchesSortOrder.championship ||
-      MatchesSortOrder.importance => 'importance',
+      MatchesSortOrder.importance =>
+        'importance',
       MatchesSortOrder.time => 'time',
       MatchesSortOrder.importantOnly => 'important_only',
       MatchesSortOrder.league => 'league',
@@ -81,12 +82,12 @@ class ApplyMatchesFilterEvent extends MatchesEvent {
 
   @override
   List<Object?> get props => [
-    filter,
-    leagueId,
-    leagueTitle,
-    sortOrder,
-    hideFavorites,
-  ];
+        filter,
+        leagueId,
+        leagueTitle,
+        sortOrder,
+        hideFavorites,
+      ];
 }
 
 class ResetMatchesFilterEvent extends MatchesEvent {
@@ -142,10 +143,10 @@ class RefreshFavoritesEvent extends MatchesEvent {
 
   @override
   List<Object?> get props => [
-    favoriteMatches,
-    favoriteTeams,
-    favoriteCompetitions,
-  ];
+        favoriteMatches,
+        favoriteTeams,
+        favoriteCompetitions,
+      ];
 }
 
 class ChangeTimezoneEvent extends MatchesEvent {

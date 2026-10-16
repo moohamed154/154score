@@ -12,7 +12,7 @@ class StandingsRepositoryImpl implements StandingsRepository {
   final StandingsRemoteDataSource _remoteDataSource;
   final LocalStorageService? _localStorageService;
   final Map<String, ({LeagueStandingsEntity entity, DateTime timestamp})>
-  _standingsCache = {};
+      _standingsCache = {};
 
   StandingsRepositoryImpl(
     this._remoteDataSource, [
@@ -36,7 +36,10 @@ class StandingsRepositoryImpl implements StandingsRepository {
     if (cached == null && _localStorageService != null) {
       final localFallback = _tryGetLocalStandings(leagueId, lang: lang);
       if (localFallback != null) {
-        _standingsCache[key] = (entity: localFallback, timestamp: DateTime.now().subtract(const Duration(minutes: 3)));
+        _standingsCache[key] = (
+          entity: localFallback,
+          timestamp: DateTime.now().subtract(const Duration(minutes: 3))
+        );
       }
     }
 
@@ -48,30 +51,35 @@ class StandingsRepositoryImpl implements StandingsRepository {
       _standingsCache[key] = (entity: standings, timestamp: DateTime.now());
       return ApiSuccess(standings);
     } on NetworkException catch (e) {
-      final fallback = _standingsCache[key]?.entity ?? _tryGetLocalStandings(leagueId, lang: lang);
+      final fallback = _standingsCache[key]?.entity ??
+          _tryGetLocalStandings(leagueId, lang: lang);
       if (fallback != null) return ApiSuccess(fallback);
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
-      final fallback = _standingsCache[key]?.entity ?? _tryGetLocalStandings(leagueId, lang: lang);
+      final fallback = _standingsCache[key]?.entity ??
+          _tryGetLocalStandings(leagueId, lang: lang);
       if (fallback != null) return ApiSuccess(fallback);
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
-      final fallback = _standingsCache[key]?.entity ?? _tryGetLocalStandings(leagueId, lang: lang);
+      final fallback = _standingsCache[key]?.entity ??
+          _tryGetLocalStandings(leagueId, lang: lang);
       if (fallback != null) return ApiSuccess(fallback);
       return ApiFailure(ServerFailure('Failed to load standings: $e'));
     }
   }
 
-  LeagueStandingsEntity? _tryGetLocalStandings(String leagueId, {required String lang}) {
+  LeagueStandingsEntity? _tryGetLocalStandings(String leagueId,
+      {required String lang}) {
     if (_localStorageService == null) return null;
     try {
-      final raw = _localStorageService.getCachedLeagueStandings(leagueId, lang: lang);
+      final raw =
+          _localStorageService.getCachedLeagueStandings(leagueId, lang: lang);
       if (raw != null && raw.isNotEmpty) {
         final decoded = jsonDecode(raw);
-        return _remoteDataSource.parseStandings(decoded, defaultLeagueId: leagueId, lang: lang);
+        return _remoteDataSource.parseStandings(decoded,
+            defaultLeagueId: leagueId, lang: lang);
       }
     } catch (_) {}
     return null;
   }
 }
-

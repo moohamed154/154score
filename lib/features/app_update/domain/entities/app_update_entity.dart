@@ -106,17 +106,17 @@ class AppUpdateEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    latestVersion,
-    latestBuildNumber,
-    minSupportedVersion,
-    minSupportedBuildNumber,
-    forceUpdate,
-    isActive,
-    downloadUrlAndroid,
-    downloadUrlIos,
-    releaseNotes,
-    releaseNotesAr,
-    releaseNotesEn,
-    fileSizeBytes,
-  ];
+        latestVersion,
+        latestBuildNumber,
+        minSupportedVersion,
+        minSupportedBuildNumber,
+        forceUpdate,
+        isActive,
+        downloadUrlAndroid,
+        downloadUrlIos,
+        releaseNotes,
+        releaseNotesAr,
+        releaseNotesEn,
+        fileSizeBytes,
+      ];
 }

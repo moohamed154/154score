@@ -32,7 +32,8 @@ void main() {
       expect(storage.getEffectiveNewsLanguage(), 'ar');
     });
 
-    test('effective news language tracks app language when set to "app"', () async {
+    test('effective news language tracks app language when set to "app"',
+        () async {
       await storage.setLanguage('en');
       expect(storage.getNewsLanguage(), 'app');
       expect(storage.getEffectiveNewsLanguage(), 'en');
@@ -41,7 +42,9 @@ void main() {
       expect(storage.getEffectiveNewsLanguage(), 'ar');
     });
 
-    test('effective news language remains independent when set to explicit language', () async {
+    test(
+        'effective news language remains independent when set to explicit language',
+        () async {
       await storage.setLanguage('en');
       await storage.setNewsLanguage('ar');
 
@@ -105,7 +108,8 @@ void main() {
       expect(cubit.isTeamFavorite(name: 'Real Madrid', id: '123'), isFalse);
     });
 
-    test('toggleCompetition optimistically updates state immediately', () async {
+    test('toggleCompetition optimistically updates state immediately',
+        () async {
       expect(cubit.isCompetitionFavorite(name: 'Egyptian League'), isFalse);
 
       final future = cubit.toggleCompetition(
@@ -113,13 +117,15 @@ void main() {
         id: 'egy_league_1',
       );
       expect(
-        cubit.isCompetitionFavorite(name: 'Egyptian League', id: 'egy_league_1'),
+        cubit.isCompetitionFavorite(
+            name: 'Egyptian League', id: 'egy_league_1'),
         isTrue,
       );
 
       await future;
       expect(
-        cubit.isCompetitionFavorite(name: 'Egyptian League', id: 'egy_league_1'),
+        cubit.isCompetitionFavorite(
+            name: 'Egyptian League', id: 'egy_league_1'),
         isTrue,
       );
     });
@@ -166,7 +172,8 @@ void main() {
       expect(find.byIcon(Icons.star_border_rounded), findsNothing);
     });
 
-    testWidgets('triggers onTap callback and animates smoothly on tap', (tester) async {
+    testWidgets('triggers onTap callback and animates smoothly on tap',
+        (tester) async {
       bool tapped = false;
 
       await tester.pumpWidget(
@@ -204,7 +211,9 @@ void main() {
       mockWs = MockWebSocketService();
     });
 
-    testWidgets('renders both App Interface Language and News Language sections', (tester) async {
+    testWidgets(
+        'renders both App Interface Language and News Language sections',
+        (tester) async {
       final localeCubit = LocaleCubit(storage, mockWs);
       final newsLangCubit = NewsLanguageCubit(storage);
       final mockNewsBloc = MockNewsBloc();
@@ -237,4 +246,5 @@ void main() {
 }
 
 class MockWebSocketService extends Mock implements WebSocketService {}
+
 class MockNewsBloc extends Mock implements NewsBloc {}

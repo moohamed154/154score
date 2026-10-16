@@ -28,8 +28,7 @@ class FavoritesView extends StatelessWidget {
       ),
       body: BlocBuilder<FavoritesCubit, FavoritesState>(
         builder: (context, state) {
-          final hasFavorites =
-              state.favoriteTeams.isNotEmpty ||
+          final hasFavorites = state.favoriteTeams.isNotEmpty ||
               state.favoriteCompetitions.isNotEmpty ||
               state.favoriteMatches.isNotEmpty;
 
@@ -52,13 +51,14 @@ class FavoritesView extends StatelessWidget {
                   runSpacing: 8,
                   children: state.favoriteTeams.map((team) {
                     final cleanTeam = team.trim();
-                    final displayTitle =
-                        state.teamTitles[cleanTeam] ??
-                        TeamResolver.getLocalizedName(cleanTeam, isArabic: isArabic) ??
+                    final displayTitle = state.teamTitles[cleanTeam] ??
+                        TeamResolver.getLocalizedName(cleanTeam,
+                            isArabic: isArabic) ??
                         cleanTeam;
                     final teamId = int.tryParse(cleanTeam) != null
                         ? cleanTeam
-                        : LocalStorageServiceImpl.knownTeamNameToId[cleanTeam.toLowerCase()];
+                        : LocalStorageServiceImpl
+                            .knownTeamNameToId[cleanTeam.toLowerCase()];
                     final teamLogo = state.teamLogos[cleanTeam] ??
                         (teamId != null ? state.teamLogos[teamId] : null) ??
                         state.teamLogos[displayTitle] ??
@@ -84,7 +84,9 @@ class FavoritesView extends StatelessWidget {
                       label: Text(displayTitle),
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
-                        context.read<FavoritesCubit>().toggleTeam(displayTitle, id: team);
+                        context
+                            .read<FavoritesCubit>()
+                            .toggleTeam(displayTitle, id: team);
                       },
                     );
                   }).toList(),
@@ -129,24 +131,34 @@ class FavoritesView extends StatelessWidget {
                       if (fromTitles != null &&
                           fromTitles.isNotEmpty &&
                           int.tryParse(fromTitles) == null) {
-                        return LeagueResolver.resolveTitle(fromTitles, isArabic: isArabic);
+                        return LeagueResolver.resolveTitle(fromTitles,
+                            isArabic: isArabic);
                       }
-                      final resolved = LeagueResolver.resolveTitle(cleanComp, isArabic: isArabic);
-                      if (resolved.isNotEmpty && int.tryParse(resolved) == null) {
+                      final resolved = LeagueResolver.resolveTitle(cleanComp,
+                          isArabic: isArabic);
+                      if (resolved.isNotEmpty &&
+                          int.tryParse(resolved) == null) {
                         return resolved;
                       }
-                      final fallback = LocalStorageServiceImpl.defaultKnownTitles[cleanComp];
+                      final fallback =
+                          LocalStorageServiceImpl.defaultKnownTitles[cleanComp];
                       if (fallback != null && fallback.isNotEmpty) {
-                        return LeagueResolver.resolveTitle(fallback, isArabic: isArabic);
+                        return LeagueResolver.resolveTitle(fallback,
+                            isArabic: isArabic);
                       }
                       return cleanComp;
                     }();
 
                     final logoUrl = state.competitionLogos[cleanComp] ??
                         state.competitionLogos[displayTitle] ??
-                        UrlHelper.resolveChampionshipLogo(cleanComp, isDark: isDark) ??
-                        UrlHelper.resolveChampionshipLogo(LeagueResolver.resolveId(cleanComp), isDark: isDark) ??
-                        UrlHelper.resolveChampionshipLogo(LeagueResolver.resolveId(displayTitle), isDark: isDark);
+                        UrlHelper.resolveChampionshipLogo(cleanComp,
+                            isDark: isDark) ??
+                        UrlHelper.resolveChampionshipLogo(
+                            LeagueResolver.resolveId(cleanComp),
+                            isDark: isDark) ??
+                        UrlHelper.resolveChampionshipLogo(
+                            LeagueResolver.resolveId(displayTitle),
+                            isDark: isDark);
 
                     return Chip(
                       avatar: logoUrl != null
@@ -165,9 +177,9 @@ class FavoritesView extends StatelessWidget {
                       deleteIcon: const Icon(Icons.close_rounded, size: 16),
                       onDeleted: () {
                         context.read<FavoritesCubit>().toggleCompetition(
-                          id: cleanComp,
-                          name: displayTitle,
-                        );
+                              id: cleanComp,
+                              name: displayTitle,
+                            );
                       },
                     );
                   }).toList(),

@@ -128,7 +128,8 @@ class AppUpdateCubit extends Cubit<AppUpdateState> {
 
     try {
       final dir = await getTemporaryDirectory();
-      final sanitizedVersion = info.latestVersion.replaceAll(RegExp(r'[^\w.-]'), '_');
+      final sanitizedVersion =
+          info.latestVersion.replaceAll(RegExp(r'[^\w.-]'), '_');
       final savePath = '${dir.path}/154score_v$sanitizedVersion.apk';
       final file = File(savePath);
 
@@ -149,7 +150,9 @@ class AppUpdateCubit extends Cubit<AppUpdateState> {
         onReceiveProgress: (received, total) {
           if (total > 0) expectedTotal = total;
           final currentTotal = expectedTotal > 0 ? expectedTotal : total;
-          final progress = currentTotal > 0 ? (received / currentTotal).clamp(0.0, 1.0) : 0.0;
+          final progress = currentTotal > 0
+              ? (received / currentTotal).clamp(0.0, 1.0)
+              : 0.0;
 
           emit(state.copyWith(
             status: AppUpdateStatus.downloading,
@@ -170,7 +173,8 @@ class AppUpdateCubit extends Cubit<AppUpdateState> {
           emit(state.copyWith(
             status: AppUpdateStatus.downloadFailed,
             errorType: AppUpdateErrorType.corruptedFile,
-            errorMessage: 'الملف المحمل غير مكتمل أو تالف. يرجى إعادة المحاولة.',
+            errorMessage:
+                'الملف المحمل غير مكتمل أو تالف. يرجى إعادة المحاولة.',
           ));
           return;
         }

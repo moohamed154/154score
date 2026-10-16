@@ -66,14 +66,13 @@ class SectionHeader extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Text(
                   actionText ?? l10n.translate('view_all'),
-                  style:
-                      AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),

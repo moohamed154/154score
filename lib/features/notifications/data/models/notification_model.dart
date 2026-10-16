@@ -22,7 +22,8 @@ class NotificationModel extends AppNotificationEntity {
       title: json['title']?.toString() ?? '',
       body: json['body']?.toString() ?? '',
       image: json['image']?.toString(),
-      timestamp: json['timestamp'] is num ? (json['timestamp'] as num).toInt() : 0,
+      timestamp:
+          json['timestamp'] is num ? (json['timestamp'] as num).toInt() : 0,
       createdAt: json['created_at']?.toString() ?? '',
       isRead: json['is_read'] == true,
       data: json['data'] is Map<String, dynamic>

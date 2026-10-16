@@ -83,8 +83,7 @@ class NotificationService {
     try {
       await _plugin
           .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
+              AndroidFlutterLocalNotificationsPlugin>()
           ?.requestNotificationsPermission();
     } catch (_) {}
 
@@ -92,8 +91,7 @@ class NotificationService {
     try {
       await _plugin
           .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >()
+              IOSFlutterLocalNotificationsPlugin>()
           ?.requestPermissions(
             alert: true,
             badge: true,
@@ -124,7 +122,8 @@ class NotificationService {
           final granted = await androidPlugin.requestNotificationsPermission();
           return granted ?? false;
         } catch (e) {
-          debugPrint('[NotificationService] androidPlugin.requestNotificationsPermission error: $e');
+          debugPrint(
+              '[NotificationService] androidPlugin.requestNotificationsPermission error: $e');
         }
       }
     } catch (e) {
@@ -150,7 +149,8 @@ class NotificationService {
           final enabled = await androidPlugin.areNotificationsEnabled();
           return enabled ?? false;
         } catch (e) {
-          debugPrint('[NotificationService] androidPlugin.areNotificationsEnabled error: $e');
+          debugPrint(
+              '[NotificationService] androidPlugin.areNotificationsEnabled error: $e');
         }
       }
     } catch (e) {
@@ -175,8 +175,7 @@ class NotificationService {
     );
     await _plugin
         .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 
@@ -293,7 +292,9 @@ class NotificationService {
     int? notificationId,
   }) async {
     await _show(
-      id: notificationId ?? _stableId('redcard_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
+      id: notificationId ??
+          _stableId(
+              'redcard_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
       title: title,
       body: body,
       channelId: _channelMatchId,
@@ -311,7 +312,9 @@ class NotificationService {
     int? notificationId,
   }) async {
     await _show(
-      id: notificationId ?? _stableId('yellowcard_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
+      id: notificationId ??
+          _stableId(
+              'yellowcard_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
       title: title,
       body: body,
       channelId: _channelMatchId,
@@ -329,7 +332,9 @@ class NotificationService {
     int? notificationId,
   }) async {
     await _show(
-      id: notificationId ?? _stableId('sub_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
+      id: notificationId ??
+          _stableId(
+              'sub_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
       title: title,
       body: body,
       channelId: _channelMatchId,
@@ -347,7 +352,9 @@ class NotificationService {
     int? notificationId,
   }) async {
     await _show(
-      id: notificationId ?? _stableId('penmiss_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
+      id: notificationId ??
+          _stableId(
+              'penmiss_${matchId}_${DateTime.now().millisecondsSinceEpoch % 100000}'),
       title: title,
       body: body,
       channelId: _channelMatchId,

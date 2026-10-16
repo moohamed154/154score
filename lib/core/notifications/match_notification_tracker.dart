@@ -338,11 +338,15 @@ class MatchNotificationTracker {
     if (scope == 'all_matches') return true;
 
     final favMatches = (_prefs!.getStringList('app_favorite_matches') ??
-        _prefs!.getStringList('favorite_matches') ??
-        []).map((s) => s.replaceAll('match:', '').trim()).toSet();
+            _prefs!.getStringList('favorite_matches') ??
+            [])
+        .map((s) => s.replaceAll('match:', '').trim())
+        .toSet();
     final matchNotifs = (_prefs!.getStringList('match_notifications') ?? [])
-        .map((s) => s.replaceAll('match:', '').trim()).toSet();
-    if (favMatches.contains(cleanId) || matchNotifs.contains(cleanId)) return true;
+        .map((s) => s.replaceAll('match:', '').trim())
+        .toSet();
+    if (favMatches.contains(cleanId) || matchNotifs.contains(cleanId))
+      return true;
 
     final mutedTeams = (_prefs!.getStringList('team_notifications_muted') ?? [])
         .map((s) => s.toLowerCase().trim())
@@ -395,8 +399,10 @@ class MatchNotificationTracker {
     // 3. Fallback name match if IDs missing on match
     for (final name in targetNames) {
       if (name.isEmpty) continue;
-      if (!hasT1Id && (t1 == name || t1.contains(name) || name.contains(t1))) return true;
-      if (!hasT2Id && (t2 == name || t2.contains(name) || name.contains(t2))) return true;
+      if (!hasT1Id && (t1 == name || t1.contains(name) || name.contains(t1)))
+        return true;
+      if (!hasT2Id && (t2 == name || t2.contains(name) || name.contains(t2)))
+        return true;
     }
 
     return false;
@@ -416,7 +422,9 @@ class MatchNotificationTracker {
         : '⚽ Goal! [$scoringTeam] $s1 - $s2 ${scoringTeam == match.team1 ? match.team2 : match.team1}';
 
     final min = (match.minute != null && match.minute!.trim().isNotEmpty)
-        ? (isArabic ? 'الدقيقة ${match.minute}\' | ' : 'Minute ${match.minute}\' | ')
+        ? (isArabic
+            ? 'الدقيقة ${match.minute}\' | '
+            : 'Minute ${match.minute}\' | ')
         : '';
     final body = '$min${match.team1} ضد ${match.team2}';
 

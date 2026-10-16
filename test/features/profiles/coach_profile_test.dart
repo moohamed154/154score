@@ -67,7 +67,9 @@ void main() {
       expect(coach.career.last.isCurrent, isFalse);
     });
 
-    test('ProfilesRemoteDataSource parses coach payload with career and current team', () async {
+    test(
+        'ProfilesRemoteDataSource parses coach payload with career and current team',
+        () async {
       final mockResponse = {
         'status': true,
         'data': {

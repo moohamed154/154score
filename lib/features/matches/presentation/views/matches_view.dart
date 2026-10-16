@@ -86,8 +86,8 @@ class _MatchesViewState extends State<MatchesView> {
                     selectedDate: state.selectedDate,
                     onDateSelected: (date) {
                       context.read<MatchesBloc>().add(
-                        LoadMatchesEvent(date: date),
-                      );
+                            LoadMatchesEvent(date: date),
+                          );
                     },
                     isDark: Theme.of(context).brightness == Brightness.dark,
                   );
@@ -101,8 +101,8 @@ class _MatchesViewState extends State<MatchesView> {
                     if (!_isSearchVisible) {
                       _searchController.clear();
                       context.read<MatchesBloc>().add(
-                        const SearchMatchesEvent(''),
-                      );
+                            const SearchMatchesEvent(''),
+                          );
                     }
                   });
                 },
@@ -123,8 +123,8 @@ class _MatchesViewState extends State<MatchesView> {
                         color: state.hasActiveFilter ? AppColors.primary : null,
                       ),
                     ),
-                    tooltip: AppLocalizations.of(context)
-                        .translate('filter_title'),
+                    tooltip:
+                        AppLocalizations.of(context).translate('filter_title'),
                     onPressed: () => MatchFilterBottomSheet.show(context),
                   );
                 },
@@ -137,12 +137,12 @@ class _MatchesViewState extends State<MatchesView> {
       body: BlocListener<FavoritesCubit, FavoritesState>(
         listener: (context, favState) {
           context.read<MatchesBloc>().add(
-            RefreshFavoritesEvent(
-              favoriteMatches: favState.favoriteMatches,
-              favoriteTeams: favState.favoriteTeams,
-              favoriteCompetitions: favState.favoriteCompetitions,
-            ),
-          );
+                RefreshFavoritesEvent(
+                  favoriteMatches: favState.favoriteMatches,
+                  favoriteTeams: favState.favoriteTeams,
+                  favoriteCompetitions: favState.favoriteCompetitions,
+                ),
+              );
         },
         child: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, state) {
@@ -158,8 +158,8 @@ class _MatchesViewState extends State<MatchesView> {
                     selectedDate: state.selectedDate,
                     onDateSelected: (date) {
                       context.read<MatchesBloc>().add(
-                        LoadMatchesEvent(date: date),
-                      );
+                            LoadMatchesEvent(date: date),
+                          );
                     },
                   ),
 
@@ -187,8 +187,8 @@ class _MatchesViewState extends State<MatchesView> {
                         ),
                         onChanged: (query) {
                           context.read<MatchesBloc>().add(
-                            SearchMatchesEvent(query),
-                          );
+                                SearchMatchesEvent(query),
+                              );
                         },
                       ),
                     ),
@@ -199,8 +199,8 @@ class _MatchesViewState extends State<MatchesView> {
                     liveCount: state.liveMatchesCount,
                     onFilterSelected: (filter) {
                       context.read<MatchesBloc>().add(
-                        ChangeFilterEvent(filter),
-                      );
+                            ChangeFilterEvent(filter),
+                          );
                     },
                   ),
 
@@ -211,12 +211,12 @@ class _MatchesViewState extends State<MatchesView> {
                       onRefresh: () async {
                         final completer = Completer<void>();
                         context.read<MatchesBloc>().add(
-                          LoadMatchesEvent(
-                            date: state.selectedDate,
-                            isRefresh: true,
-                            completer: completer,
-                          ),
-                        );
+                              LoadMatchesEvent(
+                                date: state.selectedDate,
+                                isRefresh: true,
+                                completer: completer,
+                              ),
+                            );
                         try {
                           await completer.future.timeout(
                             const Duration(seconds: 3),
@@ -245,9 +245,8 @@ class _MatchesViewState extends State<MatchesView> {
         enabled: true,
         effect: ShimmerEffect(
           baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
-          highlightColor: isDark
-              ? const Color(0xFF384B66)
-              : const Color(0xFFF1F5F9),
+          highlightColor:
+              isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
           duration: const Duration(milliseconds: 1500),
         ),
         child: ListView(
@@ -299,8 +298,8 @@ class _MatchesViewState extends State<MatchesView> {
         message: state.errorMessage,
         onRetry: () {
           context.read<MatchesBloc>().add(
-            LoadMatchesEvent(date: state.selectedDate),
-          );
+                LoadMatchesEvent(date: state.selectedDate),
+              );
         },
       );
     }
@@ -326,7 +325,8 @@ class _MatchesViewState extends State<MatchesView> {
 
     // Extract Favorite Matches for today (pinned on top)
     final List<MatchEntity> favoriteMatches = [];
-    if (state.activeFilter != MatchFilterType.favorites && !state.hideFavorites) {
+    if (state.activeFilter != MatchFilterType.favorites &&
+        !state.hideFavorites) {
       for (final league in state.filteredLeagues) {
         for (final m in league.matches) {
           if (m.isFavorite && !favoriteMatches.any((fav) => fav.id == m.id)) {

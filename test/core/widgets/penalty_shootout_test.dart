@@ -24,7 +24,9 @@ void main() {
 
       expect(
         find.byWidgetPredicate(
-          (w) => w is Text && (w.data == 'Penalty Kicks' || w.data == 'ركلات الترجيح'),
+          (w) =>
+              w is Text &&
+              (w.data == 'Penalty Kicks' || w.data == 'ركلات الترجيح'),
         ),
         findsOneWidget,
       );

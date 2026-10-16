@@ -16,7 +16,9 @@ void main() {
   });
 
   group('Stadium Profile & Image URL Normalization Tests', () {
-    test('UrlHelper rewrites /stadium/820/ and /stadium/800/ to canonical 600px CDN URL', () {
+    test(
+        'UrlHelper rewrites /stadium/820/ and /stadium/800/ to canonical 600px CDN URL',
+        () {
       const url820 = 'https://imgs.ysscores.com/stadium/820/1461724761244.jpg';
       final normalized820 = UrlHelper.normalizeImageUrl(url820);
       expect(
@@ -32,7 +34,9 @@ void main() {
       );
     });
 
-    test('UrlHelper.normalizeStadiumImageUrl maps bare filenames to canonical 600px CDN URL', () {
+    test(
+        'UrlHelper.normalizeStadiumImageUrl maps bare filenames to canonical 600px CDN URL',
+        () {
       const bareFilename = '1461724761244.jpg';
       final res = UrlHelper.normalizeStadiumImageUrl(bareFilename);
       expect(
@@ -59,7 +63,9 @@ void main() {
       },
     );
 
-    test('ProfilesRemoteDataSourceImpl parses stadium response and normalizes image to 600px CDN', () async {
+    test(
+        'ProfilesRemoteDataSourceImpl parses stadium response and normalizes image to 600px CDN',
+        () async {
       final mockJson = {
         'status': 'success',
         'data': {

@@ -45,11 +45,13 @@ class TeamHeaderCard extends StatelessWidget {
     final logo = (profile?.teamLogo != null && profile!.teamLogo!.isNotEmpty)
         ? profile!.teamLogo
         : (fallbackLogo ??
-              (profile?.teamId != null && int.tryParse(profile!.teamId) != null
-                  ? UrlHelper.resolveTeamLogo(profile!.teamId)
-                  : null));
+            (profile?.teamId != null && int.tryParse(profile!.teamId) != null
+                ? UrlHelper.resolveTeamLogo(profile!.teamId)
+                : null));
     final rawLeagueName = profile?.leagueName ??
-        (isSkeleton ? (isArabic ? 'الدوري الإسباني' : 'League Competition') : null);
+        (isSkeleton
+            ? (isArabic ? 'الدوري الإسباني' : 'League Competition')
+            : null);
     final leagueName = LeagueResolver.resolveTitle(
       rawLeagueName,
       isArabic: isArabic,
@@ -261,10 +263,10 @@ class TeamHeaderCard extends StatelessWidget {
                       padding: const EdgeInsets.all(6.0),
                       onTap: () {
                         context.read<FavoritesCubit>().toggleTeam(
-                          name,
-                          id: profile?.teamId,
-                          logo: logo,
-                        );
+                              name,
+                              id: profile?.teamId,
+                              logo: logo,
+                            );
                       },
                     );
                   },
@@ -328,9 +330,9 @@ class TeamHeaderCard extends StatelessWidget {
                         final (color, label) = switch (res) {
                           'W' => (AppColors.primary, isArabic ? 'ف' : 'W'),
                           'D' => (
-                            const Color(0xFFEAB308),
-                            isArabic ? 'ت' : 'D',
-                          ),
+                              const Color(0xFFEAB308),
+                              isArabic ? 'ت' : 'D',
+                            ),
                           'L' => (AppColors.liveRed, isArabic ? 'خ' : 'L'),
                           _ => (Colors.grey, res),
                         };

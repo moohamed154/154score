@@ -67,17 +67,17 @@ class LeagueState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    leagueId,
-    leagueTitle,
-    leagueLogo,
-    country,
-    season,
-    standings,
-    topScorers,
-    topAssists,
-    matches,
-    selectedTab,
-    errorMessage,
-  ];
+        status,
+        leagueId,
+        leagueTitle,
+        leagueLogo,
+        country,
+        season,
+        standings,
+        topScorers,
+        topAssists,
+        matches,
+        selectedTab,
+        errorMessage,
+      ];
 }

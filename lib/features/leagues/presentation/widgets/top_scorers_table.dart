@@ -34,18 +34,17 @@ class TopScorersTable extends StatelessWidget {
         titleKey: 'tab_overview',
         customMessage: isAssists
             ? (isArabic
-                  ? 'لا توجد بيانات للصناع'
-                  : 'No top assists data available')
+                ? 'لا توجد بيانات للصناع'
+                : 'No top assists data available')
             : (isArabic
-                  ? 'لا توجد بيانات للهدافين'
-                  : 'No top scorers data available'),
+                ? 'لا توجد بيانات للهدافين'
+                : 'No top scorers data available'),
         icon: Icons.emoji_events_outlined,
       );
     }
 
-    final displayRows = maxRows != null
-        ? scorers.take(maxRows!).toList()
-        : scorers;
+    final displayRows =
+        maxRows != null ? scorers.take(maxRows!).toList() : scorers;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 8),
@@ -74,16 +73,15 @@ class TopScorersTable extends StatelessWidget {
                   width: isSmall ? 28 : 34,
                   child: Text(
                     '#',
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -91,16 +89,15 @@ class TopScorersTable extends StatelessWidget {
                 Expanded(
                   child: Text(
                     isArabic ? 'اللاعب' : 'Player',
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
                   ),
                 ),
                 if (!isAssists) ...[
@@ -108,16 +105,15 @@ class TopScorersTable extends StatelessWidget {
                     width: isSmall ? 36 : 46,
                     child: Text(
                       isArabic ? 'الأهداف' : 'Goals',
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                          ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -125,17 +121,16 @@ class TopScorersTable extends StatelessWidget {
                     width: isSmall ? 28 : 36,
                     child: Text(
                       isArabic ? 'ر.ج' : 'P.G',
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: isSmall ? 10 : 11,
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                          ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: isSmall ? 10 : 11,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -143,17 +138,16 @@ class TopScorersTable extends StatelessWidget {
                     width: isSmall ? 28 : 36,
                     child: Text(
                       isArabic ? 'ض.ج' : 'P.M',
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: isSmall ? 10 : 11,
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                          ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: isSmall ? 10 : 11,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -162,16 +156,15 @@ class TopScorersTable extends StatelessWidget {
                     width: isSmall ? 44 : 56,
                     child: Text(
                       isArabic ? 'صناعة' : 'Assists',
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                          ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -239,19 +232,18 @@ class TopScorersTable extends StatelessWidget {
             ),
             child: Text(
               scorer.rank.toString(),
-              style:
-                  AppTypography.getBodyMedium(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    fontWeight: isTopThree ? FontWeight.w800 : FontWeight.w600,
-                    color: isTopThree
-                        ? (isDark ? rankBg : const Color(0xFFB8860B))
-                        : (isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary),
-                    fontSize: isSmall ? 12 : 13,
-                  ),
+              style: AppTypography.getBodyMedium(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                fontWeight: isTopThree ? FontWeight.w800 : FontWeight.w600,
+                color: isTopThree
+                    ? (isDark ? rankBg : const Color(0xFFB8860B))
+                    : (isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary),
+                fontSize: isSmall ? 12 : 13,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -278,8 +270,7 @@ class TopScorersTable extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       InkWell(
-                        onTap:
-                            (scorer.playerId != null &&
+                        onTap: (scorer.playerId != null &&
                                 scorer.playerId!.isNotEmpty)
                             ? () {
                                 context.push(
@@ -289,19 +280,17 @@ class TopScorersTable extends StatelessWidget {
                             : null,
                         child: Text(
                           scorer.playerName,
-                          style:
-                              AppTypography.getBodyMedium(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: isSmall ? 12 : 14,
-                                color:
-                                    (scorer.playerId != null &&
-                                        scorer.playerId!.isNotEmpty)
-                                    ? AppColors.primary
-                                    : null,
-                              ),
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: isSmall ? 12 : 14,
+                            color: (scorer.playerId != null &&
+                                    scorer.playerId!.isNotEmpty)
+                                ? AppColors.primary
+                                : null,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -338,16 +327,15 @@ class TopScorersTable extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   scorer.teamName!,
-                                  style:
-                                      AppTypography.getBodySmall(
-                                        isDark: isDark,
-                                        isArabic: isArabic,
-                                      ).copyWith(
-                                        fontSize: isSmall ? 10 : 11,
-                                        color: isDark
-                                            ? AppColors.darkTextMuted
-                                            : AppColors.lightTextMuted,
-                                      ),
+                                  style: AppTypography.getBodySmall(
+                                    isDark: isDark,
+                                    isArabic: isArabic,
+                                  ).copyWith(
+                                    fontSize: isSmall ? 10 : 11,
+                                    color: isDark
+                                        ? AppColors.darkTextMuted
+                                        : AppColors.lightTextMuted,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -382,15 +370,14 @@ class TopScorersTable extends StatelessWidget {
                   ),
                   child: Text(
                     scorer.goals.toString(),
-                    style:
-                        AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          fontSize: isSmall ? 12 : 13,
-                        ),
+                    style: AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                      fontSize: isSmall ? 12 : 13,
+                    ),
                   ),
                 ),
               ),
@@ -400,17 +387,16 @@ class TopScorersTable extends StatelessWidget {
               width: isSmall ? 28 : 36,
               child: Text(
                 '${scorer.penaltyGoals ?? 0}',
-                style:
-                    AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: isSmall ? 11 : 12,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: isSmall ? 11 : 12,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -419,17 +405,16 @@ class TopScorersTable extends StatelessWidget {
               width: isSmall ? 28 : 36,
               child: Text(
                 '${scorer.penaltiesMissed ?? 0}',
-                style:
-                    AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: isSmall ? 11 : 12,
-                      color: isDark
-                          ? AppColors.darkTextMuted
-                          : AppColors.lightTextMuted,
-                    ),
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: isSmall ? 11 : 12,
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -451,15 +436,14 @@ class TopScorersTable extends StatelessWidget {
                   ),
                   child: Text(
                     (scorer.assists ?? scorer.goals).toString(),
-                    style:
-                        AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          fontSize: isSmall ? 12 : 13,
-                        ),
+                    style: AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                      fontSize: isSmall ? 12 : 13,
+                    ),
                   ),
                 ),
               ),

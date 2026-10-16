@@ -11,8 +11,10 @@ abstract class LiveActivityPlatformDataSource {
   Stream<String> get onTrackingStoppedStream;
 }
 
-class LiveActivityPlatformDataSourceImpl implements LiveActivityPlatformDataSource {
-  static const MethodChannel _channel = MethodChannel('com.hamdy.app154score/live_activity');
+class LiveActivityPlatformDataSourceImpl
+    implements LiveActivityPlatformDataSource {
+  static const MethodChannel _channel =
+      MethodChannel('com.hamdy.app154score/live_activity');
 
   final StreamController<Map<String, dynamic>> _pushTokenRotatedController =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -57,9 +59,11 @@ class LiveActivityPlatformDataSourceImpl implements LiveActivityPlatformDataSour
   }
 
   @override
-  Future<Map<String, dynamic>> startLiveActivity(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> startLiveActivity(
+      Map<String, dynamic> data) async {
     try {
-      final result = await _channel.invokeMethod<Map>('startLiveActivity', data);
+      final result =
+          await _channel.invokeMethod<Map>('startLiveActivity', data);
       if (result != null) {
         return Map<String, dynamic>.from(result);
       }
@@ -72,7 +76,8 @@ class LiveActivityPlatformDataSourceImpl implements LiveActivityPlatformDataSour
   @override
   Future<bool> updateLiveActivity(Map<String, dynamic> data) async {
     try {
-      final result = await _channel.invokeMethod<bool>('updateLiveActivity', data);
+      final result =
+          await _channel.invokeMethod<bool>('updateLiveActivity', data);
       return result ?? false;
     } catch (_) {
       return false;
@@ -95,7 +100,8 @@ class LiveActivityPlatformDataSourceImpl implements LiveActivityPlatformDataSour
   @override
   Future<List<String>> getActiveActivities() async {
     try {
-      final result = await _channel.invokeListMethod<String>('getActiveActivities');
+      final result =
+          await _channel.invokeListMethod<String>('getActiveActivities');
       return result ?? [];
     } catch (_) {
       return [];

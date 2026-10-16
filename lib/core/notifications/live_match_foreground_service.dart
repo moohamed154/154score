@@ -152,25 +152,29 @@ class LiveMatchTaskHandler extends TaskHandler {
         await MatchNotificationTracker.instance.processMatches(matches);
         _updateNotificationStatus(matches, lang);
 
-        final trackedIds = _prefs?.getStringList('154score_tracked_live_matches') ?? [];
+        final trackedIds =
+            _prefs?.getStringList('154score_tracked_live_matches') ?? [];
         if (trackedIds.isNotEmpty) {
           final trackedMatches = matches
-              .where((m) => trackedIds.contains(m.id.replaceAll('match:', '').trim()))
+              .where((m) =>
+                  trackedIds.contains(m.id.replaceAll('match:', '').trim()))
               .toList();
           if (trackedMatches.isNotEmpty) {
             FlutterForegroundTask.sendDataToMain({
               'type': 'tracked_matches_update',
-              'matches': trackedMatches.map((m) => {
-                'id': m.id,
-                'score1': m.score1,
-                'score2': m.score2,
-                'minute': m.minute,
-                'status': m.status,
-                'statusCode': m.statusCode,
-                'period': m.period,
-                'penaltyScore1': m.penaltyScore1,
-                'penaltyScore2': m.penaltyScore2,
-              }).toList(),
+              'matches': trackedMatches
+                  .map((m) => {
+                        'id': m.id,
+                        'score1': m.score1,
+                        'score2': m.score2,
+                        'minute': m.minute,
+                        'status': m.status,
+                        'statusCode': m.statusCode,
+                        'period': m.period,
+                        'penaltyScore1': m.penaltyScore1,
+                        'penaltyScore2': m.penaltyScore2,
+                      })
+                  .toList(),
             });
           }
         }
@@ -236,8 +240,8 @@ class LiveMatchTaskHandler extends TaskHandler {
 
         if (items.isEmpty) return;
 
-        final seenSet = (_prefs?.getStringList('154score_seen_notif_ids') ?? [])
-            .toSet();
+        final seenSet =
+            (_prefs?.getStringList('154score_seen_notif_ids') ?? []).toSet();
         final isFirstRun =
             !(_prefs?.containsKey('154score_seen_notif_ids') ?? false);
 
@@ -438,7 +442,8 @@ class LiveMatchForegroundService {
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'match_foreground_service',
         channelName: '154Score خدمة المتابعة المباشرة',
-        channelDescription: 'إشعار متابعة أهداف وأحداث المباريات المباشرة لحظة بلحظة بدون تأخير',
+        channelDescription:
+            'إشعار متابعة أهداف وأحداث المباريات المباشرة لحظة بلحظة بدون تأخير',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         enableVibration: false,

@@ -9,7 +9,8 @@ abstract class NewsRemoteDataSource {
     required String lang,
     int page = 1,
   });
-  Future<NewsDetailEntity> getNewsDetail(String id, {String? slug, required String lang});
+  Future<NewsDetailEntity> getNewsDetail(String id,
+      {String? slug, required String lang});
 }
 
 class NewsRemoteDataSourceImpl implements NewsRemoteDataSource {
@@ -80,10 +81,7 @@ class NewsRemoteDataSourceImpl implements NewsRemoteDataSource {
     final data = response['data'] as Map? ?? {};
     final news = data['news'] as List? ?? [];
 
-    return news
-        .whereType<Map>()
-        .map((item) => _articleFromMap(item))
-        .toList();
+    return news.whereType<Map>().map((item) => _articleFromMap(item)).toList();
   }
 
   @override
@@ -100,9 +98,7 @@ class NewsRemoteDataSourceImpl implements NewsRemoteDataSource {
     final data = response['data'] as Map? ?? {};
 
     final rawParagraphs = data['paragraphs'] as List? ?? [];
-    final paragraphs = rawParagraphs
-        .whereType<String>()
-        .toList();
+    final paragraphs = rawParagraphs.whereType<String>().toList();
 
     final rawTags = data['tags'] as List? ?? [];
     final tags = rawTags.whereType<String>().toList();

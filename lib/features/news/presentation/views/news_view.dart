@@ -34,14 +34,15 @@ class NewsView extends StatelessWidget {
             final newsLangSetting = sl<LocalStorageService>().getNewsLanguage();
             if (newsLangSetting == 'app') {
               context.read<NewsBloc>().add(
-                ChangeNewsLanguageEvent(localeState.locale.languageCode),
-              );
+                    ChangeNewsLanguageEvent(localeState.locale.languageCode),
+                  );
             }
           },
         ),
         BlocListener<NewsLanguageCubit, String>(
           listener: (context, newsLang) {
-            final appLang = context.read<LocaleCubit>().state.locale.languageCode;
+            final appLang =
+                context.read<LocaleCubit>().state.locale.languageCode;
             final targetLang = newsLang == 'app' ? appLang : newsLang;
             context.read<NewsBloc>().add(ChangeNewsLanguageEvent(targetLang));
           },
@@ -83,8 +84,8 @@ class NewsView extends StatelessWidget {
               onRefresh: () {
                 final completer = Completer<void>();
                 context.read<NewsBloc>().add(
-                  LoadNewsFeedEvent(isRefresh: true, completer: completer),
-                );
+                      LoadNewsFeedEvent(isRefresh: true, completer: completer),
+                    );
                 return completer.future;
               },
               child: _NewsBody(
@@ -171,9 +172,8 @@ class _NewsBody extends StatelessWidget {
       textDirection: isNewsArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Skeletonizer(
         enabled: isLoading,
-        containersColor: isDark
-            ? AppColors.darkCardElevated
-            : AppColors.lightCardElevated,
+        containersColor:
+            isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
         child: CustomScrollView(
           slivers: [
             // Section label: Latest News

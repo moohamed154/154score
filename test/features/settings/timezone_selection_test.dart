@@ -39,7 +39,8 @@ void main() {
       expect(zero.formattedOffset, 'UTC +0');
     });
 
-    test('matches search queries across numeric, Arabic, and English strings', () {
+    test('matches search queries across numeric, Arabic, and English strings',
+        () {
       final riyadhOffset = UtcOffsetInfo.findByOffset(3);
 
       expect(riyadhOffset.matches('3'), isTrue);
@@ -81,7 +82,8 @@ void main() {
 
       await storage.setTimezoneAuto(true);
       expect(storage.isTimezoneAuto(), isTrue);
-      expect(storage.getTimezoneOffset(), DateTime.now().timeZoneOffset.inHours);
+      expect(
+          storage.getTimezoneOffset(), DateTime.now().timeZoneOffset.inHours);
     });
   });
 
@@ -123,7 +125,8 @@ void main() {
       when(() => mockMatchesBloc.state).thenReturn(
         MatchesState(selectedDate: DateTime(2026, 9, 24)),
       );
-      when(() => mockMatchesBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => mockMatchesBloc.stream)
+          .thenAnswer((_) => const Stream.empty());
     });
 
     tearDown(() async {
@@ -149,7 +152,8 @@ void main() {
       );
     }
 
-    testWidgets('renders search field, auto device tile, and offset list', (tester) async {
+    testWidgets('renders search field, auto device tile, and offset list',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -159,7 +163,8 @@ void main() {
       expect(find.text('UTC +3'), findsWidgets);
     });
 
-    testWidgets('filters timezones when user types into search', (tester) async {
+    testWidgets('filters timezones when user types into search',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 

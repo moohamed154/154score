@@ -52,12 +52,11 @@ class TimelineEventItem extends StatelessWidget {
     final isPeriodEvent = _isPeriodEvent(event.type, event.playerName);
 
     if (isPeriodEvent) {
-      final scoreStr =
-          (event.score != null &&
-                  event.score!.trim().isNotEmpty &&
-                  event.score != '-')
-              ? event.score!.trim()
-              : null;
+      final scoreStr = (event.score != null &&
+              event.score!.trim().isNotEmpty &&
+              event.score != '-')
+          ? event.score!.trim()
+          : null;
       final label = _getPeriodLabel(event, l10n, isArabic);
 
       final periodWidget = Padding(
@@ -220,18 +219,15 @@ class TimelineEventItem extends StatelessWidget {
     );
 
     final isSub = visualType == MatchVisualEventType.substitution;
-    final hasSecondary =
-        event.secondaryPlayerName != null &&
+    final hasSecondary = event.secondaryPlayerName != null &&
         event.secondaryPlayerName!.trim().isNotEmpty;
 
     // For substitution events, the player coming IN is displayed on top,
     // and the player going OUT (with red arrow down) is displayed on bottom.
-    final mainPlayerName = (isSub && hasSecondary)
-        ? event.secondaryPlayerName!
-        : event.playerName;
-    final subPlayerOutName = (isSub && hasSecondary)
-        ? event.playerName
-        : event.secondaryPlayerName;
+    final mainPlayerName =
+        (isSub && hasSecondary) ? event.secondaryPlayerName! : event.playerName;
+    final subPlayerOutName =
+        (isSub && hasSecondary) ? event.playerName : event.secondaryPlayerName;
 
     final iconWidget = MatchEventVisualIcon(
       type: visualType,
@@ -242,9 +238,8 @@ class TimelineEventItem extends StatelessWidget {
     // Substitution events: two distinct players, each with their own avatar
     if (isSub && subPlayerOutName != null && subPlayerOutName.isNotEmpty) {
       final subWidget = Column(
-        crossAxisAlignment: isHome
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           // Player IN (mainPlayerName)
@@ -268,7 +263,9 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                         child: Text(
                           mainPlayerName,
-                          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          style: (isArabic
+                              ? GoogleFonts.cairo
+                              : GoogleFonts.inter)(
                             fontWeight: FontWeight.w600,
                             fontSize: isSmall ? 11.0 : 12.0,
                             height: 1.2,
@@ -319,7 +316,9 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                         child: Text(
                           mainPlayerName,
-                          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          style: (isArabic
+                              ? GoogleFonts.cairo
+                              : GoogleFonts.inter)(
                             fontWeight: FontWeight.w600,
                             fontSize: isSmall ? 11.0 : 12.0,
                             height: 1.2,
@@ -358,7 +357,9 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                         child: Text(
                           subPlayerOutName,
-                          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          style: (isArabic
+                              ? GoogleFonts.cairo
+                              : GoogleFonts.inter)(
                             fontSize: isSmall ? 9.5 : 10.5,
                             color: AppColors.redCard,
                             fontWeight: FontWeight.w600,
@@ -406,7 +407,9 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                         child: Text(
                           subPlayerOutName,
-                          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          style: (isArabic
+                              ? GoogleFonts.cairo
+                              : GoogleFonts.inter)(
                             fontSize: isSmall ? 9.5 : 10.5,
                             color: AppColors.redCard,
                             fontWeight: FontWeight.w600,
@@ -423,9 +426,8 @@ class TimelineEventItem extends StatelessWidget {
       );
 
       return Row(
-        mainAxisAlignment: isHome
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: isHome
             ? [
@@ -457,17 +459,15 @@ class TimelineEventItem extends StatelessWidget {
     );
 
     final textWidget = Column(
-      crossAxisAlignment: isHome
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
+      crossAxisAlignment:
+          isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         // Player Name & Score
         Row(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: isHome
-              ? MainAxisAlignment.end
-              : MainAxisAlignment.start,
+          mainAxisAlignment:
+              isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: isHome
               ? [
@@ -486,7 +486,8 @@ class TimelineEventItem extends StatelessWidget {
                       ),
                       child: Text(
                         mainPlayerName,
-                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                        style:
+                            (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                           fontWeight: FontWeight.w600,
                           fontSize: isSmall ? 11.0 : 12.0,
                           height: 1.2,
@@ -513,7 +514,8 @@ class TimelineEventItem extends StatelessWidget {
                       ),
                       child: Text(
                         mainPlayerName,
-                        style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                        style:
+                            (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                           fontWeight: FontWeight.w600,
                           fontSize: isSmall ? 11.0 : 12.0,
                           height: 1.2,
@@ -551,9 +553,8 @@ class TimelineEventItem extends StatelessWidget {
               style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                 fontSize: isSmall ? 9.5 : 10.0,
                 fontWeight: FontWeight.w500,
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               ),
               textAlign: isHome ? TextAlign.end : TextAlign.start,
               maxLines: 1,
@@ -578,9 +579,8 @@ class TimelineEventItem extends StatelessWidget {
     );
 
     return Row(
-      mainAxisAlignment: isHome
-          ? MainAxisAlignment.end
-          : MainAxisAlignment.start,
+      mainAxisAlignment:
+          isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: isHome
           ? [
@@ -703,9 +703,8 @@ class TimelineEventItem extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 2.5),
         padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.darkCardElevated
-              : AppColors.lightCardElevated,
+          color:
+              isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
           borderRadius: BorderRadius.circular(3),
           border: Border.all(
             color: isDark ? AppColors.darkBorder : AppColors.lightBorder,

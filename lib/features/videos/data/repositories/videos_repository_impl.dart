@@ -8,12 +8,10 @@ import '../datasources/videos_remote_datasource.dart';
 class VideosRepositoryImpl implements VideosRepository {
   final VideosRemoteDataSource _remoteDataSource;
   final Map<String, ({List<VideoItemEntity> videos, DateTime timestamp})>
-  _videosCache = {};
-  final Map<
-    String,
-    ({List<VideoCategoryEntity> categories, DateTime timestamp})
-  >
-  _categoriesCache = {};
+      _videosCache = {};
+  final Map<String,
+          ({List<VideoCategoryEntity> categories, DateTime timestamp})>
+      _categoriesCache = {};
 
   VideosRepositoryImpl(this._remoteDataSource);
 

@@ -37,7 +37,8 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   void initState() {
     super.initState();
-    _isDeveloperModeUnlocked = sl<LocalStorageService>().isDeveloperModeEnabled();
+    _isDeveloperModeUnlocked =
+        sl<LocalStorageService>().isDeveloperModeEnabled();
   }
 
   @override
@@ -183,7 +184,9 @@ class _SettingsViewState extends State<SettingsView> {
       unawaited(AppUpdateDialog.show(context));
     } else if (state.status == AppUpdateStatus.upToDate) {
       final isArabic = AppLocalizations.of(context).isArabic;
-      final ver = state.currentAppVersion.isNotEmpty ? state.currentAppVersion : '1.0.1';
+      final ver = state.currentAppVersion.isNotEmpty
+          ? state.currentAppVersion
+          : '1.0.1';
       final messenger = ScaffoldMessenger.of(context);
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(
@@ -591,15 +594,14 @@ class _SettingsViewState extends State<SettingsView> {
                         subtitleText,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -664,7 +666,8 @@ class _SettingsViewState extends State<SettingsView> {
               ),
               title: Text(l10n.translate('settings_notifications')),
               subtitle: Text(
-                storage.getMatchNotificationScope() == LocalStorageService.matchNotifScopeStarred
+                storage.getMatchNotificationScope() ==
+                        LocalStorageService.matchNotifScopeStarred
                     ? l10n.translate('notif_scope_starred_title')
                     : l10n.translate('notif_scope_all_title'),
                 style: AppTypography.getBodySmall(
@@ -679,9 +682,8 @@ class _SettingsViewState extends State<SettingsView> {
               trailing: Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 16,
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               ),
               onTap: () async {
                 await context.push('/settings/notifications');
@@ -803,7 +805,8 @@ class _SettingsViewState extends State<SettingsView> {
                       showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
-                        builder: (ctx) => DiagnosticsSheet(webSocketService: ws),
+                        builder: (ctx) =>
+                            DiagnosticsSheet(webSocketService: ws),
                       );
                     },
                   ),
@@ -904,9 +907,10 @@ class _SettingsViewState extends State<SettingsView> {
                         children: [
                           BlocBuilder<AppUpdateCubit, AppUpdateState>(
                             builder: (context, updateState) {
-                              final ver = updateState.currentAppVersion.isNotEmpty
-                                  ? updateState.currentAppVersion
-                                  : '1.0.1';
+                              final ver =
+                                  updateState.currentAppVersion.isNotEmpty
+                                      ? updateState.currentAppVersion
+                                      : '1.0.1';
                               return Text(
                                 '154Score v$ver',
                                 style: AppTypography.getBodyLarge(
@@ -947,17 +951,20 @@ class _SettingsViewState extends State<SettingsView> {
                   builder: (context, updateState) {
                     final isChecking = updateState.isChecking;
                     return InkWell(
-                      onTap: isChecking ? null : () => _onCheckForUpdate(context),
+                      onTap:
+                          isChecking ? null : () => _onCheckForUpdate(context),
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 2),
                         child: Row(
                           children: [
                             Container(
                               width: 38,
                               height: 38,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.12),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Center(
@@ -983,7 +990,9 @@ class _SettingsViewState extends State<SettingsView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    isArabic ? 'البحث عن تحديثات' : 'Check for Updates',
+                                    isArabic
+                                        ? 'البحث عن تحديثات'
+                                        : 'Check for Updates',
                                     style: TextStyle(
                                       color: isDark
                                           ? AppColors.darkTextPrimary
@@ -1069,14 +1078,13 @@ class _SettingsViewState extends State<SettingsView> {
         title,
         style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
             .copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
+          color: AppColors.primary,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
-
 
   Widget _buildCard({
     required bool isDark,
@@ -1243,17 +1251,14 @@ class _DeveloperPasswordDialogState extends State<_DeveloperPasswordDialog> {
                     ? AppColors.darkBackground
                     : AppColors.lightBackground,
                 border: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusMd),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                   borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : AppColors.lightBorder,
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusMd),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                   borderSide: const BorderSide(
                     color: AppColors.primary,
                     width: 2,
@@ -1282,8 +1287,7 @@ class _DeveloperPasswordDialogState extends State<_DeveloperPasswordDialog> {
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(AppDimensions.radiusSm),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
             ),
           ),
           child: Text(isArabic ? 'تأكيد' : 'Confirm'),
@@ -1292,4 +1296,3 @@ class _DeveloperPasswordDialogState extends State<_DeveloperPasswordDialog> {
     );
   }
 }
-

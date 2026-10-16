@@ -73,7 +73,8 @@ void main() {
   });
 
   group('LocaleCubit Instant Switching & Loading Threshold Tests', () {
-    test('setLocale emits immediately (0ms) without waiting for storage', () async {
+    test('setLocale emits immediately (0ms) without waiting for storage',
+        () async {
       final cubit = LocaleCubit(mockStorage, mockWebSocketService);
 
       expect(cubit.state.locale, const Locale('ar'));
@@ -194,7 +195,9 @@ void main() {
       ),
     ];
 
-    test('Scenario C: Uncached language keeps existing data visible during background fetch', () async {
+    test(
+        'Scenario C: Uncached language keeps existing data visible during background fetch',
+        () async {
       final bloc = MatchesBloc(
         repository: mockRepository,
         webSocketService: mockWebSocketService,
@@ -294,7 +297,9 @@ void main() {
       await bloc.close();
     });
 
-    test('Scenario E: API failure keeps existing visible data intact and does not show full-screen error', () async {
+    test(
+        'Scenario E: API failure keeps existing visible data intact and does not show full-screen error',
+        () async {
       final bloc = MatchesBloc(
         repository: mockRepository,
         webSocketService: mockWebSocketService,
@@ -400,15 +405,19 @@ void main() {
       mockPrefs = MockSharedPreferences();
       final storage = LocalStorageServiceImpl(mockPrefs);
       // Even if legacy unkeyed cache has Arabic, requesting English must return null when no en cache exists
-      when(() => mockPrefs.getString('app_cached_rankings_en')).thenReturn(null);
-      when(() => mockPrefs.getString('app_cached_rankings')).thenReturn('{"leagues": [{"name": "الدوري الإنجليزي"}]}');
+      when(() => mockPrefs.getString('app_cached_rankings_en'))
+          .thenReturn(null);
+      when(() => mockPrefs.getString('app_cached_rankings'))
+          .thenReturn('{"leagues": [{"name": "الدوري الإنجليزي"}]}');
       when(() => mockPrefs.getString('app_language')).thenReturn('en');
 
       final cached = storage.getCachedRankings(lang: 'en');
       expect(cached, isNull);
     });
 
-    test('Favorites cross-lingual resolution matches Arabic saved favorites to English championship', () {
+    test(
+        'Favorites cross-lingual resolution matches Arabic saved favorites to English championship',
+        () {
       const state = FavoritesState(
         favoriteCompetitions: ['دوري أبطال أوروبا', 'الدوري الإنجليزي الممتاز'],
         competitionTitles: {
@@ -418,15 +427,22 @@ void main() {
       );
 
       // Matches by ID
-      expect(state.isFavoriteCompetition(id: '12048', name: 'UEFA Champions League'), isTrue);
-      expect(state.isFavoriteCompetition(id: '6811', name: 'Premier League'), isTrue);
+      expect(
+          state.isFavoriteCompetition(
+              id: '12048', name: 'UEFA Champions League'),
+          isTrue);
+      expect(state.isFavoriteCompetition(id: '6811', name: 'Premier League'),
+          isTrue);
 
       // Matches by English name via defaultNameToId
-      expect(state.isFavoriteCompetition(name: 'UEFA Champions League'), isTrue);
+      expect(
+          state.isFavoriteCompetition(name: 'UEFA Champions League'), isTrue);
       expect(state.isFavoriteCompetition(name: 'Premier League'), isTrue);
     });
 
-    test('getDefaultFallbackChampionships returns localized titles for en and ar', () {
+    test(
+        'getDefaultFallbackChampionships returns localized titles for en and ar',
+        () {
       final enFallbacks = getDefaultFallbackChampionships('en');
       final arFallbacks = getDefaultFallbackChampionships('ar');
 

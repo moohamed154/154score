@@ -5,7 +5,7 @@ class MatchEventEntity extends Equatable {
   final String playerName;
   final String? secondaryPlayerName;
   final String
-  type; // goal, yellow_card, red_card, substitution, var, start-end-match
+      type; // goal, yellow_card, red_card, substitution, var, start-end-match
   final bool isHomeTeam;
   final String? score;
   final String? videoUrl;
@@ -83,23 +83,23 @@ class MatchEventEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    minute,
-    playerName,
-    secondaryPlayerName,
-    type,
-    isHomeTeam,
-    score,
-    videoUrl,
-    playerId,
-    playerNumber,
-    playerPhoto,
-    playerShortName,
-    secondaryPlayerId,
-    secondaryPlayerNumber,
-    secondaryPlayerPhoto,
-    secondaryPlayerShortName,
-    isPeriodMarker,
-  ];
+        minute,
+        playerName,
+        secondaryPlayerName,
+        type,
+        isHomeTeam,
+        score,
+        videoUrl,
+        playerId,
+        playerNumber,
+        playerPhoto,
+        playerShortName,
+        secondaryPlayerId,
+        secondaryPlayerNumber,
+        secondaryPlayerPhoto,
+        secondaryPlayerShortName,
+        isPeriodMarker,
+      ];
 }
 
 class MatchStatItemEntity extends Equatable {
@@ -119,12 +119,12 @@ class MatchStatItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    title,
-    homeValue,
-    awayValue,
-    homePercentage,
-    category,
-  ];
+        title,
+        homeValue,
+        awayValue,
+        homePercentage,
+        category,
+      ];
 }
 
 class MatchInfoSectionEntity extends Equatable {
@@ -191,14 +191,14 @@ class MatchNewsItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    title,
-    image,
-    link,
-    date,
-    description,
-    articleId,
-    slug,
-  ];
+        title,
+        image,
+        link,
+        date,
+        description,
+        articleId,
+        slug,
+      ];
 }
 
 class MatchLineupEntity extends Equatable {
@@ -261,15 +261,15 @@ class MatchLineupEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    matchId,
-    lineupsAvailable,
-    formationType,
-    formationTypeId,
-    formationTypeText,
-    isConfirmed,
-    home,
-    away,
-  ];
+        matchId,
+        lineupsAvailable,
+        formationType,
+        formationTypeId,
+        formationTypeText,
+        isConfirmed,
+        home,
+        away,
+      ];
 }
 
 class TeamLineupEntity extends Equatable {
@@ -333,15 +333,15 @@ class TeamLineupEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    teamId,
-    teamName,
-    teamLogo,
-    formation,
-    coach,
-    startingXi,
-    substitutes,
-    injuries,
-  ];
+        teamId,
+        teamName,
+        teamLogo,
+        formation,
+        coach,
+        startingXi,
+        substitutes,
+        injuries,
+      ];
 }
 
 class LineupPlayerEntity extends Equatable {
@@ -352,7 +352,7 @@ class LineupPlayerEntity extends Equatable {
   final String? position;
   final String? positionCode; // "G", "D", "M", "F", "SUB"
   final String?
-  detailedPosition; // "GK", "RB", "CB", "LB", "CDM", "CM", "RW", "LW", "CF"
+      detailedPosition; // "GK", "RB", "CB", "LB", "CDM", "CM", "RW", "LW", "CF"
   final int? formationPosition;
   final String? photo;
   final String? rating;
@@ -469,32 +469,32 @@ class LineupPlayerEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    playerId,
-    name,
-    shortName,
-    number,
-    position,
-    positionCode,
-    detailedPosition,
-    formationPosition,
-    photo,
-    rating,
-    isCaptain,
-    isStarter,
-    isSubstitute,
-    isManOfMatch,
-    yellowCards,
-    redCards,
-    goals,
-    ownGoals,
-    assists,
-    substituteIn,
-    substituteOut,
-    substituteTime,
-    substitutePlus,
-    subbedForName,
-    subbedForId,
-  ];
+        playerId,
+        name,
+        shortName,
+        number,
+        position,
+        positionCode,
+        detailedPosition,
+        formationPosition,
+        photo,
+        rating,
+        isCaptain,
+        isStarter,
+        isSubstitute,
+        isManOfMatch,
+        yellowCards,
+        redCards,
+        goals,
+        ownGoals,
+        assists,
+        substituteIn,
+        substituteOut,
+        substituteTime,
+        substitutePlus,
+        subbedForName,
+        subbedForId,
+      ];
 }
 
 class LineupCoachEntity extends Equatable {
@@ -536,22 +536,22 @@ class LineupInjuryEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    playerId,
-    name,
-    shortName,
-    number,
-    position,
-    photo,
-    absenceReason,
-    absenceTypeId,
-  ];
+        playerId,
+        name,
+        shortName,
+        number,
+        position,
+        photo,
+        absenceReason,
+        absenceTypeId,
+      ];
 }
 
 class MatchVideoItemEntity extends Equatable {
   final String title;
   final String url;
   final String?
-  type; // 'summary', 'goals', 'full_match', 'alternative_summary', 'goal_clip'
+      type; // 'summary', 'goals', 'full_match', 'alternative_summary', 'goal_clip'
   final String? minute;
   final String? playerName;
 
@@ -650,21 +650,19 @@ class MatchVideosEntity extends Equatable {
 
     if (itemsMap == null) return const MatchVideosEntity();
 
-    final videosContainer = itemsMap['videos'] is Map
-        ? itemsMap['videos'] as Map
-        : null;
+    final videosContainer =
+        itemsMap['videos'] is Map ? itemsMap['videos'] as Map : null;
 
-    final explicitHasVideo =
-        itemsMap['has_video'] ??
+    final explicitHasVideo = itemsMap['has_video'] ??
         itemsMap['hasVideo'] ??
         videosContainer?['has_video'] ??
         videosContainer?['hasVideo'];
 
     final bool isExplicitlyDisabled =
         (explicitHasVideo is bool && !explicitHasVideo) ||
-        explicitHasVideo == 'false' ||
-        explicitHasVideo == 0 ||
-        explicitHasVideo == '0';
+            explicitHasVideo == 'false' ||
+            explicitHasVideo == 0 ||
+            explicitHasVideo == '0';
 
     if (isExplicitlyDisabled) {
       return const MatchVideosEntity(hasVideo: false);
@@ -672,12 +670,12 @@ class MatchVideosEntity extends Equatable {
 
     final bool isExplicitlyEnabled =
         (explicitHasVideo is bool && explicitHasVideo) ||
-        explicitHasVideo == 'true' ||
-        explicitHasVideo == 1 ||
-        explicitHasVideo == '1' ||
-        itemsMap['video'] == 1 ||
-        itemsMap['video'] == '1' ||
-        itemsMap['video'] == true;
+            explicitHasVideo == 'true' ||
+            explicitHasVideo == 1 ||
+            explicitHasVideo == '1' ||
+            itemsMap['video'] == 1 ||
+            itemsMap['video'] == '1' ||
+            itemsMap['video'] == true;
 
     MatchVideoItemEntity? parseItem(dynamic obj, {String? defaultTitle}) {
       if (obj == null) return null;
@@ -693,8 +691,8 @@ class MatchVideosEntity extends Equatable {
         }
         final title =
             (obj['title'] ?? obj['name'] ?? defaultTitle)?.toString() ??
-            defaultTitle ??
-            '';
+                defaultTitle ??
+                '';
         return MatchVideoItemEntity(
           title: title.isNotEmpty ? title : (defaultTitle ?? ''),
           url: url.trim(),
@@ -749,24 +747,22 @@ class MatchVideosEntity extends Equatable {
         if (c is Map) {
           final pName =
               c['player_name']?.toString() ?? c['player']?.toString() ?? '';
-          final timeStr =
-              c['time']?.toString() ??
+          final timeStr = c['time']?.toString() ??
               (c['minute'] != null ? "${c['minute']}'" : '');
           final clipTitle = isArabic
               ? (pName.isNotEmpty
-                    ? 'هدف: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
-                    : 'هدف $timeStr')
+                  ? 'هدف: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
+                  : 'هدف $timeStr')
               : (pName.isNotEmpty
-                    ? 'Goal: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
-                    : 'Goal $timeStr');
+                  ? 'Goal: $pName${timeStr.isNotEmpty ? ' ($timeStr)' : ''}'
+                  : 'Goal $timeStr');
           final item = parseItem(c, defaultTitle: clipTitle);
           if (item != null) goalClips.add(item);
         }
       }
     }
 
-    final resolvedHasVideo =
-        isExplicitlyEnabled ||
+    final resolvedHasVideo = isExplicitlyEnabled ||
         summary != null ||
         goals != null ||
         videoLinks.isNotEmpty ||
@@ -788,13 +784,13 @@ class MatchVideosEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    hasVideo,
-    summary,
-    goals,
-    fullMatch,
-    videoLinks,
-    goalClips,
-  ];
+        hasVideo,
+        summary,
+        goals,
+        fullMatch,
+        videoLinks,
+        goalClips,
+      ];
 }
 
 class PenaltyKickItemEntity extends Equatable {
@@ -816,13 +812,13 @@ class PenaltyKickItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    order,
-    playerId,
-    playerName,
-    playerPhoto,
-    isGoal,
-    score,
-  ];
+        order,
+        playerId,
+        playerName,
+        playerPhoto,
+        isGoal,
+        score,
+      ];
 }
 
 class PenaltyShootoutDetailEntity extends Equatable {
@@ -845,11 +841,11 @@ class PenaltyShootoutDetailEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    homeScore,
-    awayScore,
-    homeKicks,
-    awayKicks,
-  ];
+        homeScore,
+        awayScore,
+        homeKicks,
+        awayKicks,
+      ];
 }
 
 class MatchEventsPayload extends Equatable {
@@ -871,13 +867,13 @@ class MatchEventsPayload extends Equatable {
 
   @override
   List<Object?> get props => [
-    events,
-    videos,
-    championshipId,
-    halfScores,
-    penaltiesDetail,
-    alert,
-  ];
+        events,
+        videos,
+        championshipId,
+        halfScores,
+        penaltiesDetail,
+        alert,
+      ];
 }
 
 class MatchH2HSummaryEntity extends Equatable {
@@ -903,12 +899,12 @@ class MatchH2HSummaryEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    homeWins,
-    awayWins,
-    draws,
-    homeTeamName,
-    awayTeamName,
-  ];
+        homeWins,
+        awayWins,
+        draws,
+        homeTeamName,
+        awayTeamName,
+      ];
 }
 
 class MatchFormItemEntity extends Equatable {
@@ -936,13 +932,13 @@ class MatchFormItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    matchId,
-    opponentName,
-    opponentLogo,
-    score,
-    winType,
-    isHome,
-  ];
+        matchId,
+        opponentName,
+        opponentLogo,
+        score,
+        winType,
+        isHome,
+      ];
 }
 
 class MatchRecentFormEntity extends Equatable {
@@ -960,11 +956,11 @@ class MatchRecentFormEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    homeMatches,
-    awayMatches,
-    homeTeamName,
-    awayTeamName,
-  ];
+        homeMatches,
+        awayMatches,
+        homeTeamName,
+        awayTeamName,
+      ];
 }
 
 class MatchReturnLegEntity extends Equatable {
@@ -990,14 +986,14 @@ class MatchReturnLegEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    matchId,
-    homeTeam,
-    awayTeam,
-    homeScores,
-    awayScores,
-    aggResult,
-    penalties,
-  ];
+        matchId,
+        homeTeam,
+        awayTeam,
+        homeScores,
+        awayScores,
+        aggResult,
+        penalties,
+      ];
 }
 
 class MatchQuickStatsEntity extends Equatable {
@@ -1033,15 +1029,15 @@ class MatchQuickStatsEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    homePossession,
-    awayPossession,
-    homeShots,
-    awayShots,
-    homeFouls,
-    awayFouls,
-    homeOffsides,
-    awayOffsides,
-  ];
+        homePossession,
+        awayPossession,
+        homeShots,
+        awayShots,
+        homeFouls,
+        awayFouls,
+        homeOffsides,
+        awayOffsides,
+      ];
 }
 
 class MatchRefereeItemEntity extends Equatable {
@@ -1118,33 +1114,33 @@ class MatchOverviewDataEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    matchId,
-    homeTeamName,
-    awayTeamName,
-    homeTeamLogo,
-    awayTeamLogo,
-    homeTeamId,
-    awayTeamId,
-    championshipId,
-    championshipTitle,
-    championshipLogo,
-    score1,
-    score2,
-    status,
-    statusCode,
-    note,
-    time,
-    date,
-    round,
-    stadiumName,
-    stadiumId,
-    returnLeg,
-    h2hSummary,
-    recentForm,
-    quickStats,
-    referees,
-    channels,
-  ];
+        matchId,
+        homeTeamName,
+        awayTeamName,
+        homeTeamLogo,
+        awayTeamLogo,
+        homeTeamId,
+        awayTeamId,
+        championshipId,
+        championshipTitle,
+        championshipLogo,
+        score1,
+        score2,
+        status,
+        statusCode,
+        note,
+        time,
+        date,
+        round,
+        stadiumName,
+        stadiumId,
+        returnLeg,
+        h2hSummary,
+        recentForm,
+        quickStats,
+        referees,
+        channels,
+      ];
 }
 
 class MatchDetailsPayload extends Equatable {

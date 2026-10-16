@@ -44,8 +44,7 @@ class MatchesRepositoryImpl implements MatchesRepository {
         if (liveMatch == null) return m;
 
         return m.copyWith(
-          minute:
-              (liveMatch.minute != null &&
+          minute: (liveMatch.minute != null &&
                   liveMatch.minute!.isNotEmpty &&
                   liveMatch.minute != 'null')
               ? liveMatch.minute
@@ -55,28 +54,26 @@ class MatchesRepositoryImpl implements MatchesRepository {
               : m.period,
           extraTime:
               (liveMatch.extraTime != null && liveMatch.extraTime!.isNotEmpty)
-              ? liveMatch.extraTime
-              : m.extraTime,
+                  ? liveMatch.extraTime
+                  : m.extraTime,
           status: (liveMatch.status != null && liveMatch.status!.isNotEmpty)
               ? liveMatch.status
               : m.status,
           statusCode:
               (liveMatch.statusCode != null && liveMatch.statusCode!.isNotEmpty)
-              ? liveMatch.statusCode
-              : m.statusCode,
+                  ? liveMatch.statusCode
+                  : m.statusCode,
           score1: (liveMatch.score1 != null && liveMatch.score1!.isNotEmpty)
               ? liveMatch.score1
               : m.score1,
           score2: (liveMatch.score2 != null && liveMatch.score2!.isNotEmpty)
               ? liveMatch.score2
               : m.score2,
-          penaltyScore1:
-              (liveMatch.penaltyScore1 != null &&
+          penaltyScore1: (liveMatch.penaltyScore1 != null &&
                   liveMatch.penaltyScore1!.isNotEmpty)
               ? liveMatch.penaltyScore1
               : m.penaltyScore1,
-          penaltyScore2:
-              (liveMatch.penaltyScore2 != null &&
+          penaltyScore2: (liveMatch.penaltyScore2 != null &&
                   liveMatch.penaltyScore2!.isNotEmpty)
               ? liveMatch.penaltyScore2
               : m.penaltyScore2,
@@ -97,8 +94,7 @@ class MatchesRepositoryImpl implements MatchesRepository {
     String? sort,
   }) async {
     try {
-      final isLiveOrToday =
-          date == null ||
+      final isLiveOrToday = date == null ||
           date.isEmpty ||
           date == DateFormatter.toApiDateString(DateTime.now());
 
@@ -113,14 +109,14 @@ class MatchesRepositoryImpl implements MatchesRepository {
 
       final liveFuture = isLiveOrToday
           ? _remoteDataSource
-                .getLiveMatches(
-                  lang: lang,
-                  utcOffset: utcOffset,
-                  date: date,
-                  leagueId: leagueId,
-                  sort: sort,
-                )
-                .catchError((_) => <LeagueGroupDto>[])
+              .getLiveMatches(
+                lang: lang,
+                utcOffset: utcOffset,
+                date: date,
+                leagueId: leagueId,
+                sort: sort,
+              )
+              .catchError((_) => <LeagueGroupDto>[])
           : Future.value(<LeagueGroupDto>[]);
 
       final results = await Future.wait([matchesFuture, liveFuture]);
@@ -228,7 +224,7 @@ class MatchesRepositoryImpl implements MatchesRepository {
   }
 
   final Map<String, ({List<LeagueGroupDto> dtos, DateTime timestamp})>
-  _dateMatchesCache = {};
+      _dateMatchesCache = {};
 
   @override
   Future<ApiResult<List<LeagueGroupEntity>>> getMatchesByDate({
@@ -241,9 +237,8 @@ class MatchesRepositoryImpl implements MatchesRepository {
   }) async {
     final isToday = date == DateFormatter.toApiDateString(DateTime.now());
     final cacheKey = '$date-$lang-${utcOffset ?? 0}-$status-$leagueId-$sort';
-    final ttl = isToday
-        ? const Duration(seconds: 20)
-        : const Duration(minutes: 5);
+    final ttl =
+        isToday ? const Duration(seconds: 20) : const Duration(minutes: 5);
 
     final cached = _dateMatchesCache[cacheKey];
     final favoriteMatches = _localStorageService.getFavoriteMatches();
@@ -267,14 +262,14 @@ class MatchesRepositoryImpl implements MatchesRepository {
 
       final liveFuture = isToday
           ? _remoteDataSource
-                .getLiveMatches(
-                  lang: lang,
-                  utcOffset: utcOffset,
-                  date: date,
-                  leagueId: leagueId,
-                  sort: sort,
-                )
-                .catchError((_) => <LeagueGroupDto>[])
+              .getLiveMatches(
+                lang: lang,
+                utcOffset: utcOffset,
+                date: date,
+                leagueId: leagueId,
+                sort: sort,
+              )
+              .catchError((_) => <LeagueGroupDto>[])
           : Future.value(<LeagueGroupDto>[]);
 
       final results = await Future.wait([matchesFuture, liveFuture]);

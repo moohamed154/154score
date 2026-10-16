@@ -95,24 +95,24 @@ class WebSocketConnectionHealth extends Equatable {
 
   @override
   List<Object?> get props => [
-    state,
-    currentTransport,
-    socketId,
-    latencyMs,
-    lastConnectedAt,
-    lastDisconnectedAt,
-    reconnectAttempts,
-    lastError,
-    activeSubscriptions,
-    totalEventsReceived,
-    duplicateEventsSuppressed,
-    staleEventsSuppressed,
-    eventsIgnored,
-    lastEventName,
-    lastEventTimestamp,
-    restFallbackActive,
-    lastRestRefreshAt,
-  ];
+        state,
+        currentTransport,
+        socketId,
+        latencyMs,
+        lastConnectedAt,
+        lastDisconnectedAt,
+        reconnectAttempts,
+        lastError,
+        activeSubscriptions,
+        totalEventsReceived,
+        duplicateEventsSuppressed,
+        staleEventsSuppressed,
+        eventsIgnored,
+        lastEventName,
+        lastEventTimestamp,
+        restFallbackActive,
+        lastRestRefreshAt,
+      ];
 }
 
 /// Strongly typed Live Match real-time update model
@@ -207,21 +207,17 @@ class LiveMatchUpdate extends Equatable {
       }
     }
 
-    final t1 =
-        json['team_1']?.toString() ??
+    final t1 = json['team_1']?.toString() ??
         homeTeamMap?['name']?.toString() ??
         json['home_team']?.toString();
-    final t2 =
-        json['team_2']?.toString() ??
+    final t2 = json['team_2']?.toString() ??
         awayTeamMap?['name']?.toString() ??
         json['away_team']?.toString();
 
-    final t1Logo =
-        json['team_1_logo']?.toString() ??
+    final t1Logo = json['team_1_logo']?.toString() ??
         homeTeamMap?['logo']?.toString() ??
         json['home_logo']?.toString();
-    final t2Logo =
-        json['team_2_logo']?.toString() ??
+    final t2Logo = json['team_2_logo']?.toString() ??
         awayTeamMap?['logo']?.toString() ??
         json['away_logo']?.toString();
 
@@ -246,15 +242,13 @@ class LiveMatchUpdate extends Equatable {
       if (pMap['home'] != null) pen1 = pMap['home'].toString();
       if (pMap['away'] != null) pen2 = pMap['away'].toString();
     }
-    pen1 ??=
-        json['penalty_score_1']?.toString() ??
+    pen1 ??= json['penalty_score_1']?.toString() ??
         json['penalties_1']?.toString() ??
         json['penalties_home']?.toString() ??
         (json['penalties'] is Map
             ? json['penalties']['home']?.toString()
             : null);
-    pen2 ??=
-        json['penalty_score_2']?.toString() ??
+    pen2 ??= json['penalty_score_2']?.toString() ??
         json['penalties_2']?.toString() ??
         json['penalties_away']?.toString() ??
         (json['penalties'] is Map
@@ -266,13 +260,11 @@ class LiveMatchUpdate extends Equatable {
     // League extraction
     Map? leagueMap;
     if (json['league'] is Map) leagueMap = json['league'] as Map;
-    final lTitle =
-        defaultLeagueTitle ??
+    final lTitle = defaultLeagueTitle ??
         json['league_title']?.toString() ??
         leagueMap?['name']?.toString() ??
         json['league']?.toString();
-    final lId =
-        defaultLeagueId ??
+    final lId = defaultLeagueId ??
         json['league_id']?.toString() ??
         leagueMap?['id']?.toString();
 
@@ -295,14 +287,13 @@ class LiveMatchUpdate extends Equatable {
           ? json['clock'].toString()
           : json['minute']?.toString(),
       period: json['period']?.toString(),
-      extraTime:
-          (json['extra_time'] is! Map &&
+      extraTime: (json['extra_time'] is! Map &&
               json['extra_time'] != null &&
               json['extra_time'] != 'null')
           ? json['extra_time']?.toString()
           : (json['added_time']?.toString() ??
-                json['stoppage_time']?.toString() ??
-                json['injury_time']?.toString()),
+              json['stoppage_time']?.toString() ??
+              json['injury_time']?.toString()),
       eventType: json['event_type']?.toString() ?? json['type']?.toString(),
       playerName: json['player_name']?.toString() ?? json['player']?.toString(),
       timestamp: parsedTimestamp,
@@ -313,28 +304,28 @@ class LiveMatchUpdate extends Equatable {
 
   @override
   List<Object?> get props => [
-    matchId,
-    leagueTitle,
-    leagueId,
-    team1,
-    team2,
-    team1Logo,
-    team2Logo,
-    score1,
-    score2,
-    penaltyScore1,
-    penaltyScore2,
-    time,
-    status,
-    statusCode,
-    minute,
-    period,
-    extraTime,
-    eventType,
-    playerName,
-    timestamp,
-    sequence,
-  ];
+        matchId,
+        leagueTitle,
+        leagueId,
+        team1,
+        team2,
+        team1Logo,
+        team2Logo,
+        score1,
+        score2,
+        penaltyScore1,
+        penaltyScore2,
+        time,
+        status,
+        statusCode,
+        minute,
+        period,
+        extraTime,
+        eventType,
+        playerName,
+        timestamp,
+        sequence,
+      ];
 }
 
 /// Strongly typed Transfer real-time update model
@@ -383,8 +374,7 @@ class TransferUpdate extends Equatable {
 
     return TransferUpdate(
       transferId: json['id']?.toString() ?? json['transfer_id']?.toString(),
-      playerName:
-          json['player_name']?.toString() ??
+      playerName: json['player_name']?.toString() ??
           json['player']?.toString() ??
           'Unknown Player',
       playerPosition:
@@ -411,19 +401,19 @@ class TransferUpdate extends Equatable {
 
   @override
   List<Object?> get props => [
-    transferId,
-    playerName,
-    playerPosition,
-    playerImage,
-    fromTeamName,
-    fromTeamLogo,
-    toTeamName,
-    toTeamLogo,
-    transferType,
-    transferFee,
-    transferDate,
-    timestamp,
-  ];
+        transferId,
+        playerName,
+        playerPosition,
+        playerImage,
+        fromTeamName,
+        fromTeamLogo,
+        toTeamName,
+        toTeamLogo,
+        transferType,
+        transferFee,
+        transferDate,
+        timestamp,
+      ];
 }
 
 /// Strongly typed Match Detail real-time update model for match:{id} room
@@ -507,18 +497,17 @@ class MatchDetailRealtimeUpdate extends Equatable {
       );
     }
 
-    String parsedMatchId =
-        (json['match_id'] ??
-                json['matchId'] ??
-                payload['match_id'] ??
-                payload['matchId'] ??
-                fallbackMatchId ??
-                json['id'] ??
-                payload['id'] ??
-                '')
-            .toString()
-            .replaceAll('match:', '')
-            .trim();
+    String parsedMatchId = (json['match_id'] ??
+            json['matchId'] ??
+            payload['match_id'] ??
+            payload['matchId'] ??
+            fallbackMatchId ??
+            json['id'] ??
+            payload['id'] ??
+            '')
+        .toString()
+        .replaceAll('match:', '')
+        .trim();
 
     if (parsedMatchId.isEmpty && json['channel'] != null) {
       final ch = json['channel'].toString();
@@ -546,23 +535,21 @@ class MatchDetailRealtimeUpdate extends Equatable {
     String? pen2;
     final pSource =
         (payload['score'] is Map && payload['score']['penalties'] is Map)
-        ? (payload['score']['penalties'] as Map)
-        : (json['score'] is Map && json['score']['penalties'] is Map)
-        ? (json['score']['penalties'] as Map)
-        : null;
+            ? (payload['score']['penalties'] as Map)
+            : (json['score'] is Map && json['score']['penalties'] is Map)
+                ? (json['score']['penalties'] as Map)
+                : null;
     if (pSource != null) {
       if (pSource['home'] != null) pen1 = pSource['home'].toString();
       if (pSource['away'] != null) pen2 = pSource['away'].toString();
     }
-    pen1 ??=
-        payload['penalty_score_1']?.toString() ??
+    pen1 ??= payload['penalty_score_1']?.toString() ??
         payload['penalties_1']?.toString() ??
         payload['penalties_home']?.toString() ??
         json['penalty_score_1']?.toString() ??
         json['penalties_1']?.toString() ??
         json['penalties_home']?.toString();
-    pen2 ??=
-        payload['penalty_score_2']?.toString() ??
+    pen2 ??= payload['penalty_score_2']?.toString() ??
         payload['penalties_2']?.toString() ??
         payload['penalties_away']?.toString() ??
         json['penalty_score_2']?.toString() ??
@@ -578,16 +565,15 @@ class MatchDetailRealtimeUpdate extends Equatable {
         ? rawClock
         : (rawMin ?? rawClock);
     final period = payload['period']?.toString() ?? json['period']?.toString();
-    final extraTime =
-        (payload['extra_time'] is! Map &&
+    final extraTime = (payload['extra_time'] is! Map &&
             payload['extra_time'] != null &&
             payload['extra_time'] != 'null')
         ? payload['extra_time']?.toString()
         : (payload['added_time']?.toString() ??
-              payload['stoppage_time']?.toString() ??
-              payload['injury_time']?.toString() ??
-              json['extra_time']?.toString() ??
-              json['added_time']?.toString());
+            payload['stoppage_time']?.toString() ??
+            payload['injury_time']?.toString() ??
+            json['extra_time']?.toString() ??
+            json['added_time']?.toString());
 
     // If backend sent scraped sections list: {"data": [{"section": "معلومات اللقاء", "items": [...]}]}
     if (json['data'] is List) {
@@ -617,8 +603,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
     final statusCode =
         payload['status_code']?.toString() ?? json['status_code']?.toString();
 
-    final isHome =
-        payload['is_home'] == true ||
+    final isHome = payload['is_home'] == true ||
         payload['team'] == '1' ||
         payload['team'] == 'home' ||
         payload['team_type'] == 'home';
@@ -645,8 +630,7 @@ class MatchDetailRealtimeUpdate extends Equatable {
       isHomeTeam: isHome,
       timestamp: parsedTimestamp,
       sequence: parsedSequence,
-      videoUrl:
-          payload['video_url']?.toString() ??
+      videoUrl: payload['video_url']?.toString() ??
           payload['videoUrl']?.toString() ??
           payload['video']?.toString(),
       rawPayload: json,
@@ -655,23 +639,23 @@ class MatchDetailRealtimeUpdate extends Equatable {
 
   @override
   List<Object?> get props => [
-    matchId,
-    score1,
-    score2,
-    penaltyScore1,
-    penaltyScore2,
-    status,
-    statusCode,
-    minute,
-    extraTime,
-    period,
-    eventType,
-    eventPlayer,
-    eventAssist,
-    eventMinute,
-    isHomeTeam,
-    timestamp,
-    sequence,
-    videoUrl,
-  ];
+        matchId,
+        score1,
+        score2,
+        penaltyScore1,
+        penaltyScore2,
+        status,
+        statusCode,
+        minute,
+        extraTime,
+        period,
+        eventType,
+        eventPlayer,
+        eventAssist,
+        eventMinute,
+        isHomeTeam,
+        timestamp,
+        sequence,
+        videoUrl,
+      ];
 }

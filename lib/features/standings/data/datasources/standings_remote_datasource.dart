@@ -57,7 +57,8 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         if (cachedJson != null && cachedJson.isNotEmpty) {
           try {
             final decoded = jsonDecode(cachedJson);
-            return parseStandings(decoded, defaultLeagueId: leagueId, lang: lang);
+            return parseStandings(decoded,
+                defaultLeagueId: leagueId, lang: lang);
           } catch (_) {}
         }
       }
@@ -106,8 +107,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
         for (final c in colorsData) {
           if (c is Map) {
             final color = c['color']?.toString();
-            final desc =
-                c['description']?.toString() ??
+            final desc = c['description']?.toString() ??
                 c['league_to']?.toString() ??
                 c['name']?.toString() ??
                 '';
@@ -170,17 +170,15 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
 
       // 2. Secondary Source: raw['list_match']
       //    Check if raw['list_match'] provides data or more complete rows than data['table']
-      final rawMatch = (raw['list_match'] is List)
-          ? (raw['list_match'] as List)
-          : null;
+      final rawMatch =
+          (raw['list_match'] is List) ? (raw['list_match'] as List) : null;
       if (rawMatch != null && rawMatch.isNotEmpty) {
         final rawRows = <StandingRowEntity>[];
         final rawGroups = <String, List<StandingRowEntity>>{};
 
         // Determine if items are group-wrapper objects (Map of maps)
         // or flat team objects (Map with team_name / team_id fields)
-        final isGrouped =
-            rawMatch.first is Map &&
+        final isGrouped = rawMatch.first is Map &&
             !(rawMatch.first as Map).containsKey('team_name') &&
             !(rawMatch.first as Map).containsKey('team_id') &&
             !(rawMatch.first as Map).containsKey('play') &&
@@ -194,8 +192,8 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
             final groupLetter = String.fromCharCode(65 + gIdx);
             final defaultGroupName = hasMultiGroups
                 ? (lang == 'ar'
-                      ? 'المجموعة $groupLetter'
-                      : 'Group $groupLetter')
+                    ? 'المجموعة $groupLetter'
+                    : 'Group $groupLetter')
                 : null;
 
             final groupRows = <StandingRowEntity>[];
@@ -342,8 +340,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
                     score: teamAMap['score'] is int
                         ? teamAMap['score'] as int
                         : int.tryParse(teamAMap['score']?.toString() ?? ''),
-                    isWinner:
-                        teamAMap['is_winner'] == true ||
+                    isWinner: teamAMap['is_winner'] == true ||
                         teamAMap['winner'] == true,
                     worldRanking: teamAMap['world_ranking'] is int
                         ? teamAMap['world_ranking'] as int
@@ -359,8 +356,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
                     score: teamBMap['score'] is int
                         ? teamBMap['score'] as int
                         : int.tryParse(teamBMap['score']?.toString() ?? ''),
-                    isWinner:
-                        teamBMap['is_winner'] == true ||
+                    isWinner: teamBMap['is_winner'] == true ||
                         teamBMap['winner'] == true,
                     worldRanking: teamBMap['world_ranking'] is int
                         ? teamBMap['world_ranking'] as int
@@ -450,7 +446,7 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
           final color = fillMatch?.group(1) ?? '#34C759';
           final text =
               textMatch?.group(1)?.replaceAll(RegExp(r'<[^>]*>'), '').trim() ??
-              '';
+                  '';
           if (text.isNotEmpty) {
             items.add(StandingLegendEntity(colorHex: color, description: text));
           }

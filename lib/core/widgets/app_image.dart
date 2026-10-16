@@ -29,21 +29,19 @@ class AppImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fallbackBg = isDark
-        ? AppColors.darkCardElevated
-        : AppColors.lightCardElevated;
-    final iconColor = isDark
-        ? AppColors.darkTextMuted
-        : AppColors.lightTextMuted;
+    final fallbackBg =
+        isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated;
+    final iconColor =
+        isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
     final safeWidth =
         (width != null && width!.isFinite && !width!.isNaN && width! > 0)
-        ? width
-        : null;
+            ? width
+            : null;
     final safeHeight =
         (height != null && height!.isFinite && !height!.isNaN && height! > 0)
-        ? height
-        : null;
+            ? height
+            : null;
 
     final safeIconSize = (safeWidth != null)
         ? (safeWidth * 0.5).clamp(14.0, 40.0)

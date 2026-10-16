@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/errors/failures.dart';
 import 'package:score154/core/network/api_result.dart';
@@ -85,8 +85,8 @@ void main() {
 
       when(() => repo.getCommentatorProfile(id, slug, lang: any(named: 'lang')))
           .thenAnswer(
-            (_) async => ApiSuccess(makeProfile(id, slug, expectedName)),
-          );
+        (_) async => ApiSuccess(makeProfile(id, slug, expectedName)),
+      );
 
       final result = await repo.getCommentatorProfile(id, slug, lang: 'ar');
 
@@ -103,15 +103,15 @@ void main() {
 
       when(() => repo.getCommentatorProfile(id, slug, lang: any(named: 'lang')))
           .thenAnswer(
-            (_) async => const ApiSuccess(
-              ProfileEntity(
-                id: '16',
-                slug: 'jawad-badda',
-                name: 'جواد بدة',
-                sections: [],
-              ),
-            ),
-          );
+        (_) async => const ApiSuccess(
+          ProfileEntity(
+            id: '16',
+            slug: 'jawad-badda',
+            name: 'جواد بدة',
+            sections: [],
+          ),
+        ),
+      );
 
       final result = await repo.getCommentatorProfile(id, slug, lang: 'ar');
       final profile = result.dataOrNull!;
@@ -191,7 +191,9 @@ void main() {
     );
 
     // ── 7. Commentator 54 / Abdallah-Alghamedi API structure mapping ────────
-    test('Commentator 54 / Abdallah-Alghamedi entity mapping carries full metadata', () {
+    test(
+        'Commentator 54 / Abdallah-Alghamedi entity mapping carries full metadata',
+        () {
       const entity = ProfileEntity(
         id: '54',
         slug: 'Abdallah-Alghamedi',

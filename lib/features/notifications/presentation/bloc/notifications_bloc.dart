@@ -17,7 +17,8 @@ class LoadNotificationsEvent extends NotificationsEvent {
   final bool isRefresh;
   final Completer<void>? completer;
 
-  const LoadNotificationsEvent({this.lang = 'ar', this.isRefresh = false, this.completer});
+  const LoadNotificationsEvent(
+      {this.lang = 'ar', this.isRefresh = false, this.completer});
 
   @override
   List<Object?> get props => [lang, isRefresh];
@@ -76,7 +77,8 @@ class NotificationsState extends Equatable {
 class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   final NotificationsRepository repository;
 
-  NotificationsBloc({required this.repository}) : super(const NotificationsState()) {
+  NotificationsBloc({required this.repository})
+      : super(const NotificationsState()) {
     on<LoadNotificationsEvent>(_onLoadNotifications);
     on<MarkNotificationReadEvent>(_onMarkRead);
     on<MarkAllNotificationsReadEvent>(_onMarkAllRead);
@@ -87,7 +89,8 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     Emitter<NotificationsState> emit,
   ) async {
     if (!event.isRefresh && state.status != NotificationsStatus.success) {
-      emit(state.copyWith(status: NotificationsStatus.loading, lang: event.lang));
+      emit(state.copyWith(
+          status: NotificationsStatus.loading, lang: event.lang));
     }
 
     final result = await repository.getNotifications(lang: event.lang);
@@ -142,7 +145,8 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   ) async {
     final ids = state.notifications.map((n) => n.id).toList();
     await repository.markAllAsRead(ids);
-    final updated = state.notifications.map((n) => n.copyWith(isRead: true)).toList();
+    final updated =
+        state.notifications.map((n) => n.copyWith(isRead: true)).toList();
     emit(state.copyWith(notifications: updated));
   }
 }

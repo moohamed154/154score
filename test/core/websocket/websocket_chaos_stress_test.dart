@@ -1,4 +1,4 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/core/websocket/websocket_event.dart';
 import 'package:score154/core/websocket/websocket_service.dart';
@@ -88,7 +88,9 @@ void main() {
       },
     );
 
-    test('1,000 Synthetic Events Stress Test (Duplicates, Stale, Malformed, Unknown)', () async {
+    test(
+        '1,000 Synthetic Events Stress Test (Duplicates, Stale, Malformed, Unknown)',
+        () async {
       int liveMatchesEmitted = 0;
       int transfersEmitted = 0;
       int matchDetailsEmitted = 0;

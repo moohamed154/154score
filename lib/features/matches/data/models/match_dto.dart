@@ -89,13 +89,11 @@ class MatchDto {
       }
     }
 
-    final rawT1 =
-        json['team_1']?.toString() ??
+    final rawT1 = json['team_1']?.toString() ??
         homeTeamMap?['name']?.toString() ??
         json['home_team']?.toString() ??
         'Team 1';
-    final rawT2 =
-        json['team_2']?.toString() ??
+    final rawT2 = json['team_2']?.toString() ??
         awayTeamMap?['name']?.toString() ??
         json['away_team']?.toString() ??
         'Team 2';
@@ -103,18 +101,15 @@ class MatchDto {
     final t1 = (rawT1.trim() == 'دورتوند') ? 'دورتموند' : rawT1;
     final t2 = (rawT2.trim() == 'دورتوند') ? 'دورتموند' : rawT2;
 
-    final t1Id =
-        json['team_1_id']?.toString() ??
+    final t1Id = json['team_1_id']?.toString() ??
         homeTeamMap?['id']?.toString() ??
         json['home_team_id']?.toString();
-    final t2Id =
-        json['team_2_id']?.toString() ??
+    final t2Id = json['team_2_id']?.toString() ??
         awayTeamMap?['id']?.toString() ??
         json['away_team_id']?.toString();
 
     // 2. Stable Match ID
-    final rawId =
-        json['match_id']?.toString() ??
+    final rawId = json['match_id']?.toString() ??
         json['id']?.toString() ??
         json['id_match']?.toString();
     final effectiveId = (rawId != null && rawId.isNotEmpty && rawId != 'null')
@@ -122,13 +117,11 @@ class MatchDto {
         : '${t1}_${t2}_${date ?? ""}';
 
     // 3. Team Logos (normalized)
-    final rawLogo1 =
-        json['team_1_logo']?.toString() ??
+    final rawLogo1 = json['team_1_logo']?.toString() ??
         homeTeamMap?['logo']?.toString() ??
         homeTeamMap?['image']?.toString() ??
         json['home_logo']?.toString();
-    final rawLogo2 =
-        json['team_2_logo']?.toString() ??
+    final rawLogo2 = json['team_2_logo']?.toString() ??
         awayTeamMap?['logo']?.toString() ??
         awayTeamMap?['image']?.toString() ??
         json['away_logo']?.toString();
@@ -163,9 +156,8 @@ class MatchDto {
 
     // Check if rawStatus contains kick-off time (e.g. "10:00م", "02:30م", "10:00", "05:00 م")
     final timePattern = RegExp(r'^(\d{1,2}:\d{2})\s*([صم]|AM|PM|am|pm)?$');
-    final timeMatch = rawStatus != null
-        ? timePattern.firstMatch(rawStatus)
-        : null;
+    final timeMatch =
+        rawStatus != null ? timePattern.firstMatch(rawStatus) : null;
 
     if (timeMatch != null) {
       final digits = timeMatch.group(1)!;
@@ -196,15 +188,13 @@ class MatchDto {
       if (pMap['home'] != null) pen1 = pMap['home'].toString();
       if (pMap['away'] != null) pen2 = pMap['away'].toString();
     }
-    pen1 ??=
-        json['penalty_score_1']?.toString() ??
+    pen1 ??= json['penalty_score_1']?.toString() ??
         json['penalties_1']?.toString() ??
         json['penalties_home']?.toString() ??
         (json['penalties'] is Map
             ? json['penalties']['home']?.toString()
             : null);
-    pen2 ??=
-        json['penalty_score_2']?.toString() ??
+    pen2 ??= json['penalty_score_2']?.toString() ??
         json['penalties_2']?.toString() ??
         json['penalties_away']?.toString() ??
         (json['penalties'] is Map
@@ -223,24 +213,26 @@ class MatchDto {
       return null;
     }
 
-    final penAttempts1 =
-        parseAttempts(json['penalty_attempts_1']) ??
+    final penAttempts1 = parseAttempts(json['penalty_attempts_1']) ??
         parseAttempts(json['penaltyAttempts1']) ??
         (json['penalties'] is Map
-            ? parseAttempts(json['penalties']['attempts_1'] ?? json['penalties']['attempts_home'])
+            ? parseAttempts(json['penalties']['attempts_1'] ??
+                json['penalties']['attempts_home'])
             : null) ??
         (json['score'] is Map && json['score']['penalties'] is Map
-            ? parseAttempts(json['score']['penalties']['attempts_1'] ?? json['score']['penalties']['attempts_home'])
+            ? parseAttempts(json['score']['penalties']['attempts_1'] ??
+                json['score']['penalties']['attempts_home'])
             : null);
 
-    final penAttempts2 =
-        parseAttempts(json['penalty_attempts_2']) ??
+    final penAttempts2 = parseAttempts(json['penalty_attempts_2']) ??
         parseAttempts(json['penaltyAttempts2']) ??
         (json['penalties'] is Map
-            ? parseAttempts(json['penalties']['attempts_2'] ?? json['penalties']['attempts_away'])
+            ? parseAttempts(json['penalties']['attempts_2'] ??
+                json['penalties']['attempts_away'])
             : null) ??
         (json['score'] is Map && json['score']['penalties'] is Map
-            ? parseAttempts(json['score']['penalties']['attempts_2'] ?? json['score']['penalties']['attempts_away'])
+            ? parseAttempts(json['score']['penalties']['attempts_2'] ??
+                json['score']['penalties']['attempts_away'])
             : null);
 
     // 6. Half-Time Scores
@@ -251,14 +243,12 @@ class MatchDto {
       if (htMap['home'] != null) ht1 = htMap['home'].toString();
       if (htMap['away'] != null) ht2 = htMap['away'].toString();
     }
-    ht1 ??=
-        json['half_time_score_1']?.toString() ??
+    ht1 ??= json['half_time_score_1']?.toString() ??
         json['ht_score_1']?.toString() ??
         (json['half_time'] is Map
             ? json['half_time']['home']?.toString()
             : null);
-    ht2 ??=
-        json['half_time_score_2']?.toString() ??
+    ht2 ??= json['half_time_score_2']?.toString() ??
         json['ht_score_2']?.toString() ??
         (json['half_time'] is Map
             ? json['half_time']['away']?.toString()
@@ -275,13 +265,11 @@ class MatchDto {
       if (etMap['home'] != null) et1 = etMap['home'].toString();
       if (etMap['away'] != null) et2 = etMap['away'].toString();
     }
-    et1 ??=
-        json['extra_time_score_1']?.toString() ??
+    et1 ??= json['extra_time_score_1']?.toString() ??
         (json['extra_time'] is Map
             ? json['extra_time']['home']?.toString()
             : null);
-    et2 ??=
-        json['extra_time_score_2']?.toString() ??
+    et2 ??= json['extra_time_score_2']?.toString() ??
         (json['extra_time'] is Map
             ? json['extra_time']['away']?.toString()
             : null);
@@ -295,19 +283,16 @@ class MatchDto {
       leagueMap = json['league'] as Map;
     }
 
-    final lTitle =
-        leagueTitle ??
+    final lTitle = leagueTitle ??
         json['league_title']?.toString() ??
         leagueMap?['name']?.toString() ??
         json['league_name']?.toString();
 
-    final lId =
-        leagueId ??
+    final lId = leagueId ??
         json['league_id']?.toString() ??
         leagueMap?['id']?.toString();
 
-    final rawLLogo =
-        leagueLogo ??
+    final rawLLogo = leagueLogo ??
         json['league_logo']?.toString() ??
         leagueMap?['logo']?.toString();
     final lLogo = UrlHelper.resolveChampionshipLogo(
@@ -349,14 +334,13 @@ class MatchDto {
           ? json['clock'].toString()
           : json['minute']?.toString(),
       period: json['period']?.toString(),
-      extraTime:
-          (json['extra_time'] is! Map &&
+      extraTime: (json['extra_time'] is! Map &&
               json['extra_time'] != null &&
               json['extra_time'] != 'null')
           ? json['extra_time']?.toString()
           : (json['added_time']?.toString() ??
-                json['stoppage_time']?.toString() ??
-                json['injury_time']?.toString()),
+              json['stoppage_time']?.toString() ??
+              json['injury_time']?.toString()),
       leagueTitle: lTitle,
       leagueLogo: lLogo,
       leagueId: lId,
@@ -508,8 +492,7 @@ class LeagueGroupDto {
   }
 
   factory LeagueGroupDto.fromJson(Map<String, dynamic> json, {String? date}) {
-    final title =
-        json['league_title']?.toString() ??
+    final title = json['league_title']?.toString() ??
         json['title']?.toString() ??
         json['name']?.toString() ??
         'Competition';

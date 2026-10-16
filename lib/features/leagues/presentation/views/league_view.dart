@@ -70,8 +70,7 @@ class _LeagueViewState extends State<LeagueView>
 
     return BlocBuilder<LeagueBloc, LeagueState>(
       builder: (context, state) {
-        final title =
-            state.leagueTitle ??
+        final title = state.leagueTitle ??
             widget.initialTitle ??
             l10n.translate('standings_title');
 
@@ -106,10 +105,10 @@ class _LeagueViewState extends State<LeagueView>
                     isFavorite: isFav,
                     onFavoriteTap: () {
                       context.read<FavoritesCubit>().toggleCompetition(
-                        id: widget.leagueId,
-                        name: title,
-                        logo: state.leagueLogo ?? widget.initialLogo,
-                      );
+                            id: widget.leagueId,
+                            name: title,
+                            logo: state.leagueLogo ?? widget.initialLogo,
+                          );
                     },
                   );
                 },
@@ -150,27 +149,26 @@ class _LeagueViewState extends State<LeagueView>
                   onRefresh: () async {
                     final completer = Completer<void>();
                     context.read<LeagueBloc>().add(
-                      LoadLeagueDetailsEvent(
-                        widget.leagueId,
-                        isRefresh: true,
-                        completer: completer,
-                      ),
-                    );
+                          LoadLeagueDetailsEvent(
+                            widget.leagueId,
+                            isRefresh: true,
+                            completer: completer,
+                          ),
+                        );
                     try {
                       await completer.future.timeout(
                         const Duration(seconds: 3),
                       );
                     } catch (_) {}
                   },
-                  child:
-                      state.status == LeagueStatus.error &&
+                  child: state.status == LeagueStatus.error &&
                           state.matches.isEmpty &&
                           state.standings == null
                       ? ErrorView(
                           message: state.errorMessage,
                           onRetry: () => context.read<LeagueBloc>().add(
-                            LoadLeagueDetailsEvent(widget.leagueId),
-                          ),
+                                LoadLeagueDetailsEvent(widget.leagueId),
+                              ),
                         )
                       : TabBarView(
                           controller: _tabController,
@@ -232,9 +230,8 @@ class _LeagueViewState extends State<LeagueView>
         'Saturday',
         'Sunday',
       ];
-      final dayName = isArabic
-          ? arabicDays[dt.weekday - 1]
-          : englishDays[dt.weekday - 1];
+      final dayName =
+          isArabic ? arabicDays[dt.weekday - 1] : englishDays[dt.weekday - 1];
       final dayStr = dt.day.toString().padLeft(2, '0');
       final monthStr = dt.month.toString().padLeft(2, '0');
       final yearStr = dt.year.toString();
@@ -244,8 +241,8 @@ class _LeagueViewState extends State<LeagueView>
     int parseTimeMinutes(String? timeStr) {
       if (timeStr == null || timeStr.isEmpty || timeStr == '-') return 0;
       final clean = timeStr.trim();
-      final match = RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?')
-          .firstMatch(clean);
+      final match =
+          RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?').firstMatch(clean);
       if (match == null) return 0;
       var h = int.tryParse(match.group(1) ?? '0') ?? 0;
       final m = int.tryParse(match.group(2) ?? '0') ?? 0;
@@ -266,8 +263,8 @@ class _LeagueViewState extends State<LeagueView>
         days: (DateTime.now().weekday == DateTime.sunday)
             ? 7
             : (DateTime.now().weekday == DateTime.monday
-                  ? 1
-                  : DateTime.now().weekday % 7),
+                ? 1
+                : DateTime.now().weekday % 7),
       ),
     );
     int finishedCountInCurrentDay = 0;
@@ -290,10 +287,10 @@ class _LeagueViewState extends State<LeagueView>
           final daysToAdd = (currentUpcomingDate.weekday == DateTime.friday)
               ? 1
               : (currentUpcomingDate.weekday == DateTime.saturday)
-              ? 1
-              : (currentUpcomingDate.weekday == DateTime.sunday)
-              ? 5
-              : (DateTime.friday - currentUpcomingDate.weekday + 7) % 7;
+                  ? 1
+                  : (currentUpcomingDate.weekday == DateTime.sunday)
+                      ? 5
+                      : (DateTime.friday - currentUpcomingDate.weekday + 7) % 7;
           currentUpcomingDate = currentUpcomingDate.add(
             Duration(days: daysToAdd > 0 ? daysToAdd : 1),
           );
@@ -383,16 +380,15 @@ class _LeagueViewState extends State<LeagueView>
                   const SizedBox(width: 8),
                   Text(
                     headerText,
-                    style:
-                        AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
+                    style: AppTypography.getBodyMedium(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
                   ),
                 ],
               ),
@@ -478,8 +474,8 @@ class _LeagueViewState extends State<LeagueView>
                               color: _standingsSubTab == 0
                                   ? Colors.white
                                   : (isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.lightTextSecondary),
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary),
                             ),
                           ),
                         ),
@@ -509,8 +505,8 @@ class _LeagueViewState extends State<LeagueView>
                               color: _standingsSubTab == 1
                                   ? Colors.white
                                   : (isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.lightTextSecondary),
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary),
                             ),
                           ),
                         ),
@@ -522,7 +518,6 @@ class _LeagueViewState extends State<LeagueView>
             ),
           ),
         ],
-
         if ((hasBoth && _standingsSubTab == 0) || isKnockoutOnly) ...[
           if (hasStages) TournamentStagesWidget(stages: standings.stages!),
         ] else ...[
@@ -534,7 +529,8 @@ class _LeagueViewState extends State<LeagueView>
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Text(
-                      AppLocalizations.of(context).formatGroupName(groupEntry.key),
+                      AppLocalizations.of(context)
+                          .formatGroupName(groupEntry.key),
                       style: AppTypography.getHeadingMedium(
                         isDark: isDark,
                         isArabic: isArabic,
@@ -618,16 +614,15 @@ class _LeagueViewState extends State<LeagueView>
                     const SizedBox(width: 8),
                     Text(
                       isArabic ? 'معايير كسر التعادل' : 'Tiebreaker Rules',
-                      style:
-                          AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
+                      style: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
                     ),
                   ],
                 ),
@@ -656,19 +651,18 @@ class _LeagueViewState extends State<LeagueView>
                         Expanded(
                           child: Text(
                             rule,
-                            style:
-                                AppTypography.getBodySmall(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  fontSize: isPreamble ? 12 : 11.5,
-                                  fontWeight: isPreamble
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
-                                ),
+                            style: AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontSize: isPreamble ? 12 : 11.5,
+                              fontWeight: isPreamble
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -885,8 +879,8 @@ class _LeagueViewState extends State<LeagueView>
                               index % 3 == 0
                                   ? 'Real Madrid CF'
                                   : index % 3 == 1
-                                  ? 'Manchester City'
-                                  : 'Bayern Munich',
+                                      ? 'Manchester City'
+                                      : 'Bayern Munich',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                               ),

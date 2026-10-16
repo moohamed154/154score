@@ -42,7 +42,8 @@ void main() {
       expect(unsub, isA<bool>());
     });
 
-    test('Bulk syncAllSubscriptions reads preferences and sends cleanly', () async {
+    test('Bulk syncAllSubscriptions reads preferences and sends cleanly',
+        () async {
       final syncService = NotificationSyncService.instance;
       final result = await syncService.syncAllSubscriptions(
         teams: ['8633', '8634'],

@@ -83,12 +83,12 @@ class VideosState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    selectedCategory,
-    categories,
-    videos,
-    errorMessage,
-  ];
+        status,
+        selectedCategory,
+        categories,
+        videos,
+        errorMessage,
+      ];
 }
 
 class VideosBloc extends Bloc<VideosEvent, VideosState> {
@@ -96,7 +96,7 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
   final LocalStorageService localStorageService;
 
   VideosBloc({required this.repository, required this.localStorageService})
-    : super(const VideosState()) {
+      : super(const VideosState()) {
     on<LoadVideosEvent>(_onLoadVideos);
     on<SelectVideoCategoryEvent>(_onSelectCategory);
     on<ChangeVideosLanguageEvent>(_onChangeVideosLanguage);
@@ -131,9 +131,8 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
         state.copyWith(
           status: videosRes.isEmpty ? VideosStatus.empty : VideosStatus.success,
           videos: videosRes,
-          categories: categoriesRes.isNotEmpty
-              ? categoriesRes
-              : state.categories,
+          categories:
+              categoriesRes.isNotEmpty ? categoriesRes : state.categories,
           selectedCategory: event.champId,
           errorMessage: null,
         ),
@@ -172,9 +171,8 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
         state.copyWith(
           status: videosRes.isEmpty ? VideosStatus.empty : VideosStatus.success,
           videos: videosRes,
-          categories: categoriesRes.isNotEmpty
-              ? categoriesRes
-              : state.categories,
+          categories:
+              categoriesRes.isNotEmpty ? categoriesRes : state.categories,
           errorMessage: null,
         ),
       );

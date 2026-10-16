@@ -64,10 +64,12 @@ class PushNotificationService {
       bool firebaseReady = false;
       try {
         await Firebase.initializeApp();
-        FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+        FirebaseMessaging.onBackgroundMessage(
+            _firebaseMessagingBackgroundHandler);
         firebaseReady = true;
       } catch (e) {
-        debugPrint('[PushNotificationService] Firebase init skipped or pending config: $e');
+        debugPrint(
+            '[PushNotificationService] Firebase init skipped or pending config: $e');
       }
 
       if (firebaseReady) {
@@ -80,7 +82,8 @@ class PushNotificationService {
           sound: true,
           provisional: false,
         );
-        debugPrint('[PushNotificationService] Permission status: ${settings.authorizationStatus}');
+        debugPrint(
+            '[PushNotificationService] Permission status: ${settings.authorizationStatus}');
 
         // iOS foreground presentation
         await messaging.setForegroundNotificationPresentationOptions(
@@ -103,14 +106,16 @@ class PushNotificationService {
 
         // Token refresh listener
         messaging.onTokenRefresh.listen((newToken) {
-          debugPrint('[PushNotificationService] FCM token refreshed: $newToken');
+          debugPrint(
+              '[PushNotificationService] FCM token refreshed: $newToken');
           _fcmToken = newToken;
           registerTokenWithBackend(newToken);
         });
 
         // Foreground messages listener
         FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-          debugPrint('[PushNotificationService] Foreground message: ${message.messageId}');
+          debugPrint(
+              '[PushNotificationService] Foreground message: ${message.messageId}');
           if (message.data.isNotEmpty) {
             handleForegroundPayload(message.data);
           } else if (message.notification != null) {
@@ -123,14 +128,16 @@ class PushNotificationService {
 
         // Notification clicked from background
         FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-          debugPrint('[PushNotificationService] Notification opened app: ${message.data}');
+          debugPrint(
+              '[PushNotificationService] Notification opened app: ${message.data}');
           handleNotificationTap(message.data);
         });
 
         // Notification clicked from terminated state
         final initialMessage = await messaging.getInitialMessage();
         if (initialMessage != null) {
-          debugPrint('[PushNotificationService] Initial message: ${initialMessage.data}');
+          debugPrint(
+              '[PushNotificationService] Initial message: ${initialMessage.data}');
           handleNotificationTap(initialMessage.data);
         }
       }
@@ -159,7 +166,8 @@ class PushNotificationService {
   }) async {
     final cleanToken = token.trim();
     if (cleanToken.isEmpty) {
-      debugPrint('[PushNotificationService] Rejecting empty or whitespace token registration.');
+      debugPrint(
+          '[PushNotificationService] Rejecting empty or whitespace token registration.');
       return false;
     }
 
@@ -224,7 +232,8 @@ class PushNotificationService {
           response = await dio.post(
             ApiEndpoints.pushNotificationsProvidersFallback,
             data: payload,
-            options: Options(headers: {...requestHeaders, ...fallbackSigHeaders}),
+            options:
+                Options(headers: {...requestHeaders, ...fallbackSigHeaders}),
           );
         } else {
           rethrow;
@@ -247,7 +256,8 @@ class PushNotificationService {
         return true;
       }
     } catch (e) {
-      debugPrint('[PushNotificationService] Failed to register token with backend: $e');
+      debugPrint(
+          '[PushNotificationService] Failed to register token with backend: $e');
     }
     return false;
   }
@@ -278,14 +288,18 @@ class PushNotificationService {
     // Cross-channel deduplication with in-app tracker
     final score = data['score']?.toString() ?? '';
     final minute = data['minute']?.toString() ?? '';
-    final player = data['player']?.toString() ?? data['player_in']?.toString() ?? '';
+    final player =
+        data['player']?.toString() ?? data['player_in']?.toString() ?? '';
     final articleId = data['article_id']?.toString() ?? '';
-    final dedupKey = '${eventType}_${matchId}_${score}_${minute}_${player}_$articleId';
+    final dedupKey =
+        '${eventType}_${matchId}_${score}_${minute}_${player}_$articleId';
     try {
       final prefs = await SharedPreferences.getInstance();
-      final sentKeys = (prefs.getStringList('154score_sent_alert_keys') ?? []).toSet();
+      final sentKeys =
+          (prefs.getStringList('154score_sent_alert_keys') ?? []).toSet();
       if (sentKeys.contains(dedupKey)) {
-        debugPrint('[PushNotificationService] Deduplicated already shown alert: $dedupKey');
+        debugPrint(
+            '[PushNotificationService] Deduplicated already shown alert: $dedupKey');
         return;
       }
       sentKeys.add(dedupKey);
@@ -297,8 +311,7 @@ class PushNotificationService {
     final payload = jsonEncode({
       'type': data['type'] ?? 'match',
       if (matchId != null) 'match_id': matchId,
-      if (data['article_id'] != null)
-        'article_id': data['article_id'],
+      if (data['article_id'] != null) 'article_id': data['article_id'],
     });
 
     final notifService = NotificationService.instance;

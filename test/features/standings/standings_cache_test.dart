@@ -66,13 +66,16 @@ void main() {
       repository = StandingsRepositoryImpl(remoteDataSource, storage);
     });
 
-    test('1. LocalStorageService persists and retrieves league standings cache per language', () async {
+    test(
+        '1. LocalStorageService persists and retrieves league standings cache per language',
+        () async {
       const leagueId = '937599';
       final jsonStr = jsonEncode(dummyStandingsJson);
 
       expect(storage.getCachedLeagueStandings(leagueId, lang: 'ar'), isNull);
 
-      final saved = await storage.setCachedLeagueStandings(leagueId, jsonStr, lang: 'ar');
+      final saved =
+          await storage.setCachedLeagueStandings(leagueId, jsonStr, lang: 'ar');
       expect(saved, isTrue);
 
       final retrieved = storage.getCachedLeagueStandings(leagueId, lang: 'ar');
@@ -82,10 +85,13 @@ void main() {
       expect(storage.getCachedLeagueStandings(leagueId, lang: 'en'), isNull);
     });
 
-    test('2. StandingsRemoteDataSource caches response and recovers from cache on network failure', () async {
+    test(
+        '2. StandingsRemoteDataSource caches response and recovers from cache on network failure',
+        () async {
       const leagueId = '937599';
 
-      when(() => mockApiClient.get(any(), queryParameters: any(named: 'queryParameters')))
+      when(() => mockApiClient.get(any(),
+              queryParameters: any(named: 'queryParameters')))
           .thenAnswer((_) async => dummyStandingsJson);
 
       final result = await remoteDataSource.getStandings(leagueId, lang: 'ar');
@@ -97,23 +103,30 @@ void main() {
       expect(cached, isNotNull);
 
       // Now simulate network failure
-      when(() => mockApiClient.get(any(), queryParameters: any(named: 'queryParameters')))
+      when(() => mockApiClient.get(any(),
+              queryParameters: any(named: 'queryParameters')))
           .thenThrow(const NetworkException('No internet connection'));
 
       // Remote data source gracefully recovers from cache
-      final offlineResult = await remoteDataSource.getStandings(leagueId, lang: 'ar');
+      final offlineResult =
+          await remoteDataSource.getStandings(leagueId, lang: 'ar');
       expect(offlineResult.rows.length, equals(2));
       expect(offlineResult.rows[1].teamName, equals('Manchester City'));
     });
 
-    test('3. StandingsRepositoryImpl returns cached entity and recovers offline with ApiSuccess', () async {
+    test(
+        '3. StandingsRepositoryImpl returns cached entity and recovers offline with ApiSuccess',
+        () async {
       const leagueId = '937599';
 
       // Pre-seed storage cache
-      await storage.setCachedLeagueStandings(leagueId, jsonEncode(dummyStandingsJson), lang: 'ar');
+      await storage.setCachedLeagueStandings(
+          leagueId, jsonEncode(dummyStandingsJson),
+          lang: 'ar');
 
       // Make network throw ServerException
-      when(() => mockApiClient.get(any(), queryParameters: any(named: 'queryParameters')))
+      when(() => mockApiClient.get(any(),
+              queryParameters: any(named: 'queryParameters')))
           .thenThrow(const ServerException('Upstream 503', statusCode: 503));
 
       final repoResult = await repository.getStandings(leagueId, lang: 'ar');
@@ -125,22 +138,27 @@ void main() {
       expect(entity.rows.first.points, equals(25));
     });
 
-    test('4. StandingsRepositoryImpl serves in-memory cache on subsequent requests within 5 minutes', () async {
+    test(
+        '4. StandingsRepositoryImpl serves in-memory cache on subsequent requests within 5 minutes',
+        () async {
       const leagueId = '937599';
 
-      when(() => mockApiClient.get(any(), queryParameters: any(named: 'queryParameters')))
+      when(() => mockApiClient.get(any(),
+              queryParameters: any(named: 'queryParameters')))
           .thenAnswer((_) async => dummyStandingsJson);
 
       final firstCall = await repository.getStandings(leagueId, lang: 'ar');
       expect(firstCall, isA<ApiSuccess<LeagueStandingsEntity>>());
 
       // Verify client was called once
-      verify(() => mockApiClient.get(any(), queryParameters: any(named: 'queryParameters'))).called(1);
+      verify(() => mockApiClient.get(any(),
+          queryParameters: any(named: 'queryParameters'))).called(1);
 
       // Second call should hit memory cache immediately without calling API client again
       final secondCall = await repository.getStandings(leagueId, lang: 'ar');
       expect(secondCall, isA<ApiSuccess<LeagueStandingsEntity>>());
-      verifyNever(() => mockApiClient.get(any(), queryParameters: any(named: 'queryParameters')));
+      verifyNever(() => mockApiClient.get(any(),
+          queryParameters: any(named: 'queryParameters')));
     });
   });
 }

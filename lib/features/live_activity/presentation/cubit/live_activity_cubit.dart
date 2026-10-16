@@ -76,7 +76,8 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
 
     if (_webSocketService != null) {
       _wsSubscription?.cancel();
-      _wsSubscription = _webSocketService.liveMatchesStream.listen(_onWebSocketUpdate);
+      _wsSubscription =
+          _webSocketService.liveMatchesStream.listen(_onWebSocketUpdate);
     }
     if (Platform.isAndroid) {
       try {
@@ -289,7 +290,8 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
 
     try {
       final lang = _localStorage?.getLanguage() ?? 'ar';
-      final liveResult = await _matchesRepository.getLiveMatchesFlat(lang: lang);
+      final liveResult =
+          await _matchesRepository.getLiveMatchesFlat(lang: lang);
 
       final liveMatchesMap = <String, MatchEntity>{};
       if (liveResult is ApiSuccess<List<MatchEntity>>) {
@@ -317,7 +319,8 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
         } else {
           // If match is not in live flat list (e.g. upcoming or just finished), query by today's date
           final now = DateTime.now();
-          final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+          final dateStr =
+              '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
           final todayResult = await _matchesRepository.getMatchesByDate(
             date: dateStr,
             lang: lang,
@@ -390,10 +393,13 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
                   score2: item['score2']?.toString() ?? cached.score2,
                   minute: item['minute']?.toString() ?? cached.minute,
                   status: item['status']?.toString() ?? cached.status,
-                  statusCode: item['statusCode']?.toString() ?? cached.statusCode,
+                  statusCode:
+                      item['statusCode']?.toString() ?? cached.statusCode,
                   period: item['period']?.toString() ?? cached.period,
-                  penaltyScore1: item['penaltyScore1']?.toString() ?? cached.penaltyScore1,
-                  penaltyScore2: item['penaltyScore2']?.toString() ?? cached.penaltyScore2,
+                  penaltyScore1:
+                      item['penaltyScore1']?.toString() ?? cached.penaltyScore1,
+                  penaltyScore2:
+                      item['penaltyScore2']?.toString() ?? cached.penaltyScore2,
                 );
                 _trackedMatchesCache[id] = updated;
                 updateTracking(

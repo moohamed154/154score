@@ -39,8 +39,8 @@ class MatchH2HCard extends StatelessWidget {
         : (homeTeamFallback?.isNotEmpty == true ? homeTeamFallback! : null);
     final homeLabel = rawHome != null
         ? (rawHome.startsWith('فوز') || rawHome.endsWith('Wins')
-              ? rawHome
-              : (arabic ? 'فوز $rawHome' : '$rawHome Wins'))
+            ? rawHome
+            : (arabic ? 'فوز $rawHome' : '$rawHome Wins'))
         : (arabic ? 'فوز المضيف' : 'Home Wins');
 
     final rawAway = summary.awayTeamName?.isNotEmpty == true
@@ -48,8 +48,8 @@ class MatchH2HCard extends StatelessWidget {
         : (awayTeamFallback?.isNotEmpty == true ? awayTeamFallback! : null);
     final awayLabel = rawAway != null
         ? (rawAway.startsWith('فوز') || rawAway.endsWith('Wins')
-              ? rawAway
-              : (arabic ? 'فوز $rawAway' : '$rawAway Wins'))
+            ? rawAway
+            : (arabic ? 'فوز $rawAway' : '$rawAway Wins'))
         : (arabic ? 'فوز الضيف' : 'Away Wins');
 
     return Container(
@@ -77,29 +77,27 @@ class MatchH2HCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   arabic ? 'سجل المواجهات المباشرة' : 'Head-to-Head Record',
-                  style:
-                      AppTypography.getBodyLarge(
-                        isDark: dark,
-                        isArabic: arabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
+                  style: AppTypography.getBodyLarge(
+                    isDark: dark,
+                    isArabic: arabic,
+                  ).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
                 ),
                 const Spacer(),
                 if (total > 0)
                   Text(
                     arabic ? '$total مباريات' : '$total Matches',
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: dark,
-                          isArabic: arabic,
-                        ).copyWith(
-                          color: dark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: AppTypography.getBodySmall(
+                      isDark: dark,
+                      isArabic: arabic,
+                    ).copyWith(
+                      color: dark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
               ],
             ),
@@ -120,28 +118,26 @@ class MatchH2HCard extends StatelessWidget {
                     children: [
                       Text(
                         '$homeWins',
-                        style:
-                            AppTypography.getHeadingLarge(
-                              isDark: dark,
-                              isArabic: arabic,
-                            ).copyWith(
-                              color: AppColors.uclGreen,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        style: AppTypography.getHeadingLarge(
+                          isDark: dark,
+                          isArabic: arabic,
+                        ).copyWith(
+                          color: AppColors.uclGreen,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         homeLabel,
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: dark,
-                              isArabic: arabic,
-                            ).copyWith(
-                              color: dark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style: AppTypography.getBodySmall(
+                          isDark: dark,
+                          isArabic: arabic,
+                        ).copyWith(
+                          color: dark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
@@ -156,30 +152,28 @@ class MatchH2HCard extends StatelessWidget {
                     children: [
                       Text(
                         '$draws',
-                        style:
-                            AppTypography.getHeadingLarge(
-                              isDark: dark,
-                              isArabic: arabic,
-                            ).copyWith(
-                              color: dark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        style: AppTypography.getHeadingLarge(
+                          isDark: dark,
+                          isArabic: arabic,
+                        ).copyWith(
+                          color: dark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         arabic ? 'تعادل' : 'Draws',
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: dark,
-                              isArabic: arabic,
-                            ).copyWith(
-                              color: dark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style: AppTypography.getBodySmall(
+                          isDark: dark,
+                          isArabic: arabic,
+                        ).copyWith(
+                          color: dark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -192,28 +186,26 @@ class MatchH2HCard extends StatelessWidget {
                     children: [
                       Text(
                         '$awayWins',
-                        style:
-                            AppTypography.getHeadingLarge(
-                              isDark: dark,
-                              isArabic: arabic,
-                            ).copyWith(
-                              color: AppColors.relegationRed,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        style: AppTypography.getHeadingLarge(
+                          isDark: dark,
+                          isArabic: arabic,
+                        ).copyWith(
+                          color: AppColors.relegationRed,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         awayLabel,
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: dark,
-                              isArabic: arabic,
-                            ).copyWith(
-                              color: dark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style: AppTypography.getBodySmall(
+                          isDark: dark,
+                          isArabic: arabic,
+                        ).copyWith(
+                          color: dark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,

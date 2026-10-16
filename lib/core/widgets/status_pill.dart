@@ -146,9 +146,8 @@ class StatusPill extends StatelessWidget {
     String displayText = status ?? (time ?? '-');
 
     if (isFinished) {
-      bgColor = isDark
-          ? AppColors.darkCardElevated
-          : AppColors.lightCardElevated;
+      bgColor =
+          isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated;
       textColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
     } else {
       bgColor = AppColors.statusUpcoming.withValues(alpha: 0.15);
@@ -171,10 +170,10 @@ class StatusPill extends StatelessWidget {
         displayText,
         style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
             .copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w600,
-              fontSize: compact ? 10 : 11,
-            ),
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: compact ? 10 : 11,
+        ),
       ),
     );
   }

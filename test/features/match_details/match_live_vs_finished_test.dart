@@ -12,7 +12,9 @@ import 'package:score154/features/matches/domain/entities/match_entity.dart';
 
 void main() {
   group('Live vs Finished Match Status & Banner Tests', () {
-    test('ScoreHelper.isFinishedStatus returns false for live matches and half-time', () {
+    test(
+        'ScoreHelper.isFinishedStatus returns false for live matches and half-time',
+        () {
       expect(ScoreHelper.isFinishedStatus('مباشر'), isFalse);
       expect(ScoreHelper.isFinishedStatus('الشوط الثاني'), isFalse);
       expect(ScoreHelper.isFinishedStatus('الشوط الأول'), isFalse);
@@ -23,7 +25,9 @@ void main() {
       expect(ScoreHelper.isFinishedStatus('ended'), isTrue);
     });
 
-    test('MatchStatusHelper.parseStatus correctly distinguishes half-time and live from finished', () {
+    test(
+        'MatchStatusHelper.parseStatus correctly distinguishes half-time and live from finished',
+        () {
       // 1. Half-time variations
       expect(
         MatchStatusHelper.parseStatus('نهاية الشوط الأول'),
@@ -151,7 +155,9 @@ void main() {
       expect(find.text('انتهت'), findsOneWidget);
     });
 
-    test('MatchEventHelper normalizes minute 120 to 90 for 90-minute matches without extra time', () {
+    test(
+        'MatchEventHelper normalizes minute 120 to 90 for 90-minute matches without extra time',
+        () {
       final rawEvents = [
         const MatchEventEntity(
           minute: '0',
@@ -209,7 +215,9 @@ void main() {
       expect(merged.last.minute, equals('90'));
     });
 
-    test('MatchEventHelper preserves minute 120 when match actually played extra time', () {
+    test(
+        'MatchEventHelper preserves minute 120 when match actually played extra time',
+        () {
       final extraTimeEvents = [
         const MatchEventEntity(
           minute: '0',

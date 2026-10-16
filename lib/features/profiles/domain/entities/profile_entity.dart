@@ -56,17 +56,17 @@ class ProfileTeamEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    fullName,
-    logo,
-    worldRanking,
-    role,
-    from,
-    to,
-    duration,
-    isCurrent,
-  ];
+        id,
+        name,
+        fullName,
+        logo,
+        worldRanking,
+        role,
+        from,
+        to,
+        duration,
+        isCurrent,
+      ];
 }
 
 class ProfileEntity extends Equatable {
@@ -122,28 +122,28 @@ class ProfileEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    slug,
-    name,
-    englishName,
-    image,
-    countryFlag,
-    country,
-    channel,
-    birthDate,
-    commentaryLanguage,
-    voiceUrl,
-    role,
-    capacity,
-    builtDate,
-    pitchSurface,
-    city,
-    mapUrl,
-    currentTeam,
-    career,
-    sections,
-    upcomingMatches,
-    recentMatches,
-    residentTeams,
-  ];
+        id,
+        slug,
+        name,
+        englishName,
+        image,
+        countryFlag,
+        country,
+        channel,
+        birthDate,
+        commentaryLanguage,
+        voiceUrl,
+        role,
+        capacity,
+        builtDate,
+        pitchSurface,
+        city,
+        mapUrl,
+        currentTeam,
+        career,
+        sections,
+        upcomingMatches,
+        recentMatches,
+        residentTeams,
+      ];
 }

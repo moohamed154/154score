@@ -58,12 +58,12 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
 
   void _applyFilters() {
     context.read<MatchesBloc>().add(
-      ApplyMatchesFilterEvent(
-        filter: _tempFilter,
-        sortOrder: _tempSortOrder,
-        hideFavorites: _tempHideFavorites,
-      ),
-    );
+          ApplyMatchesFilterEvent(
+            filter: _tempFilter,
+            sortOrder: _tempSortOrder,
+            hideFavorites: _tempHideFavorites,
+          ),
+        );
     Navigator.of(context).pop();
   }
 
@@ -76,8 +76,7 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
 
     return BlocBuilder<MatchesBloc, MatchesState>(
       builder: (context, state) {
-        final isDefault =
-            _tempFilter == MatchFilterType.all &&
+        final isDefault = _tempFilter == MatchFilterType.all &&
             (_tempSortOrder == MatchesSortOrder.championship ||
                 _tempSortOrder == MatchesSortOrder.importance) &&
             !_tempHideFavorites;
@@ -187,9 +186,8 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCard
-                              : AppColors.lightCard,
+                          color:
+                              isDark ? AppColors.darkCard : AppColors.lightCard,
                           borderRadius: BorderRadius.circular(
                             AppDimensions.radiusMd,
                           ),
@@ -247,11 +245,12 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                         isDark: isDark,
                         isArabic: isArabic,
                         title: l10n.translate('filter_sort_championship'),
-                        subtitle: l10n.translate('filter_championship_subtitle'),
+                        subtitle:
+                            l10n.translate('filter_championship_subtitle'),
                         icon: Icons.emoji_events_outlined,
                         isSelected:
                             _tempSortOrder == MatchesSortOrder.championship ||
-                            _tempSortOrder == MatchesSortOrder.importance,
+                                _tempSortOrder == MatchesSortOrder.importance,
                         onTap: () {
                           setState(() {
                             _tempSortOrder = MatchesSortOrder.championship;
@@ -281,7 +280,8 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                         isDark: isDark,
                         isArabic: isArabic,
                         title: l10n.translate('filter_important_only'),
-                        subtitle: l10n.translate('filter_important_only_subtitle'),
+                        subtitle:
+                            l10n.translate('filter_important_only_subtitle'),
                         icon: Icons.local_fire_department_outlined,
                         isSelected:
                             _tempSortOrder == MatchesSortOrder.importantOnly,
@@ -323,14 +323,12 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                   bottom: mediaQuery.padding.bottom + 12,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurface
-                      : AppColors.lightSurface,
+                  color:
+                      isDark ? AppColors.darkSurface : AppColors.lightSurface,
                   border: Border(
                     top: BorderSide(
-                      color: isDark
-                          ? AppColors.darkBorder
-                          : AppColors.lightBorder,
+                      color:
+                          isDark ? AppColors.darkBorder : AppColors.lightBorder,
                       width: 0.8,
                     ),
                   ),
@@ -407,7 +405,9 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.primary.withValues(alpha: 0.2)
-                      : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                      : (isDark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.05)),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -429,9 +429,12 @@ class _MatchFilterBottomSheetState extends State<MatchFilterBottomSheet> {
                       title,
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w600,
                         color: isSelected
-                            ? (isDark ? Colors.white : AppColors.lightTextPrimary)
+                            ? (isDark
+                                ? Colors.white
+                                : AppColors.lightTextPrimary)
                             : (isDark
                                 ? AppColors.darkTextPrimary
                                 : AppColors.lightTextPrimary),

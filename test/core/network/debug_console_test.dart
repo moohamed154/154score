@@ -141,7 +141,9 @@ void main() {
       DebugConsole.maxHistorySize = oldSize;
     });
 
-    test('printLatestResponse, printAllResponses, and printRecord run without throwing', () {
+    test(
+        'printLatestResponse, printAllResponses, and printRecord run without throwing',
+        () {
       // Empty calls
       expect(() => DebugConsole.printLatestResponse(), returnsNormally);
       expect(() => DebugConsole.printAllResponses(), returnsNormally);

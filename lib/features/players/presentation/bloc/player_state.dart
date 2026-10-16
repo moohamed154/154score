@@ -45,12 +45,12 @@ class PlayerState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    playerId,
-    playerName,
-    playerPhoto,
-    profile,
-    selectedTab,
-    errorMessage,
-  ];
+        status,
+        playerId,
+        playerName,
+        playerPhoto,
+        profile,
+        selectedTab,
+        errorMessage,
+      ];
 }

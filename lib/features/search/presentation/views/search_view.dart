@@ -99,9 +99,9 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
 
   void _onSearchChanged(String value, bool isArabic) {
     context.read<SearchCubit>().onQueryChanged(
-      value,
-      lang: isArabic ? 'ar' : 'en',
-    );
+          value,
+          lang: isArabic ? 'ar' : 'en',
+        );
   }
 
   void _clearSearch() {
@@ -268,14 +268,13 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                     cat.$2,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
                       color: isSelected
                           ? Colors.white
                           : (isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary),
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary),
                     ),
                   ),
                   if (count > 0) ...[
@@ -289,8 +288,8 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                         color: isSelected
                             ? Colors.white.withValues(alpha: 0.25)
                             : (isDark
-                                  ? AppColors.darkSurface
-                                  : AppColors.lightSurface),
+                                ? AppColors.darkSurface
+                                : AppColors.lightSurface),
                         borderRadius: BorderRadius.circular(
                           AppDimensions.radiusFull,
                         ),
@@ -303,8 +302,8 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
                           color: isSelected
                               ? Colors.white
                               : (isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted),
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted),
                         ),
                       ),
                     ),
@@ -313,9 +312,8 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
               ),
               selected: isSelected,
               selectedColor: AppColors.primary,
-              backgroundColor: isDark
-                  ? AppColors.darkCard
-                  : AppColors.lightCard,
+              backgroundColor:
+                  isDark ? AppColors.darkCard : AppColors.lightCard,
               side: BorderSide(
                 color: isSelected
                     ? AppColors.primary
@@ -505,7 +503,8 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
         : (isTeam
             ? (((item.logo != null && UrlHelper.isValidImageUrl(item.logo))
                     ? item.logo
-                    : UrlHelper.resolveTeamLogo(item.id, teamName: item.title)) ??
+                    : UrlHelper.resolveTeamLogo(item.id,
+                        teamName: item.title)) ??
                 item.logo)
             : item.logo);
 

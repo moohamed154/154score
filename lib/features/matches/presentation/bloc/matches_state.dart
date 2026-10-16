@@ -49,7 +49,7 @@ class MatchesState extends Equatable {
       filteredLeagues.fold<int>(0, (sum, l) => sum + l.matches.length);
 
   List<({String? id, String title, String? logo, int matchCount})>
-  get availableLeagues {
+      get availableLeagues {
     final map =
         <String, ({String? id, String title, String? logo, int matchCount})>{};
     for (final l in allLeagues) {
@@ -117,19 +117,19 @@ class MatchesState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    allLeagues,
-    filteredLeagues,
-    selectedDate,
-    activeFilter,
-    selectedLeagueId,
-    selectedLeagueTitle,
-    sortOrder,
-    hideFavorites,
-    searchQuery,
-    errorMessage,
-    liveMatchesCount,
-    timeFormat,
-    isLanguageRefreshing,
-  ];
+        status,
+        allLeagues,
+        filteredLeagues,
+        selectedDate,
+        activeFilter,
+        selectedLeagueId,
+        selectedLeagueTitle,
+        sortOrder,
+        hideFavorites,
+        searchQuery,
+        errorMessage,
+        liveMatchesCount,
+        timeFormat,
+        isLanguageRefreshing,
+      ];
 }

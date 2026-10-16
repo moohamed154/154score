@@ -66,8 +66,7 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
 
     final liveMatches = _liveMatchesCount;
 
-    final isTimeSlot =
-        widget.isTimeSorted ||
+    final isTimeSlot = widget.isTimeSorted ||
         (widget.league.leagueId == null &&
             RegExp(r'^\d{1,2}:\d{2}').hasMatch(widget.league.leagueTitle));
 
@@ -116,16 +115,14 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                         setState(() => _isExpanded = !_isExpanded);
                         return;
                       }
-                      final lId =
-                          widget.league.leagueId ??
+                      final lId = widget.league.leagueId ??
                           LeagueResolver.resolveId(widget.league.leagueTitle);
                       if (lId != null && lId.isNotEmpty) {
-                        final logo =
-                            UrlHelper.resolveChampionshipLogo(
-                              lId,
-                              currentLogo: widget.league.leagueLogo,
-                              isDark: isDark,
-                            );
+                        final logo = UrlHelper.resolveChampionshipLogo(
+                          lId,
+                          currentLogo: widget.league.leagueLogo,
+                          isDark: isDark,
+                        );
                         context.push(
                           '/league/$lId',
                           extra: {
@@ -147,7 +144,8 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                           AppImage(
                             imageUrl: UrlHelper.resolveChampionshipLogo(
                               widget.league.leagueId ??
-                                  LeagueResolver.resolveId(widget.league.leagueTitle),
+                                  LeagueResolver.resolveId(
+                                      widget.league.leagueTitle),
                               currentLogo: widget.league.leagueLogo,
                               isDark: isDark,
                             ),
@@ -208,16 +206,17 @@ class _LeagueSectionWidgetState extends State<LeagueSectionWidget> {
                       );
 
                       return StarredButton(
-                        key: ValueKey('comp_star_${widget.league.leagueId ?? widget.league.leagueTitle}'),
+                        key: ValueKey(
+                            'comp_star_${widget.league.leagueId ?? widget.league.leagueTitle}'),
                         isStarred: isFav,
                         size: 20,
                         padding: const EdgeInsets.all(4.0),
                         onTap: () {
                           context.read<FavoritesCubit>().toggleCompetition(
-                            id: widget.league.leagueId,
-                            name: widget.league.leagueTitle,
-                            logo: widget.league.leagueLogo,
-                          );
+                                id: widget.league.leagueId,
+                                name: widget.league.leagueTitle,
+                                logo: widget.league.leagueLogo,
+                              );
                         },
                       );
                     },

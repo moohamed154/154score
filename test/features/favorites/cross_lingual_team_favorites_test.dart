@@ -23,7 +23,8 @@ void main() {
       cubit.close();
     });
 
-    test('1. TeamResolver correctly matches Arabic and English names for Egypt', () {
+    test('1. TeamResolver correctly matches Arabic and English names for Egypt',
+        () {
       expect(TeamResolver.areSameTeam('مصر', 'Egypt'), isTrue);
       expect(TeamResolver.areSameTeam('منتخب مصر', 'Egypt'), isTrue);
       expect(TeamResolver.areSameTeam('Egypt', 'مصر'), isTrue);
@@ -31,7 +32,9 @@ void main() {
       expect(TeamResolver.areSameTeam('أنغولا', 'Angola'), isTrue);
     });
 
-    test('2. Team favorited in Arabic is recognized as favorite when viewed in English (User Scenario)', () async {
+    test(
+        '2. Team favorited in Arabic is recognized as favorite when viewed in English (User Scenario)',
+        () async {
       // User favorites team in Arabic (display name 'مصر', teamId '967')
       await cubit.toggleTeam('مصر', id: '967');
 
@@ -47,7 +50,9 @@ void main() {
       expect(storage.isFavoriteTeam('Egypt'), isTrue);
     });
 
-    test('3. Team favorited with only Arabic text (pre-existing SharedPreferences) resolves in English', () {
+    test(
+        '3. Team favorited with only Arabic text (pre-existing SharedPreferences) resolves in English',
+        () {
       // Simulate existing SharedPreferences where only 'مصر' was stored
       const state = FavoritesState(
         favoriteTeams: ['مصر'],
@@ -59,7 +64,9 @@ void main() {
       expect(state.isFavoriteTeam(name: 'Angola'), isFalse);
     });
 
-    test('4. Club teams (e.g. Real Madrid, Al Ahly) work cross-lingually between Arabic and English', () async {
+    test(
+        '4. Club teams (e.g. Real Madrid, Al Ahly) work cross-lingually between Arabic and English',
+        () async {
       // Real Madrid favorited in Arabic
       await cubit.toggleTeam('ريال مدريد', id: '86');
       expect(cubit.isTeamFavorite(name: 'Real Madrid'), isTrue);
@@ -73,7 +80,9 @@ void main() {
       expect(cubit.isTeamFavorite(id: '103', name: 'الأهلي'), isTrue);
     });
 
-    test('5. Toggling favorite off in English removes team originally favorited in Arabic', () async {
+    test(
+        '5. Toggling favorite off in English removes team originally favorited in Arabic',
+        () async {
       // Favorited in Arabic
       await cubit.toggleTeam('مصر', id: '967');
       expect(cubit.isTeamFavorite(name: 'Egypt', id: '967'), isTrue);
@@ -87,18 +96,22 @@ void main() {
       expect(storage.getFavoriteTeams(), isEmpty);
     });
 
-    test('6. Dynamic team title registration maps custom team IDs to names', () async {
+    test('6. Dynamic team title registration maps custom team IDs to names',
+        () async {
       await cubit.registerTeamTitles({'999': 'Zamalek'});
 
       expect(cubit.state.teamTitles['999'], 'Zamalek');
       expect(cubit.state.teamTitles['zamalek'], '999');
     });
 
-    test('7. TeamResolver localized name provides proper title per language', () {
+    test('7. TeamResolver localized name provides proper title per language',
+        () {
       expect(TeamResolver.getLocalizedName('مصر', isArabic: false), 'Egypt');
       expect(TeamResolver.getLocalizedName('Egypt', isArabic: true), 'مصر');
-      expect(TeamResolver.getLocalizedName('ريال مدريد', isArabic: false), 'Real Madrid');
-      expect(TeamResolver.getLocalizedName('Real Madrid', isArabic: true), 'ريال مدريد');
+      expect(TeamResolver.getLocalizedName('ريال مدريد', isArabic: false),
+          'Real Madrid');
+      expect(TeamResolver.getLocalizedName('Real Madrid', isArabic: true),
+          'ريال مدريد');
     });
   });
 }

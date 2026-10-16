@@ -8,13 +8,14 @@ import '../datasources/news_remote_datasource.dart';
 class NewsRepositoryImpl implements NewsRepository {
   final NewsRemoteDataSource _remoteDataSource;
 
-  final Map<String, ({NewsFeedEntity feed, DateTime timestamp})> _cachedFeeds = {};
+  final Map<String, ({NewsFeedEntity feed, DateTime timestamp})> _cachedFeeds =
+      {};
 
   final Map<String, ({List<NewsArticleEntity> items, DateTime timestamp})>
-  _teamNewsCache = {};
+      _teamNewsCache = {};
 
   final Map<String, ({NewsDetailEntity detail, DateTime timestamp})>
-  _detailCache = {};
+      _detailCache = {};
 
   NewsRepositoryImpl(this._remoteDataSource);
 
@@ -27,7 +28,8 @@ class NewsRepositoryImpl implements NewsRepository {
   Future<ApiResult<NewsFeedEntity>> getNewsFeed({required String lang}) async {
     final cached = _cachedFeeds[lang];
     if (cached != null &&
-        DateTime.now().difference(cached.timestamp) < const Duration(minutes: 5)) {
+        DateTime.now().difference(cached.timestamp) <
+            const Duration(minutes: 5)) {
       _prewarmOtherLanguage(lang);
       return ApiSuccess(cached.feed);
     }
@@ -53,13 +55,11 @@ class NewsRepositoryImpl implements NewsRepository {
     final otherLang = currentLang == 'ar' ? 'en' : 'ar';
     final otherCached = _cachedFeeds[otherLang];
     if (otherCached == null ||
-        DateTime.now().difference(otherCached.timestamp) >= const Duration(minutes: 10)) {
-      _remoteDataSource
-          .getNewsFeed(lang: otherLang)
-          .then((otherFeed) {
-            _cachedFeeds[otherLang] = (feed: otherFeed, timestamp: DateTime.now());
-          })
-          .catchError((_) {});
+        DateTime.now().difference(otherCached.timestamp) >=
+            const Duration(minutes: 10)) {
+      _remoteDataSource.getNewsFeed(lang: otherLang).then((otherFeed) {
+        _cachedFeeds[otherLang] = (feed: otherFeed, timestamp: DateTime.now());
+      }).catchError((_) {});
     }
   }
 
@@ -72,7 +72,8 @@ class NewsRepositoryImpl implements NewsRepository {
     final key = '$teamId-$lang-$page';
     final cached = _teamNewsCache[key];
     if (cached != null &&
-        DateTime.now().difference(cached.timestamp) < const Duration(minutes: 5)) {
+        DateTime.now().difference(cached.timestamp) <
+            const Duration(minutes: 5)) {
       return ApiSuccess(cached.items);
     }
 
@@ -105,7 +106,8 @@ class NewsRepositoryImpl implements NewsRepository {
     final key = '$id-$lang';
     final cached = _detailCache[key];
     if (cached != null &&
-        DateTime.now().difference(cached.timestamp) < const Duration(minutes: 10)) {
+        DateTime.now().difference(cached.timestamp) <
+            const Duration(minutes: 10)) {
       return ApiSuccess(cached.detail);
     }
 

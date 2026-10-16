@@ -81,15 +81,14 @@ class _DebugConsoleSheetState extends State<DebugConsoleSheet> {
                     const SizedBox(height: 2),
                     Text(
                       l10n.translate('debug_console_subtitle'),
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -230,8 +229,8 @@ class _DebugConsoleSheetState extends State<DebugConsoleSheet> {
                     : allHistory.where((rec) {
                         return rec.url.toLowerCase().contains(_searchQuery) ||
                             (rec.statusCode?.toString().contains(
-                                  _searchQuery,
-                                ) ??
+                                      _searchQuery,
+                                    ) ??
                                 false) ||
                             rec.method.toLowerCase().contains(_searchQuery);
                       }).toList();
@@ -251,15 +250,14 @@ class _DebugConsoleSheetState extends State<DebugConsoleSheet> {
                         const SizedBox(height: 12),
                         Text(
                           l10n.translate('debug_console_no_logs'),
-                          style:
-                              AppTypography.getBodyMedium(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
-                              ),
+                          style: AppTypography.getBodyMedium(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -311,8 +309,7 @@ class _DebugRecordCardState extends State<_DebugRecordCard> {
   @override
   Widget build(BuildContext context) {
     final record = widget.record;
-    final isSuccess =
-        !record.isError &&
+    final isSuccess = !record.isError &&
         record.statusCode != null &&
         record.statusCode! >= 200 &&
         record.statusCode! < 300;
@@ -325,9 +322,8 @@ class _DebugRecordCardState extends State<_DebugRecordCard> {
         ? '${record.statusCode}'
         : (record.isError ? 'ERR' : '???');
 
-    final durationLabel = record.duration != null
-        ? '${record.duration!.inMilliseconds}ms'
-        : '';
+    final durationLabel =
+        record.duration != null ? '${record.duration!.inMilliseconds}ms' : '';
 
     return Container(
       decoration: BoxDecoration(

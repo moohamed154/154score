@@ -16,7 +16,9 @@ void main() {
   });
 
   group('MatchNotificationTracker Tests', () {
-    test('Correctly identifies favorited team Fiji as tracked for notifications', () async {
+    test(
+        'Correctly identifies favorited team Fiji as tracked for notifications',
+        () async {
       final tracker = MatchNotificationTracker.instance;
 
       const fijiMatch = MatchEntity(
@@ -51,7 +53,8 @@ void main() {
       expect(tracker.isMatchTracked(otherMatch), isFalse);
     });
 
-    test('Goal score progression is detected without throwing errors', () async {
+    test('Goal score progression is detected without throwing errors',
+        () async {
       final tracker = MatchNotificationTracker.instance;
 
       const initialMatch = MatchEntity(

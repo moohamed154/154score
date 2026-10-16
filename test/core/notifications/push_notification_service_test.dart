@@ -37,7 +37,8 @@ void main() {
       expect(payload, contains('"article_id":"14040707"'));
     });
 
-    test('Stable notification ID generation is deterministic and non-negative', () {
+    test('Stable notification ID generation is deterministic and non-negative',
+        () {
       final id1 = NotificationService.stableId('goal_6106404_1_1');
       final id2 = NotificationService.stableId('goal_6106404_1_1');
       final id3 = NotificationService.stableId('start_6106404');

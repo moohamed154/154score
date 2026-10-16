@@ -38,14 +38,12 @@ class MatchScoreWidget extends StatelessWidget {
     final s1 = ScoreHelper.normalizeScore(score1);
     final s2 = ScoreHelper.normalizeScore(score2);
 
-    final hasPenalties =
-        penaltyScore1 != null &&
+    final hasPenalties = penaltyScore1 != null &&
         penaltyScore1!.isNotEmpty &&
         penaltyScore2 != null &&
         penaltyScore2!.isNotEmpty;
 
-    final hasHalfTime =
-        halfTimeScore1 != null &&
+    final hasHalfTime = halfTimeScore1 != null &&
         halfTimeScore1!.isNotEmpty &&
         halfTimeScore2 != null &&
         halfTimeScore2!.isNotEmpty;
@@ -63,15 +61,14 @@ class MatchScoreWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Text(
                 ':',
-                style:
-                    (isLarge
-                            ? AppTypography.getScoreLarge(isDark: isDark)
-                            : AppTypography.getScoreMedium(isDark: isDark))
-                        .copyWith(
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
+                style: (isLarge
+                        ? AppTypography.getScoreLarge(isDark: isDark)
+                        : AppTypography.getScoreMedium(isDark: isDark))
+                    .copyWith(
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
               ),
             ),
             AnimatedScoreText(score: s2, isLarge: isLarge, isLive: isLive),
@@ -85,16 +82,14 @@ class MatchScoreWidget extends StatelessWidget {
             isArabic
                 ? '(الشوط الأول: $halfTimeScore1 - $halfTimeScore2)'
                 : '(HT: $halfTimeScore1 - $halfTimeScore2)',
-            style:
-                AppTypography.getBodySmall(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontSize: 11,
-                  color: isDark
-                      ? AppColors.darkTextMuted
-                      : AppColors.lightTextMuted,
-                ),
+            style: AppTypography.getBodySmall(
+              isDark: isDark,
+              isArabic: isArabic,
+            ).copyWith(
+              fontSize: 11,
+              color:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            ),
           ),
         ],
 

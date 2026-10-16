@@ -176,7 +176,8 @@ void main() {
   });
 
   group('MatchCard Real-Time Clock Widget Test', () {
-    testWidgets('MatchCard starts counting from 00:00 when live and minute is null', (
+    testWidgets(
+        'MatchCard starts counting from 00:00 when live and minute is null', (
       tester,
     ) async {
       final now = DateTime.now();

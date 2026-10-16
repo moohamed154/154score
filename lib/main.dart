@@ -28,7 +28,8 @@ void main() async {
       try {
         FlutterForegroundTask.initCommunicationPort();
       } catch (e) {
-        debugPrint('[main] FlutterForegroundTask.initCommunicationPort error: $e');
+        debugPrint(
+            '[main] FlutterForegroundTask.initCommunicationPort error: $e');
       }
     }
 
@@ -71,7 +72,8 @@ void main() async {
     // POST /notifications/notification_post_service
     unawaited(
       NotificationSyncService.instance.syncAllSubscriptions().catchError((e) {
-        debugPrint('[main] NotificationSyncService.syncAllSubscriptions error: $e');
+        debugPrint(
+            '[main] NotificationSyncService.syncAllSubscriptions error: $e');
         return false;
       }),
     );

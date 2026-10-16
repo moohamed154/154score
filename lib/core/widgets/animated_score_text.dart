@@ -23,18 +23,17 @@ class AnimatedScoreText extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final resolvedStyle =
-        style ??
+    final resolvedStyle = style ??
         (isLarge
                 ? AppTypography.getScoreLarge(isDark: isDark)
                 : AppTypography.getScoreMedium(isDark: isDark))
             .copyWith(
-              color: isLive
-                  ? AppColors.liveRed
-                  : (isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary),
-            );
+          color: isLive
+              ? AppColors.liveRed
+              : (isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary),
+        );
 
     return AnimatedSwitcher(
       duration: duration,

@@ -356,7 +356,10 @@ class LeagueResolver {
     '911131': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
     '77783': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
     '943601': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
-    '41791876': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
+    '41791876': (
+      ar: 'كأس الكونفيدرالية الإفريقية',
+      en: 'CAF Confederation Cup'
+    ),
     '943602': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
     '911121': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
     '76684': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
@@ -548,7 +551,8 @@ class LeagueResolver {
     }
 
     // 2. Direct name match (case-insensitive)
-    if (cleanA.isNotEmpty && cleanB.isNotEmpty &&
+    if (cleanA.isNotEmpty &&
+        cleanB.isNotEmpty &&
         cleanA.toLowerCase() == cleanB.toLowerCase()) {
       return true;
     }
@@ -561,9 +565,13 @@ class LeagueResolver {
     }
 
     // 3b. Stage-tolerant base name match (e.g. "دوري أبطال أفريقيا | الأدوار الإقصائية")
-    final baseA = cleanA.contains('|') ? cleanA.split('|').first.trim() : cleanA;
-    final baseB = cleanB.contains('|') ? cleanB.split('|').first.trim() : cleanB;
-    if (baseA.isNotEmpty && baseB.isNotEmpty && (baseA != cleanA || baseB != cleanB)) {
+    final baseA =
+        cleanA.contains('|') ? cleanA.split('|').first.trim() : cleanA;
+    final baseB =
+        cleanB.contains('|') ? cleanB.split('|').first.trim() : cleanB;
+    if (baseA.isNotEmpty &&
+        baseB.isNotEmpty &&
+        (baseA != cleanA || baseB != cleanB)) {
       if (baseA.toLowerCase() == baseB.toLowerCase() ||
           normalize(baseA) == normalize(baseB)) {
         return true;
@@ -670,4 +678,3 @@ class LeagueResolver {
     return false;
   }
 }
-

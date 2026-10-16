@@ -17,8 +17,8 @@ class ApiClient {
   final LocalStorageService? _localStorageService;
 
   ApiClient({Dio? dio, LocalStorageService? localStorageService})
-    : _localStorageService = localStorageService,
-      _dio = dio ?? _createDefaultDio(localStorageService) {
+      : _localStorageService = localStorageService,
+        _dio = dio ?? _createDefaultDio(localStorageService) {
     if (!_dio.interceptors.any((i) => i is DebugConsoleInterceptor)) {
       _dio.interceptors.insert(0, DebugConsoleInterceptor());
     }
@@ -72,7 +72,8 @@ class ApiClient {
           }
 
           // Anti-Tampering & Anti-Scraping: attach dynamic cryptographic signature (HMAC-SHA256, Nonce, Timestamp)
-          final signPath = options.uri.path.isNotEmpty ? options.uri.path : options.path;
+          final signPath =
+              options.uri.path.isNotEmpty ? options.uri.path : options.path;
           final securityHeaders = SecuritySigner.buildSecurityHeaders(
             method: options.method,
             path: signPath,
@@ -86,22 +87,20 @@ class ApiClient {
           } else {
             try {
               if (GetIt.instance.isRegistered<LocalStorageService>()) {
-                offset = GetIt.instance<LocalStorageService>()
-                    .getTimezoneOffset();
+                offset =
+                    GetIt.instance<LocalStorageService>().getTimezoneOffset();
               }
             } catch (_) {}
           }
 
           // 1. If options.queryParameters already has 'utc-offset', ensure it's a String
           if (options.queryParameters.containsKey('utc-offset')) {
-            options.queryParameters['utc-offset'] = options
-                .queryParameters['utc-offset']
-                .toString();
+            options.queryParameters['utc-offset'] =
+                options.queryParameters['utc-offset'].toString();
           } else {
             // 2. Automatically inject utc-offset as String for any match-related endpoint
             final path = options.path;
-            final isMatchEndpoint =
-                path.startsWith('/api/matches') ||
+            final isMatchEndpoint = path.startsWith('/api/matches') ||
                 path.startsWith(ApiEndpoints.matches) ||
                 path.contains('/matches') ||
                 path.contains('/teams') ||
@@ -252,7 +251,8 @@ class ApiClient {
 
         if (statusCode == 503) {
           if (message.isEmpty || message.startsWith('Server error occurred')) {
-            message = 'Upstream data source is temporarily busy. Please retry shortly.';
+            message =
+                'Upstream data source is temporarily busy. Please retry shortly.';
           }
         } else if (statusCode == 404) {
           if (message.isEmpty || message.startsWith('Server error occurred')) {

@@ -21,14 +21,10 @@ class AppUpdateDto extends AppUpdateEntity {
     final rawData = json['data'];
     final Map<dynamic, dynamic> map = (rawData is Map) ? rawData : json;
 
-    final releaseNotesAr = (map['release_notes_ar'] ??
-            map['releaseNotesAr'] ??
-            '')
-        .toString();
-    final releaseNotesEn = (map['release_notes_en'] ??
-            map['releaseNotesEn'] ??
-            '')
-        .toString();
+    final releaseNotesAr =
+        (map['release_notes_ar'] ?? map['releaseNotesAr'] ?? '').toString();
+    final releaseNotesEn =
+        (map['release_notes_en'] ?? map['releaseNotesEn'] ?? '').toString();
     final generalNotes = (map['release_notes'] ??
             map['releaseNotes'] ??
             map['message'] ??
@@ -36,9 +32,14 @@ class AppUpdateDto extends AppUpdateEntity {
         .toString();
 
     return AppUpdateDto(
-      latestVersion: (map['latest_version'] ?? map['latestVersion'] ?? '1.0.0').toString(),
+      latestVersion:
+          (map['latest_version'] ?? map['latestVersion'] ?? '1.0.0').toString(),
       latestBuildNumber: int.tryParse(
-            (map['latest_build_number'] ?? map['latestBuildNumber'] ?? map['latest_build'] ?? 1).toString(),
+            (map['latest_build_number'] ??
+                    map['latestBuildNumber'] ??
+                    map['latest_build'] ??
+                    1)
+                .toString(),
           ) ??
           1,
       minSupportedVersion: (map['min_supported_version'] ??
@@ -80,17 +81,17 @@ class AppUpdateDto extends AppUpdateEntity {
   }
 
   Map<String, dynamic> toJson() => {
-    'latest_version': latestVersion,
-    'latest_build_number': latestBuildNumber,
-    'min_supported_version': minSupportedVersion,
-    'min_supported_build_number': minSupportedBuildNumber,
-    'force_update': forceUpdate,
-    'is_active': isActive,
-    'download_url_android': downloadUrlAndroid,
-    'download_url_ios': downloadUrlIos,
-    'release_notes': releaseNotes,
-    'release_notes_ar': releaseNotesAr,
-    'release_notes_en': releaseNotesEn,
-    'file_size_bytes': fileSizeBytes,
-  };
+        'latest_version': latestVersion,
+        'latest_build_number': latestBuildNumber,
+        'min_supported_version': minSupportedVersion,
+        'min_supported_build_number': minSupportedBuildNumber,
+        'force_update': forceUpdate,
+        'is_active': isActive,
+        'download_url_android': downloadUrlAndroid,
+        'download_url_ios': downloadUrlIos,
+        'release_notes': releaseNotes,
+        'release_notes_ar': releaseNotesAr,
+        'release_notes_en': releaseNotesEn,
+        'file_size_bytes': fileSizeBytes,
+      };
 }

@@ -29,14 +29,14 @@ class LeagueDetailsEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    logo,
-    country,
-    season,
-    standings,
-    topScorers,
-    topAssists,
-    matches,
-  ];
+        id,
+        name,
+        logo,
+        country,
+        season,
+        standings,
+        topScorers,
+        topAssists,
+        matches,
+      ];
 }

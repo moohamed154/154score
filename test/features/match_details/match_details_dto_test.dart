@@ -15,7 +15,9 @@ void main() {
   });
 
   group('MatchDetailsRemoteDataSource V4.2 Parsing Tests', () {
-    test('getEvents parses V4.2 events correctly (team-a/b, text, subtitle, minute)', () async {
+    test(
+        'getEvents parses V4.2 events correctly (team-a/b, text, subtitle, minute)',
+        () async {
       when(
         () => mockApiClient.get(
           any(),
@@ -68,7 +70,9 @@ void main() {
       expect(events[1].isHomeTeam, isFalse);
     });
 
-    test('getStats parses V4.2 sectioned statistics with accurate percentage and no NaN', () async {
+    test(
+        'getStats parses V4.2 sectioned statistics with accurate percentage and no NaN',
+        () async {
       when(
         () => mockApiClient.get(
           any(),
@@ -146,7 +150,9 @@ void main() {
       expect(details[0].items[0].content, 'بي إن سبورت 8');
     });
 
-    test('getEventsPayload parses match summary, goals, and goal clips accurately', () async {
+    test(
+        'getEventsPayload parses match summary, goals, and goal clips accurately',
+        () async {
       when(
         () => mockApiClient.get(
           any(),
@@ -264,7 +270,9 @@ void main() {
       expect(chips[2].title, contains('جليكير ميندوزا'));
     });
 
-    test('when has_video is false, MatchVideosEntity hasVideo is false and allChips is empty', () async {
+    test(
+        'when has_video is false, MatchVideosEntity hasVideo is false and allChips is empty',
+        () async {
       when(
         () => mockApiClient.get(
           any(),
@@ -342,7 +350,9 @@ void main() {
       },
     );
 
-    test('news parsing drops items with Download Yalla Shoot App and download links in English too', () async {
+    test(
+        'news parsing drops items with Download Yalla Shoot App and download links in English too',
+        () async {
       when(
         () => mockApiClient.get(
           any(),
@@ -382,7 +392,9 @@ void main() {
       );
     });
 
-    test('getDetailsPayload parses rich overview and sections from YallaShoot parity API', () async {
+    test(
+        'getDetailsPayload parses rich overview and sections from YallaShoot parity API',
+        () async {
       when(
         () => mockApiClient.get(
           any(),

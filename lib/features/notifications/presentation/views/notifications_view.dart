@@ -34,8 +34,8 @@ class _NotificationsViewState extends State<NotificationsView> {
         if (mounted) {
           final l = Localizations.localeOf(context).languageCode;
           context.read<NotificationsBloc>().add(
-            LoadNotificationsEvent(lang: l, isRefresh: true),
-          );
+                LoadNotificationsEvent(lang: l, isRefresh: true),
+              );
         }
       });
     });
@@ -89,7 +89,8 @@ class _NotificationsViewState extends State<NotificationsView> {
     context.read<NotificationsBloc>().add(MarkNotificationReadEvent(item.id));
 
     if (item.category == 'news') {
-      final articleId = item.data['article_id'] ?? item.id.replaceFirst('news_', '');
+      final articleId =
+          item.data['article_id'] ?? item.id.replaceFirst('news_', '');
       context.push('/news/$articleId');
     } else if (item.category == 'match') {
       final matchId = item.data['match_id'] ?? item.matchId;
@@ -123,8 +124,8 @@ class _NotificationsViewState extends State<NotificationsView> {
                 tooltip: l10n.translate('mark_all_read'),
                 onPressed: () {
                   context.read<NotificationsBloc>().add(
-                    const MarkAllNotificationsReadEvent(),
-                  );
+                        const MarkAllNotificationsReadEvent(),
+                      );
                 },
               );
             },
@@ -138,23 +139,27 @@ class _NotificationsViewState extends State<NotificationsView> {
       ),
       body: BlocBuilder<NotificationsBloc, NotificationsState>(
         builder: (context, state) {
-          if (state.status == NotificationsStatus.loading && state.notifications.isEmpty) {
+          if (state.status == NotificationsStatus.loading &&
+              state.notifications.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.status == NotificationsStatus.error && state.notifications.isEmpty) {
+          if (state.status == NotificationsStatus.error &&
+              state.notifications.isEmpty) {
             return ErrorView(
-              message: state.errorMessage ?? l10n.translate('error_service_unavailable'),
+              message: state.errorMessage ??
+                  l10n.translate('error_service_unavailable'),
               onRetry: () {
                 final lang = Localizations.localeOf(context).languageCode;
                 context.read<NotificationsBloc>().add(
-                  LoadNotificationsEvent(lang: lang, isRefresh: true),
-                );
+                      LoadNotificationsEvent(lang: lang, isRefresh: true),
+                    );
               },
             );
           }
 
-          if (state.status == NotificationsStatus.empty || state.notifications.isEmpty) {
+          if (state.status == NotificationsStatus.empty ||
+              state.notifications.isEmpty) {
             return const EmptyView(
               icon: Icons.notifications_off_outlined,
               titleKey: 'no_notifications',
@@ -166,8 +171,8 @@ class _NotificationsViewState extends State<NotificationsView> {
             onRefresh: () async {
               final lang = Localizations.localeOf(context).languageCode;
               context.read<NotificationsBloc>().add(
-                LoadNotificationsEvent(lang: lang, isRefresh: true),
-              );
+                    LoadNotificationsEvent(lang: lang, isRefresh: true),
+                  );
             },
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(
@@ -183,7 +188,9 @@ class _NotificationsViewState extends State<NotificationsView> {
 
                 return Material(
                   color: isDark
-                      ? (item.isRead ? const Color(0xFF1E293B) : const Color(0xFF1E3A5F).withValues(alpha: 0.4))
+                      ? (item.isRead
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFF1E3A5F).withValues(alpha: 0.4))
                       : (item.isRead ? Colors.white : const Color(0xFFEFF6FF)),
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
@@ -217,7 +224,9 @@ class _NotificationsViewState extends State<NotificationsView> {
                                           isDark: isDark,
                                           isArabic: isArabic,
                                         ).copyWith(
-                                          fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
+                                          fontWeight: item.isRead
+                                              ? FontWeight.w600
+                                              : FontWeight.w800,
                                         ),
                                       ),
                                     ),
@@ -225,7 +234,8 @@ class _NotificationsViewState extends State<NotificationsView> {
                                       Container(
                                         width: 8,
                                         height: 8,
-                                        margin: const EdgeInsets.only(left: 6, right: 6),
+                                        margin: const EdgeInsets.only(
+                                            left: 6, right: 6),
                                         decoration: const BoxDecoration(
                                           color: AppColors.primary,
                                           shape: BoxShape.circle,
@@ -240,7 +250,9 @@ class _NotificationsViewState extends State<NotificationsView> {
                                     isDark: isDark,
                                     isArabic: isArabic,
                                   ).copyWith(
-                                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                    color: isDark
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFF64748B),
                                   ),
                                 ),
                               ],

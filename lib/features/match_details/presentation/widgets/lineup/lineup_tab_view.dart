@@ -66,8 +66,8 @@ class _LineupTabViewState extends State<LineupTabView> {
             message: state.errorMessage,
             onRetry: () {
               context.read<MatchDetailsBloc>().add(
-                LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
-              );
+                    LoadMatchDetailsEvent(widget.matchId, isRefresh: true),
+                  );
             },
           );
         }
@@ -81,12 +81,12 @@ class _LineupTabViewState extends State<LineupTabView> {
             onRefresh: () async {
               final completer = Completer<void>();
               context.read<MatchDetailsBloc>().add(
-                LoadMatchDetailsEvent(
-                  widget.matchId,
-                  isRefresh: true,
-                  completer: completer,
-                ),
-              );
+                    LoadMatchDetailsEvent(
+                      widget.matchId,
+                      isRefresh: true,
+                      completer: completer,
+                    ),
+                  );
               try {
                 await completer.future.timeout(const Duration(seconds: 3));
               } catch (_) {}
@@ -116,12 +116,12 @@ class _LineupTabViewState extends State<LineupTabView> {
           onRefresh: () async {
             final completer = Completer<void>();
             context.read<MatchDetailsBloc>().add(
-              LoadMatchDetailsEvent(
-                widget.matchId,
-                isRefresh: true,
-                completer: completer,
-              ),
-            );
+                  LoadMatchDetailsEvent(
+                    widget.matchId,
+                    isRefresh: true,
+                    completer: completer,
+                  ),
+                );
             try {
               await completer.future.timeout(const Duration(seconds: 3));
             } catch (_) {}
@@ -213,8 +213,7 @@ class _LineupTabViewState extends State<LineupTabView> {
     final String label;
     if (customText != null && customText.trim().isNotEmpty) {
       final trimmed = customText.trim();
-      final textIsProbable =
-          trimmed.contains('متوقعة') ||
+      final textIsProbable = trimmed.contains('متوقعة') ||
           trimmed.toLowerCase().contains('probable') ||
           trimmed.toLowerCase().contains('predicted');
       if (isConfirmed && textIsProbable) {
@@ -260,9 +259,8 @@ class _LineupTabViewState extends State<LineupTabView> {
   Widget _buildViewSwitcher(bool isDark, bool isArabic) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkCardElevated
-            : AppColors.lightCardElevated,
+        color:
+            isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -317,8 +315,8 @@ class _LineupTabViewState extends State<LineupTabView> {
               color: isSelected
                   ? Colors.black
                   : (isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted),
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted),
             ),
             const SizedBox(width: 4),
             Text(
@@ -329,8 +327,8 @@ class _LineupTabViewState extends State<LineupTabView> {
                 color: isSelected
                     ? Colors.black
                     : (isDark
-                          ? AppColors.darkTextMuted
-                          : AppColors.lightTextMuted),
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted),
               ),
             ),
           ],

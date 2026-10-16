@@ -236,8 +236,7 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
       for (final l in rawLeagues) {
         if (l is Map) {
           final lId = l['league_id']?.toString() ?? l['id']?.toString();
-          final lTitle =
-              l['league_title']?.toString() ??
+          final lTitle = l['league_title']?.toString() ??
               l['title']?.toString() ??
               l['name']?.toString();
           final lLogo = l['league_logo']?.toString() ?? l['logo']?.toString();
@@ -320,7 +319,7 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
       if (profileMap['current_season'] is Map) {
         final rawSeason =
             profileMap['current_season']['season_name']?.toString() ??
-            profileMap['current_season']['name']?.toString();
+                profileMap['current_season']['name']?.toString();
         if (rawSeason != null) {
           final trimmed = rawSeason.trim();
           if (lang == 'ar' &&
@@ -444,8 +443,7 @@ class LeaguesRemoteDataSourceImpl implements LeaguesRemoteDataSource {
 
     return LeagueDetailsEntity(
       id: leagueId,
-      name:
-          (standings?.leagueTitle.isNotEmpty == true &&
+      name: (standings?.leagueTitle.isNotEmpty == true &&
               standings?.leagueTitle != 'League Standings')
           ? standings!.leagueTitle
           : name,

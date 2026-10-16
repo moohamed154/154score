@@ -192,9 +192,8 @@ class _TimeFormatSettingsViewState extends State<TimeFormatSettingsView> {
     required AppLocalizations l10n,
     required String format,
   }) {
-    final previewTime = format == '12h'
-        ? (isArabic ? '09:00 م' : '09:00 PM')
-        : '21:00';
+    final previewTime =
+        format == '12h' ? (isArabic ? '09:00 م' : '09:00 PM') : '21:00';
 
     return RepaintBoundary(
       child: Container(
@@ -239,7 +238,8 @@ class _TimeFormatSettingsViewState extends State<TimeFormatSettingsView> {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                    borderRadius:
+                        BorderRadius.circular(AppDimensions.radiusFull),
                     border: Border.all(
                       color: AppColors.primary.withValues(alpha: 0.3),
                     ),
@@ -263,9 +263,8 @@ class _TimeFormatSettingsViewState extends State<TimeFormatSettingsView> {
                 isDark: isDark,
                 isArabic: isArabic,
               ).copyWith(
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               ),
             ),
             const SizedBox(height: 14),
@@ -279,9 +278,7 @@ class _TimeFormatSettingsViewState extends State<TimeFormatSettingsView> {
                     : AppColors.lightCardElevated,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                 border: Border.all(
-                  color: isDark
-                      ? AppColors.darkBorder
-                      : AppColors.lightBorder,
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                 ),
               ),
               child: Row(
@@ -306,7 +303,8 @@ class _TimeFormatSettingsViewState extends State<TimeFormatSettingsView> {
                         const CircleAvatar(
                           radius: 12,
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.shield_rounded, size: 16, color: Colors.blue),
+                          child: Icon(Icons.shield_rounded,
+                              size: 16, color: Colors.blue),
                         ),
                       ],
                     ),
@@ -349,7 +347,8 @@ class _TimeFormatSettingsViewState extends State<TimeFormatSettingsView> {
                         const CircleAvatar(
                           radius: 12,
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.shield_rounded, size: 16, color: Colors.indigo),
+                          child: Icon(Icons.shield_rounded,
+                              size: 16, color: Colors.indigo),
                         ),
                         const SizedBox(width: 8),
                         Flexible(
@@ -470,7 +469,8 @@ class _TimeFormatSettingsViewState extends State<TimeFormatSettingsView> {
                     title,
                     style: TextStyle(
                       fontSize: 14.5,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w600,
                       color: isSelected
                           ? (isDark ? Colors.white : AppColors.lightTextPrimary)
                           : (isDark
@@ -510,9 +510,7 @@ class _TimeFormatSettingsViewState extends State<TimeFormatSettingsView> {
                 border: Border.all(
                   color: isSelected
                       ? AppColors.primary.withValues(alpha: 0.4)
-                      : (isDark
-                          ? AppColors.darkBorder
-                          : AppColors.lightBorder),
+                      : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
                 ),
               ),
               child: Text(

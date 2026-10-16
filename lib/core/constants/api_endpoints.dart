@@ -51,58 +51,58 @@ class ApiEndpoints {
   static const String news = '/api/news';
   static String newsDetails(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/news/$id/$slug'
-      : '/api/news/$id';
+          ? '/api/news/$id/$slug'
+          : '/api/news/$id';
 
   // 4. Teams Operations
   static String teamProfile(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/teams/$id/$slug'
-      : '/api/teams/$id';
+          ? '/api/teams/$id/$slug'
+          : '/api/teams/$id';
   static String teamPlayers(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/teams/$id/$slug/players'
-      : '/api/teams/$id/players';
+          ? '/api/teams/$id/$slug/players'
+          : '/api/teams/$id/players';
   static String teamMatches(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/teams/$id/$slug/matches'
-      : '/api/teams/$id/matches';
+          ? '/api/teams/$id/$slug/matches'
+          : '/api/teams/$id/matches';
   static String teamStandings(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/teams/$id/$slug/standings'
-      : '/api/teams/$id/standings';
+          ? '/api/teams/$id/$slug/standings'
+          : '/api/teams/$id/standings';
   static String teamTransfers(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/teams/$id/$slug/transfers'
-      : '/api/teams/$id/transfers';
+          ? '/api/teams/$id/$slug/transfers'
+          : '/api/teams/$id/transfers';
   static String teamNews(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/teams/$id/$slug/news'
-      : '/api/teams/$id/news';
+          ? '/api/teams/$id/$slug/news'
+          : '/api/teams/$id/news';
 
   // 5. Players Operations
   static String playerProfile(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/players/$id/$slug'
-      : '/api/players/$id';
+          ? '/api/players/$id/$slug'
+          : '/api/players/$id';
 
   // 6. Profiles Operations (Stadium, Referee, Commentator)
   static String stadium(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/stadium/$id/$slug'
-      : '/api/stadium/$id';
+          ? '/api/stadium/$id/$slug'
+          : '/api/stadium/$id';
   static String referee(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/referee/$id/$slug'
-      : '/api/referee/$id';
+          ? '/api/referee/$id/$slug'
+          : '/api/referee/$id';
   static String commentator(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/commentator/$id/$slug'
-      : '/api/commentator/$id';
+          ? '/api/commentator/$id/$slug'
+          : '/api/commentator/$id';
   static String coach(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/coach/$id/$slug'
-      : '/api/coach/$id';
+          ? '/api/coach/$id/$slug'
+          : '/api/coach/$id';
 
   // 7. Content & Search Operations
   static const String search = '/api/search';
@@ -117,36 +117,36 @@ class ApiEndpoints {
   static const String competitions = '/api/competitions';
   static String leagueProfile(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/leagues/$id/$slug'
-      : '/api/leagues/$id';
+          ? '/api/leagues/$id/$slug'
+          : '/api/leagues/$id';
   static String leagueStandings(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/leagues/$id/$slug/standings'
-      : '/api/leagues/$id/standings';
+          ? '/api/leagues/$id/$slug/standings'
+          : '/api/leagues/$id/standings';
   static String leagueTopScorers(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/leagues/$id/$slug/top-scorers'
-      : '/api/leagues/$id/top-scorers';
+          ? '/api/leagues/$id/$slug/top-scorers'
+          : '/api/leagues/$id/top-scorers';
   static String leagueScorers(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/leagues/$id/$slug/scorers'
-      : '/api/leagues/$id/scorers';
+          ? '/api/leagues/$id/$slug/scorers'
+          : '/api/leagues/$id/scorers';
   static String leagueMatches(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/leagues/$id/$slug/matches'
-      : '/api/leagues/$id/matches';
+          ? '/api/leagues/$id/$slug/matches'
+          : '/api/leagues/$id/matches';
   static String leagueNews(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/leagues/$id/$slug/news'
-      : '/api/leagues/$id/news';
+          ? '/api/leagues/$id/$slug/news'
+          : '/api/leagues/$id/news';
   static String leagueTeams(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/leagues/$id/$slug/teams'
-      : '/api/leagues/$id/teams';
+          ? '/api/leagues/$id/$slug/teams'
+          : '/api/leagues/$id/teams';
   static String leagueAssists(String id, [String? slug]) =>
       (slug != null && slug.isNotEmpty)
-      ? '/api/leagues/$id/$slug/assists'
-      : '/api/leagues/$id/assists';
+          ? '/api/leagues/$id/$slug/assists'
+          : '/api/leagues/$id/assists';
 
   // 8. Notifications Operations
   static const String notifications = '/api/notifications';
@@ -169,9 +169,11 @@ class ApiEndpoints {
 
   // 10. Live Activities & Lock Screen Operations
   static const String liveActivityRegister = '/live-activity/register';
-  static const String liveActivityRegisterFallback = '/api/live-activity/register';
+  static const String liveActivityRegisterFallback =
+      '/api/live-activity/register';
   static const String liveActivityUpdateToken = '/live-activity/update-token';
-  static const String liveActivityUpdateTokenFallback = '/api/live-activity/update-token';
+  static const String liveActivityUpdateTokenFallback =
+      '/api/live-activity/update-token';
   static const String liveActivityStop = '/live-activity/stop';
   static const String liveActivityStopFallback = '/api/live-activity/stop';
 }

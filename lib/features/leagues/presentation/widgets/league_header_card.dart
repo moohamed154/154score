@@ -73,12 +73,12 @@ class LeagueHeaderCard extends StatelessWidget {
             height: isSmall ? 52 : 64,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardElevated : const Color(0xFFF8FAFC),
+              color:
+                  isDark ? AppColors.darkCardElevated : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               border: Border.all(
-                color: isDark
-                    ? const Color(0xFF2A3447)
-                    : const Color(0xFFE2E8F0),
+                color:
+                    isDark ? const Color(0xFF2A3447) : const Color(0xFFE2E8F0),
                 width: 1,
               ),
               boxShadow: [
@@ -105,14 +105,13 @@ class LeagueHeaderCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style:
-                      AppTypography.getHeadingMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: isSmall ? 16 : 18,
-                      ),
+                  style: AppTypography.getHeadingMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: isSmall ? 16 : 18,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -158,14 +157,13 @@ class LeagueHeaderCard extends StatelessWidget {
                           ),
                           child: Text(
                             formatSeason(season!, isArabic),
-                            style:
-                                AppTypography.getBodySmall(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
+                            style: AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                     ],

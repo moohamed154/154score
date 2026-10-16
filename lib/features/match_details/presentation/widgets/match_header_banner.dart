@@ -92,8 +92,7 @@ class MatchHeaderBanner extends StatelessWidget {
     final score1Str = ScoreHelper.normalizeScore(s1);
     final score2Str = ScoreHelper.normalizeScore(s2);
     final hasScores = score1Str != '-' && score2Str != '-';
-    final hasPenalties =
-        (p1 != null && p1.isNotEmpty && p1 != '-') &&
+    final hasPenalties = (p1 != null && p1.isNotEmpty && p1 != '-') &&
         (p2 != null && p2.isNotEmpty && p2 != '-');
 
     final logoSize = isSmall ? 40.0 : 48.0;
@@ -119,16 +118,14 @@ class MatchHeaderBanner extends StatelessWidget {
             InkWell(
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
               onTap: () {
-                final lId =
-                    match.leagueId ??
+                final lId = match.leagueId ??
                     LeagueResolver.resolveId(match.leagueTitle);
                 if (lId != null && lId.isNotEmpty) {
-                  final logo =
-                      UrlHelper.resolveChampionshipLogo(
-                        lId,
-                        currentLogo: match.leagueLogo,
-                        isDark: isDark,
-                      );
+                  final logo = UrlHelper.resolveChampionshipLogo(
+                    lId,
+                    currentLogo: match.leagueLogo,
+                    isDark: isDark,
+                  );
                   context.push(
                     '/league/$lId',
                     extra: {'title': match.leagueTitle, 'logo': logo},
@@ -159,17 +156,16 @@ class MatchHeaderBanner extends StatelessWidget {
                     Flexible(
                       child: Text(
                         match.leagueTitle ?? 'Match Center',
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: isSmall ? 11 : 12,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: isSmall ? 11 : 12,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -203,11 +199,10 @@ class MatchHeaderBanner extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                     onTap: () {
-                      final targetId =
-                          (match.team1Id != null &&
-                                  match.team1Id!.trim().isNotEmpty)
-                              ? match.team1Id!.trim()
-                              : Uri.encodeComponent(match.team1.trim());
+                      final targetId = (match.team1Id != null &&
+                              match.team1Id!.trim().isNotEmpty)
+                          ? match.team1Id!.trim()
+                          : Uri.encodeComponent(match.team1.trim());
                       context.push(
                         '/team/$targetId',
                         extra: {
@@ -232,14 +227,13 @@ class MatchHeaderBanner extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             match.team1,
-                            style:
-                                AppTypography.getBodyLarge(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: isSmall ? 13 : 15,
-                                ),
+                            style: AppTypography.getBodyLarge(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: isSmall ? 13 : 15,
+                            ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -342,11 +336,10 @@ class MatchHeaderBanner extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                     onTap: () {
-                      final targetId =
-                          (match.team2Id != null &&
-                                  match.team2Id!.trim().isNotEmpty)
-                              ? match.team2Id!.trim()
-                              : Uri.encodeComponent(match.team2.trim());
+                      final targetId = (match.team2Id != null &&
+                              match.team2Id!.trim().isNotEmpty)
+                          ? match.team2Id!.trim()
+                          : Uri.encodeComponent(match.team2.trim());
                       context.push(
                         '/team/$targetId',
                         extra: {
@@ -371,14 +364,13 @@ class MatchHeaderBanner extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             match.team2,
-                            style:
-                                AppTypography.getBodyLarge(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: isSmall ? 13 : 15,
-                                ),
+                            style: AppTypography.getBodyLarge(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: isSmall ? 13 : 15,
+                            ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -460,7 +452,9 @@ class MatchHeaderBanner extends StatelessWidget {
                 fontSize: isSmall ? 11 : 12,
                 fontWeight: FontWeight.w600,
                 color: isCancelled
-                    ? (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626))
+                    ? (isDark
+                        ? const Color(0xFFF87171)
+                        : const Color(0xFFDC2626))
                     : (isDark
                         ? AppColors.darkTextMuted
                         : AppColors.lightTextMuted),
@@ -495,9 +489,8 @@ class MatchHeaderBanner extends StatelessWidget {
               style: TextStyle(
                 fontSize: isSmall ? 14 : 16,
                 fontWeight: FontWeight.w600,
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               ),
             ),
           ),
@@ -518,20 +511,19 @@ class MatchHeaderBanner extends StatelessWidget {
       final timeFormat = sl<LocalStorageService>().getTimeFormat();
       final timeStr =
           (match.time != null && match.time!.isNotEmpty && match.time != '-')
-          ? DateFormatter.formatDisplayTime(
-              match.time!,
-              timeFormat: timeFormat,
-              isArabic: isArabic,
-            )
-          : 'VS';
+              ? DateFormatter.formatDisplayTime(
+                  match.time!,
+                  timeFormat: timeFormat,
+                  isArabic: isArabic,
+                )
+              : 'VS';
       content = Text(
         timeStr,
         style: TextStyle(
           fontSize: isSmall ? 12 : 14,
           fontWeight: FontWeight.w600,
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+          color:
+              isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
         ),
       );
     } else {
@@ -568,9 +560,8 @@ class MatchHeaderBanner extends StatelessWidget {
             style: TextStyle(
               fontSize: isSmall ? 10 : 11,
               fontWeight: FontWeight.w600,
-              color: isDark
-                  ? AppColors.darkTextMuted
-                  : AppColors.lightTextMuted,
+              color:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
             ),
           ),
         ],

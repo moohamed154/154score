@@ -31,146 +31,150 @@ class NewsHeroCard extends StatelessWidget {
         onTap: () =>
             context.push('/news/${article.id}', extra: {'slug': article.slug}),
         child: Container(
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.lg,
-          vertical: AppDimensions.sm,
-        ),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.lg,
+            vertical: AppDimensions.sm,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.07),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
             ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Hero image
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  AppImage(
-                    imageUrl: article.image,
-                    borderRadius: 0,
-                    placeholderIcon: Icons.article_outlined,
-                  ),
-                  // Gradient overlay
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.55),
-                        ],
-                        stops: const [0.5, 1.0],
-                      ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.07),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Hero image
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    AppImage(
+                      imageUrl: article.image,
+                      borderRadius: 0,
+                      placeholderIcon: Icons.article_outlined,
                     ),
-                  ),
-                  // "Featured" badge
-                  Positioned(
-                    top: AppDimensions.sm,
-                    left: isArabic ? null : AppDimensions.sm,
-                    right: isArabic ? AppDimensions.sm : null,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.sm,
-                        vertical: 3,
-                      ),
+                    // Gradient overlay
+                    DecoratedBox(
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusFull,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.55),
+                          ],
+                          stops: const [0.5, 1.0],
                         ),
                       ),
-                      child: Text(
-                        isArabic ? 'الأبرز' : 'Featured',
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: true,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            // Title & timestamp
-            Builder(
-              builder: (context) {
-                final isArticleArabic = TextDirectionHelper.isArabic(article.title) ||
-                    TextDirectionHelper.isArabic(article.description);
-                final effectiveArabic = isArticleArabic || isArabic;
-                final textDir = isArticleArabic
-                    ? TextDirection.rtl
-                    : (isArabic ? TextDirection.rtl : TextDirection.ltr);
-
-                return Directionality(
-                  textDirection: textDir,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppDimensions.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          article.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textDirection: textDir,
-                          textAlign: isArticleArabic ? TextAlign.right : TextAlign.start,
-                          style: AppTypography.getHeadingSmall(
-                            isDark: isDark,
-                            isArabic: effectiveArabic,
+                    // "Featured" badge
+                    Positioned(
+                      top: AppDimensions.sm,
+                      left: isArabic ? null : AppDimensions.sm,
+                      right: isArabic ? AppDimensions.sm : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.sm,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusFull,
                           ),
                         ),
-                        if (article.description != null &&
-                            article.description!.isNotEmpty) ...[
-                          const SizedBox(height: AppDimensions.xs),
+                        child: Text(
+                          isArabic ? 'الأبرز' : 'Featured',
+                          style: AppTypography.getBodySmall(
+                            isDark: true,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Title & timestamp
+              Builder(
+                builder: (context) {
+                  final isArticleArabic =
+                      TextDirectionHelper.isArabic(article.title) ||
+                          TextDirectionHelper.isArabic(article.description);
+                  final effectiveArabic = isArticleArabic || isArabic;
+                  final textDir = isArticleArabic
+                      ? TextDirection.rtl
+                      : (isArabic ? TextDirection.rtl : TextDirection.ltr);
+
+                  return Directionality(
+                    textDirection: textDir,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppDimensions.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                           Text(
-                            article.description!,
+                            article.title,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             textDirection: textDir,
-                            textAlign: isArticleArabic ? TextAlign.right : TextAlign.start,
-                            style: AppTypography.getBodyMedium(
+                            textAlign: isArticleArabic
+                                ? TextAlign.right
+                                : TextAlign.start,
+                            style: AppTypography.getHeadingSmall(
                               isDark: isDark,
                               isArabic: effectiveArabic,
                             ),
                           ),
+                          if (article.description != null &&
+                              article.description!.isNotEmpty) ...[
+                            const SizedBox(height: AppDimensions.xs),
+                            Text(
+                              article.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textDirection: textDir,
+                              textAlign: isArticleArabic
+                                  ? TextAlign.right
+                                  : TextAlign.start,
+                              style: AppTypography.getBodyMedium(
+                                isDark: isDark,
+                                isArabic: effectiveArabic,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: AppDimensions.xs),
+                          _RelativeTime(
+                            publishedAt: article.publishedAt,
+                            isDark: isDark,
+                            isArabic: effectiveArabic,
+                          ),
                         ],
-                        const SizedBox(height: AppDimensions.xs),
-                        _RelativeTime(
-                          publishedAt: article.publishedAt,
-                          isDark: isDark,
-                          isArabic: effectiveArabic,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 /// Horizontal carousel of important/trending articles.
@@ -263,17 +267,15 @@ class _ImportantCard extends StatelessWidget {
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         textDirection: textDir,
-                        textAlign: isArticleArabic
-                            ? TextAlign.right
-                            : TextAlign.start,
-                        style:
-                            AppTypography.getBodyLarge(
-                              isDark: isDark,
-                              isArabic: effectiveArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
+                        textAlign:
+                            isArticleArabic ? TextAlign.right : TextAlign.start,
+                        style: AppTypography.getBodyLarge(
+                          isDark: isDark,
+                          isArabic: effectiveArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   );
@@ -320,8 +322,8 @@ class NewsTeamFilterBar extends StatelessWidget {
             final isSelected = selectedTeamId == null;
             return GestureDetector(
               onTap: () => context.read<NewsBloc>().add(
-                const SelectTeamFilterEvent(null),
-              ),
+                    const SelectTeamFilterEvent(null),
+                  ),
               child: _TeamChip(
                 label: isArabic ? 'الكل' : l10n.translate('all_clubs'),
                 logo: null,
@@ -409,8 +411,8 @@ class _TeamChip extends StatelessWidget {
                   color: isSelected
                       ? AppColors.primary
                       : (isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary),
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary),
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 ),
               );

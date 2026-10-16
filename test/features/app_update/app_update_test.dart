@@ -26,7 +26,9 @@ void main() {
       );
     });
 
-    test('should detect same version with higher build number as update available', () {
+    test(
+        'should detect same version with higher build number as update available',
+        () {
       expect(
         updateEntity.hasUpdate(
           currentVersion: '1.2.0',
@@ -82,7 +84,8 @@ void main() {
       );
     });
 
-    test('should identify compulsory update when version < minSupportedVersion', () {
+    test('should identify compulsory update when version < minSupportedVersion',
+        () {
       expect(
         updateEntity.isCompulsory(
           currentVersion: '1.0.9',
@@ -92,7 +95,8 @@ void main() {
       );
     });
 
-    test('should identify optional update when version >= minSupportedVersion', () {
+    test('should identify optional update when version >= minSupportedVersion',
+        () {
       expect(
         updateEntity.isCompulsory(
           currentVersion: '1.1.0',
@@ -151,7 +155,8 @@ void main() {
       expect(dto.latestBuildNumber, equals(35));
       expect(dto.minSupportedVersion, equals('1.5.0'));
       expect(dto.minSupportedBuildNumber, equals(20));
-      expect(dto.downloadUrlAndroid, equals('https://server.com/app-release.apk'));
+      expect(
+          dto.downloadUrlAndroid, equals('https://server.com/app-release.apk'));
       expect(dto.downloadUrlIos, equals('https://apps.apple.com/app/154score'));
       expect(dto.releaseNotes, contains('New live commentary'));
       expect(dto.fileSizeBytes, equals(42000000));

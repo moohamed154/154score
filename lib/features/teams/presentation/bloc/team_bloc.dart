@@ -19,12 +19,12 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
     String? initialName,
     String? initialLogo,
   }) : super(
-         TeamState(
-           teamId: teamId,
-           teamName: initialName,
-           teamLogo: initialLogo,
-         ),
-       ) {
+          TeamState(
+            teamId: teamId,
+            teamName: initialName,
+            teamLogo: initialLogo,
+          ),
+        ) {
     on<LoadTeamProfileEvent>(_onLoadTeamProfile);
     on<ChangeTeamTabEvent>(_onChangeTab);
     on<SelectChampionshipStandingsEvent>(_onSelectChampionshipStandings);
@@ -57,11 +57,10 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
               }),
             );
           }
-          final initialChampId =
-              profile.leagueId ??
+          final initialChampId = profile.leagueId ??
               (profile.championships.isNotEmpty
                   ? (profile.championships.first.urlId ??
-                        profile.championships.first.id)
+                      profile.championships.first.id)
                   : null);
 
           LeagueStandingsEntity? initialStandings;

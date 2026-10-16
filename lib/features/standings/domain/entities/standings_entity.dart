@@ -48,21 +48,21 @@ class StandingRowEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    position,
-    teamName,
-    teamId,
-    teamLogo,
-    played,
-    wins,
-    draws,
-    losses,
-    goalsFor,
-    goalsAgainst,
-    goalDiff,
-    points,
-    rankColor,
-    groupName,
-  ];
+        position,
+        teamName,
+        teamId,
+        teamLogo,
+        played,
+        wins,
+        draws,
+        losses,
+        goalsFor,
+        goalsAgainst,
+        goalDiff,
+        points,
+        rankColor,
+        groupName,
+      ];
 }
 
 class StageTeamEntity extends Equatable {
@@ -109,15 +109,15 @@ class StageMatchEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    matchId,
-    position,
-    teamGroup,
-    teamA,
-    teamB,
-    winnerId,
-    matchDate,
-    matchTime,
-  ];
+        matchId,
+        position,
+        teamGroup,
+        teamA,
+        teamB,
+        winnerId,
+        matchDate,
+        matchTime,
+      ];
 }
 
 class TournamentStageEntity extends Equatable {
@@ -167,12 +167,12 @@ class LeagueStandingsEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    leagueId,
-    leagueTitle,
-    rows,
-    groups,
-    stages,
-    legends,
-    rulesList,
-  ];
+        leagueId,
+        leagueTitle,
+        rows,
+        groups,
+        stages,
+        legends,
+        rulesList,
+      ];
 }

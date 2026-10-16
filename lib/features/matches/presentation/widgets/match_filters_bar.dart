@@ -79,20 +79,17 @@ class MatchFiltersBar extends StatelessWidget {
                 ],
                 Text(
                   item.$2,
-                  style:
-                      AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: isSelected
-                            ? Colors.black
-                            : (isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary),
-                      ),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.black
+                        : (isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary),
+                  ),
                 ),
                 if (item.$3 != null) ...[
                   const SizedBox(width: 5),

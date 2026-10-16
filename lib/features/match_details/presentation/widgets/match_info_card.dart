@@ -58,14 +58,13 @@ class MatchInfoCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     section.section,
-                    style:
-                        AppTypography.getBodyLarge(
-                          isDark: dark,
-                          isArabic: arabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
+                    style: AppTypography.getBodyLarge(
+                      isDark: dark,
+                      isArabic: arabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ],
@@ -116,8 +115,8 @@ class MatchInfoCard extends StatelessWidget {
                           color: isClickable
                               ? AppColors.primary
                               : (dark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted),
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted),
                         ),
                         const SizedBox(width: 8),
 
@@ -126,16 +125,15 @@ class MatchInfoCard extends StatelessWidget {
                           flex: 2,
                           child: Text(
                             item.title,
-                            style:
-                                AppTypography.getBodySmall(
-                                  isDark: dark,
-                                  isArabic: arabic,
-                                ).copyWith(
-                                  color: dark
-                                      ? AppColors.darkTextMuted
-                                      : AppColors.lightTextMuted,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            style: AppTypography.getBodySmall(
+                              isDark: dark,
+                              isArabic: arabic,
+                            ).copyWith(
+                              color: dark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -149,20 +147,19 @@ class MatchInfoCard extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   item.content,
-                                  style:
-                                      AppTypography.getBodyMedium(
-                                        isDark: dark,
-                                        isArabic: arabic,
-                                      ).copyWith(
-                                        fontWeight: isClickable
-                                            ? FontWeight.w700
-                                            : FontWeight.w600,
-                                        color: isClickable
-                                            ? AppColors.primary
-                                            : (dark
-                                                  ? AppColors.darkTextPrimary
-                                                  : AppColors.lightTextPrimary),
-                                      ),
+                                  style: AppTypography.getBodyMedium(
+                                    isDark: dark,
+                                    isArabic: arabic,
+                                  ).copyWith(
+                                    fontWeight: isClickable
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    color: isClickable
+                                        ? AppColors.primary
+                                        : (dark
+                                            ? AppColors.darkTextPrimary
+                                            : AppColors.lightTextPrimary),
+                                  ),
                                   textAlign: TextAlign.end,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -200,29 +197,25 @@ class MatchInfoCard extends StatelessWidget {
   void _handleNavigation(BuildContext context, MatchInfoItemEntity item) {
     if (!item.canNavigate) return;
 
-    var id =
-        (item.entityId != null &&
+    var id = (item.entityId != null &&
             item.entityId!.isNotEmpty &&
             item.entityId != 'null')
         ? item.entityId!
         : '0';
 
-    final isCommentator =
-        item.entityType?.toLowerCase() == 'commentator' ||
+    final isCommentator = item.entityType?.toLowerCase() == 'commentator' ||
         item.title.toLowerCase().contains('commentator') ||
         item.title.contains('معلق');
 
     if (isCommentator && (id == '0' || id.isEmpty)) {
-      final resolvedId =
-          CommentatorResolver.resolveId(item.content) ??
+      final resolvedId = CommentatorResolver.resolveId(item.content) ??
           CommentatorResolver.resolveId(item.slug);
       if (resolvedId != null) {
         id = resolvedId;
       }
     }
 
-    final isChampionship =
-        item.entityType?.toLowerCase() == 'championship' ||
+    final isChampionship = item.entityType?.toLowerCase() == 'championship' ||
         item.title.toLowerCase().contains('championship') ||
         item.title.toLowerCase().contains('league') ||
         item.title.contains('بطولة') ||
@@ -230,8 +223,7 @@ class MatchInfoCard extends StatelessWidget {
         item.title.contains('كأس');
 
     if (isChampionship && (id == '0' || id.isEmpty)) {
-      final resolvedId =
-          LeagueResolver.resolveId(item.content) ??
+      final resolvedId = LeagueResolver.resolveId(item.content) ??
           LeagueResolver.resolveId(item.slug);
       if (resolvedId != null) {
         id = resolvedId;

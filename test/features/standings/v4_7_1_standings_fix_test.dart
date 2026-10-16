@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/localization/app_localizations.dart';
@@ -24,7 +24,9 @@ Widget createTestApp(Widget child, {Locale locale = const Locale('ar')}) {
 
 void main() {
   group('154Score V4.7.1 Standings Fix & Qualification Regression Tests', () {
-    test('1. DataSource parses all 20 teams when data.table has 1 item and raw.list_match has 20 items', () async {
+    test(
+        '1. DataSource parses all 20 teams when data.table has 1 item and raw.list_match has 20 items',
+        () async {
       final mockClient = MockApiClient();
       final ds = StandingsRemoteDataSourceImpl(mockClient);
 

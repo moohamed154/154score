@@ -44,6 +44,7 @@ void main() {
     );
     expect(transformFinder, findsOneWidget);
     final Transform transform = tester.widget(transformFinder);
-    expect(transform.transform.storage[0], -1.0); // Horizontal flip (scaleX = -1)
+    expect(
+        transform.transform.storage[0], -1.0); // Horizontal flip (scaleX = -1)
   });
 }

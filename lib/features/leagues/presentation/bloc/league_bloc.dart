@@ -24,12 +24,12 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
     String? initialTitle,
     String? initialLogo,
   }) : super(
-         LeagueState(
-           leagueId: leagueId,
-           leagueTitle: initialTitle,
-           leagueLogo: initialLogo,
-         ),
-       ) {
+          LeagueState(
+            leagueId: leagueId,
+            leagueTitle: initialTitle,
+            leagueLogo: initialLogo,
+          ),
+        ) {
     on<LoadLeagueDetailsEvent>(_onLoadLeagueDetails);
     on<ChangeLeagueTabEvent>(_onChangeTab);
     on<LeagueLiveMatchReceivedEvent>(_onLiveMatchReceived);
@@ -64,11 +64,11 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
         onSuccess: (details) {
           final effectiveTitle =
               details.name.isNotEmpty && details.name != 'League'
-              ? details.name
-              : (details.standings?.leagueTitle.isNotEmpty == true &&
-                        details.standings?.leagueTitle != 'League Standings'
-                    ? details.standings!.leagueTitle
-                    : (state.leagueTitle ?? 'League'));
+                  ? details.name
+                  : (details.standings?.leagueTitle.isNotEmpty == true &&
+                          details.standings?.leagueTitle != 'League Standings'
+                      ? details.standings!.leagueTitle
+                      : (state.leagueTitle ?? 'League'));
 
           emit(
             state.copyWith(
@@ -130,8 +130,7 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
     bool matchFound = false;
     final updatedMatches = state.matches.map((m) {
       final matchesId = update.matchId != null && m.id == update.matchId;
-      final matchesTeams =
-          (update.team1 != null &&
+      final matchesTeams = (update.team1 != null &&
           update.team2 != null &&
           update.team1!.isNotEmpty &&
           update.team2!.isNotEmpty &&
@@ -152,8 +151,8 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
               : m.status,
           statusCode:
               (update.statusCode != null && update.statusCode!.isNotEmpty)
-              ? update.statusCode
-              : m.statusCode,
+                  ? update.statusCode
+                  : m.statusCode,
           minute: (update.minute != null && update.minute!.isNotEmpty)
               ? update.minute
               : m.minute,

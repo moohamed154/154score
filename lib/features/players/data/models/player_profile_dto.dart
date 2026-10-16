@@ -31,8 +31,8 @@ class PlayerProfileDto {
       team = PlayerTeamEntity(
         id: (t['id'] ?? t['row_id'] ?? '').toString(),
         name: (t['name'] ?? t['title'] ?? '').toString(),
-        fullName: (t['full_name'] ?? t['full_title'] ?? t['title'] ?? '')
-            .toString(),
+        fullName:
+            (t['full_name'] ?? t['full_title'] ?? t['title'] ?? '').toString(),
         logo: UrlHelper.normalizeImageUrl(
           (t['logo'] ?? t['image'])?.toString(),
         ),
@@ -123,8 +123,7 @@ class PlayerProfileDto {
             league: leagueEntity,
             appearances: int.tryParse(s['appearances']?.toString() ?? '0') ?? 0,
             goals: int.tryParse(s['goals']?.toString() ?? '0') ?? 0,
-            assists:
-                int.tryParse(
+            assists: int.tryParse(
                   (s['assists'] ?? s['assist'])?.toString() ?? '0',
                 ) ??
                 0,
@@ -134,20 +133,17 @@ class PlayerProfileDto {
                 int.tryParse(s['miss_penalty']?.toString() ?? '0') ?? 0,
             cancelGoal: int.tryParse(s['cancel_goal']?.toString() ?? '0') ?? 0,
             ownGoal: int.tryParse(s['own_goal']?.toString() ?? '0') ?? 0,
-            yellowCards:
-                int.tryParse(
+            yellowCards: int.tryParse(
                   (s['yellow_cards'] ?? s['yellow_card'])?.toString() ?? '0',
                 ) ??
                 0,
-            redCards:
-                int.tryParse(
+            redCards: int.tryParse(
                   (s['red_cards'] ?? s['red_card'])?.toString() ?? '0',
                 ) ??
                 0,
             cleanSheets:
                 int.tryParse(s['clean_sheets']?.toString() ?? '0') ?? 0,
-            manOfMatch:
-                int.tryParse(
+            manOfMatch: int.tryParse(
                   (s['man_of_match'] ?? s['man_match'])?.toString() ?? '0',
                 ) ??
                 0,
@@ -189,12 +185,11 @@ class PlayerProfileDto {
 
         final type = (tr['type'] ?? tr['trans'] ?? '').toString();
         final rawFee = (tr['raw_fee'] ?? tr['value'] ?? '0').toString();
-        final fee =
-            (tr['fee'] ??
-                    (rawFee != '0'
-                        ? rawFee
-                        : (lang == 'en' ? 'Free Transfer' : 'انتقال حر')))
-                .toString();
+        final fee = (tr['fee'] ??
+                (rawFee != '0'
+                    ? rawFee
+                    : (lang == 'en' ? 'Free Transfer' : 'انتقال حر')))
+            .toString();
         final season =
             (tr['season'] ?? tr['date_from']?.toString().split('-').first ?? '')
                 .toString();

@@ -17,7 +17,8 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   });
 
   @override
-  Future<ApiResult<List<AppNotificationEntity>>> getNotifications({String lang = 'ar'}) async {
+  Future<ApiResult<List<AppNotificationEntity>>> getNotifications(
+      {String lang = 'ar'}) async {
     try {
       final response = await apiClient.get(
         ApiEndpoints.notifications,
@@ -42,7 +43,8 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
         final isNewsEnabled = localStorage.isNewsNotificationEnabled();
         final isLineupEnabled = localStorage.isMatchLineupNotificationEnabled();
         final isGoalsEnabled = localStorage.isMatchGoalsNotificationEnabled();
-        final isStartEndEnabled = localStorage.isMatchStartEndNotificationEnabled();
+        final isStartEndEnabled =
+            localStorage.isMatchStartEndNotificationEnabled();
 
         final result = items
             .map((item) {
@@ -56,10 +58,17 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
             .whereType<AppNotificationEntity>()
             .where((notif) {
               // Apply user-configured preferences
-              if (notif.type == NotificationType.news && !isNewsEnabled) return false;
-              if (notif.type == NotificationType.lineup && !isLineupEnabled) return false;
-              if ((notif.type == NotificationType.goal || notif.type == NotificationType.redCard) && !isGoalsEnabled) return false;
-              if ((notif.type == NotificationType.matchStart || notif.type == NotificationType.matchHalftime || notif.type == NotificationType.matchEnd) && !isStartEndEnabled) return false;
+              if (notif.type == NotificationType.news && !isNewsEnabled)
+                return false;
+              if (notif.type == NotificationType.lineup && !isLineupEnabled)
+                return false;
+              if ((notif.type == NotificationType.goal ||
+                      notif.type == NotificationType.redCard) &&
+                  !isGoalsEnabled) return false;
+              if ((notif.type == NotificationType.matchStart ||
+                      notif.type == NotificationType.matchHalftime ||
+                      notif.type == NotificationType.matchEnd) &&
+                  !isStartEndEnabled) return false;
               return true;
             })
             .toList();
@@ -67,7 +76,8 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
         return ApiSuccess(result);
       }
 
-      return const ApiFailure(ServerFailure('Failed to load notifications', statusCode: 500));
+      return const ApiFailure(
+          ServerFailure('Failed to load notifications', statusCode: 500));
     } catch (e) {
       return ApiFailure(ServerFailure(e.toString()));
     }
@@ -80,5 +90,6 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   Future<void> markAsRead(String id) => localStorage.markNotificationAsRead(id);
 
   @override
-  Future<void> markAllAsRead(List<String> ids) => localStorage.markAllNotificationsAsRead(ids);
+  Future<void> markAllAsRead(List<String> ids) =>
+      localStorage.markAllNotificationsAsRead(ids);
 }

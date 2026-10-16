@@ -117,7 +117,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<MatchesBloc>(create: (_) => sl<MatchesBloc>()),
         BlocProvider<NewsBloc>(create: (_) => sl<NewsBloc>()),
         BlocProvider<NotificationsBloc>(
-          create: (_) => sl<NotificationsBloc>()..add(const LoadNotificationsEvent()),
+          create: (_) =>
+              sl<NotificationsBloc>()..add(const LoadNotificationsEvent()),
         ),
         BlocProvider<HomeCubit>(create: (_) => sl<HomeCubit>()),
         BlocProvider<StandingsBloc>(create: (_) => sl<StandingsBloc>()),
@@ -138,8 +139,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                 return SkeletonizerConfig(
                   data: SkeletonizerConfigData(
                     effectResolver: (brightness) {
-                      final isDarkBrightness =
-                          themeMode == ThemeMode.dark ||
+                      final isDarkBrightness = themeMode == ThemeMode.dark ||
                           (themeMode == ThemeMode.system &&
                               brightness == Brightness.dark);
                       return isDarkBrightness

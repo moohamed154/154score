@@ -63,7 +63,8 @@ abstract class LocalStorageService {
   Map<String, String> getFavoriteCompetitionTitles();
   Future<bool> registerCompetitionTitles(Map<String, String> titles);
   Map<String, String> getFavoriteCompetitionLogos() => const {};
-  Future<bool> registerCompetitionLogos(Map<String, String> logos) async => false;
+  Future<bool> registerCompetitionLogos(Map<String, String> logos) async =>
+      false;
   String resolveCompetitionTitle(String compOrId);
 
   List<String> getFavoriteMatches();
@@ -76,7 +77,9 @@ abstract class LocalStorageService {
 
   // Cached League Standings
   String? getCachedLeagueStandings(String leagueId, {String? lang}) => null;
-  Future<bool> setCachedLeagueStandings(String leagueId, String json, {String? lang}) async => false;
+  Future<bool> setCachedLeagueStandings(String leagueId, String json,
+          {String? lang}) async =>
+      false;
 
   // Tips Persistence
   bool isReorderTipDismissed();
@@ -94,11 +97,15 @@ abstract class LocalStorageService {
   bool isTeamNotificationEnabled(String teamIdOrName) => false;
   Future<bool> toggleTeamNotification(String teamIdOrName) async => false;
   bool isTeamNotificationMuted(String teamIdOrName) => false;
-  Future<bool> setTeamNotificationMuted(String teamIdOrName, bool muted) async => false;
+  Future<bool> setTeamNotificationMuted(
+          String teamIdOrName, bool muted) async =>
+      false;
 
   bool isMatchNotificationEnabled(String matchId) => false;
   Future<bool> toggleMatchNotification(String matchId) async => false;
-  Future<bool> setMatchNotificationEnabled(String matchId, bool enabled) async => false;
+  Future<bool> setMatchNotificationEnabled(
+          String matchId, bool enabled) async =>
+      false;
   List<String> getMatchNotificationIds() => [];
 
   // Granular Notification Toggles
@@ -319,7 +326,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
 
   @override
   bool isTimezoneAuto() {
-    return _prefs.getBool(_keyTimezoneAuto) ?? (_prefs.getInt(_keyTimezoneOffset) == null);
+    return _prefs.getBool(_keyTimezoneAuto) ??
+        (_prefs.getInt(_keyTimezoneOffset) == null);
   }
 
   @override
@@ -551,7 +559,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
         for (final fav in list) {
           if (int.tryParse(fav.trim()) == null &&
               (fav.trim().toLowerCase() == cleanName.toLowerCase() ||
-               TeamResolver.areSameTeam(fav, cleanName))) {
+                  TeamResolver.areSameTeam(fav, cleanName))) {
             return true;
           }
         }
@@ -561,17 +569,27 @@ class LocalStorageServiceImpl implements LocalStorageService {
     }
 
     // 2. Query only has name (no ID): Check known IDs and cross-lingual titles
-    final arLoc = TeamResolver.getLocalizedName(cleanName, isArabic: true)?.toLowerCase();
-    final enLoc = TeamResolver.getLocalizedName(cleanName, isArabic: false)?.toLowerCase();
+    final arLoc =
+        TeamResolver.getLocalizedName(cleanName, isArabic: true)?.toLowerCase();
+    final enLoc = TeamResolver.getLocalizedName(cleanName, isArabic: false)
+        ?.toLowerCase();
     final lowerName = cleanName.toLowerCase();
 
-    for (final candidate in [lowerName, if (arLoc != null) arLoc, if (enLoc != null) enLoc]) {
+    for (final candidate in [
+      lowerName,
+      if (arLoc != null) arLoc,
+      if (enLoc != null) enLoc
+    ]) {
       final knownId = knownTeamNameToId[candidate];
-      if (knownId != null && list.any((fav) => fav.trim().toLowerCase() == knownId.toLowerCase())) {
+      if (knownId != null &&
+          list.any(
+              (fav) => fav.trim().toLowerCase() == knownId.toLowerCase())) {
         return true;
       }
       final mappedId = titles[candidate];
-      if (mappedId != null && list.any((fav) => fav.trim().toLowerCase() == mappedId.toLowerCase())) {
+      if (mappedId != null &&
+          list.any(
+              (fav) => fav.trim().toLowerCase() == mappedId.toLowerCase())) {
         return true;
       }
     }
@@ -579,11 +597,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
     // 3. Fallback name match for custom teams without IDs
     for (final fav in list) {
       final cleanFav = fav.trim();
-      if (cleanName.isNotEmpty &&
-          cleanFav.toLowerCase() == lowerName) {
+      if (cleanName.isNotEmpty && cleanFav.toLowerCase() == lowerName) {
         return true;
       }
-      if (cleanName.isNotEmpty && TeamResolver.areSameTeam(cleanFav, cleanName)) {
+      if (cleanName.isNotEmpty &&
+          TeamResolver.areSameTeam(cleanFav, cleanName)) {
         return true;
       }
     }
@@ -597,7 +615,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
     final cleanName = teamName.trim();
     final cleanId = (id != null && id.trim().isNotEmpty)
         ? id.trim()
-        : (knownTeamNameToId[cleanName.toLowerCase()] ?? knownTeamNameToId[cleanName]);
+        : (knownTeamNameToId[cleanName.toLowerCase()] ??
+            knownTeamNameToId[cleanName]);
 
     final isFav = isFavoriteTeam(cleanName, id: cleanId);
 
@@ -633,14 +652,16 @@ class LocalStorageServiceImpl implements LocalStorageService {
       }
     }
     final saved = await _prefs.setStringList(_keyFavoriteTeams, list);
-    final keyToSync = (cleanId != null && cleanId.isNotEmpty) ? cleanId : cleanName;
+    final keyToSync =
+        (cleanId != null && cleanId.isNotEmpty) ? cleanId : cleanName;
     if (!isFav) {
       if (keyToSync.isNotEmpty) {
         unawaited(NotificationSyncService.instance.subscribeToTeam(keyToSync));
       }
     } else {
       if (keyToSync.isNotEmpty) {
-        unawaited(NotificationSyncService.instance.unsubscribeFromTeam(keyToSync));
+        unawaited(
+            NotificationSyncService.instance.unsubscribeFromTeam(keyToSync));
       }
     }
     return saved;
@@ -726,8 +747,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
   String resolveCompetitionTitle(String compOrId) {
     final trimmed = compOrId.trim();
     final titles = getFavoriteCompetitionTitles();
-    if (titles.containsKey(trimmed) &&
-        int.tryParse(titles[trimmed]!) == null) {
+    if (titles.containsKey(trimmed) && int.tryParse(titles[trimmed]!) == null) {
       return titles[trimmed]!;
     }
     final resolved = LeagueResolver.resolveTitle(trimmed, isArabic: true);
@@ -827,9 +847,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
         );
       });
     } else {
-      final canonicalName = effectiveName.isNotEmpty
-          ? effectiveName
-          : (cleanId ?? '');
+      final canonicalName =
+          effectiveName.isNotEmpty ? effectiveName : (cleanId ?? '');
 
       if (canonicalName.isNotEmpty &&
           !list.any((item) {
@@ -900,13 +919,16 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   String? getCachedLeagueStandings(String leagueId, {String? lang}) {
     final effectiveLang = lang ?? getLanguage();
-    return _prefs.getString('${_keyCachedLeagueStandings}_${leagueId}_$effectiveLang');
+    return _prefs
+        .getString('${_keyCachedLeagueStandings}_${leagueId}_$effectiveLang');
   }
 
   @override
-  Future<bool> setCachedLeagueStandings(String leagueId, String json, {String? lang}) {
+  Future<bool> setCachedLeagueStandings(String leagueId, String json,
+      {String? lang}) {
     final effectiveLang = lang ?? getLanguage();
-    return _prefs.setString('${_keyCachedLeagueStandings}_${leagueId}_$effectiveLang', json);
+    return _prefs.setString(
+        '${_keyCachedLeagueStandings}_${leagueId}_$effectiveLang', json);
   }
 
   @override
@@ -984,7 +1006,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
   Future<bool> setTeamNotificationMuted(String teamIdOrName, bool muted) async {
     final key = teamIdOrName.trim().toLowerCase();
     if (key.isEmpty) return false;
-    final list = (_prefs.getStringList(_keyTeamNotificationsMuted) ?? []).toList();
+    final list =
+        (_prefs.getStringList(_keyTeamNotificationsMuted) ?? []).toList();
     if (muted) {
       if (!list.contains(key)) list.add(key);
     } else {
@@ -1156,37 +1179,44 @@ class LocalStorageServiceImpl implements LocalStorageService {
     if (matchId != null && matchId.isNotEmpty) {
       final favMatches = getFavoriteMatches();
       final matchNotifs = getMatchNotificationIds();
-      if (favMatches.contains(matchId) || matchNotifs.contains(matchId)) return true;
+      if (favMatches.contains(matchId) || matchNotifs.contains(matchId))
+        return true;
     }
 
     // 2. Collect all starred / subscribed team tokens (IDs & titles, excluding muted)
     final favTeams = getFavoriteTeams();
     final favTitles = getFavoriteTeamTitles();
     final teamNotifs = _prefs.getStringList(_keyTeamNotifications) ?? [];
-    final mutedTeams = (_prefs.getStringList(_keyTeamNotificationsMuted) ?? []).toSet();
+    final mutedTeams =
+        (_prefs.getStringList(_keyTeamNotificationsMuted) ?? []).toSet();
 
     final Set<String> targetNames = {};
     for (final t in favTitles.values) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) targetNames.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed))
+        targetNames.add(trimmed);
     }
     for (final t in favTitles.keys) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) targetNames.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed))
+        targetNames.add(trimmed);
     }
     for (final t in teamNotifs) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) targetNames.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed))
+        targetNames.add(trimmed);
     }
 
     final Set<String> targetIds = {};
     for (final id in favTeams) {
       final trimmed = id.trim();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) targetIds.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase()))
+        targetIds.add(trimmed);
     }
     for (final id in teamNotifs) {
       final trimmed = id.trim();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) targetIds.add(trimmed);
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase()))
+        targetIds.add(trimmed);
     }
 
     // If user hasn't starred or subscribed to any teams at all, don't filter out everything
@@ -1197,8 +1227,10 @@ class LocalStorageServiceImpl implements LocalStorageService {
 
     // 3. Check data payload fields if present
     if (data != null) {
-      final homeId = data['home_team_id']?.toString() ?? data['home_id']?.toString();
-      final awayId = data['away_team_id']?.toString() ?? data['away_id']?.toString();
+      final homeId =
+          data['home_team_id']?.toString() ?? data['home_id']?.toString();
+      final awayId =
+          data['away_team_id']?.toString() ?? data['away_id']?.toString();
       final teamId = data['team_id']?.toString();
       if ((homeId != null && targetIds.contains(homeId)) ||
           (awayId != null && targetIds.contains(awayId)) ||
@@ -1208,10 +1240,14 @@ class LocalStorageServiceImpl implements LocalStorageService {
 
       final homeName = data['home_team']?.toString().toLowerCase();
       final awayName = data['away_team']?.toString().toLowerCase();
-      if (homeName != null && targetNames.any((n) => homeName.contains(n) || n.contains(homeName))) {
+      if (homeName != null &&
+          targetNames
+              .any((n) => homeName.contains(n) || n.contains(homeName))) {
         return true;
       }
-      if (awayName != null && targetNames.any((n) => awayName.contains(n) || n.contains(awayName))) {
+      if (awayName != null &&
+          targetNames
+              .any((n) => awayName.contains(n) || n.contains(awayName))) {
         return true;
       }
     }
@@ -1274,7 +1310,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
     return _prefs.setStringList(_keyTrackedLiveMatches, ids);
   }
 
-  static const String _keyLiveActivityEnabled = 'app_live_activity_feature_enabled';
+  static const String _keyLiveActivityEnabled =
+      'app_live_activity_feature_enabled';
 
   @override
   bool isLiveActivityFeatureEnabled() {

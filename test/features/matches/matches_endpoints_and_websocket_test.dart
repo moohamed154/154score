@@ -57,7 +57,9 @@ void main() {
       }
     });
 
-    test('5. WebSocket Envelope Unpacking: live_matches_update with LeagueMatches array', () {
+    test(
+        '5. WebSocket Envelope Unpacking: live_matches_update with LeagueMatches array',
+        () {
       final wsService = WebSocketServiceImpl();
 
       final emittedUpdates = <LiveMatchUpdate>[];

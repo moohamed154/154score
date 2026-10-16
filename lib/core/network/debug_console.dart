@@ -65,9 +65,8 @@ class DebugNetworkRecord {
 
   /// Short summary for listing in console or UI.
   String get summaryLine {
-    final status = statusCode != null
-        ? '$statusCode'
-        : (isError ? 'ERR' : '???');
+    final status =
+        statusCode != null ? '$statusCode' : (isError ? 'ERR' : '???');
     final timeMs = duration != null ? '${duration!.inMilliseconds}ms' : '';
     return '[$method] [$status] ${timeMs.isNotEmpty ? '($timeMs) ' : ''}$url';
   }
@@ -157,7 +156,8 @@ class DebugConsole {
   }
 
   /// Records and optionally prints a network error.
-  static DebugNetworkRecord? logError(DioException error, {Duration? duration}) {
+  static DebugNetworkRecord? logError(DioException error,
+      {Duration? duration}) {
     if (!enabled) return null;
 
     final record = DebugNetworkRecord(
@@ -299,9 +299,8 @@ class DebugConsole {
         debugPrintSynchronously(line);
       } else {
         for (int i = 0; i < line.length; i += maxChunkSize) {
-          final end = (i + maxChunkSize < line.length)
-              ? i + maxChunkSize
-              : line.length;
+          final end =
+              (i + maxChunkSize < line.length) ? i + maxChunkSize : line.length;
           debugPrintSynchronously(line.substring(i, end));
         }
       }
@@ -356,9 +355,8 @@ class DebugConsoleRouteObserver extends NavigatorObserver {
 
   void _onRouteChanged(String action, Route<dynamic> route) {
     final name = route.settings.name ?? route.settings.arguments?.toString();
-    final description = name != null && name.isNotEmpty
-        ? name
-        : route.toString();
+    final description =
+        name != null && name.isNotEmpty ? name : route.toString();
     DebugConsole.logPageNavigation(action, description);
   }
 }

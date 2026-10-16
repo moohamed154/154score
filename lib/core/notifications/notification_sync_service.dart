@@ -41,7 +41,8 @@ class NotificationSyncService {
 
   Future<String?> _getToken() async {
     final liveToken = PushNotificationService.instance.fcmToken;
-    if (liveToken != null && liveToken.trim().isNotEmpty) return liveToken.trim();
+    if (liveToken != null && liveToken.trim().isNotEmpty)
+      return liveToken.trim();
 
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString('154score_fcm_device_token') ??
@@ -61,7 +62,8 @@ class NotificationSyncService {
   }) async {
     final token = tokenOverride ?? await _getToken();
     if (token == null || token.trim().isEmpty) {
-      debugPrint('[NotificationSyncService] Token not available yet, queuing sync.');
+      debugPrint(
+          '[NotificationSyncService] Token not available yet, queuing sync.');
       return false;
     }
     final cleanToken = token.trim();
@@ -199,7 +201,8 @@ class NotificationSyncService {
 
     final token = tokenOverride ?? await _getToken();
     if (token == null || token.trim().isEmpty) {
-      debugPrint('[NotificationSyncService] Empty or null device token rejected.');
+      debugPrint(
+          '[NotificationSyncService] Empty or null device token rejected.');
       // Enqueue action without token for later retry when token becomes available
       await _enqueuePendingAction({
         'action': action,
@@ -241,7 +244,8 @@ class NotificationSyncService {
         return true;
       }
     } on DioException catch (e) {
-      debugPrint('[NotificationSyncService] Network error during $action $targetType: $e');
+      debugPrint(
+          '[NotificationSyncService] Network error during $action $targetType: $e');
       // If it's a network error (offline/timeout), enqueue so changes are not lost
       if (_isNetworkOrOfflineError(e)) {
         await _enqueuePendingAction(payload);

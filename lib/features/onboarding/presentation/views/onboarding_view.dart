@@ -70,7 +70,8 @@ class _OnboardingViewState extends State<OnboardingView> {
 
       for (final team in OnboardingCatalog.teams) {
         if (!selection.selectedTeams.contains(team.ar)) continue;
-        await favorites.toggleTeam(team.nameFor(isArabic: isArabic), id: team.id);
+        await favorites.toggleTeam(team.nameFor(isArabic: isArabic),
+            id: team.id);
       }
     }
 
@@ -110,9 +111,8 @@ class _OnboardingViewState extends State<OnboardingView> {
         ),
       ],
       child: Scaffold(
-        backgroundColor: isDark
-            ? AppColors.darkBackground
-            : AppColors.lightBackground,
+        backgroundColor:
+            isDark ? AppColors.darkBackground : AppColors.lightBackground,
         body: SafeArea(
           child: Column(
             children: [

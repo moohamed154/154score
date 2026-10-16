@@ -90,12 +90,12 @@ class TransfersState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    allTransfers,
-    filteredTransfers,
-    searchQuery,
-    errorMessage,
-  ];
+        status,
+        allTransfers,
+        filteredTransfers,
+        searchQuery,
+        errorMessage,
+      ];
 }
 
 class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {

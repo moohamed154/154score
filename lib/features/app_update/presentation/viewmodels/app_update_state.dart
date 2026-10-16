@@ -93,16 +93,16 @@ class AppUpdateState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    updateInfo,
-    isCompulsory,
-    progress,
-    receivedBytes,
-    totalBytes,
-    localApkPath,
-    errorType,
-    errorMessage,
-    currentAppVersion,
-    currentBuildNumber,
-  ];
+        status,
+        updateInfo,
+        isCompulsory,
+        progress,
+        receivedBytes,
+        totalBytes,
+        localApkPath,
+        errorType,
+        errorMessage,
+        currentAppVersion,
+        currentBuildNumber,
+      ];
 }

@@ -22,7 +22,8 @@ import '../datasources/live_activity_remote_datasource.dart';
 
 class LiveActivityRepositoryImpl implements LiveActivityRepository {
   static final Map<String, String> _logoBase64Cache = {};
-  static final Map<String, ({int minute, double startTimestamp})> _matchTimestamps = {};
+  static final Map<String, ({int minute, double startTimestamp})>
+      _matchTimestamps = {};
   final LiveActivityPlatformDataSource platformDataSource;
   final LiveActivityRemoteDataSource remoteDataSource;
   final LocalStorageService localStorage;
@@ -39,7 +40,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
   }
 
   void _initListeners() {
-    _tokenRotationSub = platformDataSource.onPushTokenRotatedStream.listen((data) {
+    _tokenRotationSub =
+        platformDataSource.onPushTokenRotatedStream.listen((data) {
       final actId = data['activityId']?.toString() ?? '';
       final matchId = data['matchId']?.toString() ?? '';
       final pushToken = data['pushToken']?.toString() ?? '';
@@ -52,7 +54,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       }
     });
 
-    _trackingStoppedSub = platformDataSource.onTrackingStoppedStream.listen((matchId) {
+    _trackingStoppedSub =
+        platformDataSource.onTrackingStoppedStream.listen((matchId) {
       stopTrackingMatch(matchId);
     });
   }
@@ -82,15 +85,18 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
             headers: {'User-Agent': 'Mozilla/5.0 (Mobile; 154Score)'},
           ),
         );
-        final res = await dio.get<List<int>>(clean, options: Options(responseType: ResponseType.bytes));
+        final res = await dio.get<List<int>>(clean,
+            options: Options(responseType: ResponseType.bytes));
         if (res.data != null) bytes = Uint8List.fromList(res.data!);
       } catch (_) {}
 
       if (bytes == null || bytes.isEmpty) return '';
 
-      final codec = await instantiateImageCodec(bytes, targetWidth: 28, targetHeight: 28);
+      final codec =
+          await instantiateImageCodec(bytes, targetWidth: 28, targetHeight: 28);
       final frame = await codec.getNextFrame();
-      final byteData = await frame.image.toByteData(format: ImageByteFormat.png);
+      final byteData =
+          await frame.image.toByteData(format: ImageByteFormat.png);
       if (byteData == null) return '';
       final b64 = base64Encode(byteData.buffer.asUint8List());
       if (b64.isNotEmpty && b64.length <= 1400) {
@@ -136,7 +142,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       );
 
       final nativeResult = await platformDataSource.startLiveActivity(payload);
-      final activityId = nativeResult['activityId']?.toString() ?? 'act_$cleanMatchId';
+      final activityId =
+          nativeResult['activityId']?.toString() ?? 'act_$cleanMatchId';
       final pushToken = nativeResult['pushToken']?.toString();
 
       final entity = LiveActivityEntity(
@@ -207,7 +214,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
     final effectiveScore2 = liveScore2 ?? match.score2 ?? '0';
     final effectiveStatus = liveStatus ?? match.status ?? 'مباشر';
     final effectiveStatusCode = liveStatusCode ?? match.statusCode ?? 'LIVE';
-    final effectiveMinute = (liveMinute ?? match.minute ?? '').replaceAll("'", '').trim();
+    final effectiveMinute =
+        (liveMinute ?? match.minute ?? '').replaceAll("'", '').trim();
     final effectivePeriod = livePeriod ?? match.period ?? 'live';
     final p1 = penaltyScore1 ?? match.penaltyScore1 ?? '';
     final p2 = penaltyScore2 ?? match.penaltyScore2 ?? '';
@@ -336,7 +344,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       if (syncedClock.minute >= minNum && minNum > 0) {
         minNum = syncedClock.minute;
         secNum = syncedClock.second;
-      } else if (minNum == 0 && (syncedClock.minute > 0 || syncedClock.second > 0)) {
+      } else if (minNum == 0 &&
+          (syncedClock.minute > 0 || syncedClock.second > 0)) {
         minNum = syncedClock.minute;
         secNum = syncedClock.second;
       }
@@ -368,7 +377,8 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
       );
     } else if (match.timestamp != null && match.timestamp! > 0) {
       final dt = DateTime.fromMillisecondsSinceEpoch(match.timestamp! * 1000);
-      final raw = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      final raw =
+          '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
       displayClock = DateFormatter.formatDisplayTime(
         raw,
         timeFormat: activeFormat,
@@ -384,11 +394,17 @@ class LiveActivityRepositoryImpl implements LiveActivityRepository {
     if (isLive && !isHalftime && !isFinished && (minNum > 0 || secNum > 0)) {
       final totalElapsedSec = minNum * 60 + secNum;
       final cached = _matchTimestamps[cleanMatchId];
-      if (cached != null && cached.minute == minNum && cached.startTimestamp > 0) {
+      if (cached != null &&
+          cached.minute == minNum &&
+          cached.startTimestamp > 0) {
         startTimestamp = cached.startTimestamp;
       } else {
-        startTimestamp = DateTime.now().subtract(Duration(seconds: totalElapsedSec)).millisecondsSinceEpoch / 1000.0;
-        _matchTimestamps[cleanMatchId] = (minute: minNum, startTimestamp: startTimestamp);
+        startTimestamp = DateTime.now()
+                .subtract(Duration(seconds: totalElapsedSec))
+                .millisecondsSinceEpoch /
+            1000.0;
+        _matchTimestamps[cleanMatchId] =
+            (minute: minNum, startTimestamp: startTimestamp);
       }
     } else {
       _matchTimestamps.remove(cleanMatchId);

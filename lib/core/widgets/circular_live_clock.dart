@@ -149,7 +149,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       if (syncedClock.minute >= minNum && minNum > 0) {
         minNum = syncedClock.minute;
         secNum = syncedClock.second;
-      } else if (minNum == 0 && (syncedClock.minute > 0 || syncedClock.second > 0)) {
+      } else if (minNum == 0 &&
+          (syncedClock.minute > 0 || syncedClock.second > 0)) {
         minNum = syncedClock.minute;
         secNum = syncedClock.second;
       }
@@ -183,7 +184,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       final nowSec = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
       final p = (widget.period ?? '').toLowerCase();
       final s = (widget.status ?? '').toLowerCase();
-      final is2ndHalf = p.contains('2nd') || s.contains('الثاني') || s.contains('second');
+      final is2ndHalf =
+          p.contains('2nd') || s.contains('الثاني') || s.contains('second');
       if (is2ndHalf && widget.htTime != null && widget.htTime! > 0) {
         final calcSec = (nowSec - widget.htTime!) % 60;
         if (calcSec >= 0) secNum = calcSec;
@@ -199,19 +201,16 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     // Detect periods
     final p = (widget.period ?? '').toLowerCase();
     final s = (widget.status ?? '').toLowerCase();
-    final is1stHalf =
-        p.contains('1st') ||
+    final is1stHalf = p.contains('1st') ||
         p.contains('first') ||
         s.contains('الأول') ||
         s.contains('الاول');
     final is2ndHalf =
         p.contains('2nd') || p.contains('second') || s.contains('الثاني');
-    final is1stExtra =
-        p.contains('1st_extra') ||
+    final is1stExtra = p.contains('1st_extra') ||
         s.contains('الإضافي الأول') ||
         s.contains('الاضافي الاول');
-    final is2ndExtra =
-        p.contains('2nd_extra') ||
+    final is2ndExtra = p.contains('2nd_extra') ||
         s.contains('الإضافي الثاني') ||
         s.contains('الاضافي الثاني');
 
@@ -385,8 +384,7 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     } else {
       final p = (widget.period ?? '').toLowerCase();
       final s = (widget.status ?? '').toLowerCase();
-      final is1stHalf =
-          p.contains('1st') ||
+      final is1stHalf = p.contains('1st') ||
           p.contains('first') ||
           s.contains('الأول') ||
           s.contains('الاول');
@@ -421,9 +419,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
           if (_displayExtra != null) {
             // Cap stoppage time ticking to at most (totalExtraMinutes + 3) * 60 seconds
             // to prevent runaway counter if network drops whistle event
-            final maxExtraSec = _totalExtraMinutes > 0
-                ? (_totalExtraMinutes + 3) * 60
-                : 600;
+            final maxExtraSec =
+                _totalExtraMinutes > 0 ? (_totalExtraMinutes + 3) * 60 : 600;
             if (_elapsedExtraSeconds < maxExtraSec) {
               _elapsedExtraSeconds++;
             }

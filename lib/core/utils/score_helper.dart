@@ -109,7 +109,8 @@ class ScoreHelper {
     return lower.contains('not started') ||
         lower.contains('لم تبدأ') ||
         lower.contains('upcoming') ||
-        (!isLiveStatus(status, statusCode) && !isFinishedStatus(status, statusCode));
+        (!isLiveStatus(status, statusCode) &&
+            !isFinishedStatus(status, statusCode));
   }
 
   static String normalizeScore(String? score) {

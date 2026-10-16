@@ -14,8 +14,35 @@ class SecuritySigner {
 
   // Obfuscated secret key bytes using XOR mask (prevents plain-text binary scraping)
   static final List<int> _maskedKey = [
-    107, 111, 110, 41, 57, 53, 40, 63, 5, 41, 63, 57, 5, 41, 51, 61,
-    5, 104, 106, 104, 108, 5, 99, 63, 98, 56, 107, 59, 110
+    107,
+    111,
+    110,
+    41,
+    57,
+    53,
+    40,
+    63,
+    5,
+    41,
+    63,
+    57,
+    5,
+    41,
+    51,
+    61,
+    5,
+    104,
+    106,
+    104,
+    108,
+    5,
+    99,
+    63,
+    98,
+    56,
+    107,
+    59,
+    110
   ];
   static const int _xorMask = 0x5A;
 

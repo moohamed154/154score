@@ -129,7 +129,9 @@ void main() {
       );
     });
 
-    test('formats time strings with seconds (HH:mm:ss) correctly in 24h and 12h', () {
+    test(
+        'formats time strings with seconds (HH:mm:ss) correctly in 24h and 12h',
+        () {
       expect(
         DateFormatter.formatDisplayTime(
           '21:45:00',
@@ -193,7 +195,9 @@ void main() {
   });
 
   group('MatchStatusHelper timestamp and timezone independence', () {
-    test('future UTC timestamp is ALWAYS upcoming regardless of local/shifted time string', () {
+    test(
+        'future UTC timestamp is ALWAYS upcoming regardless of local/shifted time string',
+        () {
       final nowUtc = DateTime.now().toUtc();
       // Match kickoff is 2 hours in the future
       final futureTimestamp = (nowUtc.millisecondsSinceEpoch ~/ 1000) + 7200;
@@ -210,7 +214,9 @@ void main() {
       expect(phase, MatchPhase.upcoming);
     });
 
-    test('past UTC timestamp within match duration without finished indicator is live', () {
+    test(
+        'past UTC timestamp within match duration without finished indicator is live',
+        () {
       final nowUtc = DateTime.now().toUtc();
       // Match started 30 minutes ago
       final liveTimestamp = (nowUtc.millisecondsSinceEpoch ~/ 1000) - 1800;

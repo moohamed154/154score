@@ -49,19 +49,19 @@ class _PlayerViewState extends State<PlayerView>
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         context.read<PlayerBloc>().add(
-          ChangePlayerTabEvent(_tabController.index),
-        );
+              ChangePlayerTabEvent(_tabController.index),
+            );
       }
     });
 
     context.read<PlayerBloc>().add(
-      LoadPlayerProfileEvent(
-        widget.playerId,
-        slug: widget.initialSlug,
-        fallbackName: widget.initialName,
-        fallbackPhoto: widget.initialPhoto,
-      ),
-    );
+          LoadPlayerProfileEvent(
+            widget.playerId,
+            slug: widget.initialSlug,
+            fallbackName: widget.initialName,
+            fallbackPhoto: widget.initialPhoto,
+          ),
+        );
   }
 
   @override
@@ -69,13 +69,13 @@ class _PlayerViewState extends State<PlayerView>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.playerId != widget.playerId) {
       context.read<PlayerBloc>().add(
-        LoadPlayerProfileEvent(
-          widget.playerId,
-          slug: widget.initialSlug,
-          fallbackName: widget.initialName,
-          fallbackPhoto: widget.initialPhoto,
-        ),
-      );
+            LoadPlayerProfileEvent(
+              widget.playerId,
+              slug: widget.initialSlug,
+              fallbackName: widget.initialName,
+              fallbackPhoto: widget.initialPhoto,
+            ),
+          );
     }
   }
 
@@ -93,8 +93,7 @@ class _PlayerViewState extends State<PlayerView>
 
     return BlocBuilder<PlayerBloc, PlayerState>(
       builder: (context, state) {
-        final displayName =
-            state.profile?.name ??
+        final displayName = state.profile?.name ??
             state.playerName ??
             widget.initialName ??
             (isArabic ? 'اللاعب' : 'Player');
@@ -132,13 +131,13 @@ class _PlayerViewState extends State<PlayerView>
         message: state.errorMessage,
         onRetry: () {
           context.read<PlayerBloc>().add(
-            LoadPlayerProfileEvent(
-              widget.playerId,
-              slug: widget.initialSlug,
-              fallbackName: widget.initialName,
-              fallbackPhoto: widget.initialPhoto,
-            ),
-          );
+                LoadPlayerProfileEvent(
+                  widget.playerId,
+                  slug: widget.initialSlug,
+                  fallbackName: widget.initialName,
+                  fallbackPhoto: widget.initialPhoto,
+                ),
+              );
         },
       );
     }
@@ -148,8 +147,7 @@ class _PlayerViewState extends State<PlayerView>
       return const SizedBox.shrink();
     }
 
-    final isGoalkeeper =
-        (profile.position ?? '').toUpperCase() == 'GK' ||
+    final isGoalkeeper = (profile.position ?? '').toUpperCase() == 'GK' ||
         profile.positionName.contains('حارس');
 
     final hMargin = AppDimensions.getHorizontalMargin(context);
@@ -196,9 +194,8 @@ class _PlayerViewState extends State<PlayerView>
               indicatorWeight: 3,
               indicatorSize: TabBarIndicatorSize.tab,
               labelColor: AppColors.primary,
-              unselectedLabelColor: isDark
-                  ? AppColors.darkTextMuted
-                  : AppColors.lightTextMuted,
+              unselectedLabelColor:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               labelStyle: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
@@ -251,16 +248,16 @@ class _PlayerViewState extends State<PlayerView>
           // Active Tab Content
           switch (state.selectedTab) {
             0 => PlayerStatsTabView(
-              statistics: profile.statistics,
-              isGoalkeeper: isGoalkeeper,
-              isDark: isDark,
-              isArabic: isArabic,
-            ),
+                statistics: profile.statistics,
+                isGoalkeeper: isGoalkeeper,
+                isDark: isDark,
+                isArabic: isArabic,
+              ),
             1 => PlayerTransfersTabView(
-              transfers: profile.transfers,
-              isDark: isDark,
-              isArabic: isArabic,
-            ),
+                transfers: profile.transfers,
+                isDark: isDark,
+                isArabic: isArabic,
+              ),
             _ => _buildOverviewTab(profile, isDark, isArabic),
           },
 
@@ -331,15 +328,14 @@ class _PlayerViewState extends State<PlayerView>
                   flex: 4,
                   child: Text(
                     title,
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),

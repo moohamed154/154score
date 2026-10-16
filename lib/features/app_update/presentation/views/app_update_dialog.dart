@@ -54,11 +54,15 @@ class AppUpdateDialog extends StatelessWidget {
         final isDownloading = state.isDownloading;
 
         final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
-        final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-        final textColor = isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A);
-        final mutedColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+        final borderColor =
+            isDark ? AppColors.darkBorder : AppColors.lightBorder;
+        final textColor =
+            isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A);
+        final mutedColor =
+            isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
 
-        final releaseNotesText = updateInfo?.localizedReleaseNotes(isArabic) ?? '';
+        final releaseNotesText =
+            updateInfo?.localizedReleaseNotes(isArabic) ?? '';
 
         return PopScope(
           canPop: !isCompulsory && !isDownloading,
@@ -74,273 +78,292 @@ class AppUpdateDialog extends StatelessWidget {
                   side: BorderSide(color: borderColor, width: 1),
                 ),
                 child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // 1. Header with Badge & Icon
-                    Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(state).withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 1. Header with Badge & Icon
+                      Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(state)
+                                  .withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _getStatusIcon(state),
+                              color: _getStatusColor(state),
+                              size: 26,
+                            ),
                           ),
-                          child: Icon(
-                            _getStatusIcon(state),
-                            color: _getStatusColor(state),
-                            size: 26,
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isCompulsory
+                                      ? (isArabic
+                                          ? 'تحديث إجباري مطلوب'
+                                          : 'Mandatory Update Required')
+                                      : (isArabic
+                                          ? 'تحديث جديد متوفر'
+                                          : 'New Update Available'),
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  isArabic
+                                      ? 'الإصدار ${updateInfo?.latestVersion ?? ''} (الحالي: ${state.currentAppVersion})'
+                                      : 'Version ${updateInfo?.latestVersion ?? ''} (Current: ${state.currentAppVersion})',
+                                  style: TextStyle(
+                                    color: mutedColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+
+                      // 2. Release Notes
+                      if (releaseNotesText.trim().isNotEmpty &&
+                          !isDownloading &&
+                          state.status != AppUpdateStatus.downloadFailed) ...[
+                        Text(
+                          isArabic
+                              ? 'ما الجديد في هذا التحديث:'
+                              : "What's new in this update:",
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
+                        const SizedBox(height: 8),
+                        Container(
+                          constraints: const BoxConstraints(maxHeight: 130),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkSurface
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: borderColor, width: 0.8),
+                          ),
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Text(
+                              releaseNotesText,
+                              style: TextStyle(
+                                color: isDark
+                                    ? const Color(0xFFCBD5E1)
+                                    : const Color(0xFF334155),
+                                fontSize: 12.5,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                      ],
+
+                      // 3. Live Download Progress
+                      if (isDownloading) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: state.progress > 0 ? state.progress : null,
+                            minHeight: 10,
+                            backgroundColor: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE2E8F0),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${(state.progress * 100).toStringAsFixed(0)}%',
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              _formatProgressBytes(state.receivedBytes,
+                                  state.totalBytes, isArabic),
+                              style: TextStyle(
+                                color: mutedColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                      ],
+
+                      // 4. Error Alert View
+                      if (state.hasError && state.errorMessage != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.liveRed.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.liveRed.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                isCompulsory
-                                    ? (isArabic ? 'تحديث إجباري مطلوب' : 'Mandatory Update Required')
-                                    : (isArabic ? 'تحديث جديد متوفر' : 'New Update Available'),
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              const Icon(
+                                Icons.error_outline_rounded,
+                                color: AppColors.liveRed,
+                                size: 20,
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                isArabic
-                                    ? 'الإصدار ${updateInfo?.latestVersion ?? ''} (الحالي: ${state.currentAppVersion})'
-                                    : 'Version ${updateInfo?.latestVersion ?? ''} (Current: ${state.currentAppVersion})',
-                                style: TextStyle(
-                                  color: mutedColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  state.errorMessage!,
+                                  style: const TextStyle(
+                                    color: AppColors.liveRed,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.4,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        const SizedBox(height: 18),
                       ],
-                    ),
-                    const SizedBox(height: 18),
 
-                    // 2. Release Notes
-                    if (releaseNotesText.trim().isNotEmpty &&
-                        !isDownloading &&
-                        state.status != AppUpdateStatus.downloadFailed) ...[
-                      Text(
-                        isArabic ? 'ما الجديد في هذا التحديث:' : "What's new in this update:",
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        constraints: const BoxConstraints(maxHeight: 130),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkSurface
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor, width: 0.8),
-                        ),
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: Text(
-                            releaseNotesText,
-                            style: TextStyle(
-                              color: isDark
-                                  ? const Color(0xFFCBD5E1)
-                                  : const Color(0xFF334155),
-                              fontSize: 12.5,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                    ],
-
-                    // 3. Live Download Progress
-                    if (isDownloading) ...[
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: state.progress > 0 ? state.progress : null,
-                          minHeight: 10,
-                          backgroundColor: isDark
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFE2E8F0),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                      // 5. Action Buttons
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '${(state.progress * 100).toStringAsFixed(0)}%',
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            _formatProgressBytes(state.receivedBytes, state.totalBytes, isArabic),
-                            style: TextStyle(
-                              color: mutedColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                    ],
-
-                    // 4. Error Alert View
-                    if (state.hasError && state.errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.liveRed.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.liveRed.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.error_outline_rounded,
-                              color: AppColors.liveRed,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
+                          // Later button (only if optional and not actively downloading)
+                          if (!isCompulsory && !isDownloading) ...[
                             Expanded(
-                              child: Text(
-                                state.errorMessage!,
-                                style: const TextStyle(
-                                  color: AppColors.liveRed,
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.4,
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 13),
+                                  side: BorderSide(color: borderColor),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text(
+                                  isArabic ? 'لاحقاً' : 'Later',
+                                  style: TextStyle(
+                                    color: mutedColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 10),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                    ],
 
-                    // 5. Action Buttons
-                    Row(
-                      children: [
-                        // Later button (only if optional and not actively downloading)
-                        if (!isCompulsory && !isDownloading) ...[
+                          // Main Action Button (Update / Retry / Install)
                           Expanded(
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 13),
-                                side: BorderSide(color: borderColor),
+                            flex: isCompulsory ? 1 : 2,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              onPressed: () => Navigator.of(context).pop(),
+                              onPressed: () {
+                                if (isDownloading) {
+                                  // Active downloading, ignore or let user wait
+                                  return;
+                                }
+
+                                if (state.status ==
+                                        AppUpdateStatus.readyToInstall ||
+                                    state.status ==
+                                        AppUpdateStatus.installFailed) {
+                                  cubit.installApk();
+                                } else {
+                                  cubit.startDownload();
+                                }
+                              },
                               child: Text(
-                                isArabic ? 'لاحقاً' : 'Later',
-                                style: TextStyle(
-                                  color: mutedColor,
+                                _getActionTitle(state, isArabic),
+                                style: const TextStyle(
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
                         ],
-
-                        // Main Action Button (Update / Retry / Install)
-                        Expanded(
-                          flex: isCompulsory ? 1 : 2,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 13),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () {
-                              if (isDownloading) {
-                                // Active downloading, ignore or let user wait
-                                return;
-                              }
-
-                              if (state.status == AppUpdateStatus.readyToInstall ||
-                                  state.status == AppUpdateStatus.installFailed) {
-                                cubit.installApk();
-                              } else {
-                                cubit.startDownload();
-                              }
-                            },
-                            child: Text(
-                              _getActionTitle(state, isArabic),
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-    },
+        );
+      },
     );
   }
 
   static IconData _getStatusIcon(AppUpdateState state) {
     if (state.hasError) return Icons.warning_amber_rounded;
-    if (state.status == AppUpdateStatus.readyToInstall) return Icons.check_circle_rounded;
+    if (state.status == AppUpdateStatus.readyToInstall)
+      return Icons.check_circle_rounded;
     if (state.isDownloading) return Icons.downloading_rounded;
     return Icons.system_update_rounded;
   }
 
   static Color _getStatusColor(AppUpdateState state) {
     if (state.hasError) return AppColors.liveRed;
-    if (state.status == AppUpdateStatus.readyToInstall) return AppColors.primary;
+    if (state.status == AppUpdateStatus.readyToInstall)
+      return AppColors.primary;
     if (state.isDownloading) return AppColors.accent;
     return AppColors.primary;
   }
 
   static String _getActionTitle(AppUpdateState state, bool isArabic) {
-    if (state.isDownloading) return isArabic ? 'جاري التحميل...' : 'Downloading...';
-    if (state.status == AppUpdateStatus.readyToInstall) return isArabic ? 'تثبيت الآن' : 'Install Now';
-    if (state.status == AppUpdateStatus.installFailed) return isArabic ? 'إعادة محاولة التثبيت' : 'Retry Install';
-    if (state.status == AppUpdateStatus.downloadFailed) return isArabic ? 'إعادة المحاولة' : 'Retry';
+    if (state.isDownloading)
+      return isArabic ? 'جاري التحميل...' : 'Downloading...';
+    if (state.status == AppUpdateStatus.readyToInstall)
+      return isArabic ? 'تثبيت الآن' : 'Install Now';
+    if (state.status == AppUpdateStatus.installFailed)
+      return isArabic ? 'إعادة محاولة التثبيت' : 'Retry Install';
+    if (state.status == AppUpdateStatus.downloadFailed)
+      return isArabic ? 'إعادة المحاولة' : 'Retry';
     return isArabic ? 'تحديث الآن' : 'Update Now';
   }
 

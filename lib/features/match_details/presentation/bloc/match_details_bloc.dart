@@ -102,9 +102,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       try {
         eventsFuture = repository.getEventsPayload(cleanTarget, lang: lang);
       } catch (_) {
-        eventsFuture = repository
-            .getEvents(cleanTarget, lang: lang)
-            .then(
+        eventsFuture = repository.getEvents(cleanTarget, lang: lang).then(
               (res) => ApiSuccess(
                 MatchEventsPayload(events: res.dataOrNull ?? const []),
               ),
@@ -224,15 +222,16 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
       final isCurrentlyLive =
           ScoreHelper.isLiveStatus(resolvedStatus, resolvedStatusCode) ||
-          (resolvedStatusCode != null &&
-              (resolvedStatusCode == 'LIVE' ||
-                  resolvedStatusCode.startsWith('IN_PLAY') ||
-                  resolvedStatusCode == 'HALF_TIME' ||
-                  resolvedStatusCode == 'HT'));
+              (resolvedStatusCode != null &&
+                  (resolvedStatusCode == 'LIVE' ||
+                      resolvedStatusCode.startsWith('IN_PLAY') ||
+                      resolvedStatusCode == 'HALF_TIME' ||
+                      resolvedStatusCode == 'HT'));
 
-      final isCancelledOrPostponed =
-          ScoreHelper.isCancelledOrPostponed(resolvedStatus, resolvedStatusCode) ||
-          ScoreHelper.isCancelledOrPostponed(state.liveStatus, state.liveStatusCode);
+      final isCancelledOrPostponed = ScoreHelper.isCancelledOrPostponed(
+              resolvedStatus, resolvedStatusCode) ||
+          ScoreHelper.isCancelledOrPostponed(
+              state.liveStatus, state.liveStatusCode);
 
       if (!isCurrentlyLive && !isCancelledOrPostponed && hasFinishedEvent) {
         if (resolvedStatus == null ||
@@ -274,12 +273,10 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
       final detailsRes = detailsPayload.sections;
       final overviewRes = detailsPayload.overview;
-      final resolvedDetails = detailsRes.isNotEmpty
-          ? detailsRes
-          : state.details;
+      final resolvedDetails =
+          detailsRes.isNotEmpty ? detailsRes : state.details;
       final resolvedOverview = overviewRes ?? state.overview;
-      resolvedChampionshipId =
-          resolvedChampionshipId ??
+      resolvedChampionshipId = resolvedChampionshipId ??
           resolvedOverview?.championshipId ??
           state.championshipId;
 
@@ -290,10 +287,10 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final isOverviewCancelledOrPostponed =
           ScoreHelper.isCancelledOrPostponed(overviewStatus);
 
-      final isCancelledOrPostponedFinal =
-          isCancelledOrPostponed ||
+      final isCancelledOrPostponedFinal = isCancelledOrPostponed ||
           isOverviewCancelledOrPostponed ||
-          ScoreHelper.isCancelledOrPostponed(resolvedStatus, resolvedStatusCode);
+          ScoreHelper.isCancelledOrPostponed(
+              resolvedStatus, resolvedStatusCode);
 
       if (isOverviewCancelledOrPostponed) {
         resolvedStatus = overviewStatus;
@@ -304,8 +301,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       }
 
       final effectiveDate = resolvedOverview?.date;
-      final isPastMatch =
-          effectiveDate != null &&
+      final isPastMatch = effectiveDate != null &&
           DateTime.tryParse(effectiveDate)?.isBefore(
                 DateTime(
                   DateTime.now().year,
@@ -334,9 +330,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         state.copyWith(
           details: resolvedDetails,
           overview: resolvedOverview,
-          alert: state.alert ??
-              eventsPayloadRes.alert ??
-              resolvedOverview?.note,
+          alert:
+              state.alert ?? eventsPayloadRes.alert ?? resolvedOverview?.note,
           championshipId: resolvedChampionshipId,
           liveStatus: resolvedStatus,
           liveStatusCode: resolvedStatusCode,
@@ -353,14 +348,14 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
       final statsRes =
           (secondaryResults[0] as ApiResult<List<MatchStatItemEntity>>)
-              .dataOrNull ??
-          [];
+                  .dataOrNull ??
+              [];
       final lineupsRes =
           (secondaryResults[1] as ApiResult<MatchLineupEntity?>).dataOrNull;
       final newsRes =
           (secondaryResults[2] as ApiResult<List<MatchNewsItemEntity>>)
-              .dataOrNull ??
-          [];
+                  .dataOrNull ??
+              [];
 
       final resolvedStats = statsRes.isNotEmpty ? statsRes : state.stats;
       final resolvedNews = newsRes.isNotEmpty ? newsRes : state.news;
@@ -420,12 +415,10 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           score: (update.score1 != null && update.score2 != null)
               ? '${update.score1} - ${update.score2}'
               : null,
-          isHomeTeam:
-              update.rawPayload['is_home'] == true ||
+          isHomeTeam: update.rawPayload['is_home'] == true ||
               update.rawPayload['team'] == '1' ||
               update.rawPayload['team'] == 'home',
-          videoUrl:
-              update.rawPayload['video_url']?.toString() ??
+          videoUrl: update.rawPayload['video_url']?.toString() ??
               update.rawPayload['videoUrl']?.toString() ??
               update.rawPayload['video']?.toString(),
         );
@@ -437,28 +430,24 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
 
       emit(
         state.copyWith(
-          liveScore1:
-              update.score1 ??
+          liveScore1: update.score1 ??
               update.rawPayload['score_1']?.toString() ??
               update.rawPayload['score1']?.toString() ??
               update.rawPayload['home_score']?.toString() ??
               state.liveScore1,
-          liveScore2:
-              update.score2 ??
+          liveScore2: update.score2 ??
               update.rawPayload['score_2']?.toString() ??
               update.rawPayload['score2']?.toString() ??
               update.rawPayload['away_score']?.toString() ??
               state.liveScore2,
-          livePenaltyScore1:
-              update.penaltyScore1 ??
+          livePenaltyScore1: update.penaltyScore1 ??
               update.rawPayload['penalty_score_1']?.toString() ??
               update.rawPayload['penalties_1']?.toString() ??
               (update.rawPayload['penalties'] is Map
                   ? update.rawPayload['penalties']['home']?.toString()
                   : null) ??
               state.livePenaltyScore1,
-          livePenaltyScore2:
-              update.penaltyScore2 ??
+          livePenaltyScore2: update.penaltyScore2 ??
               update.rawPayload['penalty_score_2']?.toString() ??
               update.rawPayload['penalties_2']?.toString() ??
               (update.rawPayload['penalties'] is Map
@@ -466,8 +455,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
                   : null) ??
               state.livePenaltyScore2,
           liveStatus: update.status ?? state.liveStatus,
-          liveStatusCode:
-              update.statusCode ??
+          liveStatusCode: update.statusCode ??
               update.rawPayload['status_code']?.toString() ??
               state.liveStatusCode,
           liveMinute: update.minute ?? state.liveMinute,
@@ -494,34 +482,29 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         existingEvents: state.events,
         update: update,
       );
-      final effectiveEvents = mergeResult.isUpdated
-          ? mergeResult.data
-          : state.events;
+      final effectiveEvents =
+          mergeResult.isUpdated ? mergeResult.data : state.events;
 
       emit(
         state.copyWith(
-          liveScore1:
-              update.score1 ??
+          liveScore1: update.score1 ??
               update.rawPayload['score_1']?.toString() ??
               update.rawPayload['score1']?.toString() ??
               update.rawPayload['home_score']?.toString() ??
               state.liveScore1,
-          liveScore2:
-              update.score2 ??
+          liveScore2: update.score2 ??
               update.rawPayload['score_2']?.toString() ??
               update.rawPayload['score2']?.toString() ??
               update.rawPayload['away_score']?.toString() ??
               state.liveScore2,
-          livePenaltyScore1:
-              update.penaltyScore1 ??
+          livePenaltyScore1: update.penaltyScore1 ??
               update.rawPayload['penalty_score_1']?.toString() ??
               update.rawPayload['penalties_1']?.toString() ??
               (update.rawPayload['penalties'] is Map
                   ? update.rawPayload['penalties']['home']?.toString()
                   : null) ??
               state.livePenaltyScore1,
-          livePenaltyScore2:
-              update.penaltyScore2 ??
+          livePenaltyScore2: update.penaltyScore2 ??
               update.rawPayload['penalty_score_2']?.toString() ??
               update.rawPayload['penalties_2']?.toString() ??
               (update.rawPayload['penalties'] is Map
@@ -529,8 +512,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
                   : null) ??
               state.livePenaltyScore2,
           liveStatus: update.status ?? state.liveStatus,
-          liveStatusCode:
-              update.statusCode ??
+          liveStatusCode: update.statusCode ??
               update.rawPayload['status_code']?.toString() ??
               state.liveStatusCode,
           liveMinute: update.minute ?? state.liveMinute,
@@ -623,8 +605,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
               e.playerNumber,
               e.isHomeTeam,
             );
-            final isSecondary =
-                e.secondaryPlayerName != null &&
+            final isSecondary = e.secondaryPlayerName != null &&
                 matchesEvent(
                   e.secondaryPlayerName!,
                   e.secondaryPlayerNumber,
@@ -634,9 +615,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
             if (isPrimary || isSecondary) {
               final pMin = MatchMinuteParser.parse(e.minute);
               final eventMin = pMin.mainMinute > 0 ? pMin.mainMinute : null;
-              final otherPlayer = isPrimary
-                  ? e.secondaryPlayerName
-                  : e.playerName;
+              final otherPlayer =
+                  isPrimary ? e.secondaryPlayerName : e.playerName;
 
               if (player.isStarter) {
                 // Starters start the game on the pitch: in a substitution, they leave the pitch (SUBBED OUT).

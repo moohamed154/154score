@@ -31,8 +31,7 @@ class TopScorerDto {
   });
 
   factory TopScorerDto.fromJson(int fallbackRank, Map<String, dynamic> json) {
-    final rank =
-        int.tryParse(
+    final rank = int.tryParse(
           json['rank']?.toString() ??
               json['position']?.toString() ??
               json['pos']?.toString() ??
@@ -46,8 +45,7 @@ class TopScorerDto {
     } else if (json['name'] != null) {
       name = json['name'].toString();
     } else if (json['player'] is Map) {
-      name =
-          json['player']['title']?.toString() ??
+      name = json['player']['title']?.toString() ??
           json['player']['name']?.toString() ??
           name;
     }
@@ -68,29 +66,25 @@ class TopScorerDto {
       tName = json['team'].toString();
     }
 
-    rawTeamLogo ??=
-        json['team_logo']?.toString() ??
+    rawTeamLogo ??= json['team_logo']?.toString() ??
         json['team_image']?.toString() ??
         json['logo']?.toString();
     tId ??= json['team_id']?.toString();
 
-    final rawPlayerImg =
-        json['player_photo']?.toString() ??
+    final rawPlayerImg = json['player_photo']?.toString() ??
         json['player_image']?.toString() ??
         json['photo']?.toString() ??
         json['image']?.toString() ??
         (json['player'] is Map
             ? (json['player']['photo']?.toString() ??
-                  json['player']['image']?.toString())
+                json['player']['image']?.toString())
             : null);
 
-    final playerId =
-        json['player_id']?.toString() ??
+    final playerId = json['player_id']?.toString() ??
         json['id']?.toString() ??
         (json['player'] is Map ? json['player']['id']?.toString() : null);
 
-    final goals =
-        int.tryParse(
+    final goals = int.tryParse(
           json['goals']?.toString() ??
               json['goals_scored']?.toString() ??
               json['goal']?.toString() ??

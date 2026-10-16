@@ -131,7 +131,8 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
       );
 
       // 3. Capture widget to high-resolution PNG
-      final Uint8List imageBytes = await _screenshotController.captureFromWidget(
+      final Uint8List imageBytes =
+          await _screenshotController.captureFromWidget(
         shareCard,
         delay: const Duration(milliseconds: 250),
         context: mounted ? parentContext : null,
@@ -296,7 +297,6 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 14),
-
                         Row(
                           children: [
                             Icon(
@@ -377,18 +377,18 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
       body: switch (_state) {
         _DetailState.loading => _buildLoading(isDark),
         _DetailState.error => CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              floating: true,
-              backgroundColor: isDark
-                  ? AppColors.darkBackground
-                  : AppColors.lightBackground,
-            ),
-            SliverFillRemaining(
-              child: ErrorView(message: _error, onRetry: _load),
-            ),
-          ],
-        ),
+            slivers: [
+              SliverAppBar(
+                floating: true,
+                backgroundColor: isDark
+                    ? AppColors.darkBackground
+                    : AppColors.lightBackground,
+              ),
+              SliverFillRemaining(
+                child: ErrorView(message: _error, onRetry: _load),
+              ),
+            ],
+          ),
         _DetailState.success => _buildSuccess(context, isDark, isArabic, l10n),
       },
     );
@@ -399,9 +399,8 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
       slivers: [
         SliverAppBar(
           floating: true,
-          backgroundColor: isDark
-              ? AppColors.darkBackground
-              : AppColors.lightBackground,
+          backgroundColor:
+              isDark ? AppColors.darkBackground : AppColors.lightBackground,
         ),
         SliverToBoxAdapter(
           child: Container(
@@ -454,9 +453,8 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
         SliverAppBar(
           expandedHeight: 240,
           pinned: true,
-          backgroundColor: isDark
-              ? AppColors.darkBackground
-              : AppColors.lightBackground,
+          backgroundColor:
+              isDark ? AppColors.darkBackground : AppColors.lightBackground,
           leading: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(

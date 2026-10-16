@@ -70,12 +70,12 @@ class LocaleState extends Equatable {
 
   @override
   List<Object?> get props => [
-    locale,
-    isRefreshing,
-    showIndicator,
-    requestToken,
-    errorMessage,
-  ];
+        locale,
+        isRefreshing,
+        showIndicator,
+        requestToken,
+        errorMessage,
+      ];
 }
 
 // Locale Cubit
@@ -86,7 +86,7 @@ class LocaleCubit extends Cubit<LocaleState> {
   int _currentToken = 0;
 
   LocaleCubit(this._storage, this._webSocketService)
-    : super(LocaleState(locale: Locale(_storage.getLanguage())));
+      : super(LocaleState(locale: Locale(_storage.getLanguage())));
 
   /// Switches locale immediately (0ms), switches WebSocket channels,
   /// persists language to storage asynchronously, and begins background refresh coordination.
@@ -162,7 +162,8 @@ class TimezoneState extends Equatable {
   });
 
   UtcOffsetInfo get currentOffsetInfo => UtcOffsetInfo.findByOffset(offset);
-  UtcOffsetInfo get deviceOffsetInfo => UtcOffsetInfo.findByOffset(deviceOffset);
+  UtcOffsetInfo get deviceOffsetInfo =>
+      UtcOffsetInfo.findByOffset(deviceOffset);
 
   TimezoneState copyWith({
     int? offset,
@@ -185,13 +186,13 @@ class TimezoneCubit extends Cubit<TimezoneState> {
   final LocalStorageService _storage;
 
   TimezoneCubit(this._storage)
-    : super(
-        TimezoneState(
-          offset: _storage.getTimezoneOffset(),
-          isAuto: _storage.isTimezoneAuto(),
-          deviceOffset: _storage.getDeviceTimezoneOffset(),
-        ),
-      );
+      : super(
+          TimezoneState(
+            offset: _storage.getTimezoneOffset(),
+            isAuto: _storage.isTimezoneAuto(),
+            deviceOffset: _storage.getDeviceTimezoneOffset(),
+          ),
+        );
 
   Future<void> setTimezoneOffset(int offset) async {
     await _storage.setTimezoneOffset(offset);
@@ -223,4 +224,3 @@ class NewsLanguageCubit extends Cubit<String> {
     emit(lang);
   }
 }
-

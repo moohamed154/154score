@@ -128,7 +128,14 @@ class UtcOffsetInfo {
       titleAr: 'التوقيت الشرقي (نيويورك، ميامي، بوغوتا)',
       titleEn: 'Eastern Time (US & Canada & Colombia)',
       citiesAr: ['نيويورك', 'واشنطن', 'ميامي', 'تورونتو', 'بوغوتا', 'ليما'],
-      citiesEn: ['New York', 'Washington', 'Miami', 'Toronto', 'Bogota', 'Lima'],
+      citiesEn: [
+        'New York',
+        'Washington',
+        'Miami',
+        'Toronto',
+        'Bogota',
+        'Lima'
+      ],
       timezoneAbbr: 'EST',
     ),
     UtcOffsetInfo(
@@ -167,32 +174,107 @@ class UtcOffsetInfo {
       offset: 0,
       titleAr: 'توقيت جرينتش ولندن والمغرب',
       titleEn: 'Greenwich Mean Time (London, Dublin, Lisbon, Casablanca)',
-      citiesAr: ['لندن', 'دبلن', 'لشبونة', 'الدار البيضاء', 'الرباط', 'أكرا', 'ريكيافيك'],
-      citiesEn: ['London', 'Dublin', 'Lisbon', 'Casablanca', 'Rabat', 'Accra', 'Reykjavik'],
+      citiesAr: [
+        'لندن',
+        'دبلن',
+        'لشبونة',
+        'الدار البيضاء',
+        'الرباط',
+        'أكرا',
+        'ريكيافيك'
+      ],
+      citiesEn: [
+        'London',
+        'Dublin',
+        'Lisbon',
+        'Casablanca',
+        'Rabat',
+        'Accra',
+        'Reykjavik'
+      ],
       timezoneAbbr: 'GMT/WET',
     ),
     UtcOffsetInfo(
       offset: 1,
       titleAr: 'توقيت وسط أوروبا والجزائر وتونس',
       titleEn: 'Central European Time (Paris, Berlin, Rome, Madrid, Algiers)',
-      citiesAr: ['باريس', 'مدريد', 'برلين', 'روما', 'أمستردام', 'الجزائر', 'تونس', 'بروكسل'],
-      citiesEn: ['Paris', 'Madrid', 'Berlin', 'Rome', 'Amsterdam', 'Algiers', 'Tunis', 'Brussels'],
+      citiesAr: [
+        'باريس',
+        'مدريد',
+        'برلين',
+        'روما',
+        'أمستردام',
+        'الجزائر',
+        'تونس',
+        'بروكسل'
+      ],
+      citiesEn: [
+        'Paris',
+        'Madrid',
+        'Berlin',
+        'Rome',
+        'Amsterdam',
+        'Algiers',
+        'Tunis',
+        'Brussels'
+      ],
       timezoneAbbr: 'CET',
     ),
     UtcOffsetInfo(
       offset: 2,
       titleAr: 'توقيت القاهرة والقدس وطرابلس وعمان',
-      titleEn: 'Eastern European Time (Cairo, Jerusalem, Tripoli, Amman, Beirut)',
-      citiesAr: ['القاهرة', 'القدس', 'طرابلس', 'عمان', 'بيروت', 'دمشق', 'أثينا', 'كييف', 'جوهانسبرغ'],
-      citiesEn: ['Cairo', 'Jerusalem', 'Tripoli', 'Amman', 'Beirut', 'Damascus', 'Athens', 'Kyiv', 'Johannesburg'],
+      titleEn:
+          'Eastern European Time (Cairo, Jerusalem, Tripoli, Amman, Beirut)',
+      citiesAr: [
+        'القاهرة',
+        'القدس',
+        'طرابلس',
+        'عمان',
+        'بيروت',
+        'دمشق',
+        'أثينا',
+        'كييف',
+        'جوهانسبرغ'
+      ],
+      citiesEn: [
+        'Cairo',
+        'Jerusalem',
+        'Tripoli',
+        'Amman',
+        'Beirut',
+        'Damascus',
+        'Athens',
+        'Kyiv',
+        'Johannesburg'
+      ],
       timezoneAbbr: 'EET/CAT',
     ),
     UtcOffsetInfo(
       offset: 3,
       titleAr: 'توقيت مكة والرياض والكويت والدوحة وبغداد',
       titleEn: 'Arabia Standard Time (Riyadh, Kuwait, Doha, Baghdad, Moscow)',
-      citiesAr: ['الرياض', 'مكة', 'الكويت', 'الدوحة', 'بغداد', 'المنامة', 'صنعاء', 'موسكو', 'إسطنبول'],
-      citiesEn: ['Riyadh', 'Mecca', 'Kuwait', 'Doha', 'Baghdad', 'Manama', 'Sanaa', 'Moscow', 'Istanbul'],
+      citiesAr: [
+        'الرياض',
+        'مكة',
+        'الكويت',
+        'الدوحة',
+        'بغداد',
+        'المنامة',
+        'صنعاء',
+        'موسكو',
+        'إسطنبول'
+      ],
+      citiesEn: [
+        'Riyadh',
+        'Mecca',
+        'Kuwait',
+        'Doha',
+        'Baghdad',
+        'Manama',
+        'Sanaa',
+        'Moscow',
+        'Istanbul'
+      ],
       timezoneAbbr: 'AST/MSK',
     ),
     UtcOffsetInfo(
@@ -208,7 +290,13 @@ class UtcOffsetInfo {
       titleAr: 'توقيت باكستان وآسيا الوسطى (إسلام آباد، كراتشي، طشقند)',
       titleEn: 'Pakistan & Central Asia Time (Islamabad, Karachi, Tashkent)',
       citiesAr: ['إسلام آباد', 'كراتشي', 'طشقند', 'يكاترينبورغ', 'عشق آباد'],
-      citiesEn: ['Islamabad', 'Karachi', 'Tashkent', 'Yekaterinburg', 'Ashgabat'],
+      citiesEn: [
+        'Islamabad',
+        'Karachi',
+        'Tashkent',
+        'Yekaterinburg',
+        'Ashgabat'
+      ],
       timezoneAbbr: 'PKT',
     ),
     UtcOffsetInfo(
@@ -224,15 +312,37 @@ class UtcOffsetInfo {
       titleAr: 'توقيت الهند الصينية (بانكوك، جاكرتا، هانوي)',
       titleEn: 'Indochina Time (Bangkok, Jakarta, Hanoi)',
       citiesAr: ['بانكوك', 'جاكرتا', 'هانوي', 'هو تشي منه', 'بنوم بنه'],
-      citiesEn: ['Bangkok', 'Jakarta', 'Hanoi', 'Ho Chi Minh City', 'Phnom Penh'],
+      citiesEn: [
+        'Bangkok',
+        'Jakarta',
+        'Hanoi',
+        'Ho Chi Minh City',
+        'Phnom Penh'
+      ],
       timezoneAbbr: 'ICT',
     ),
     UtcOffsetInfo(
       offset: 8,
       titleAr: 'توقيت الصين وسنغافورة (بكين، سنغافورة، كوالالمبور)',
       titleEn: 'China & Singapore Time (Beijing, Singapore, Kuala Lumpur)',
-      citiesAr: ['بكين', 'سنغافورة', 'كوالالمبور', 'هونغ كونغ', 'تايبيه', 'بيرث', 'مانيلا'],
-      citiesEn: ['Beijing', 'Singapore', 'Kuala Lumpur', 'Hong Kong', 'Taipei', 'Perth', 'Manila'],
+      citiesAr: [
+        'بكين',
+        'سنغافورة',
+        'كوالالمبور',
+        'هونغ كونغ',
+        'تايبيه',
+        'بيرث',
+        'مانيلا'
+      ],
+      citiesEn: [
+        'Beijing',
+        'Singapore',
+        'Kuala Lumpur',
+        'Hong Kong',
+        'Taipei',
+        'Perth',
+        'Manila'
+      ],
       timezoneAbbr: 'CST/SGT',
     ),
     UtcOffsetInfo(

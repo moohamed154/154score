@@ -94,12 +94,12 @@ class TeamCategorizedSquadEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    coach,
-    goalkeepers,
-    defenders,
-    midfielders,
-    attackers,
-  ];
+        coach,
+        goalkeepers,
+        defenders,
+        midfielders,
+        attackers,
+      ];
 }
 
 class TeamTransferPartyEntity extends Equatable {
@@ -138,14 +138,14 @@ class TeamTransferItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    player,
-    teamIn,
-    teamOut,
-    value,
-    type,
-    dateFrom,
-    dateTo,
-  ];
+        player,
+        teamIn,
+        teamOut,
+        value,
+        type,
+        dateFrom,
+        dateTo,
+      ];
 }
 
 class TeamTransfersEntity extends Equatable {
@@ -179,14 +179,14 @@ class TeamNewsItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    title,
-    slug,
-    description,
-    image,
-    createdAt,
-    url,
-  ];
+        id,
+        title,
+        slug,
+        description,
+        image,
+        createdAt,
+        url,
+      ];
 }
 
 class TeamProfileEntity extends Equatable {
@@ -248,31 +248,31 @@ class TeamProfileEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    teamId,
-    teamName,
-    teamLogo,
-    leagueId,
-    leagueName,
-    country,
-    countryFlag,
-    countryCode,
-    about,
-    federation,
-    division,
-    stadiumId,
-    stadiumName,
-    worldRanking,
-    championships,
-    cups,
-    onlineMatches,
-    upcomingMatches,
-    recentMatches,
-    postponedMatches,
-    standingsRow,
-    form,
-    squad,
-    categorizedSquad,
-    transfers,
-    news,
-  ];
+        teamId,
+        teamName,
+        teamLogo,
+        leagueId,
+        leagueName,
+        country,
+        countryFlag,
+        countryCode,
+        about,
+        federation,
+        division,
+        stadiumId,
+        stadiumName,
+        worldRanking,
+        championships,
+        cups,
+        onlineMatches,
+        upcomingMatches,
+        recentMatches,
+        postponedMatches,
+        standingsRow,
+        form,
+        squad,
+        categorizedSquad,
+        transfers,
+        news,
+      ];
 }

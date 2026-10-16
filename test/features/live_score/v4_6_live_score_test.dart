@@ -65,14 +65,16 @@ class _MockStorageForLiveScore implements LocalStorageService {
     String? id,
     String? name,
     String? slug,
-  }) async => true;
+  }) async =>
+      true;
   @override
   bool isFavoriteCompetition({
     String? compName,
     String? id,
     String? name,
     String? slug,
-  }) => false;
+  }) =>
+      false;
   @override
   Map<String, String> getFavoriteCompetitionTitles() => {};
   @override
@@ -186,7 +188,9 @@ void main() {
   });
 
   group('154Score V4.6 — Event Diff & Deduplication Engine Tests', () {
-    test('3. MatchEventHelper merges and sorts events chronologically without duplicates', () {
+    test(
+        '3. MatchEventHelper merges and sorts events chronologically without duplicates',
+        () {
       final existingEvents = [
         const MatchEventEntity(
           minute: '23',

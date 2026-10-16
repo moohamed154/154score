@@ -73,11 +73,14 @@ void main() {
     // -------------------------------------------------------------------------
     // Test 1: Successful token registration
     // -------------------------------------------------------------------------
-    test('1. Successful token registration sends valid payload to /notifications/push_notifications_providers', () async {
+    test(
+        '1. Successful token registration sends valid payload to /notifications/push_notifications_providers',
+        () async {
       final interceptor = MockDioInterceptor();
       final dio = createMockDio(interceptor);
 
-      final result = await PushNotificationService.instance.registerTokenWithBackend(
+      final result =
+          await PushNotificationService.instance.registerTokenWithBackend(
         'valid_device_token_abc',
         dioClient: dio,
         platformOverride: 'android',
@@ -102,11 +105,13 @@ void main() {
     // -------------------------------------------------------------------------
     // Test 2: Token refresh registration
     // -------------------------------------------------------------------------
-    test('2. Token refresh registration updates stored token and sends request', () async {
+    test('2. Token refresh registration updates stored token and sends request',
+        () async {
       final interceptor = MockDioInterceptor();
       final dio = createMockDio(interceptor);
 
-      final result = await PushNotificationService.instance.registerTokenWithBackend(
+      final result =
+          await PushNotificationService.instance.registerTokenWithBackend(
         'refreshed_device_token_xyz',
         dioClient: dio,
         platformOverride: 'ios',
@@ -124,13 +129,16 @@ void main() {
 
       // Check SharedPreferences updated
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('154score_fcm_device_token'), equals('refreshed_device_token_xyz'));
+      expect(prefs.getString('154score_fcm_device_token'),
+          equals('refreshed_device_token_xyz'));
     });
 
     // -------------------------------------------------------------------------
     // Test 3: Successful subscribe request
     // -------------------------------------------------------------------------
-    test('3. Successful subscribe request sends device_token, action, target_type, target_id', () async {
+    test(
+        '3. Successful subscribe request sends device_token, action, target_type, target_id',
+        () async {
       final interceptor = MockDioInterceptor();
       final dio = createMockDio(interceptor);
 
@@ -157,11 +165,13 @@ void main() {
     // -------------------------------------------------------------------------
     // Test 4: Successful unsubscribe request
     // -------------------------------------------------------------------------
-    test('4. Successful unsubscribe request sends correct action and payload', () async {
+    test('4. Successful unsubscribe request sends correct action and payload',
+        () async {
       final interceptor = MockDioInterceptor();
       final dio = createMockDio(interceptor);
 
-      final result = await NotificationSyncService.instance.unsubscribeFromMatch(
+      final result =
+          await NotificationSyncService.instance.unsubscribeFromMatch(
         '6106404',
         dioClient: dio,
         tokenOverride: 'valid_token_123',
@@ -183,7 +193,9 @@ void main() {
     // -------------------------------------------------------------------------
     // Test 5: 404 fallback from /notifications/... to /api/notifications/...
     // -------------------------------------------------------------------------
-    test('5. 404 fallback from /notifications/... to /api/notifications/... triggers on 404 only', () async {
+    test(
+        '5. 404 fallback from /notifications/... to /api/notifications/... triggers on 404 only',
+        () async {
       final interceptor = MockDioInterceptor((options) {
         if (options.path == ApiEndpoints.pushNotificationsProviders) {
           // Primary route returns 404 Route Not Found
@@ -201,21 +213,25 @@ void main() {
       });
       final dio = createMockDio(interceptor);
 
-      final result = await PushNotificationService.instance.registerTokenWithBackend(
+      final result =
+          await PushNotificationService.instance.registerTokenWithBackend(
         'token_for_fallback_test',
         dioClient: dio,
       );
 
       expect(result, isTrue);
       expect(interceptor.recordedRequests.length, equals(2));
-      expect(interceptor.recordedRequests[0].path, equals(ApiEndpoints.pushNotificationsProviders));
-      expect(interceptor.recordedRequests[1].path, equals(ApiEndpoints.pushNotificationsProvidersFallback));
+      expect(interceptor.recordedRequests[0].path,
+          equals(ApiEndpoints.pushNotificationsProviders));
+      expect(interceptor.recordedRequests[1].path,
+          equals(ApiEndpoints.pushNotificationsProvidersFallback));
     });
 
     // -------------------------------------------------------------------------
     // Test 6: No duplicate request after a successful response
     // -------------------------------------------------------------------------
-    test('6. No duplicate request sent when the primary request succeeds', () async {
+    test('6. No duplicate request sent when the primary request succeeds',
+        () async {
       final interceptor = MockDioInterceptor((options) {
         return Response(
           requestOptions: options,
@@ -231,7 +247,8 @@ void main() {
         dioClient: dio,
       );
       expect(interceptor.recordedRequests.length, equals(1));
-      expect(interceptor.recordedRequests.first.path, equals(ApiEndpoints.pushNotificationsProviders));
+      expect(interceptor.recordedRequests.first.path,
+          equals(ApiEndpoints.pushNotificationsProviders));
 
       // B. Notification sync service
       interceptor.recordedRequests.clear();
@@ -241,38 +258,45 @@ void main() {
         tokenOverride: 'token_single_call',
       );
       expect(interceptor.recordedRequests.length, equals(1));
-      expect(interceptor.recordedRequests.first.path, equals(ApiEndpoints.notificationPostService));
+      expect(interceptor.recordedRequests.first.path,
+          equals(ApiEndpoints.notificationPostService));
 
       // C. Background task
       interceptor.recordedRequests.clear();
       await triggerMatchReminderBackgroundTask(dioClient: dio);
       expect(interceptor.recordedRequests.length, equals(1));
-      expect(interceptor.recordedRequests.first.path, equals(ApiEndpoints.matchReminderBackgroundTask));
+      expect(interceptor.recordedRequests.first.path,
+          equals(ApiEndpoints.matchReminderBackgroundTask));
     });
 
     // -------------------------------------------------------------------------
     // Test 7: Empty token rejection
     // -------------------------------------------------------------------------
-    test('7. Empty and whitespace tokens are rejected without making network calls', () async {
+    test(
+        '7. Empty and whitespace tokens are rejected without making network calls',
+        () async {
       final interceptor = MockDioInterceptor();
       final dio = createMockDio(interceptor);
 
       // A. Empty string
-      final resEmpty = await PushNotificationService.instance.registerTokenWithBackend(
+      final resEmpty =
+          await PushNotificationService.instance.registerTokenWithBackend(
         '',
         dioClient: dio,
       );
       expect(resEmpty, isFalse);
 
       // B. Whitespace string
-      final resWhitespace = await PushNotificationService.instance.registerTokenWithBackend(
+      final resWhitespace =
+          await PushNotificationService.instance.registerTokenWithBackend(
         '     ',
         dioClient: dio,
       );
       expect(resWhitespace, isFalse);
 
       // C. Sync service with empty token
-      final resSync = await NotificationSyncService.instance.sendSubscriptionAction(
+      final resSync =
+          await NotificationSyncService.instance.sendSubscriptionAction(
         action: 'subscribe',
         targetType: 'team',
         targetId: '8633',
@@ -288,7 +312,9 @@ void main() {
     // -------------------------------------------------------------------------
     // Test 8: Network timeout and retry behavior
     // -------------------------------------------------------------------------
-    test('8. Network timeout does not trigger 404 fallback and preserves offline action in queue', () async {
+    test(
+        '8. Network timeout does not trigger 404 fallback and preserves offline action in queue',
+        () async {
       int requestCount = 0;
       final interceptor = MockDioInterceptor((options) {
         requestCount++;
@@ -313,7 +339,8 @@ void main() {
 
       // Verify action was enqueued into SharedPreferences for offline recovery
       final prefs = await SharedPreferences.getInstance();
-      final queued = prefs.getStringList('154score_pending_notification_actions');
+      final queued =
+          prefs.getStringList('154score_pending_notification_actions');
       expect(queued, isNotNull);
       expect(queued!.isNotEmpty, isTrue);
       expect(queued.first, contains('9999'));
@@ -330,14 +357,17 @@ void main() {
       );
 
       expect(recoveryInterceptor.recordedRequests.length, equals(1));
-      final remainingQueue = prefs.getStringList('154score_pending_notification_actions');
+      final remainingQueue =
+          prefs.getStringList('154score_pending_notification_actions');
       expect(remainingQueue, isEmpty);
     });
 
     // -------------------------------------------------------------------------
     // Test 9: Background task execution
     // -------------------------------------------------------------------------
-    test('9. Background task sends POST /notifications/match_reminder_background_task with source', () async {
+    test(
+        '9. Background task sends POST /notifications/match_reminder_background_task with source',
+        () async {
       final interceptor = MockDioInterceptor();
       final dio = createMockDio(interceptor);
 
@@ -359,7 +389,9 @@ void main() {
     // -------------------------------------------------------------------------
     // Test 10: Background task failure handling
     // -------------------------------------------------------------------------
-    test('10. Background task handles HTTP 500 and network errors safely without uncaught exceptions', () async {
+    test(
+        '10. Background task handles HTTP 500 and network errors safely without uncaught exceptions',
+        () async {
       final interceptor = MockDioInterceptor((options) {
         throw DioException(
           requestOptions: options,
@@ -383,7 +415,9 @@ void main() {
     // -------------------------------------------------------------------------
     // Extra Test: ApnsNotificationService syncWithBackend
     // -------------------------------------------------------------------------
-    test('11. ApnsNotificationService uses Section 4.7 notificationPostService route with strict 404 fallback', () async {
+    test(
+        '11. ApnsNotificationService uses Section 4.7 notificationPostService route with strict 404 fallback',
+        () async {
       final interceptor = MockDioInterceptor((options) {
         if (options.path == ApiEndpoints.notificationPostService) {
           throw DioException(
@@ -404,8 +438,10 @@ void main() {
 
       expect(success, isTrue);
       expect(interceptor.recordedRequests.length, equals(2));
-      expect(interceptor.recordedRequests[0].path, equals(ApiEndpoints.notificationPostService));
-      expect(interceptor.recordedRequests[1].path, equals(ApiEndpoints.notificationPostServiceFallback));
+      expect(interceptor.recordedRequests[0].path,
+          equals(ApiEndpoints.notificationPostService));
+      expect(interceptor.recordedRequests[1].path,
+          equals(ApiEndpoints.notificationPostServiceFallback));
     });
   });
 }

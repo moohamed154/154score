@@ -84,7 +84,8 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
                   color: isDark ? AppColors.darkCard : AppColors.lightCard,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                   border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   ),
                 ),
                 child: TextField(
@@ -251,10 +252,10 @@ class _TimezoneSelectionViewState extends State<TimezoneSelectionView> {
         title,
         style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
             .copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
+          color: AppColors.primary,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }

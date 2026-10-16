@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 
 void main() {
@@ -24,8 +24,7 @@ void main() {
         expect(
           shouldNav,
           isFalse,
-          reason:
-              'A referee item with null id must NOT be navigable. '
+          reason: 'A referee item with null id must NOT be navigable. '
               'Before V4.7.3 fix this would default to id="1" and open the '
               'wrong entity for every tap.',
         );
@@ -43,8 +42,7 @@ void main() {
         expect(
           shouldNav,
           isFalse,
-          reason:
-              'A commentator item with null id must NOT be navigable. '
+          reason: 'A commentator item with null id must NOT be navigable. '
               'Before fix, every tap opened id=1 (رؤوف خليف or equivalent).',
         );
       });
@@ -108,8 +106,7 @@ void main() {
         expect(
           resolvedId,
           isNull,
-          reason:
-              'Entity ID must be null (no navigation), not "1". '
+          reason: 'Entity ID must be null (no navigation), not "1". '
               'Before V4.7.3 the code used item.id ?? "1" which always '
               'opened the same wrong entity.',
         );
@@ -171,9 +168,8 @@ void main() {
       test('referee URL never defaults to id=1 when id is null', () {
         const String? nullableId = null;
         // ignore: dead_code
-        final resolvedUrl = (nullableId != null)
-            ? buildRefereeUrl(nullableId, 'slug')
-            : null;
+        final resolvedUrl =
+            (nullableId != null) ? buildRefereeUrl(nullableId, 'slug') : null;
         expect(resolvedUrl, isNull);
       });
     });

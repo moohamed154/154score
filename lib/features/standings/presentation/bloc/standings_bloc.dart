@@ -68,11 +68,11 @@ class StandingsState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    selectedLeagueId,
-    standings,
-    errorMessage,
-  ];
+        status,
+        selectedLeagueId,
+        standings,
+        errorMessage,
+      ];
 }
 
 class StandingsBloc extends Bloc<StandingsEvent, StandingsState> {
@@ -80,7 +80,7 @@ class StandingsBloc extends Bloc<StandingsEvent, StandingsState> {
   final LocalStorageService localStorageService;
 
   StandingsBloc({required this.repository, required this.localStorageService})
-    : super(const StandingsState()) {
+      : super(const StandingsState()) {
     on<LoadStandingsEvent>(_onLoadStandings);
     on<ChangeStandingsLanguageEvent>(_onChangeStandingsLanguage);
   }

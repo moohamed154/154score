@@ -52,14 +52,13 @@ class MatchQuickStatsCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   arabic ? 'إحصائيات سريعة' : 'Quick Match Statistics',
-                  style:
-                      AppTypography.getBodyLarge(
-                        isDark: dark,
-                        isArabic: arabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
+                  style: AppTypography.getBodyLarge(
+                    isDark: dark,
+                    isArabic: arabic,
+                  ).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
                 ),
               ],
             ),
@@ -152,16 +151,14 @@ class MatchQuickStatsCard extends StatelessWidget {
             ),
             Text(
               title,
-              style:
-                  AppTypography.getBodySmall(
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ).copyWith(
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                    fontWeight: FontWeight.w500,
-                  ),
+              style: AppTypography.getBodySmall(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             Text(
               awayValStr,
@@ -186,9 +183,8 @@ class MatchQuickStatsCard extends StatelessWidget {
                 Expanded(
                   flex: ((1.0 - homePct) * 100).toInt(),
                   child: Container(
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : AppColors.lightBorder,
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   ),
                 ),
               ],

@@ -88,11 +88,11 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
     _titleSlideAnimation =
         Tween<Offset>(begin: const Offset(0.0, 0.30), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _entranceController,
-            curve: const Interval(0.25, 0.65, curve: Curves.easeOutCubic),
-          ),
-        );
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: const Interval(0.25, 0.65, curve: Curves.easeOutCubic),
+      ),
+    );
 
     _subtitleFadeAnimation = CurvedAnimation(
       parent: _entranceController,
@@ -290,11 +290,11 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
     _progressTweenAnimation =
         Tween<double>(begin: startValue, end: _targetProgress).animate(
-          CurvedAnimation(
-            parent: _progressController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
+      CurvedAnimation(
+        parent: _progressController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
     unawaited(
       _progressController.forward(from: 0.0).then((_) {
@@ -370,8 +370,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
       };
     }
 
-    final isDark =
-        themeMode == ThemeMode.dark ||
+    final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             (Theme.of(context).brightness == Brightness.dark ||
                 MediaQuery.maybePlatformBrightnessOf(context) ==
@@ -381,9 +380,8 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
     final isArabic = l10n.isArabic;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
@@ -473,8 +471,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                 gradient: RadialGradient(
                   colors: [
                     AppColors.primary.withValues(
-                      alpha:
-                          (isDark ? 0.28 : 0.20) *
+                      alpha: (isDark ? 0.28 : 0.20) *
                           (1.0 - _pulseWaveAnimation.value),
                     ),
                     AppColors.primary.withValues(alpha: 0.0),
@@ -658,8 +655,8 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
   Widget _buildRealProgressBar(AppLocalizations l10n, bool isDark) {
     const barWidth = 190.0;
     const barHeight = 4.0;
-    final progressValue = (_progressTweenAnimation?.value ?? _currentProgress)
-        .clamp(0.0, 1.0);
+    final progressValue =
+        (_progressTweenAnimation?.value ?? _currentProgress).clamp(0.0, 1.0);
 
     return FadeTransition(
       opacity: _subtitleFadeAnimation,
@@ -706,9 +703,8 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
             style: GoogleFonts.cairo(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: isDark
-                  ? AppColors.darkTextMuted
-                  : AppColors.lightTextMuted,
+              color:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               letterSpacing: 0.5,
             ),
           ),

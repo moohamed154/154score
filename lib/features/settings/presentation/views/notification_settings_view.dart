@@ -18,7 +18,8 @@ class NotificationSettingsView extends StatefulWidget {
   const NotificationSettingsView({super.key});
 
   @override
-  State<NotificationSettingsView> createState() => _NotificationSettingsViewState();
+  State<NotificationSettingsView> createState() =>
+      _NotificationSettingsViewState();
 }
 
 class _NotificationSettingsViewState extends State<NotificationSettingsView> {
@@ -111,7 +112,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
       padding: const EdgeInsets.only(bottom: 10, top: 4),
       child: Text(
         title,
-        style: AppTypography.getHeadingSmall(isDark: isDark, isArabic: isArabic).copyWith(
+        style: AppTypography.getHeadingSmall(isDark: isDark, isArabic: isArabic)
+            .copyWith(
           color: AppColors.primary,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.3,
@@ -130,7 +132,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
       appBar: AppBar(
         title: Text(
           l10n.translate('settings_notifications'),
-          style: AppTypography.getHeadingMedium(isDark: isDark, isArabic: isArabic),
+          style: AppTypography.getHeadingMedium(
+              isDark: isDark, isArabic: isArabic),
         ),
         elevation: 0,
       ),
@@ -163,15 +166,21 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                     children: [
                       Text(
                         l10n.translate('notifications_title'),
-                        style: AppTypography.getHeadingSmall(isDark: isDark, isArabic: isArabic).copyWith(
+                        style: AppTypography.getHeadingSmall(
+                                isDark: isDark, isArabic: isArabic)
+                            .copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         l10n.translate('notif_settings_header_desc'),
-                        style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        style: AppTypography.getBodySmall(
+                                isDark: isDark, isArabic: isArabic)
+                            .copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
                         ),
                       ),
                     ],
@@ -184,11 +193,16 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
           const SizedBox(height: 24),
 
           // ── Section 0: Zero-Delay Live Match Mode ────────────────────────
-          _buildSectionHeader(l10n.translate('notif_live_match_mode_title'), isDark, isArabic),
+          _buildSectionHeader(
+              l10n.translate('notif_live_match_mode_title'), isDark, isArabic),
           Text(
             l10n.translate('notif_live_match_mode_subtitle'),
-            style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            style:
+                AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
+                    .copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
           const SizedBox(height: 10),
@@ -203,7 +217,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                       color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.bolt_rounded, color: AppColors.primary, size: 24),
+                    child: const Icon(Icons.bolt_rounded,
+                        color: AppColors.primary, size: 24),
                   ),
                   title: Row(
                     children: [
@@ -215,7 +230,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: _liveMatchModeEnabled
                               ? Colors.green.withValues(alpha: 0.15)
@@ -231,7 +247,9 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                         child: Text(
                           _liveMatchModeEnabled ? 'Zero Delay' : 'OFF',
                           style: TextStyle(
-                            color: _liveMatchModeEnabled ? Colors.green : Colors.grey,
+                            color: _liveMatchModeEnabled
+                                ? Colors.green
+                                : Colors.grey,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -244,9 +262,14 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                     child: Text(
                       Platform.isIOS
                           ? l10n.translate('notif_live_match_service_desc_ios')
-                          : l10n.translate('notif_live_match_service_desc_android'),
-                      style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          : l10n.translate(
+                              'notif_live_match_service_desc_android'),
+                      style: AppTypography.getBodySmall(
+                              isDark: isDark, isArabic: isArabic)
+                          .copyWith(
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
                       ),
                     ),
                   ),
@@ -257,19 +280,23 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                 if (Platform.isAndroid && _liveMatchModeEnabled) ...[
                   const Divider(height: 1),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     child: Row(
                       children: [
-                        const Icon(Icons.battery_charging_full_rounded, color: Colors.teal, size: 20),
+                        const Icon(Icons.battery_charging_full_rounded,
+                            color: Colors.teal, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             l10n.translate('notif_battery_opt_button'),
-                            style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic),
+                            style: AppTypography.getBodySmall(
+                                isDark: isDark, isArabic: isArabic),
                           ),
                         ),
                         TextButton(
-                          onPressed: () => LiveMatchForegroundService.requestBatteryExemption(),
+                          onPressed: () => LiveMatchForegroundService
+                              .requestBatteryExemption(),
                           child: const Text('تفعيل / Allow'),
                         ),
                       ],
@@ -283,11 +310,16 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
           const SizedBox(height: 24),
 
           // ── Section 1: Match Notification Scope ──────────────────────────
-          _buildSectionHeader(l10n.translate('notif_scope_title'), isDark, isArabic),
+          _buildSectionHeader(
+              l10n.translate('notif_scope_title'), isDark, isArabic),
           Text(
             l10n.translate('notif_scope_subtitle'),
-            style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            style:
+                AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
+                    .copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
           const SizedBox(height: 10),
@@ -303,10 +335,13 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                 children: [
                   // Option 1: Starred / Subscribed teams only (Recommended)
                   InkWell(
-                    onTap: () => _setScope(LocalStorageService.matchNotifScopeStarred),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusMd)),
+                    onTap: () =>
+                        _setScope(LocalStorageService.matchNotifScopeStarred),
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppDimensions.radiusMd)),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -320,11 +355,13 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+                                    const Icon(Icons.star_rounded,
+                                        color: Colors.amber, size: 20),
                                     const SizedBox(width: 6),
                                     Flexible(
                                       child: Text(
-                                        l10n.translate('notif_scope_starred_title'),
+                                        l10n.translate(
+                                            'notif_scope_starred_title'),
                                         style: AppTypography.getBodyMedium(
                                           isDark: isDark,
                                           isArabic: isArabic,
@@ -333,17 +370,21 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                                     ),
                                     const SizedBox(width: 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(alpha: 0.15),
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: AppColors.primary.withValues(alpha: 0.4),
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.4),
                                           width: 0.8,
                                         ),
                                       ),
                                       child: Text(
-                                        l10n.translate('notif_scope_recommended_badge'),
+                                        l10n.translate(
+                                            'notif_scope_recommended_badge'),
                                         style: const TextStyle(
                                           color: AppColors.primary,
                                           fontSize: 11,
@@ -356,8 +397,12 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                                 const SizedBox(height: 6),
                                 Text(
                                   l10n.translate('notif_scope_starred_desc'),
-                                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                  style: AppTypography.getBodySmall(
+                                          isDark: isDark, isArabic: isArabic)
+                                      .copyWith(
+                                    color: isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary,
                                     height: 1.35,
                                   ),
                                 ),
@@ -373,10 +418,13 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
 
                   // Option 2: All Matches
                   InkWell(
-                    onTap: () => _setScope(LocalStorageService.matchNotifScopeAll),
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppDimensions.radiusMd)),
+                    onTap: () =>
+                        _setScope(LocalStorageService.matchNotifScopeAll),
+                    borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(AppDimensions.radiusMd)),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -390,7 +438,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.public_rounded, color: AppColors.primary, size: 20),
+                                    const Icon(Icons.public_rounded,
+                                        color: AppColors.primary, size: 20),
                                     const SizedBox(width: 6),
                                     Flexible(
                                       child: Text(
@@ -406,8 +455,12 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                                 const SizedBox(height: 6),
                                 Text(
                                   l10n.translate('notif_scope_all_desc'),
-                                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                  style: AppTypography.getBodySmall(
+                                          isDark: isDark, isArabic: isArabic)
+                                      .copyWith(
+                                    color: isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary,
                                     height: 1.35,
                                   ),
                                 ),
@@ -426,13 +479,15 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
           const SizedBox(height: 24),
 
           // ── Section 2: Alert Types ───────────────────────────────────────
-          _buildSectionHeader(l10n.translate('notif_events_title'), isDark, isArabic),
+          _buildSectionHeader(
+              l10n.translate('notif_events_title'), isDark, isArabic),
           _buildCard(
             isDark: isDark,
             child: Column(
               children: [
                 SwitchListTile(
-                  secondary: const Icon(Icons.sports_soccer_rounded, color: Colors.green),
+                  secondary: const Icon(Icons.sports_soccer_rounded,
+                      color: Colors.green),
                   title: Text(l10n.translate('notif_match_goals')),
                   subtitle: Text(l10n.translate('notif_match_goals_desc')),
                   value: _goalsEnabled,
@@ -441,7 +496,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                 ),
                 const Divider(height: 1),
                 SwitchListTile(
-                  secondary: const Icon(Icons.groups_rounded, color: Colors.blue),
+                  secondary:
+                      const Icon(Icons.groups_rounded, color: Colors.blue),
                   title: Text(l10n.translate('notif_match_lineup')),
                   subtitle: Text(l10n.translate('notif_match_lineup_desc')),
                   value: _lineupEnabled,
@@ -450,7 +506,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                 ),
                 const Divider(height: 1),
                 SwitchListTile(
-                  secondary: const Icon(Icons.alarm_rounded, color: Colors.orange),
+                  secondary:
+                      const Icon(Icons.alarm_rounded, color: Colors.orange),
                   title: Text(l10n.translate('notif_match_start_end')),
                   subtitle: Text(l10n.translate('notif_match_start_end_desc')),
                   value: _startEndEnabled,
@@ -459,7 +516,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                 ),
                 const Divider(height: 1),
                 SwitchListTile(
-                  secondary: const Icon(Icons.newspaper_rounded, color: Colors.deepPurple),
+                  secondary: const Icon(Icons.newspaper_rounded,
+                      color: Colors.deepPurple),
                   title: Text(l10n.translate('notif_news')),
                   subtitle: Text(l10n.translate('notif_news_desc')),
                   value: _newsEnabled,
@@ -473,19 +531,22 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
           const SizedBox(height: 24),
 
           // ── Section 3: Favorite Teams Management ─────────────────────────
-          _buildSectionHeader(l10n.translate('notif_favorite_teams_section'), isDark, isArabic),
+          _buildSectionHeader(
+              l10n.translate('notif_favorite_teams_section'), isDark, isArabic),
           BlocBuilder<FavoritesCubit, FavoritesState>(
             builder: (context, favState) {
               final count = favState.favoriteTeams.length;
-              final countText = l10n.translate('notif_starred_teams_count').replaceAll(
-                    '{count}',
-                    '$count',
-                  );
+              final countText =
+                  l10n.translate('notif_starred_teams_count').replaceAll(
+                        '{count}',
+                        '$count',
+                      );
 
               return _buildCard(
                 isDark: isDark,
                 child: ListTile(
-                  leading: const Icon(Icons.star_rate_rounded, color: Colors.amber, size: 28),
+                  leading: const Icon(Icons.star_rate_rounded,
+                      color: Colors.amber, size: 28),
                   title: Text(
                     l10n.translate('notif_manage_favorites'),
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -494,7 +555,9 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                   trailing: Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
                   onTap: () => context.push('/favorites'),
                 ),

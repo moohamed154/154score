@@ -31,17 +31,17 @@ class TopScorerEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    rank,
-    playerName,
-    playerImage,
-    teamName,
-    teamLogo,
-    teamId,
-    goals,
-    assists,
-    playerId,
-    penaltyGoals,
-    penaltiesMissed,
-    matchesPlayed,
-  ];
+        rank,
+        playerName,
+        playerImage,
+        teamName,
+        teamLogo,
+        teamId,
+        goals,
+        assists,
+        playerId,
+        penaltyGoals,
+        penaltiesMissed,
+        matchesPlayed,
+      ];
 }

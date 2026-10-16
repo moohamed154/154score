@@ -8,7 +8,7 @@ import '../datasources/transfers_remote_datasource.dart';
 class TransfersRepositoryImpl implements TransfersRepository {
   final TransfersRemoteDataSource _remoteDataSource;
   final Map<String, ({List<TransferEntity> entities, DateTime timestamp})>
-  _transfersCache = {};
+      _transfersCache = {};
 
   TransfersRepositoryImpl(this._remoteDataSource);
 

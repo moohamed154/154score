@@ -9,7 +9,6 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
 
   static const String _keyCompleted = 'app_onboarding_completed';
 
-
   @override
   bool isCompleted() {
     return _prefs.getBool(_keyCompleted) ?? false;

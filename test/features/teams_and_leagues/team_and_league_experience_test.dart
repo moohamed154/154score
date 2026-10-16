@@ -92,7 +92,8 @@ class MockLocalStorageService implements LocalStorageService {
     String? id,
     String? name,
     String? slug,
-  }) async => true;
+  }) async =>
+      true;
 
   @override
   bool isFavoriteCompetition({
@@ -100,7 +101,8 @@ class MockLocalStorageService implements LocalStorageService {
     String? id,
     String? name,
     String? slug,
-  }) => false;
+  }) =>
+      false;
 
   @override
   Map<String, String> getFavoriteCompetitionTitles() => {};
@@ -672,7 +674,8 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('8. MatchCard and StandingsTable team taps with numeric teamId', (
+    testWidgets('8. MatchCard and StandingsTable team taps with numeric teamId',
+        (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390 * 2, 844 * 2);
@@ -768,7 +771,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('9. TransferCard player tap navigates to player profile and directional arrow points forward in Arabic', (
+    testWidgets(
+        '9. TransferCard player tap navigates to player profile and directional arrow points forward in Arabic',
+        (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390 * 2, 844 * 2);
@@ -847,4 +852,3 @@ void main() {
     });
   });
 }
-

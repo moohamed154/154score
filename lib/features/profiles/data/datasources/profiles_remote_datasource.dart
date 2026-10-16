@@ -52,12 +52,10 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
 
           for (final it in rawItems) {
             if (it is Map) {
-              final title = (it['title'] ?? it['label'] ?? '')
-                  .toString()
-                  .trim();
-              final content = (it['content'] ?? it['value'] ?? '')
-                  .toString()
-                  .trim();
+              final title =
+                  (it['title'] ?? it['label'] ?? '').toString().trim();
+              final content =
+                  (it['content'] ?? it['value'] ?? '').toString().trim();
               final icon = it['icon']?.toString();
               final link = (it['link'] ?? it['url'])?.toString();
 
@@ -66,15 +64,13 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
               final tLower = title.toLowerCase();
 
               // Check if item is an image or flag URL
-              final isImageItem =
-                  tLower == 'image' ||
+              final isImageItem = tLower == 'image' ||
                   tLower == 'photo' ||
                   title == 'الصورة' ||
                   title.contains('صورة') ||
                   content.contains('imgs.ysscores.com');
 
-              final isFlagItem =
-                  tLower.contains('flag') ||
+              final isFlagItem = tLower.contains('flag') ||
                   tLower.contains('country logo') ||
                   title.contains('شعار الدولة') ||
                   title.contains('علم') ||
@@ -257,9 +253,8 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
             for (final it in rawItems) {
               if (it is Map) {
                 final t = (it['title'] ?? it['label'] ?? '').toString().trim();
-                final c = (it['content'] ?? it['value'] ?? '')
-                    .toString()
-                    .trim();
+                final c =
+                    (it['content'] ?? it['value'] ?? '').toString().trim();
                 if (t.isNotEmpty && c.isNotEmpty) {
                   items.add(
                     ProfileItemEntity(
@@ -293,18 +288,17 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
       final map = response['data'] as Map;
       capacity = (map['capacity'] ?? map['seats'])?.toString();
       builtDate = (map['built_date'] ?? map['create'])?.toString();
-      pitchSurface = (map['pitch_surface'] ?? map['floor'] ?? map['surface'])
-          ?.toString();
+      pitchSurface =
+          (map['pitch_surface'] ?? map['floor'] ?? map['surface'])?.toString();
       city = map['city']?.toString();
       mapUrl = (map['map_link'] ?? map['link_map'])?.toString();
 
-      final rawUpcoming =
-          map['upcoming_matches'] as List? ??
+      final rawUpcoming = map['upcoming_matches'] as List? ??
           (map['matches'] is Map
               ? (map['matches']['coming'] as List? ??
-                    (map['matches']['coming'] is Map
-                        ? map['matches']['coming']['data'] as List?
-                        : null))
+                  (map['matches']['coming'] is Map
+                      ? map['matches']['coming']['data'] as List?
+                      : null))
               : null) ??
           [];
       for (final m in rawUpcoming) {
@@ -317,13 +311,12 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
         }
       }
 
-      final rawRecent =
-          map['recent_matches'] as List? ??
+      final rawRecent = map['recent_matches'] as List? ??
           (map['matches'] is Map
               ? (map['matches']['end'] as List? ??
-                    (map['matches']['end'] is Map
-                        ? map['matches']['end']['data'] as List?
-                        : null))
+                  (map['matches']['end'] is Map
+                      ? map['matches']['end']['data'] as List?
+                      : null))
               : null) ??
           [];
       for (final m in rawRecent) {
@@ -336,13 +329,12 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
         }
       }
 
-      final rawTeams =
-          map['teams'] as List? ??
+      final rawTeams = map['teams'] as List? ??
           (map['stadium_teams'] is List
               ? map['stadium_teams'] as List
               : (map['stadium_teams'] is Map
-                    ? (map['stadium_teams'] as Map).values.toList()
-                    : null)) ??
+                  ? (map['stadium_teams'] as Map).values.toList()
+                  : null)) ??
           [];
       for (final t in rawTeams) {
         if (t is Map) {
@@ -408,13 +400,12 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
           final cId =
               (c['team_id'] ?? c['id'] ?? tMap['row_id'] ?? tMap['id'] ?? '')
                   .toString();
-          final cName =
-              (c['team_name'] ??
-                      c['name'] ??
-                      tMap['title'] ??
-                      tMap['full_title'] ??
-                      '')
-                  .toString();
+          final cName = (c['team_name'] ??
+                  c['name'] ??
+                  tMap['title'] ??
+                  tMap['full_title'] ??
+                  '')
+              .toString();
           final cLogo = UrlHelper.normalizeImageUrl(
             (c['team_logo'] ?? c['logo'] ?? tMap['image'])?.toString(),
           );
@@ -422,8 +413,7 @@ class ProfilesRemoteDataSourceImpl implements ProfilesRemoteDataSource {
           final cFrom = c['from']?.toString();
           final cTo = c['to']?.toString();
           final cDuration = c['duration']?.toString();
-          final cIsCurrent =
-              c['is_current'] == true ||
+          final cIsCurrent = c['is_current'] == true ||
               c['team_coach'] == 1 ||
               c['team_coach'] == '1';
 

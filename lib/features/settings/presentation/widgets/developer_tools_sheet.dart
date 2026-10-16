@@ -63,7 +63,8 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
   void initState() {
     super.initState();
     _refreshOnboardingStatus();
-    _isLiveActivityEnabled = sl<LocalStorageService>().isLiveActivityFeatureEnabled();
+    _isLiveActivityEnabled =
+        sl<LocalStorageService>().isLiveActivityFeatureEnabled();
   }
 
   void _refreshOnboardingStatus() {
@@ -172,8 +173,8 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
 
   Future<void> _clearMatchesCache() async {
     context.read<MatchesBloc>().add(
-      LoadMatchesEvent(date: DateTime.now(), isRefresh: true),
-    );
+          LoadMatchesEvent(date: DateTime.now(), isRefresh: true),
+        );
     await HapticFeedback.lightImpact();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -326,11 +327,11 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                         subtitle: Text(
                           _onboardingStatus
                               ? (isArabic
-                                    ? 'مكتملة (لن تظهر للمستخدم)'
-                                    : 'Completed (hidden on launch)')
+                                  ? 'مكتملة (لن تظهر للمستخدم)'
+                                  : 'Completed (hidden on launch)')
                               : (isArabic
-                                    ? 'غير مكتملة (ستظهر عند فتح التطبيق)'
-                                    : 'Not completed (will appear on launch)'),
+                                  ? 'غير مكتملة (ستظهر عند فتح التطبيق)'
+                                  : 'Not completed (will appear on launch)'),
                           style: TextStyle(
                             color: _onboardingStatus
                                 ? AppColors.uclGreen
@@ -366,7 +367,8 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                               ? 'تجربة التدفق واختيار الثيم والأندية والدوريات'
                               : 'Preview theme, language & favorites selection',
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                        trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                            size: 14),
                         onTap: () {
                           Navigator.of(context).pop();
                           context.push('/onboarding');
@@ -395,14 +397,17 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                           color: AppColors.primary,
                         ),
                         title: Text(
-                          isArabic ? 'وحدة تحكم الشبكة (Debug Console)' : 'Debug Console Sheet',
+                          isArabic
+                              ? 'وحدة تحكم الشبكة (Debug Console)'
+                              : 'Debug Console Sheet',
                         ),
                         subtitle: Text(
                           isArabic
                               ? 'سجل الطلبات، الاستجابات، وأوقات التأخير'
                               : 'Inspect API requests, response payloads & times',
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                        trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                            size: 14),
                         onTap: () {
                           Navigator.of(context).pop();
                           DebugConsoleSheet.show(context);
@@ -415,20 +420,24 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                           color: AppColors.accent,
                         ),
                         title: Text(
-                          isArabic ? 'فحص تشخيص النظام (System Diagnostics)' : 'System Diagnostics Sheet',
+                          isArabic
+                              ? 'فحص تشخيص النظام (System Diagnostics)'
+                              : 'System Diagnostics Sheet',
                         ),
                         subtitle: Text(
                           isArabic
                               ? 'فحص حالة السيرفر، المقاييس، وصحة الـ WebSocket'
                               : 'Ping server endpoints, metrics & WS health',
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                        trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                            size: 14),
                         onTap: () {
                           Navigator.of(context).pop();
                           showModalBottomSheet(
                             context: context,
                             isScrollControlled: true,
-                            builder: (ctx) => DiagnosticsSheet(webSocketService: ws),
+                            builder: (ctx) =>
+                                DiagnosticsSheet(webSocketService: ws),
                           );
                         },
                       ),
@@ -439,14 +448,20 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                           color: AppColors.accent,
                         ),
                         title: Text(
-                          isArabic ? 'قياس سرعة استجابة السيرفر (Ping API)' : 'Ping Server Latency',
+                          isArabic
+                              ? 'قياس سرعة استجابة السيرفر (Ping API)'
+                              : 'Ping Server Latency',
                         ),
                         subtitle: Text(
-                          _pingLatency ?? (isArabic ? 'اضغط للفحص المباشر' : 'Tap to ping'),
+                          _pingLatency ??
+                              (isArabic ? 'اضغط للفحص المباشر' : 'Tap to ping'),
                           style: TextStyle(
-                            color: _pingLatency != null && _pingLatency!.contains('OK')
+                            color: _pingLatency != null &&
+                                    _pingLatency!.contains('OK')
                                 ? AppColors.uclGreen
-                                : (_pingLatency != null ? AppColors.liveRed : null),
+                                : (_pingLatency != null
+                                    ? AppColors.liveRed
+                                    : null),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -454,7 +469,8 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : OutlinedButton(
                                 onPressed: _testApiPing,
@@ -469,7 +485,9 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
 
                 // 3. Notification Diagnostics
                 _buildSectionTitle(
-                  isArabic ? '3. فحص الإشعارات (Notification Tools)' : '3. Notifications',
+                  isArabic
+                      ? '3. فحص الإشعارات (Notification Tools)'
+                      : '3. Notifications',
                   isDark,
                 ),
                 _buildCard(
@@ -482,7 +500,9 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                           color: AppColors.liveRed,
                         ),
                         title: Text(
-                          isArabic ? 'إرسال إشعار تجريبي فوري' : 'Trigger Mock Notification',
+                          isArabic
+                              ? 'إرسال إشعار تجريبي فوري'
+                              : 'Trigger Mock Notification',
                         ),
                         subtitle: Text(
                           isArabic
@@ -505,7 +525,9 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                           color: AppColors.primary,
                         ),
                         title: Text(
-                          isArabic ? 'مزامنة الاشتراكات (Sync Topics)' : 'Sync FCM Subscriptions',
+                          isArabic
+                              ? 'مزامنة الاشتراكات (Sync Topics)'
+                              : 'Sync FCM Subscriptions',
                         ),
                         subtitle: Text(
                           isArabic
@@ -514,7 +536,8 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                         ),
                         onTap: () async {
                           await HapticFeedback.selectionClick();
-                          await NotificationSyncService.instance.syncAllSubscriptions();
+                          await NotificationSyncService.instance
+                              .syncAllSubscriptions();
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -532,7 +555,9 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
 
                 // 4. Cache & Storage Management
                 _buildSectionTitle(
-                  isArabic ? '4. إدارة الذاكرة والتخزين المؤقت' : '4. Cache & Storage',
+                  isArabic
+                      ? '4. إدارة الذاكرة والتخزين المؤقت'
+                      : '4. Cache & Storage',
                   isDark,
                 ),
                 _buildCard(
@@ -541,7 +566,9 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                     children: [
                       ListTile(
                         leading: const Icon(Icons.cleaning_services_rounded),
-                        title: Text(isArabic ? 'مسح كاش الصور (Clear Images)' : 'Clear Image Cache'),
+                        title: Text(isArabic
+                            ? 'مسح كاش الصور (Clear Images)'
+                            : 'Clear Image Cache'),
                         subtitle: Text(
                           isArabic
                               ? 'تفريغ شعارات الأندية وصور الأخبار من الذاكرة'
@@ -552,7 +579,9 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.refresh_rounded),
-                        title: Text(isArabic ? 'تحديث كاش المباريات' : 'Refresh Matches Cache'),
+                        title: Text(isArabic
+                            ? 'تحديث كاش المباريات'
+                            : 'Refresh Matches Cache'),
                         subtitle: Text(
                           isArabic
                               ? 'إعادة طلب مباريات اليوم وتحديث الذاكرة'
@@ -562,9 +591,12 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.delete_forever_rounded, color: AppColors.liveRed),
+                        leading: const Icon(Icons.delete_forever_rounded,
+                            color: AppColors.liveRed),
                         title: Text(
-                          isArabic ? 'تصفير المفضلات (Reset Favorites)' : 'Reset Favorites',
+                          isArabic
+                              ? 'تصفير المفضلات (Reset Favorites)'
+                              : 'Reset Favorites',
                           style: const TextStyle(color: AppColors.liveRed),
                         ),
                         subtitle: Text(
@@ -579,7 +611,8 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                             context.read<FavoritesCubit>().loadFavorites();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('🗑️ تم تصفير قائمة المفضلات بنجاح.'),
+                                content:
+                                    Text('🗑️ تم تصفير قائمة المفضلات بنجاح.'),
                               ),
                             );
                           }
@@ -628,8 +661,9 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            backgroundColor:
-                                val ? AppColors.uclGreen : const Color(0xFF1E293B),
+                            backgroundColor: val
+                                ? AppColors.uclGreen
+                                : const Color(0xFF1E293B),
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -680,15 +714,22 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                     padding: const EdgeInsets.all(AppDimensions.md),
                     child: Column(
                       children: [
-                        _buildInfoRow('Platform OS', '${Platform.operatingSystem} ${Platform.operatingSystemVersion}'),
+                        _buildInfoRow('Platform OS',
+                            '${Platform.operatingSystem} ${Platform.operatingSystemVersion}'),
                         _buildInfoRow('App Version', '1.0.0 (Production)'),
                         _buildInfoRow('API Endpoint', ApiEndpoints.baseUrl),
                         _buildInfoRow('WS Endpoint', ApiEndpoints.websocketUrl),
                         _buildInfoRow('App Language', storage.getLanguage()),
-                        _buildInfoRow('News Language', storage.getEffectiveNewsLanguage()),
+                        _buildInfoRow('News Language',
+                            storage.getEffectiveNewsLanguage()),
                         _buildInfoRow('Theme Mode', storage.getThemeMode()),
-                        _buildInfoRow('Timezone Offset', '${storage.getTimezoneOffset()}h (Auto: ${storage.isTimezoneAuto()})'),
-                        _buildInfoRow('WS Connection', ws.currentStatus == SocketConnectionState.connected ? 'Connected 🟢' : 'Disconnected 🔴'),
+                        _buildInfoRow('Timezone Offset',
+                            '${storage.getTimezoneOffset()}h (Auto: ${storage.isTimezoneAuto()})'),
+                        _buildInfoRow(
+                            'WS Connection',
+                            ws.currentStatus == SocketConnectionState.connected
+                                ? 'Connected 🟢'
+                                : 'Disconnected 🔴'),
                       ],
                     ),
                   ),
@@ -706,7 +747,9 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                         : 'Lock & Hide Developer Tools',
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: isDark ? const Color(0xFF243242) : const Color(0xFFE2E8F0),
+                    backgroundColor: isDark
+                        ? const Color(0xFF243242)
+                        : const Color(0xFFE2E8F0),
                     foregroundColor: isDark ? Colors.white : Colors.black87,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),

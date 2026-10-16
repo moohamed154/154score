@@ -172,7 +172,8 @@ class AppLocalizations {
       'standings_gd': 'GD',
       'standings_points': 'Pts',
       'standings_form': 'Form',
-      'standings_no_legends': 'Qualification and relegation information is not available for this competition currently',
+      'standings_no_legends':
+          'Qualification and relegation information is not available for this competition currently',
 
       // Transfers
       'transfers_title': 'Transfer Market',
@@ -216,9 +217,11 @@ class AppLocalizations {
       'onb_leagues_title': 'Your favorite leagues',
       'onb_leagues_sub': 'They will appear first in the matches list',
       'settings_app_language': 'App Interface Language',
-      'settings_app_language_desc': 'Controls application menus, tabs, and layout direction',
+      'settings_app_language_desc':
+          'Controls application menus, tabs, and layout direction',
       'settings_news_language': 'News & Articles Language',
-      'settings_news_language_desc': 'Choose the language for football news feed',
+      'settings_news_language_desc':
+          'Choose the language for football news feed',
       'news_lang_same_as_app': 'Same as App Language',
       'news_lang_arabic': 'Arabic only',
       'news_lang_english': 'English only',
@@ -230,26 +233,37 @@ class AppLocalizations {
       'time_24h': '24-Hour (14:30)',
       'time_format_settings_title': 'Time Format',
       'time_format_intro_title': 'Match & Event Times Display',
-      'time_format_intro_desc': 'Choose how kick-off times and match events are formatted throughout the app.',
+      'time_format_intro_desc':
+          'Choose how kick-off times and match events are formatted throughout the app.',
       'time_format_preview': 'Live Preview',
-      'time_format_preview_desc': 'This is how kick-off times will appear on match cards:',
+      'time_format_preview_desc':
+          'This is how kick-off times will appear on match cards:',
       'time_format_12h_title': '12-Hour Format (AM / PM)',
-      'time_format_12h_desc': 'Standard 12-hour clock with AM and PM markers (e.g. 08:45 PM)',
+      'time_format_12h_desc':
+          'Standard 12-hour clock with AM and PM markers (e.g. 08:45 PM)',
       'time_format_24h_title': '24-Hour Format',
-      'time_format_24h_desc': 'International 24-hour military clock (e.g. 20:45)',
-      'time_format_applied_notice': 'Format applied instantly across all match cards and schedules',
+      'time_format_24h_desc':
+          'International 24-hour military clock (e.g. 20:45)',
+      'time_format_applied_notice':
+          'Format applied instantly across all match cards and schedules',
       'theme_settings_title': 'Appearance',
       'theme_intro_title': 'Theme & Visual Style',
-      'theme_intro_desc': 'Choose between dark and light themes, or let the app automatically adapt to your system settings.',
+      'theme_intro_desc':
+          'Choose between dark and light themes, or let the app automatically adapt to your system settings.',
       'theme_preview': 'Live App Preview',
-      'theme_preview_desc': 'This is how screens and match cards will look in 154Score:',
+      'theme_preview_desc':
+          'This is how screens and match cards will look in 154Score:',
       'theme_dark_title': 'Dark Mode',
-      'theme_dark_desc': 'Comfortable dark interface optimized for low light and battery conservation',
+      'theme_dark_desc':
+          'Comfortable dark interface optimized for low light and battery conservation',
       'theme_light_title': 'Light Mode',
-      'theme_light_desc': 'Clean and bright aesthetic with crisp contrast in sunlight',
+      'theme_light_desc':
+          'Clean and bright aesthetic with crisp contrast in sunlight',
       'theme_system_title': 'System Default',
-      'theme_system_desc': 'Automatically syncs with your device operating system theme',
-      'theme_applied_notice': 'Theme changes are applied immediately across all tabs and screens',
+      'theme_system_desc':
+          'Automatically syncs with your device operating system theme',
+      'theme_applied_notice':
+          'Theme changes are applied immediately across all tabs and screens',
       'settings_timezone': 'Timezone',
       'timezone_auto': 'Automatic (Local Device)',
       'timezone_utc': 'UTC (Universal Time)',
@@ -262,7 +276,8 @@ class AppLocalizations {
       'no_timezones_found': 'No matching timezones found',
       'settings_diagnostics': 'API & WebSocket Diagnostics',
       'settings_about': 'About 154Score',
-      'about_description': '154Score is a high-performance football center powered by 154score API and real-time WebSockets.',
+      'about_description':
+          '154Score is a high-performance football center powered by 154score API and real-time WebSockets.',
 
       'settings_notifications': 'Notifications & Alerts',
       'notif_news': 'News Notifications',
@@ -275,7 +290,8 @@ class AppLocalizations {
       'notif_match_start_end_desc': 'Kick-off, half-time and full-time whistle',
       'notifications_title': 'Notifications',
       'no_notifications': 'No notifications right now',
-      'no_notifications_desc': 'You will receive updates about goals, lineups, and breaking news here.',
+      'no_notifications_desc':
+          'You will receive updates about goals, lineups, and breaking news here.',
       'mark_all_read': 'Mark all as read',
       'clear_all': 'Clear all',
 
@@ -283,23 +299,30 @@ class AppLocalizations {
       'notif_scope_title': 'Match Notification Scope',
       'notif_scope_subtitle': 'Choose which matches trigger push alerts',
       'notif_scope_starred_title': 'Starred & Subscribed Teams Only',
-      'notif_scope_starred_desc': 'Only receive alerts for matches involving your favorite clubs (recommended to avoid excessive notifications).',
+      'notif_scope_starred_desc':
+          'Only receive alerts for matches involving your favorite clubs (recommended to avoid excessive notifications).',
       'notif_scope_all_title': 'All Matches',
-      'notif_scope_all_desc': 'Receive alerts for all matches across all tracked leagues and tournaments.',
+      'notif_scope_all_desc':
+          'Receive alerts for all matches across all tracked leagues and tournaments.',
       'notif_scope_recommended_badge': 'Recommended',
       'notif_events_title': 'Alert Types',
       'notif_favorite_teams_section': 'Favorite Teams',
       'notif_manage_favorites': 'Manage Starred Teams',
       'notif_starred_teams_count': 'You are following {count} teams',
       'notif_test_title': 'Test Push Notification',
-      'notif_test_subtitle': 'Send a test alert to verify notification sounds and banner appearance on your device.',
+      'notif_test_subtitle':
+          'Send a test alert to verify notification sounds and banner appearance on your device.',
       'notif_test_sent': 'Test notification sent! Check your notification bar.',
-      'notif_settings_header_desc': 'Customize your match alerts and news notifications to never miss crucial moments.',
+      'notif_settings_header_desc':
+          'Customize your match alerts and news notifications to never miss crucial moments.',
       'notif_live_match_mode_title': 'Zero-Delay Live Match Mode',
-      'notif_live_match_mode_subtitle': 'Real-time background tracking during live matches for instant goal alerts (0-1s delay).',
+      'notif_live_match_mode_subtitle':
+          'Real-time background tracking during live matches for instant goal alerts (0-1s delay).',
       'notif_live_match_service_status': 'Live Match Tracking Service',
-      'notif_live_match_service_desc_android': 'Runs a persistent low-power background service on Android to bypass Doze mode and deliver goal alerts immediately.',
-      'notif_live_match_service_desc_ios': 'Direct Apple APNs integration delivers instant goal notifications directly through Apple servers without Firebase.',
+      'notif_live_match_service_desc_android':
+          'Runs a persistent low-power background service on Android to bypass Doze mode and deliver goal alerts immediately.',
+      'notif_live_match_service_desc_ios':
+          'Direct Apple APNs integration delivers instant goal notifications directly through Apple servers without Firebase.',
       'notif_battery_opt_button': 'Exempt from Battery Optimization',
       'notif_battery_opt_granted': 'Battery optimization exemption active',
 
@@ -331,7 +354,8 @@ class AppLocalizations {
       'debug_console_copied': 'Copied to clipboard',
 
       'error_title': 'Something went wrong',
-      'error_network': 'Unable to connect to the server. Please check your internet connection.',
+      'error_network':
+          'Unable to connect to the server. Please check your internet connection.',
       'error_service_unavailable':
           'Data is temporarily unavailable. Please try again.',
       'error_rate_limited':
@@ -372,7 +396,8 @@ class AppLocalizations {
       'midfielders': 'Midfielders',
       'forwards': 'Forwards',
       'lineup_unavailable_title': 'Lineups Not Available Yet',
-      'lineup_unavailable_desc': 'Official starting lineups are usually announced 1 hour before kickoff.',
+      'lineup_unavailable_desc':
+          'Official starting lineups are usually announced 1 hour before kickoff.',
       'refresh_lineup': 'Check for Updates',
       'player_details': 'Player Details',
       'starter': 'Starter',
@@ -576,7 +601,8 @@ class AppLocalizations {
       'onb_leagues_title': 'دورياتك المفضلة',
       'onb_leagues_sub': 'ستظهر في أعلى قائمة المباريات',
       'settings_app_language': 'لغة واجهة التطبيق',
-      'settings_app_language_desc': 'تغيير لغة القوائم والتبويبات واتجاه واجهة التطبيق',
+      'settings_app_language_desc':
+          'تغيير لغة القوائم والتبويبات واتجاه واجهة التطبيق',
       'settings_news_language': 'لغة الأخبار والمقالات',
       'settings_news_language_desc': 'تحديد لغة مصادر ومقالات الأخبار الرياضية',
       'news_lang_same_as_app': 'حسب لغة التطبيق (تلقائي)',
@@ -590,26 +616,34 @@ class AppLocalizations {
       'time_24h': '24 ساعة (14:30)',
       'time_format_settings_title': 'صيغة عرض الوقت',
       'time_format_intro_title': 'طريقة عرض توقيت المباريات',
-      'time_format_intro_desc': 'اختر طريقة تنسيق مواعيد انطلاق المباريات وأحداثها في جميع شاشات التطبيق.',
+      'time_format_intro_desc':
+          'اختر طريقة تنسيق مواعيد انطلاق المباريات وأحداثها في جميع شاشات التطبيق.',
       'time_format_preview': 'معاينة حية للتوقيت',
-      'time_format_preview_desc': 'هكذا سيظهر توقيت المباريات في الكروت وجداول المباريات:',
+      'time_format_preview_desc':
+          'هكذا سيظهر توقيت المباريات في الكروت وجداول المباريات:',
       'time_format_12h_title': 'نظام 12 ساعة (صباحاً / مساءً)',
-      'time_format_12h_desc': 'عرض التوقيت بنظام 12 ساعة مع دلالة (ص / م) مثل: 08:45 م',
+      'time_format_12h_desc':
+          'عرض التوقيت بنظام 12 ساعة مع دلالة (ص / م) مثل: 08:45 م',
       'time_format_24h_title': 'نظام 24 ساعة (التوقيت الدولي)',
-      'time_format_24h_desc': 'عرض التوقيت بالنظام الدولي الموحد دون ص/م مثل: 20:45',
-      'time_format_applied_notice': 'يتم تطبيق الصيغة المختارة فورياً في كل جداول المباريات والإشعارات',
+      'time_format_24h_desc':
+          'عرض التوقيت بالنظام الدولي الموحد دون ص/م مثل: 20:45',
+      'time_format_applied_notice':
+          'يتم تطبيق الصيغة المختارة فورياً في كل جداول المباريات والإشعارات',
       'theme_settings_title': 'المظهر والألوان',
       'theme_intro_title': 'مظهر التطبيق وألوانه',
-      'theme_intro_desc': 'اختر بين الوضع الداكن أو الفاتح، أو دع التطبيق يتبع مظهر نظام جهازك تلقائياً.',
+      'theme_intro_desc':
+          'اختر بين الوضع الداكن أو الفاتح، أو دع التطبيق يتبع مظهر نظام جهازك تلقائياً.',
       'theme_preview': 'معاينة حية للمظهر',
       'theme_preview_desc': 'هكذا ستظهر شاشات وبطاقات المباريات في 154Score:',
       'theme_dark_title': 'الوضع الداكن (Dark)',
-      'theme_dark_desc': 'واجهة داكنة مريحة للعين في الإضاءة الخافتة وموفرة للبطارية',
+      'theme_dark_desc':
+          'واجهة داكنة مريحة للعين في الإضاءة الخافتة وموفرة للبطارية',
       'theme_light_title': 'الوضع الفاتح (Light)',
       'theme_light_desc': 'واجهة بيضاء ناصعة وواضحة جداً في ضوء النهار',
       'theme_system_title': 'تلقائي (حسب النظام)',
       'theme_system_desc': 'يتغير مظهر التطبيق تلقائياً عند تغيير وضع جهازك',
-      'theme_applied_notice': 'يتم تطبيق المظهر فوراً في جميع الشاشات مع حفظ اختيارك',
+      'theme_applied_notice':
+          'يتم تطبيق المظهر فوراً في جميع الشاشات مع حفظ اختيارك',
       'settings_timezone': 'المنطقة الزمنية',
       'timezone_auto': 'تلقائي (توقيت الجهاز)',
       'timezone_utc': 'توقيت جرينتش (UTC)',
@@ -622,7 +656,8 @@ class AppLocalizations {
       'no_timezones_found': 'لم يتم العثور على مناطق زمنية مطابقة',
       'settings_diagnostics': 'فحص الخادم والويب سوكت',
       'settings_about': 'حول 154Score',
-      'about_description': 'تطبيق 154Score الرياضي الاحترافي لمتابعة نتائج المباريات لحظة بلحظة عبر 154score API والويب سوكت المباشر.',
+      'about_description':
+          'تطبيق 154Score الرياضي الاحترافي لمتابعة نتائج المباريات لحظة بلحظة عبر 154score API والويب سوكت المباشر.',
 
       'settings_notifications': 'الإشعارات والتنبيهات',
       'notif_news': 'إشعارات الأخبار',
@@ -630,37 +665,50 @@ class AppLocalizations {
       'notif_match_lineup': 'إشعارات التشكيلة',
       'notif_match_lineup_desc': 'تنبيه عند إعلان التشكيلة الرسمية للمباراة',
       'notif_match_goals': 'الأهداف والبطاقات',
-      'notif_match_goals_desc': 'تنبيه فوري عند تسجيل الأهداف والبطاقات الحمراء',
+      'notif_match_goals_desc':
+          'تنبيه فوري عند تسجيل الأهداف والبطاقات الحمراء',
       'notif_match_start_end': 'بداية ونهاية المباراة',
-      'notif_match_start_end_desc': 'تنبيه عند صافرة البداية والشوطين وصافرة النهاية',
+      'notif_match_start_end_desc':
+          'تنبيه عند صافرة البداية والشوطين وصافرة النهاية',
       'notifications_title': 'الإشعارات والتنبيهات',
       'no_notifications': 'لا توجد إشعارات حالياً',
-      'no_notifications_desc': 'ستظهر هنا إشعارات الأهداف والتشكيلات والأخبار العاجلة فور صدورها.',
+      'no_notifications_desc':
+          'ستظهر هنا إشعارات الأهداف والتشكيلات والأخبار العاجلة فور صدورها.',
       'mark_all_read': 'تحديد الكل كمقروء',
       'clear_all': 'مسح الكل',
 
       // Notification Settings & Scope
       'notif_scope_title': 'نطاق إشعارات المباريات',
-      'notif_scope_subtitle': 'حدد المباريات التي ترغب في تلقي تنبيهات فورية لها',
+      'notif_scope_subtitle':
+          'حدد المباريات التي ترغب في تلقي تنبيهات فورية لها',
       'notif_scope_starred_title': 'الفرق المفضلة والمتابعة فقط',
-      'notif_scope_starred_desc': 'استلام تنبيهات (الأهداف والتشكيلة وصافرة البداية والنهاية) لمباريات أنديتك المفضلة فقط لتجنب كثرة الإشعارات.',
+      'notif_scope_starred_desc':
+          'استلام تنبيهات (الأهداف والتشكيلة وصافرة البداية والنهاية) لمباريات أنديتك المفضلة فقط لتجنب كثرة الإشعارات.',
       'notif_scope_all_title': 'جميع المباريات',
-      'notif_scope_all_desc': 'استلام تنبيهات لكافة المباريات في جميع البطولات والدوريات المتاحة.',
+      'notif_scope_all_desc':
+          'استلام تنبيهات لكافة المباريات في جميع البطولات والدوريات المتاحة.',
       'notif_scope_recommended_badge': 'موصى به',
       'notif_events_title': 'أنواع التنبيهات المفعّلة',
       'notif_favorite_teams_section': 'الفرق المفضلة',
       'notif_manage_favorites': 'إدارة الفرق المفضلة',
       'notif_starred_teams_count': 'أنت تتابع حالياً {count} فرق',
       'notif_test_title': 'تجربة الإشعارات',
-      'notif_test_subtitle': 'أرسل إشعاراً تجريبياً للتأكد من وصول التنبيهات وصوت الإشعار على هاتفك.',
+      'notif_test_subtitle':
+          'أرسل إشعاراً تجريبياً للتأكد من وصول التنبيهات وصوت الإشعار على هاتفك.',
       'notif_test_button': 'إرسال إشعار تجريبي',
-      'notif_test_sent': 'تم إرسال الإشعار التجريبي! تفقّد شريط الإشعارات بالأعلى.',
-      'notif_settings_header_desc': 'خصص تنبيهات المباريات والأخبار العاجلة لتواكب كل ما يهمك لحظة بلحظة.',
-      'notif_live_match_mode_title': 'وضع المتابعة المباشرة الفورية (Zero-Delay)',
-      'notif_live_match_mode_subtitle': 'متابعة حية في الخلفية أثناء المباريات لتصلك تنبيهات الأهداف فور تسجيلها بدون تأخير.',
+      'notif_test_sent':
+          'تم إرسال الإشعار التجريبي! تفقّد شريط الإشعارات بالأعلى.',
+      'notif_settings_header_desc':
+          'خصص تنبيهات المباريات والأخبار العاجلة لتواكب كل ما يهمك لحظة بلحظة.',
+      'notif_live_match_mode_title':
+          'وضع المتابعة المباشرة الفورية (Zero-Delay)',
+      'notif_live_match_mode_subtitle':
+          'متابعة حية في الخلفية أثناء المباريات لتصلك تنبيهات الأهداف فور تسجيلها بدون تأخير.',
       'notif_live_match_service_status': 'خدمة المتابعة المباشرة',
-      'notif_live_match_service_desc_android': 'تعمل في الخلفية على أندرويد لتفادي وضع توفير الطاقة (Doze) وضمان وصول الأهداف فور تسجيلها.',
-      'notif_live_match_service_desc_ios': 'تعتمد على خدمة Apple APNs الفورية المباشرة بدون فايربيس لتصلك الأهداف في أجزاء من الثانية.',
+      'notif_live_match_service_desc_android':
+          'تعمل في الخلفية على أندرويد لتفادي وضع توفير الطاقة (Doze) وضمان وصول الأهداف فور تسجيلها.',
+      'notif_live_match_service_desc_ios':
+          'تعتمد على خدمة Apple APNs الفورية المباشرة بدون فايربيس لتصلك الأهداف في أجزاء من الثانية.',
       'notif_battery_opt_button': 'استثناء التطبيق من تحسين البطارية',
       'notif_battery_opt_granted': 'تم تفعيل الاستثناء من توفير البطارية',
 
@@ -691,7 +739,8 @@ class AppLocalizations {
       'debug_console_copied': 'تم النسخ إلى الحافظة',
 
       'error_title': 'حدث خطأ ما',
-      'error_network': 'تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة ثانية.',
+      'error_network':
+          'تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة ثانية.',
       'error_service_unavailable': 'البيانات غير متاحة مؤقتًا، حاول مرة أخرى.',
       'error_rate_limited':
           'تم تجاوز معدل الطلبات، يرجى الانتظار قليلًا والمحاولة ثانية.',
@@ -731,7 +780,8 @@ class AppLocalizations {
       'midfielders': 'الوسط',
       'forwards': 'الهجوم',
       'lineup_unavailable_title': 'لم يتم الإعلان عن التشكيلة بعد',
-      'lineup_unavailable_desc': 'عادة ما يتم الكشف عن التشكيل الرسمي قبل ساعة واحدة من صافرة البداية.',
+      'lineup_unavailable_desc':
+          'عادة ما يتم الكشف عن التشكيل الرسمي قبل ساعة واحدة من صافرة البداية.',
       'refresh_lineup': 'تحديث التشكيلة',
       'player_details': 'معلومات اللاعب',
       'starter': 'أساسي',
@@ -771,7 +821,8 @@ class AppLocalizations {
     if (trimmed.isEmpty) return raw;
 
     // Check if it starts with "المجموعة" or "المجموعه"
-    final arMatch = RegExp(r'^المجموع[ةه]\s*(.+)$', caseSensitive: false).firstMatch(trimmed);
+    final arMatch = RegExp(r'^المجموع[ةه]\s*(.+)$', caseSensitive: false)
+        .firstMatch(trimmed);
     if (arMatch != null) {
       final identifier = arMatch.group(1)?.trim() ?? '';
       if (!isArabic) {
@@ -783,7 +834,8 @@ class AppLocalizations {
     }
 
     // Check if it starts with "Group"
-    final enMatch = RegExp(r'^Group\s*(.+)$', caseSensitive: false).firstMatch(trimmed);
+    final enMatch =
+        RegExp(r'^Group\s*(.+)$', caseSensitive: false).firstMatch(trimmed);
     if (enMatch != null) {
       final identifier = enMatch.group(1)?.trim() ?? '';
       if (isArabic) {
@@ -852,7 +904,9 @@ class AppLocalizations {
     final lower = trimmed.toLowerCase();
 
     // Final
-    if (lower == 'final' || trimmed == 'النهائي' || trimmed == 'المباراة النهائية') {
+    if (lower == 'final' ||
+        trimmed == 'النهائي' ||
+        trimmed == 'المباراة النهائية') {
       return isArabic ? 'النهائي' : 'Final';
     }
 
@@ -867,22 +921,30 @@ class AppLocalizations {
     }
 
     // Round of 16
-    if (lower.contains('16') || trimmed.contains('16') || trimmed.contains('١٦')) {
+    if (lower.contains('16') ||
+        trimmed.contains('16') ||
+        trimmed.contains('١٦')) {
       return isArabic ? 'دور الـ 16' : 'Round of 16';
     }
 
     // Round of 32
-    if (lower.contains('32') || trimmed.contains('32') || trimmed.contains('٣٢')) {
+    if (lower.contains('32') ||
+        trimmed.contains('32') ||
+        trimmed.contains('٣٢')) {
       return isArabic ? 'دور الـ 32' : 'Round of 32';
     }
 
     // Round of 64
-    if (lower.contains('64') || trimmed.contains('64') || trimmed.contains('٦٤')) {
+    if (lower.contains('64') ||
+        trimmed.contains('64') ||
+        trimmed.contains('٦٤')) {
       return isArabic ? 'دور الـ 64' : 'Round of 64';
     }
 
     // 3rd place
-    if (lower.contains('3rd') || lower.contains('third') || trimmed.contains('المركز الثالث')) {
+    if (lower.contains('3rd') ||
+        lower.contains('third') ||
+        trimmed.contains('المركز الثالث')) {
       return isArabic ? 'تحديد المركز الثالث' : '3rd Place';
     }
 

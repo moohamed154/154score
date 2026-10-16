@@ -62,14 +62,16 @@ class MockLocalStorageService implements LocalStorageService {
     String? id,
     String? name,
     String? slug,
-  }) async => true;
+  }) async =>
+      true;
   @override
   bool isFavoriteCompetition({
     String? compName,
     String? id,
     String? name,
     String? slug,
-  }) => false;
+  }) =>
+      false;
   @override
   Map<String, String> getFavoriteCompetitionTitles() => {};
   @override

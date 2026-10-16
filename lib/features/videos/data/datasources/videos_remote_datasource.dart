@@ -6,7 +6,7 @@ import '../models/video_dto.dart';
 
 abstract class VideosRemoteDataSource {
   Future<(List<VideoItemEntity>, List<VideoCategoryEntity>)>
-  getVideosAndCategories({required String champId, required String lang});
+      getVideosAndCategories({required String champId, required String lang});
 
   Future<VideoDetailEntity> getVideoDetail(String id, {required String lang});
 }
@@ -18,7 +18,7 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
 
   @override
   Future<(List<VideoItemEntity>, List<VideoCategoryEntity>)>
-  getVideosAndCategories({
+      getVideosAndCategories({
     required String champId,
     required String lang,
   }) async {

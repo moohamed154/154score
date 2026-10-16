@@ -66,7 +66,9 @@ void main() {
   });
 
   group('MatchDetails WebSocket Real-Time Propagation Tests', () {
-    test('MatchDetailRealtimeUpdate.fromJson preserves match_id when event has own id', () {
+    test(
+        'MatchDetailRealtimeUpdate.fromJson preserves match_id when event has own id',
+        () {
       final payload = {
         'id': 99999, // Event ID
         'match_id': 1080351, // Match ID
@@ -92,7 +94,9 @@ void main() {
       expect(update.status, 'live');
     });
 
-    test('MatchDetailsBloc emits liveMinute, liveExtraTime, livePeriod from general LiveMatchUpdate', () async {
+    test(
+        'MatchDetailsBloc emits liveMinute, liveExtraTime, livePeriod from general LiveMatchUpdate',
+        () async {
       final bloc = MatchDetailsBloc(
         repository: mockRepository,
         webSocketService: mockWebSocketService,
@@ -123,7 +127,9 @@ void main() {
       await bloc.close();
     });
 
-    test('MatchDetailsBloc emits liveMinute, liveExtraTime, livePeriod from match:{id} room socket update', () async {
+    test(
+        'MatchDetailsBloc emits liveMinute, liveExtraTime, livePeriod from match:{id} room socket update',
+        () async {
       final bloc = MatchDetailsBloc(
         repository: mockRepository,
         webSocketService: mockWebSocketService,
@@ -189,7 +195,9 @@ void main() {
       },
     );
 
-    test('MatchDetailsBloc emits livePenaltyScore1 and livePenaltyScore2 from LiveMatchUpdate and room update', () async {
+    test(
+        'MatchDetailsBloc emits livePenaltyScore1 and livePenaltyScore2 from LiveMatchUpdate and room update',
+        () async {
       final bloc = MatchDetailsBloc(
         repository: mockRepository,
         webSocketService: mockWebSocketService,

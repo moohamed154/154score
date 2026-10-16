@@ -18,14 +18,14 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     String? initialName,
     String? initialPhoto,
     String? initialSlug,
-  }) : _currentSlug = initialSlug,
-       super(
-         PlayerState(
-           playerId: initialId ?? '',
-           playerName: initialName,
-           playerPhoto: initialPhoto,
-         ),
-       ) {
+  })  : _currentSlug = initialSlug,
+        super(
+          PlayerState(
+            playerId: initialId ?? '',
+            playerName: initialName,
+            playerPhoto: initialPhoto,
+          ),
+        ) {
     on<LoadPlayerProfileEvent>(_onLoadPlayerProfile);
     on<ChangePlayerTabEvent>(_onChangePlayerTab);
     on<RefreshPlayerProfileEvent>(_onRefreshPlayerProfile);
@@ -71,9 +71,8 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
             status: PlayerStatus.success,
             profile: profile,
             playerId: profile.id.isNotEmpty ? profile.id : state.playerId,
-            playerName: profile.name.isNotEmpty
-                ? profile.name
-                : state.playerName,
+            playerName:
+                profile.name.isNotEmpty ? profile.name : state.playerName,
             playerPhoto: profile.photo ?? state.playerPhoto,
           ),
         );
@@ -116,9 +115,8 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
             status: PlayerStatus.success,
             profile: profile,
             playerId: profile.id.isNotEmpty ? profile.id : state.playerId,
-            playerName: profile.name.isNotEmpty
-                ? profile.name
-                : state.playerName,
+            playerName:
+                profile.name.isNotEmpty ? profile.name : state.playerName,
             playerPhoto: profile.photo ?? state.playerPhoto,
           ),
         );

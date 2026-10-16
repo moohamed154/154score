@@ -22,7 +22,9 @@ void main() {
       cubit.close();
     });
 
-    test('1. Default state: Featured competitions are returned before custom changes', () {
+    test(
+        '1. Default state: Featured competitions are returned before custom changes',
+        () {
       expect(storage.hasCustomFavoriteCompetitions(), isFalse);
       final defaultFavs = storage.getFavoriteCompetitions();
       expect(defaultFavs, contains('الدوري الإسباني'));
@@ -37,7 +39,9 @@ void main() {
       expect(cubit.isCompetitionFavorite(id: '1933'), isTrue);
     });
 
-    test('2. Unfavoriting a league from LeagueView (by title or ID) removes it completely', () async {
+    test(
+        '2. Unfavoriting a league from LeagueView (by title or ID) removes it completely',
+        () async {
       // Initially favorite
       expect(
         storage.isFavoriteCompetition(id: '938652', name: 'الدوري الإسباني'),
@@ -60,7 +64,9 @@ void main() {
       );
     });
 
-    test('3. Favoriting a new league from Matches or Standings works across all screens', () async {
+    test(
+        '3. Favoriting a new league from Matches or Standings works across all screens',
+        () async {
       const newLeagueId = '5555';
       const newLeagueName = 'كأس مصر';
 
@@ -102,7 +108,9 @@ void main() {
       );
     });
 
-    test('4. Dynamic title registration resolves IDs to human-readable names for FavoritesView', () async {
+    test(
+        '4. Dynamic title registration resolves IDs to human-readable names for FavoritesView',
+        () async {
       await storage.registerCompetitionTitles({
         '7777': 'دوري روشن للمحترفين',
         '8888': 'كأس ملك إسبانيا',
@@ -122,7 +130,9 @@ void main() {
       ); // fallback
     });
 
-    test('5. Reordering favorites in StandingsView updates order across cubit and storage', () async {
+    test(
+        '5. Reordering favorites in StandingsView updates order across cubit and storage',
+        () async {
       final initialFavs = cubit.state.favoriteCompetitions;
       expect(initialFavs.length, greaterThanOrEqualTo(2));
 
@@ -136,7 +146,9 @@ void main() {
       expect(storage.getFavoriteCompetitions()[0], equals(second));
     });
 
-    test('6. Stage variations like "دوري أبطال أفريقيا | الأدوار الإقصائية" match when "دوري أبطال أفريقيا" is favorited', () async {
+    test(
+        '6. Stage variations like "دوري أبطال أفريقيا | الأدوار الإقصائية" match when "دوري أبطال أفريقيا" is favorited',
+        () async {
       await cubit.toggleCompetition(id: '943487', name: 'دوري أبطال أفريقيا');
 
       // Knockout stage title with pipe

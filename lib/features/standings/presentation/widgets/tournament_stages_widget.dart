@@ -85,8 +85,8 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                     color: isSelected
                         ? AppColors.primary
                         : (isDark
-                              ? AppColors.darkCardElevated
-                              : AppColors.lightCardElevated),
+                            ? AppColors.darkCardElevated
+                            : AppColors.lightCardElevated),
                     borderRadius: BorderRadius.circular(
                       AppDimensions.radiusFull,
                     ),
@@ -94,8 +94,8 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                       color: isSelected
                           ? AppColors.primary
                           : (isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder),
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder),
                       width: isSelected ? 1.5 : 1.0,
                     ),
                     boxShadow: isSelected
@@ -113,14 +113,13 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                       l10n.formatStageName(stage.stageName),
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected
                             ? Colors.white
                             : (isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary),
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary),
                       ),
                     ),
                   ),
@@ -173,7 +172,7 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
     final hasScore = match.teamA.score != null || match.teamB.score != null;
     final hasDateInfo =
         (match.matchDate != null && match.matchDate!.isNotEmpty) ||
-        (match.position != null && match.position!.isNotEmpty);
+            (match.position != null && match.position!.isNotEmpty);
 
     return Container(
       decoration: BoxDecoration(
@@ -252,9 +251,8 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                   const SizedBox(height: 8),
                   Divider(
                     height: 1,
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : AppColors.lightBorder,
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -262,8 +260,7 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                 // Team A Row
                 _buildTeamRow(
                   match.teamA,
-                  isWinner:
-                      match.teamA.isWinner ||
+                  isWinner: match.teamA.isWinner ||
                       (match.winnerId != null &&
                           match.winnerId == match.teamA.id),
                   hasScore: hasScore,
@@ -276,8 +273,7 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                 // Team B Row
                 _buildTeamRow(
                   match.teamB,
-                  isWinner:
-                      match.teamB.isWinner ||
+                  isWinner: match.teamB.isWinner ||
                       (match.winnerId != null &&
                           match.winnerId == match.teamB.id),
                   hasScore: hasScore,
@@ -333,11 +329,11 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
               fontWeight: isWinner ? FontWeight.w700 : FontWeight.w500,
               color: isWinner
                   ? (isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary)
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary)
                   : (isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary),
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary),
             ),
           ),
         ),
@@ -366,8 +362,8 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                 color: isWinner
                     ? AppColors.primary
                     : (isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary),
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary),
               ),
             ),
           ),

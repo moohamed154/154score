@@ -135,9 +135,8 @@ class OnboardingChoiceCard extends StatelessWidget {
             curve: Curves.easeOut,
             padding: const EdgeInsets.all(AppDimensions.lg),
             decoration: BoxDecoration(
-              color: selected
-                  ? AppColors.primary.withValues(alpha: 0.12)
-                  : card,
+              color:
+                  selected ? AppColors.primary.withValues(alpha: 0.12) : card,
               borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
               border: Border.all(
                 color: selected ? AppColors.primary : border,
@@ -152,8 +151,8 @@ class OnboardingChoiceCard extends StatelessWidget {
                   color: selected
                       ? AppColors.primary
                       : (isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary),
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary),
                 ),
                 const SizedBox(width: AppDimensions.lg),
                 Expanded(
@@ -270,8 +269,8 @@ class OnboardingChips extends StatelessWidget {
             color: isSelected
                 ? Colors.white
                 : (isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary),
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDimensions.radiusMd),

@@ -178,16 +178,15 @@ class PlayerBioCard extends StatelessWidget {
                         children: [
                           Text(
                             it.label,
-                            style:
-                                AppTypography.getBodySmall(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextMuted
-                                      : AppColors.lightTextMuted,
-                                  fontSize: 11,
-                                ),
+                            style: AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                              fontSize: 11,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -197,14 +196,13 @@ class PlayerBioCard extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   it.value,
-                                  style:
-                                      AppTypography.getBodyMedium(
-                                        isDark: isDark,
-                                        isArabic: isArabic,
-                                      ).copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 13,
-                                      ),
+                                  style: AppTypography.getBodyMedium(
+                                    isDark: isDark,
+                                    isArabic: isArabic,
+                                  ).copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),

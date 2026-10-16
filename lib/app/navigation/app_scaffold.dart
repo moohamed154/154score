@@ -38,7 +38,8 @@ class AppScaffold extends StatelessWidget {
       listeners: [
         BlocListener<NewsLanguageCubit, String>(
           listener: (context, newsLang) {
-            final appLang = context.read<LocaleCubit>().state.locale.languageCode;
+            final appLang =
+                context.read<LocaleCubit>().state.locale.languageCode;
             final targetLang = newsLang == 'app' ? appLang : newsLang;
             context.read<NewsBloc>().add(ChangeNewsLanguageEvent(targetLang));
           },
@@ -47,164 +48,169 @@ class AppScaffold extends StatelessWidget {
       child: BlocConsumer<LocaleCubit, LocaleState>(
         listenWhen: (prev, curr) => prev.locale != curr.locale,
         listener: (context, localeState) {
-        final lang = localeState.locale.languageCode;
-        final token = localeState.requestToken;
+          final lang = localeState.locale.languageCode;
+          final token = localeState.requestToken;
 
-        final matchesCompleter = Completer<void>();
-        final standingsCompleter = Completer<void>();
-        final transfersCompleter = Completer<void>();
-        final videosCompleter = Completer<void>();
-        final homeCompleter = Completer<void>();
-        final newsCompleter = Completer<void>();
-        final notificationsCompleter = Completer<void>();
+          final matchesCompleter = Completer<void>();
+          final standingsCompleter = Completer<void>();
+          final transfersCompleter = Completer<void>();
+          final videosCompleter = Completer<void>();
+          final homeCompleter = Completer<void>();
+          final newsCompleter = Completer<void>();
+          final notificationsCompleter = Completer<void>();
 
-        context.read<MatchesBloc>().add(
-          ChangeMatchesLanguageEvent(lang, completer: matchesCompleter),
-        );
-        context.read<StandingsBloc>().add(
-          ChangeStandingsLanguageEvent(lang, completer: standingsCompleter),
-        );
-        context.read<TransfersBloc>().add(
-          ChangeTransfersLanguageEvent(lang, completer: transfersCompleter),
-        );
-        context.read<VideosBloc>().add(
-          ChangeVideosLanguageEvent(lang, completer: videosCompleter),
-        );
-        final newsLangSetting = sl<LocalStorageService>().getNewsLanguage();
-        if (newsLangSetting == 'app') {
-          context.read<NewsBloc>().add(
-            ChangeNewsLanguageEvent(lang, completer: newsCompleter),
-          );
-        } else {
-          newsCompleter.complete();
-        }
-        context.read<NotificationsBloc>().add(
-          LoadNotificationsEvent(lang: lang, isRefresh: true, completer: notificationsCompleter),
-        );
-        context.read<HomeCubit>().changeLanguage(
-          lang,
-          completer: homeCompleter,
-        );
-
-        // When all background refreshes finish (or timeout), notify LocaleCubit to hide indicator
-        Future.wait([
-          matchesCompleter.future,
-          standingsCompleter.future,
-          transfersCompleter.future,
-          videosCompleter.future,
-          homeCompleter.future,
-          newsCompleter.future,
-          notificationsCompleter.future,
-        ]).timeout(const Duration(seconds: 5), onTimeout: () => []).then((_) {
-          if (context.mounted) {
-            context.read<LocaleCubit>().notifyRefreshCompleted(token: token);
+          context.read<MatchesBloc>().add(
+                ChangeMatchesLanguageEvent(lang, completer: matchesCompleter),
+              );
+          context.read<StandingsBloc>().add(
+                ChangeStandingsLanguageEvent(lang,
+                    completer: standingsCompleter),
+              );
+          context.read<TransfersBloc>().add(
+                ChangeTransfersLanguageEvent(lang,
+                    completer: transfersCompleter),
+              );
+          context.read<VideosBloc>().add(
+                ChangeVideosLanguageEvent(lang, completer: videosCompleter),
+              );
+          final newsLangSetting = sl<LocalStorageService>().getNewsLanguage();
+          if (newsLangSetting == 'app') {
+            context.read<NewsBloc>().add(
+                  ChangeNewsLanguageEvent(lang, completer: newsCompleter),
+                );
+          } else {
+            newsCompleter.complete();
           }
-        });
-      },
-      builder: (context, localeState) {
-        Widget contentWithIndicator() {
-          return Stack(
-            children: [
-              navigationShell,
-              if (localeState.showIndicator)
-                const Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: LinearProgressIndicator(
-                    minHeight: 2.5,
-                    backgroundColor: Colors.transparent,
-                    color: AppColors.primary,
-                  ),
-                ),
-            ],
-          );
-        }
-
-        return BlocBuilder<MatchesBloc, MatchesState>(
-          builder: (context, matchesState) {
-            final liveCount = matchesState.liveMatchesCount;
-
-            // Desktop Layout (> 1024px)
-            if (width >= AppDimensions.tabletMaxWidth) {
-              return Scaffold(
-                body: Row(
-                  children: [
-                    _buildDesktopSidebar(context, isDark, isArabic),
-                    const VerticalDivider(width: 1),
-                    Expanded(child: contentWithIndicator()),
-                  ],
-                ),
+          context.read<NotificationsBloc>().add(
+                LoadNotificationsEvent(
+                    lang: lang,
+                    isRefresh: true,
+                    completer: notificationsCompleter),
               );
-            }
+          context.read<HomeCubit>().changeLanguage(
+                lang,
+                completer: homeCompleter,
+              );
 
-            // Tablet Layout (768px - 1024px)
-            if (width >= AppDimensions.mobileMaxWidth) {
-              return Scaffold(
-                body: Row(
-                  children: [
-                    NavigationRail(
-                      selectedIndex: navigationShell.currentIndex,
-                      onDestinationSelected: (index) => _onTap(context, index),
-                      labelType: NavigationRailLabelType.all,
-                      destinations: _buildRailDestinations(l10n, liveCount),
+          // When all background refreshes finish (or timeout), notify LocaleCubit to hide indicator
+          Future.wait([
+            matchesCompleter.future,
+            standingsCompleter.future,
+            transfersCompleter.future,
+            videosCompleter.future,
+            homeCompleter.future,
+            newsCompleter.future,
+            notificationsCompleter.future,
+          ]).timeout(const Duration(seconds: 5), onTimeout: () => []).then((_) {
+            if (context.mounted) {
+              context.read<LocaleCubit>().notifyRefreshCompleted(token: token);
+            }
+          });
+        },
+        builder: (context, localeState) {
+          Widget contentWithIndicator() {
+            return Stack(
+              children: [
+                navigationShell,
+                if (localeState.showIndicator)
+                  const Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: LinearProgressIndicator(
+                      minHeight: 2.5,
+                      backgroundColor: Colors.transparent,
+                      color: AppColors.primary,
                     ),
-                    const VerticalDivider(width: 1),
-                    Expanded(child: contentWithIndicator()),
+                  ),
+              ],
+            );
+          }
+
+          return BlocBuilder<MatchesBloc, MatchesState>(
+            builder: (context, matchesState) {
+              final liveCount = matchesState.liveMatchesCount;
+
+              // Desktop Layout (> 1024px)
+              if (width >= AppDimensions.tabletMaxWidth) {
+                return Scaffold(
+                  body: Row(
+                    children: [
+                      _buildDesktopSidebar(context, isDark, isArabic),
+                      const VerticalDivider(width: 1),
+                      Expanded(child: contentWithIndicator()),
+                    ],
+                  ),
+                );
+              }
+
+              // Tablet Layout (768px - 1024px)
+              if (width >= AppDimensions.mobileMaxWidth) {
+                return Scaffold(
+                  body: Row(
+                    children: [
+                      NavigationRail(
+                        selectedIndex: navigationShell.currentIndex,
+                        onDestinationSelected: (index) =>
+                            _onTap(context, index),
+                        labelType: NavigationRailLabelType.all,
+                        destinations: _buildRailDestinations(l10n, liveCount),
+                      ),
+                      const VerticalDivider(width: 1),
+                      Expanded(child: contentWithIndicator()),
+                    ],
+                  ),
+                );
+              }
+
+              // Shell branches are 0: Home, 1: News, 2: Standings, 3: Transfers, 4: Videos, 5: Settings
+              final navIndex = navigationShell.currentIndex.clamp(0, 5);
+
+              return Scaffold(
+                body: contentWithIndicator(),
+                bottomNavigationBar: BottomNavigationBar(
+                  currentIndex: navIndex,
+                  onTap: (index) => _onTap(context, index),
+                  items: [
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.home_outlined),
+                      activeIcon: const Icon(Icons.home_rounded),
+                      label: l10n.translate('nav_home'),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.newspaper_outlined),
+                      activeIcon: const Icon(Icons.newspaper_rounded),
+                      label: l10n.translate('nav_news'),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.table_chart_outlined),
+                      activeIcon: const Icon(Icons.table_chart_rounded),
+                      label: l10n.translate('nav_standings'),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.swap_horiz_outlined),
+                      activeIcon: const Icon(Icons.swap_horiz_rounded),
+                      label: l10n.translate('nav_transfers'),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.video_library_outlined),
+                      activeIcon: const Icon(Icons.video_library_rounded),
+                      label: l10n.translate('nav_videos'),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.more_horiz_outlined),
+                      activeIcon: const Icon(Icons.more_horiz_rounded),
+                      label: l10n.translate('nav_settings'),
+                    ),
                   ],
                 ),
               );
-            }
-
-            // Shell branches are 0: Home, 1: News, 2: Standings, 3: Transfers, 4: Videos, 5: Settings
-            final navIndex = navigationShell.currentIndex.clamp(0, 5);
-
-            return Scaffold(
-              body: contentWithIndicator(),
-              bottomNavigationBar: BottomNavigationBar(
-                currentIndex: navIndex,
-                onTap: (index) => _onTap(context, index),
-                items: [
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.home_outlined),
-                    activeIcon: const Icon(Icons.home_rounded),
-                    label: l10n.translate('nav_home'),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.newspaper_outlined),
-                    activeIcon: const Icon(Icons.newspaper_rounded),
-                    label: l10n.translate('nav_news'),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.table_chart_outlined),
-                    activeIcon: const Icon(Icons.table_chart_rounded),
-                    label: l10n.translate('nav_standings'),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.swap_horiz_outlined),
-                    activeIcon: const Icon(Icons.swap_horiz_rounded),
-                    label: l10n.translate('nav_transfers'),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.video_library_outlined),
-                    activeIcon: const Icon(Icons.video_library_rounded),
-                    label: l10n.translate('nav_videos'),
-                  ),
-
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.more_horiz_outlined),
-                    activeIcon: const Icon(Icons.more_horiz_rounded),
-                    label: l10n.translate('nav_settings'),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    ),
-  );
-}
+            },
+          );
+        },
+      ),
+    );
+  }
 
   void _onTap(BuildContext context, int index) {
     navigationShell.goBranch(
@@ -307,21 +313,18 @@ class AppScaffold extends StatelessWidget {
                   color: isSelected
                       ? AppColors.primary
                       : (isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted),
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted),
                 ),
                 title: Text(
                   item.$2,
-                  style:
-                      AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: isSelected ? AppColors.primary : null,
-                      ),
+                  style: AppTypography.getBodyMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? AppColors.primary : null,
+                  ),
                 ),
                 onTap: () => _onTap(context, item.$3),
               ),

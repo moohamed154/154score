@@ -146,7 +146,9 @@ class PlayerRatingPassing extends Equatable {
     if (json == null) return const PlayerRatingPassing();
     return PlayerRatingPassing(
       accuracy: PlayerRatingMetric.fromJson(
-        json['accuracy'] is Map ? json['accuracy'] as Map<String, dynamic> : null,
+        json['accuracy'] is Map
+            ? json['accuracy'] as Map<String, dynamic>
+            : null,
       ),
       crosses: PlayerRatingMetric.fromJson(
         json['crosses'] is Map ? json['crosses'] as Map<String, dynamic> : null,
@@ -279,17 +281,26 @@ class PlayerMatchRatingEntity extends Equatable {
   });
 
   factory PlayerMatchRatingEntity.fromJson(Map<String, dynamic> json) {
-    final rawPlayer = json['player'] is Map ? json['player'] as Map<String, dynamic> : null;
-    final rawHighlights = json['highlights'] is Map ? json['highlights'] as Map<String, dynamic> : null;
-    final rawPassing = json['passing'] is Map ? json['passing'] as Map<String, dynamic> : null;
-    final rawShooting = json['shooting'] is Map ? json['shooting'] as Map<String, dynamic> : null;
-    final rawDribbles = json['dribbles_duels'] is Map ? json['dribbles_duels'] as Map<String, dynamic> : null;
+    final rawPlayer =
+        json['player'] is Map ? json['player'] as Map<String, dynamic> : null;
+    final rawHighlights = json['highlights'] is Map
+        ? json['highlights'] as Map<String, dynamic>
+        : null;
+    final rawPassing =
+        json['passing'] is Map ? json['passing'] as Map<String, dynamic> : null;
+    final rawShooting = json['shooting'] is Map
+        ? json['shooting'] as Map<String, dynamic>
+        : null;
+    final rawDribbles = json['dribbles_duels'] is Map
+        ? json['dribbles_duels'] as Map<String, dynamic>
+        : null;
 
     final statsList = <PlayerRatingStatItem>[];
     if (json['statistics'] is List) {
       for (final s in json['statistics'] as List) {
         if (s is Map) {
-          statsList.add(PlayerRatingStatItem.fromJson(Map<String, dynamic>.from(s)));
+          statsList
+              .add(PlayerRatingStatItem.fromJson(Map<String, dynamic>.from(s)));
         }
       }
     }
@@ -348,7 +359,9 @@ class PlayerMatchRatingEntity extends Equatable {
       'duels lost',
     };
 
-    return statistics.where((s) => !excludedCodes.contains(s.code.toLowerCase())).toList();
+    return statistics
+        .where((s) => !excludedCodes.contains(s.code.toLowerCase()))
+        .toList();
   }
 
   @override

@@ -19,7 +19,8 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
   final Map<String, _CacheEntry<List<MatchStatItemEntity>>> _statsCache = {};
   final Map<String, _CacheEntry<List<MatchNewsItemEntity>>> _newsCache = {};
   final Map<String, _CacheEntry<MatchLineupEntity?>> _lineupsCache = {};
-  final Map<String, _CacheEntry<PlayerMatchRatingEntity?>> _playerRatingCache = {};
+  final Map<String, _CacheEntry<PlayerMatchRatingEntity?>> _playerRatingCache =
+      {};
 
   static const _eventsTtl = Duration(seconds: 20);
   static const _statsTtl = Duration(seconds: 30);

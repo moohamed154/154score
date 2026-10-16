@@ -65,18 +65,21 @@ class _MockLocalStorageService implements LocalStorageService {
     String? id,
     String? name,
     String? slug,
-  }) async => true;
+  }) async =>
+      true;
   @override
   bool isFavoriteCompetition({
     String? compName,
     String? id,
     String? name,
     String? slug,
-  }) => false;
+  }) =>
+      false;
   @override
   Map<String, String> getFavoriteCompetitionTitles() => {};
   @override
-  Future<bool> registerCompetitionTitles(Map<String, String> titles) async => true;
+  Future<bool> registerCompetitionTitles(Map<String, String> titles) async =>
+      true;
   @override
   String resolveCompetitionTitle(String compOrId) => compOrId;
   @override
@@ -120,7 +123,9 @@ Widget createTestApp(Widget child, {Locale locale = const Locale('en')}) {
 
 void main() {
   group('LeagueResolver Title Localization', () {
-    test('Translates Africa Cup of Nations Qualification from Arabic to English', () {
+    test(
+        'Translates Africa Cup of Nations Qualification from Arabic to English',
+        () {
       final result = LeagueResolver.resolveTitle(
         'تصفيات كأس أمم أفريقيا',
         isArabic: false,
@@ -128,7 +133,9 @@ void main() {
       expect(result, equals('Africa Cup of Nations Qualification'));
     });
 
-    test('Translates Africa Cup of Nations Qualification from English to Arabic', () {
+    test(
+        'Translates Africa Cup of Nations Qualification from English to Arabic',
+        () {
       final result = LeagueResolver.resolveTitle(
         'Africa Cup of Nations Qualification',
         isArabic: true,
@@ -153,7 +160,8 @@ void main() {
   });
 
   group('TeamHeaderCard Localization', () {
-    testWidgets('Translates Arabic league title to English in English locale', (tester) async {
+    testWidgets('Translates Arabic league title to English in English locale',
+        (tester) async {
       tester.view.physicalSize = const Size(390 * 2, 844 * 2);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -188,13 +196,16 @@ void main() {
   });
 
   group('Trophies Image Prioritization', () {
-    testWidgets('Trophies card prioritizes cup.logo when cupImage has broken CDN /cups/ path', (tester) async {
+    testWidgets(
+        'Trophies card prioritizes cup.logo when cupImage has broken CDN /cups/ path',
+        (tester) async {
       tester.view.physicalSize = const Size(800 * 2, 844 * 2);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
       const brokenCupUrl = 'https://imgs.ysscores.com/cups/17672635357964.png';
-      const validLogoUrl = 'https://imgs.ysscores.com/championship/64/3321747861244.png';
+      const validLogoUrl =
+          'https://imgs.ysscores.com/championship/64/3321747861244.png';
 
       const profile = TeamProfileEntity(
         teamId: '10255',
@@ -241,8 +252,10 @@ void main() {
 
       // AppImage for trophy should have imageUrl equal to validLogoUrl, NOT brokenCupUrl
       final appImages = tester.widgetList<AppImage>(find.byType(AppImage));
-      final trophyImages = appImages.where((img) => img.imageUrl == validLogoUrl).toList();
-      final brokenImages = appImages.where((img) => img.imageUrl == brokenCupUrl).toList();
+      final trophyImages =
+          appImages.where((img) => img.imageUrl == validLogoUrl).toList();
+      final brokenImages =
+          appImages.where((img) => img.imageUrl == brokenCupUrl).toList();
 
       expect(trophyImages.isNotEmpty, isTrue);
       expect(brokenImages.isEmpty, isTrue);
@@ -250,7 +263,9 @@ void main() {
   });
 
   group('MatchCard Star Removal', () {
-    testWidgets('MatchCard does not display any star icon even if match is favorite', (tester) async {
+    testWidgets(
+        'MatchCard does not display any star icon even if match is favorite',
+        (tester) async {
       const match = MatchEntity(
         id: '12345',
         team1: 'Egypt',

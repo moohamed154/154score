@@ -100,16 +100,14 @@ class _AppDatePickerDialogState extends State<AppDatePickerDialog> {
       dateTitle = '$dd/$mm/${_selectedDate.year}';
     }
 
-
     return Theme(
       data: dialogTheme,
       child: Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
-        backgroundColor: widget.isDark
-            ? AppColors.darkCard
-            : AppColors.lightCard,
+        backgroundColor:
+            widget.isDark ? AppColors.darkCard : AppColors.lightCard,
         elevation: 6,
         clipBehavior: Clip.antiAlias,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),

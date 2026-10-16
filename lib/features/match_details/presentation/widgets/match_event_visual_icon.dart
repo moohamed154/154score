@@ -36,7 +36,8 @@ class MatchEventVisualIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveDark = isDark ?? (Theme.of(context).brightness == Brightness.dark);
+    final effectiveDark =
+        isDark ?? (Theme.of(context).brightness == Brightness.dark);
 
     switch (type) {
       case MatchVisualEventType.yellowCard:
@@ -76,8 +77,10 @@ class MatchEventVisualIcon extends StatelessWidget {
   Widget _buildYellowCard(bool isDark) {
     final width = isSmall ? 10.0 : 12.0;
     final height = isSmall ? 14.0 : 16.0;
-    final cardColor = isDark ? const Color(0xFFFACC15) : const Color(0xFFEAB308);
-    final borderColor = isDark ? const Color(0xFFEAB308) : const Color(0xFFCA8A04);
+    final cardColor =
+        isDark ? const Color(0xFFFACC15) : const Color(0xFFEAB308);
+    final borderColor =
+        isDark ? const Color(0xFFEAB308) : const Color(0xFFCA8A04);
 
     return Container(
       width: width,
@@ -103,8 +106,10 @@ class MatchEventVisualIcon extends StatelessWidget {
   Widget _buildRedCard(bool isDark) {
     final width = isSmall ? 10.0 : 12.0;
     final height = isSmall ? 14.0 : 16.0;
-    final cardColor = isDark ? const Color(0xFFEF4444) : const Color(0xFFDC2626);
-    final borderColor = isDark ? const Color(0xFFDC2626) : const Color(0xFFB91C1C);
+    final cardColor =
+        isDark ? const Color(0xFFEF4444) : const Color(0xFFDC2626);
+    final borderColor =
+        isDark ? const Color(0xFFDC2626) : const Color(0xFFB91C1C);
 
     return Container(
       width: width,
@@ -134,9 +139,12 @@ class MatchEventVisualIcon extends StatelessWidget {
     final totalH = isSmall ? 15.0 : 17.0;
 
     final redColor = isDark ? const Color(0xFFEF4444) : const Color(0xFFDC2626);
-    final redBorder = isDark ? const Color(0xFFDC2626) : const Color(0xFFB91C1C);
-    final yellowColor = isDark ? const Color(0xFFFACC15) : const Color(0xFFEAB308);
-    final yellowBorder = isDark ? const Color(0xFFEAB308) : const Color(0xFFCA8A04);
+    final redBorder =
+        isDark ? const Color(0xFFDC2626) : const Color(0xFFB91C1C);
+    final yellowColor =
+        isDark ? const Color(0xFFFACC15) : const Color(0xFFEAB308);
+    final yellowBorder =
+        isDark ? const Color(0xFFEAB308) : const Color(0xFFCA8A04);
 
     return SizedBox(
       width: totalW,
@@ -402,7 +410,8 @@ class MatchEventVisualIcon extends StatelessWidget {
 
   // ── Missed Chance (Amber circle + trending down) ──────────────────────────
   Widget _buildMissChance(bool isDark) {
-    final amberColor = isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706);
+    final amberColor =
+        isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706);
     return Container(
       padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
       decoration: BoxDecoration(
@@ -423,7 +432,8 @@ class MatchEventVisualIcon extends StatelessWidget {
 
   // ── Shot Crossbar / Post (Orange circle + goalpost icon) ──────────────────
   Widget _buildShootCrossbar(bool isDark) {
-    final orangeColor = isDark ? const Color(0xFFF97316) : const Color(0xFFEA580C);
+    final orangeColor =
+        isDark ? const Color(0xFFF97316) : const Color(0xFFEA580C);
     return Container(
       padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
       decoration: BoxDecoration(
@@ -450,7 +460,8 @@ class MatchEventVisualIcon extends StatelessWidget {
     final borderColor = isDark
         ? const Color(0xFF64748B).withValues(alpha: 0.35)
         : const Color(0xFFCBD5E1);
-    final iconColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+    final iconColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
 
     return Container(
       padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
@@ -472,7 +483,8 @@ class MatchEventVisualIcon extends StatelessWidget {
 
   // ── Paused / Interrupted (Amber pause) ───────────────────────────────────
   Widget _buildPaused(bool isDark) {
-    final pauseColor = isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706);
+    final pauseColor =
+        isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706);
     return Container(
       padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
       decoration: BoxDecoration(

@@ -85,14 +85,13 @@ class MatchStatusHelper {
 
     final hasLiveIndicator =
         (minute != null && minute.isNotEmpty && minute != 'null') ||
-        (extraTime != null &&
-            extraTime.isNotEmpty &&
-            extraTime != 'null' &&
-            extraTime != '+00:00' &&
-            extraTime != '00:00');
+            (extraTime != null &&
+                extraTime.isNotEmpty &&
+                extraTime != 'null' &&
+                extraTime != '+00:00' &&
+                extraTime != '00:00');
 
-    final isExplicitUpcoming =
-        code == 'UPCOMING' ||
+    final isExplicitUpcoming = code == 'UPCOMING' ||
         code == 'NOT_STARTED' ||
         code == 'SCHEDULED' ||
         p == 'upcoming' ||
@@ -202,15 +201,14 @@ class MatchStatusHelper {
     if (timestamp != null && timestamp > 0) {
       final nowUtcSec =
           (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-          1000;
+              1000;
       final diffSeconds = nowUtcSec - timestamp;
       if (diffSeconds < 0) {
         return MatchPhase.upcoming;
       }
     }
 
-    final hasActiveScores =
-        (score1 != null &&
+    final hasActiveScores = (score1 != null &&
         score2 != null &&
         score1.isNotEmpty &&
         score2.isNotEmpty &&
@@ -235,15 +233,13 @@ class MatchStatusHelper {
     if (date != null && date.trim().isNotEmpty) {
       matchDate = DateTime.tryParse(date.trim());
     }
-    final isPastDate =
-        matchDate != null &&
+    final isPastDate = matchDate != null &&
         DateTime(
           matchDate.year,
           matchDate.month,
           matchDate.day,
         ).isBefore(today);
-    final isFutureDate =
-        matchDate != null &&
+    final isFutureDate = matchDate != null &&
         DateTime(matchDate.year, matchDate.month, matchDate.day).isAfter(today);
 
     // 5.3 Historical match guard: A match on a past date can NEVER be live or upcoming
@@ -282,15 +278,12 @@ class MatchStatusHelper {
     if (timestamp != null && timestamp > 0) {
       final nowUtcSec =
           (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-          1000;
+              1000;
       final diff = nowUtcSec - timestamp;
       if (diff > 150 * 60 && hasActiveScores) {
         return MatchPhase.finished;
       }
-    } else if (isToday &&
-        time != null &&
-        time.isNotEmpty &&
-        time != '-') {
+    } else if (isToday && time != null && time.isNotEmpty && time != '-') {
       final startMins = parseTimeToMinutes(time);
       if (startMins != null) {
         final currentMins = currentTime.hour * 60 + currentTime.minute;
@@ -449,9 +442,8 @@ class MatchStatusHelper {
       if (elapsedPart.isNotEmpty &&
           elapsedPart != '00:00' &&
           elapsedPart != '0') {
-        final formattedElapsed = elapsedPart.contains(':')
-            ? elapsedPart
-            : '0$elapsedPart:00';
+        final formattedElapsed =
+            elapsedPart.contains(':') ? elapsedPart : '0$elapsedPart:00';
         return '$formattedElapsed  / $totalPart';
       }
       if (totalNum != null && totalNum > 0) {
@@ -477,8 +469,8 @@ class MatchStatusHelper {
   static int? parseTimeToMinutes(String? timeStr) {
     if (timeStr == null || timeStr.isEmpty || timeStr == '-') return null;
     final clean = timeStr.trim();
-    final match = RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?')
-        .firstMatch(clean);
+    final match =
+        RegExp(r'(\d{1,2}):(\d{2})\s*([صم]|AM|PM|am|pm)?').firstMatch(clean);
     if (match == null) return null;
     var h = int.tryParse(match.group(1) ?? '0') ?? 0;
     final m = int.tryParse(match.group(2) ?? '0') ?? 0;
@@ -504,7 +496,7 @@ class MatchStatusHelper {
     if (timestamp != null && timestamp > 0) {
       final nowSec =
           (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-          1000;
+              1000;
       elapsed = (nowSec - timestamp) ~/ 60;
     } else {
       final startMins = parseTimeToMinutes(time);
@@ -527,15 +519,13 @@ class MatchStatusHelper {
     final s = (status ?? '').toLowerCase();
     final p = (period ?? '').toLowerCase();
 
-    final is1stHalf =
-        p.contains('1st') ||
+    final is1stHalf = p.contains('1st') ||
         s.contains('الأول') ||
         s.contains('الاول') ||
         s.contains('first');
     final is2ndHalf =
         p.contains('2nd') || s.contains('الثاني') || s.contains('second');
-    final isHt =
-        p.contains('ht') ||
+    final isHt = p.contains('ht') ||
         s.contains('استراحة') ||
         s.contains('بين الشوطين') ||
         s.contains('half time');
@@ -555,12 +545,11 @@ class MatchStatusHelper {
       if (htTime != null && htTime > 0) {
         final nowSec =
             (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-            1000;
+                1000;
         secondHalfElapsed = math.max(0, (nowSec - htTime) ~/ 60);
       } else {
-        secondHalfElapsed = elapsed > 68
-            ? elapsed - 68
-            : (elapsed > 45 ? elapsed - 45 : 0);
+        secondHalfElapsed =
+            elapsed > 68 ? elapsed - 68 : (elapsed > 45 ? elapsed - 45 : 0);
       }
       final min = 45 + secondHalfElapsed;
       if (min < 46) return (minute: 46, extraMinute: 0);
@@ -592,7 +581,7 @@ class MatchStatusHelper {
     if (timestamp != null && timestamp > 0) {
       final nowSec =
           (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-          1000;
+              1000;
       elapsed = (nowSec - timestamp) ~/ 60;
     } else {
       final startMins = parseTimeToMinutes(time);
@@ -615,15 +604,13 @@ class MatchStatusHelper {
     final s = (status ?? '').toLowerCase();
     final p = (period ?? '').toLowerCase();
 
-    final is1stHalf =
-        p.contains('1st') ||
+    final is1stHalf = p.contains('1st') ||
         s.contains('الأول') ||
         s.contains('الاول') ||
         s.contains('first');
     final is2ndHalf =
         p.contains('2nd') || s.contains('الثاني') || s.contains('second');
-    final isHt =
-        p.contains('ht') ||
+    final isHt = p.contains('ht') ||
         s.contains('استراحة') ||
         s.contains('بين الشوطين') ||
         s.contains('half time');
@@ -641,12 +628,11 @@ class MatchStatusHelper {
       if (htTime != null && htTime > 0) {
         final nowSec =
             (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-            1000;
+                1000;
         secondHalfElapsed = math.max(0, (nowSec - htTime) ~/ 60);
       } else {
-        secondHalfElapsed = elapsed > 68
-            ? elapsed - 68
-            : (elapsed > 45 ? elapsed - 45 : 0);
+        secondHalfElapsed =
+            elapsed > 68 ? elapsed - 68 : (elapsed > 45 ? elapsed - 45 : 0);
       }
       final min = 45 + secondHalfElapsed;
       if (min < 46) return 46;
@@ -682,7 +668,7 @@ class MatchStatusHelper {
     if (timestamp != null && timestamp > 0) {
       final nowSec =
           (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-          1000;
+              1000;
       elapsedSeconds = nowSec - timestamp;
     } else {
       final startMins = parseTimeToMinutes(time);
@@ -709,23 +695,19 @@ class MatchStatusHelper {
     final s = (status ?? '').toLowerCase();
     final p = (period ?? '').toLowerCase();
 
-    final is1stHalf =
-        p.contains('1st') ||
+    final is1stHalf = p.contains('1st') ||
         p.contains('first') ||
         s.contains('الأول') ||
         s.contains('الاول');
     final is2ndHalf =
         p.contains('2nd') || p.contains('second') || s.contains('الثاني');
-    final is1stExtra =
-        p.contains('1st_extra') ||
+    final is1stExtra = p.contains('1st_extra') ||
         s.contains('الإضافي الأول') ||
         s.contains('الاضافي الاول');
-    final is2ndExtra =
-        p.contains('2nd_extra') ||
+    final is2ndExtra = p.contains('2nd_extra') ||
         s.contains('الإضافي الثاني') ||
         s.contains('الاضافي الثاني');
-    final isHt =
-        p.contains('ht') ||
+    final isHt = p.contains('ht') ||
         p.contains('break') ||
         s.contains('استراحة') ||
         s.contains('بين الشوطين') ||
@@ -765,7 +747,7 @@ class MatchStatusHelper {
       if (htTime != null && htTime > 0) {
         final nowSec =
             (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-            1000;
+                1000;
         secHalfElapsed = math.max(0, nowSec - htTime);
       } else {
         secHalfElapsed = elapsedSeconds > (60 * 60)
@@ -903,15 +885,13 @@ class MatchStatusHelper {
     final s = (status ?? '').toLowerCase();
     final p = (period ?? '').toLowerCase();
 
-    final is1stHalf =
-        p.contains('1st') ||
+    final is1stHalf = p.contains('1st') ||
         s.contains('الأول') ||
         s.contains('الاول') ||
         s.contains('first');
     final is2ndHalf =
         p.contains('2nd') || s.contains('الثاني') || s.contains('second');
-    final isHt =
-        p.contains('ht') ||
+    final isHt = p.contains('ht') ||
         s.contains('استراحة') ||
         s.contains('بين الشوطين') ||
         s.contains('half time');
@@ -935,12 +915,11 @@ class MatchStatusHelper {
       if (htTime != null && htTime > 0) {
         final nowSec =
             (now?.toUtc() ?? DateTime.now().toUtc()).millisecondsSinceEpoch ~/
-            1000;
+                1000;
         secondHalfElapsed = math.max(0, (nowSec - htTime) ~/ 60);
       } else {
-        secondHalfElapsed = elapsed > 68
-            ? elapsed - 68
-            : (elapsed > 45 ? elapsed - 45 : 0);
+        secondHalfElapsed =
+            elapsed > 68 ? elapsed - 68 : (elapsed > 45 ? elapsed - 45 : 0);
       }
       final min = 45 + secondHalfElapsed;
       if (min < 46) return "46'";
@@ -985,14 +964,12 @@ class MatchStatusHelper {
     }
     final p = (period ?? '').toLowerCase();
     final s = (rawStatus ?? '').toLowerCase();
-    final is1stHalf =
-        p.contains('1st') ||
+    final is1stHalf = p.contains('1st') ||
         s.contains('الأول') ||
         s.contains('الاول') ||
         s.contains('first');
-    final baseMin = (minNum != null && minNum > 0)
-        ? minNum
-        : (is1stHalf ? 45 : 90);
+    final baseMin =
+        (minNum != null && minNum > 0) ? minNum : (is1stHalf ? 45 : 90);
 
     final formattedExtra = formatExtraTime(extraTime, minute: baseMin);
 

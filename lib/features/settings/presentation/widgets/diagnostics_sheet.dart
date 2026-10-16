@@ -93,7 +93,6 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
             ],
           ),
           const SizedBox(height: 16),
-
           StreamBuilder<WebSocketConnectionHealth>(
             stream: widget.webSocketService.healthStream,
             initialData: widget.webSocketService.currentHealth,
@@ -139,7 +138,6 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
             },
           ),
           const SizedBox(height: 10),
-
           _buildDiagTile(
             title: l10n.translate('diag_ping'),
             value: _pingResult ?? 'Checking...',
@@ -148,7 +146,6 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
             isArabic: isArabic,
           ),
           const SizedBox(height: 10),
-
           _buildDiagTile(
             title: l10n.translate('diag_api_health'),
             value: _healthResult ?? 'Checking...',
@@ -157,7 +154,6 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
             isArabic: isArabic,
           ),
           const SizedBox(height: 10),
-
           _buildDiagTile(
             title: l10n.translate('diag_metrics'),
             value: _metricsResult ?? 'Checking...',
@@ -166,7 +162,6 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
             isArabic: isArabic,
           ),
           const SizedBox(height: 20),
-
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -217,15 +212,12 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style:
-                      AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        color: isSuccess
-                            ? AppColors.primary
-                            : AppColors.liveRed,
-                      ),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    color: isSuccess ? AppColors.primary : AppColors.liveRed,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

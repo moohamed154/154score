@@ -32,9 +32,9 @@ class RealtimeMergeEngine {
       final updatedMatches = league.matches.map((m) {
         final cleanMId = m.id.replaceAll('match:', '').trim();
         final cleanUId = (update.matchId ?? '').replaceAll('match:', '').trim();
-        final matchesId = cleanUId.isNotEmpty && (m.id == update.matchId || cleanMId == cleanUId);
-        final matchesTeams =
-            (update.team1 != null &&
+        final matchesId = cleanUId.isNotEmpty &&
+            (m.id == update.matchId || cleanMId == cleanUId);
+        final matchesTeams = (update.team1 != null &&
             update.team2 != null &&
             update.team1!.isNotEmpty &&
             update.team2!.isNotEmpty &&
@@ -48,22 +48,22 @@ class RealtimeMergeEngine {
           final newScore1 = (update.score1 != null && update.score1!.isNotEmpty)
               ? update.score1
               : (update.rawPayload['score_1']?.toString() ??
-                    update.rawPayload['score1']?.toString() ??
-                    update.rawPayload['home_score']?.toString() ??
-                    m.score1);
+                  update.rawPayload['score1']?.toString() ??
+                  update.rawPayload['home_score']?.toString() ??
+                  m.score1);
           final newScore2 = (update.score2 != null && update.score2!.isNotEmpty)
               ? update.score2
               : (update.rawPayload['score_2']?.toString() ??
-                    update.rawPayload['score2']?.toString() ??
-                    update.rawPayload['away_score']?.toString() ??
-                    m.score2);
+                  update.rawPayload['score2']?.toString() ??
+                  update.rawPayload['away_score']?.toString() ??
+                  m.score2);
           final newStatus = (update.status != null && update.status!.isNotEmpty)
               ? update.status
               : m.status;
           final newStatusCode =
               (update.statusCode != null && update.statusCode!.isNotEmpty)
-              ? update.statusCode
-              : m.statusCode;
+                  ? update.statusCode
+                  : m.statusCode;
           final newMinute = (update.minute != null && update.minute!.isNotEmpty)
               ? update.minute
               : m.minute;
@@ -72,35 +72,35 @@ class RealtimeMergeEngine {
               : m.period;
           final newExtraTime =
               (update.extraTime != null && update.extraTime!.isNotEmpty)
-              ? update.extraTime
-              : m.extraTime;
+                  ? update.extraTime
+                  : m.extraTime;
           final newTeam1Logo =
               (update.team1Logo != null && update.team1Logo!.isNotEmpty)
-              ? update.team1Logo
-              : m.team1Logo;
+                  ? update.team1Logo
+                  : m.team1Logo;
           final newTeam2Logo =
               (update.team2Logo != null && update.team2Logo!.isNotEmpty)
-              ? update.team2Logo
-              : m.team2Logo;
+                  ? update.team2Logo
+                  : m.team2Logo;
 
           final newPenaltyScore1 =
               (update.penaltyScore1 != null && update.penaltyScore1!.isNotEmpty)
-              ? update.penaltyScore1
-              : (update.rawPayload['penalty_score_1']?.toString() ??
-                    update.rawPayload['penalties_1']?.toString() ??
-                    (update.rawPayload['penalties'] is Map
-                        ? update.rawPayload['penalties']['home']?.toString()
-                        : null) ??
-                    m.penaltyScore1);
+                  ? update.penaltyScore1
+                  : (update.rawPayload['penalty_score_1']?.toString() ??
+                      update.rawPayload['penalties_1']?.toString() ??
+                      (update.rawPayload['penalties'] is Map
+                          ? update.rawPayload['penalties']['home']?.toString()
+                          : null) ??
+                      m.penaltyScore1);
           final newPenaltyScore2 =
               (update.penaltyScore2 != null && update.penaltyScore2!.isNotEmpty)
-              ? update.penaltyScore2
-              : (update.rawPayload['penalty_score_2']?.toString() ??
-                    update.rawPayload['penalties_2']?.toString() ??
-                    (update.rawPayload['penalties'] is Map
-                        ? update.rawPayload['penalties']['away']?.toString()
-                        : null) ??
-                    m.penaltyScore2);
+                  ? update.penaltyScore2
+                  : (update.rawPayload['penalty_score_2']?.toString() ??
+                      update.rawPayload['penalties_2']?.toString() ??
+                      (update.rawPayload['penalties'] is Map
+                          ? update.rawPayload['penalties']['away']?.toString()
+                          : null) ??
+                      m.penaltyScore2);
 
           return m.copyWith(
             score1: newScore1,
@@ -194,20 +194,16 @@ class RealtimeMergeEngine {
         }
 
         // If current state has higher scores or progressed minute, preserve current state
-        final currGoals =
-            (int.tryParse(currentMatch.score1 ?? '0') ?? 0) +
+        final currGoals = (int.tryParse(currentMatch.score1 ?? '0') ?? 0) +
             (int.tryParse(currentMatch.score2 ?? '0') ?? 0);
-        final restGoals =
-            (int.tryParse(restMatch.score1 ?? '0') ?? 0) +
+        final restGoals = (int.tryParse(restMatch.score1 ?? '0') ?? 0) +
             (int.tryParse(restMatch.score2 ?? '0') ?? 0);
 
-        final currMin =
-            int.tryParse(
+        final currMin = int.tryParse(
               currentMatch.minute?.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
             ) ??
             0;
-        final restMin =
-            int.tryParse(
+        final restMin = int.tryParse(
               restMatch.minute?.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
             ) ??
             0;

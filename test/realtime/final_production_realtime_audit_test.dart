@@ -207,8 +207,8 @@ void main() {
 
         File('reports/realtime/final-production-realtime-audit.json')
             .writeAsStringSync(
-              const JsonEncoder.withIndent('  ').convert(jsonReport),
-            );
+          const JsonEncoder.withIndent('  ').convert(jsonReport),
+        );
 
         const mdReport = '''# 154Score Final Production Realtime Audit Report
 **Timestamp**: 2026-08-29

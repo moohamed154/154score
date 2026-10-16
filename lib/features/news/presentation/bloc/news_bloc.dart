@@ -79,7 +79,8 @@ class NewsState extends Equatable {
       status: status ?? this.status,
       feed: feed ?? this.feed,
       filteredLatest: filteredLatest ?? this.filteredLatest,
-      selectedTeamId: clearTeamId ? null : (selectedTeamId ?? this.selectedTeamId),
+      selectedTeamId:
+          clearTeamId ? null : (selectedTeamId ?? this.selectedTeamId),
       errorMessage: errorMessage ?? this.errorMessage,
       lang: lang ?? this.lang,
     );
@@ -87,13 +88,13 @@ class NewsState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    feed,
-    filteredLatest,
-    selectedTeamId,
-    errorMessage,
-    lang,
-  ];
+        status,
+        feed,
+        filteredLatest,
+        selectedTeamId,
+        errorMessage,
+        lang,
+      ];
 }
 
 // ─── Bloc ──────────────────────────────────────────────────────────────────

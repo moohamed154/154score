@@ -89,8 +89,8 @@ class WebSocketServiceImpl implements WebSocketService {
       StreamController<MatchDetailRealtimeUpdate>.broadcast();
 
   WebSocketServiceImpl({NetworkInfo? networkInfo})
-    // ignore: prefer_initializing_formals
-    : _networkInfo = networkInfo {
+      // ignore: prefer_initializing_formals
+      : _networkInfo = networkInfo {
     _initConnectivityListener();
   }
 
@@ -139,24 +139,24 @@ class WebSocketServiceImpl implements WebSocketService {
 
   @override
   WebSocketConnectionHealth get currentHealth => WebSocketConnectionHealth(
-    state: _currentStatus,
-    currentTransport: _currentTransport,
-    socketId: _socket?.id,
-    latencyMs: _latencyMs,
-    lastConnectedAt: _lastConnectedAt,
-    lastDisconnectedAt: _lastDisconnectedAt,
-    reconnectAttempts: _reconnectAttempts,
-    lastError: _lastError,
-    activeSubscriptions: Set.unmodifiable(_getAllActiveRooms()),
-    totalEventsReceived: _totalEventsReceived,
-    duplicateEventsSuppressed: _duplicateEventsSuppressed,
-    staleEventsSuppressed: _staleEventsSuppressed,
-    eventsIgnored: _eventsIgnored,
-    lastEventName: _lastEventName,
-    lastEventTimestamp: _lastEventTimestamp,
-    restFallbackActive: _restFallbackActive,
-    lastRestRefreshAt: _lastRestRefreshAt,
-  );
+        state: _currentStatus,
+        currentTransport: _currentTransport,
+        socketId: _socket?.id,
+        latencyMs: _latencyMs,
+        lastConnectedAt: _lastConnectedAt,
+        lastDisconnectedAt: _lastDisconnectedAt,
+        reconnectAttempts: _reconnectAttempts,
+        lastError: _lastError,
+        activeSubscriptions: Set.unmodifiable(_getAllActiveRooms()),
+        totalEventsReceived: _totalEventsReceived,
+        duplicateEventsSuppressed: _duplicateEventsSuppressed,
+        staleEventsSuppressed: _staleEventsSuppressed,
+        eventsIgnored: _eventsIgnored,
+        lastEventName: _lastEventName,
+        lastEventTimestamp: _lastEventTimestamp,
+        restFallbackActive: _restFallbackActive,
+        lastRestRefreshAt: _lastRestRefreshAt,
+      );
 
   @override
   String get activeChannel => _activeChannel;
@@ -503,8 +503,7 @@ class WebSocketServiceImpl implements WebSocketService {
         final itemMap = Map<String, dynamic>.from(item);
         if (itemMap['matches'] is List) {
           // League Group item
-          final lTitle =
-              itemMap['league_title']?.toString() ??
+          final lTitle = itemMap['league_title']?.toString() ??
               itemMap['title']?.toString();
           final lId =
               itemMap['league_id']?.toString() ?? itemMap['id']?.toString();
@@ -686,11 +685,9 @@ class WebSocketServiceImpl implements WebSocketService {
         matchId: update.matchId,
         score1: update.score1,
         score2: update.score2,
-        penaltyScore1:
-            update.rawPayload['penalty_score_1']?.toString() ??
+        penaltyScore1: update.rawPayload['penalty_score_1']?.toString() ??
             update.rawPayload['penalties_1']?.toString(),
-        penaltyScore2:
-            update.rawPayload['penalty_score_2']?.toString() ??
+        penaltyScore2: update.rawPayload['penalty_score_2']?.toString() ??
             update.rawPayload['penalties_2']?.toString(),
         status: update.status,
         statusCode: update.statusCode,
@@ -901,9 +898,8 @@ class WebSocketServiceImpl implements WebSocketService {
         : ApiEndpoints.wsChannelEn;
 
     final oldTransfersChannel = _activeTransfersChannel;
-    final newTransfersChannel = langCode == 'ar'
-        ? ApiEndpoints.wsChannelTransfersAr
-        : 'transfers_en';
+    final newTransfersChannel =
+        langCode == 'ar' ? ApiEndpoints.wsChannelTransfersAr : 'transfers_en';
 
     if (oldMatchChannel != newMatchChannel) {
       unsubscribeFromChannel(oldMatchChannel);

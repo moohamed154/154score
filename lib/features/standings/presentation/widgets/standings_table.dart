@@ -88,9 +88,8 @@ class StandingsTable extends StatelessWidget {
               vertical: 10,
             ),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurface
-                  : AppColors.lightCardElevated,
+              color:
+                  isDark ? AppColors.darkSurface : AppColors.lightCardElevated,
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(AppDimensions.radiusMd),
               ),
@@ -103,14 +102,13 @@ class StandingsTable extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     child: Text(
                       l10n.translate('standings_pos'),
-                      style:
-                          AppTypography.getBodySmall(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: isSmall ? 11 : 12,
-                          ),
+                      style: AppTypography.getBodySmall(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: isSmall ? 11 : 12,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -119,14 +117,13 @@ class StandingsTable extends StatelessWidget {
                 Expanded(
                   child: Text(
                     l10n.translate('standings_team'),
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: isSmall ? 11 : 12,
-                        ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: isSmall ? 11 : 12,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -249,15 +246,14 @@ class StandingsTable extends StatelessWidget {
           fit: BoxFit.scaleDown,
           child: Text(
             label,
-            style:
-                AppTypography.getBodySmall(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: isSmall ? 10 : 11,
-                  color: isHighlight ? AppColors.primary : null,
-                ),
+            style: AppTypography.getBodySmall(
+              isDark: isDark,
+              isArabic: isArabic,
+            ).copyWith(
+              fontWeight: FontWeight.w700,
+              fontSize: isSmall ? 10 : 11,
+              color: isHighlight ? AppColors.primary : null,
+            ),
             textAlign: TextAlign.center,
           ),
         ),
@@ -290,15 +286,14 @@ class StandingsTable extends StatelessWidget {
     return Material(
       color: isHighlighted
           ? (isDark
-                ? AppColors.primary.withValues(alpha: 0.18)
-                : AppColors.primary.withValues(alpha: 0.12))
+              ? AppColors.primary.withValues(alpha: 0.18)
+              : AppColors.primary.withValues(alpha: 0.12))
           : Colors.transparent,
       child: InkWell(
         onTap: () {
-          final targetId =
-              (row.teamId != null && row.teamId!.trim().isNotEmpty)
-                  ? row.teamId!.trim()
-                  : Uri.encodeComponent(row.teamName.trim());
+          final targetId = (row.teamId != null && row.teamId!.trim().isNotEmpty)
+              ? row.teamId!.trim()
+              : Uri.encodeComponent(row.teamName.trim());
           context.push(
             '/team/$targetId',
             extra: {'name': row.teamName, 'logo': row.teamLogo},
@@ -345,17 +340,16 @@ class StandingsTable extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         child: Text(
                           displayPosition.toString(),
-                          style:
-                              AppTypography.getBodySmall(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                fontWeight: isHighlighted
-                                    ? FontWeight.w800
-                                    : FontWeight.w700,
-                                fontSize: isSmall ? 11 : 12,
-                                color: isHighlighted ? AppColors.primary : null,
-                              ),
+                          style: AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight: isHighlighted
+                                ? FontWeight.w800
+                                : FontWeight.w700,
+                            fontSize: isSmall ? 11 : 12,
+                            color: isHighlighted ? AppColors.primary : null,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -381,21 +375,19 @@ class StandingsTable extends StatelessWidget {
                     Expanded(
                       child: Text(
                         row.teamName,
-                        style:
-                            AppTypography.getBodyMedium(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: isHighlighted
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              fontSize: isSmall ? 11 : 13,
-                              color: isHighlighted
-                                  ? (isDark
-                                        ? AppColors.primaryLight
-                                        : AppColors.primaryDark)
-                                  : null,
-                            ),
+                        style: AppTypography.getBodyMedium(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight:
+                              isHighlighted ? FontWeight.w800 : FontWeight.w600,
+                          fontSize: isSmall ? 11 : 13,
+                          color: isHighlighted
+                              ? (isDark
+                                  ? AppColors.primaryLight
+                                  : AppColors.primaryDark)
+                              : null,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -488,19 +480,18 @@ class StandingsTable extends StatelessWidget {
           fit: BoxFit.scaleDown,
           child: Text(
             text,
-            style:
-                AppTypography.getBodySmall(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-                  fontSize: isSmall ? 10 : 12,
-                  color: isHighlight
-                      ? AppColors.primary
-                      : (isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary),
-                ),
+            style: AppTypography.getBodySmall(
+              isDark: isDark,
+              isArabic: isArabic,
+            ).copyWith(
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+              fontSize: isSmall ? 10 : 12,
+              color: isHighlight
+                  ? AppColors.primary
+                  : (isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary),
+            ),
             textAlign: TextAlign.center,
           ),
         ),

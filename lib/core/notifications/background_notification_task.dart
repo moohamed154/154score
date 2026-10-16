@@ -104,14 +104,16 @@ Future<bool> triggerMatchReminderBackgroundTask({Dio? dioClient}) async {
           options: Options(headers: {...requestHeaders, ...fallbackSig}),
         );
       } else {
-        debugPrint('[BackgroundNotifTask] matchReminderBackgroundTask error: $e');
+        debugPrint(
+            '[BackgroundNotifTask] matchReminderBackgroundTask error: $e');
         return false;
       }
     }
 
     return response.statusCode == 200 || response.statusCode == 201;
   } catch (e) {
-    debugPrint('[BackgroundNotifTask] matchReminderBackgroundTask safe failure: $e');
+    debugPrint(
+        '[BackgroundNotifTask] matchReminderBackgroundTask safe failure: $e');
     return false;
   }
 }
@@ -165,7 +167,9 @@ Future<void> runNotificationPoll({Dio? dioClient}) async {
       );
     } catch (_) {}
 
-    if (response == null || response.statusCode != 200 || response.data == null) {
+    if (response == null ||
+        response.statusCode != 200 ||
+        response.data == null) {
       return;
     }
 
@@ -411,8 +415,8 @@ bool _isStarredMatchEvent({
 
   final favTeams = prefs.getStringList('app_favorite_teams') ?? [];
   final teamNotifs = prefs.getStringList('team_notifications') ?? [];
-  final mutedTeams = (prefs.getStringList('team_notifications_muted') ?? [])
-      .toSet();
+  final mutedTeams =
+      (prefs.getStringList('team_notifications_muted') ?? []).toSet();
 
   final Set<String> targetNames = {};
   final rawTitles = prefs.getString('app_favorite_team_titles');

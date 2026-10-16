@@ -21,8 +21,7 @@ class PitchPainter extends CustomPainter {
     final h = size.height;
 
     // 1. Base Turf Color
-    final grassColor =
-        baseGrassColor ??
+    final grassColor = baseGrassColor ??
         (isDark ? const Color(0xFF143B25) : const Color(0xFF1E663B));
     final grassPaint = Paint()..color = grassColor;
     final pitchRect = Rect.fromLTWH(0, 0, w, h);

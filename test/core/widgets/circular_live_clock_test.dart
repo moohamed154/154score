@@ -162,7 +162,8 @@ void main() {
       (tester) async {
         final nowUtc = DateTime.now().toUtc();
         // Kickoff 20 minutes ago
-        final kickoffTs = (nowUtc.millisecondsSinceEpoch ~/ 1000) - (20 * 60 + 15);
+        final kickoffTs =
+            (nowUtc.millisecondsSinceEpoch ~/ 1000) - (20 * 60 + 15);
 
         await tester.pumpWidget(
           MaterialApp(
@@ -189,7 +190,8 @@ void main() {
       (tester) async {
         final nowUtc = DateTime.now().toUtc();
         // Match kicked off 75 minutes ago (45m 1st half + 15m HT break + 15m 2nd half)
-        final kickoffTs = (nowUtc.millisecondsSinceEpoch ~/ 1000) - (75 * 60 + 30);
+        final kickoffTs =
+            (nowUtc.millisecondsSinceEpoch ~/ 1000) - (75 * 60 + 30);
 
         await tester.pumpWidget(
           MaterialApp(

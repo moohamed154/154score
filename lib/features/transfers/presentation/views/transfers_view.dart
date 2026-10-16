@@ -81,9 +81,8 @@ class _TransfersViewState extends State<TransfersView> {
                     hintText: l10n.translate('search_placeholder'),
                     prefixIcon: const Icon(Icons.search_rounded, size: 20),
                     filled: true,
-                    fillColor: isDark
-                        ? AppColors.darkCard
-                        : AppColors.lightCard,
+                    fillColor:
+                        isDark ? AppColors.darkCard : AppColors.lightCard,
                     contentPadding: const EdgeInsets.symmetric(
                       vertical: 0,
                       horizontal: 16,
@@ -117,8 +116,8 @@ class _TransfersViewState extends State<TransfersView> {
                   ),
                   onChanged: (val) {
                     context.read<TransfersBloc>().add(
-                      SearchTransfersEvent(val),
-                    );
+                          SearchTransfersEvent(val),
+                        );
                   },
                 ),
               ),
@@ -130,8 +129,9 @@ class _TransfersViewState extends State<TransfersView> {
                   onRefresh: () async {
                     final completer = Completer<void>();
                     context.read<TransfersBloc>().add(
-                      LoadTransfersEvent(isRefresh: true, completer: completer),
-                    );
+                          LoadTransfersEvent(
+                              isRefresh: true, completer: completer),
+                        );
                     try {
                       await completer.future.timeout(
                         const Duration(seconds: 3),

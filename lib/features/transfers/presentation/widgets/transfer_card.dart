@@ -147,10 +147,12 @@ class TransferCard extends StatelessWidget {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.radiusSm),
                       onTap: () {
                         if (transfer.fromTeamName != null) {
-                          final tId = Uri.encodeComponent(transfer.fromTeamName!);
+                          final tId =
+                              Uri.encodeComponent(transfer.fromTeamName!);
                           context.push(
                             '/team/$tId',
                             extra: {
@@ -174,7 +176,9 @@ class TransferCard extends StatelessWidget {
                           Flexible(
                             child: Text(
                               transfer.fromTeamName ??
-                                  (isArabic ? 'النادي السابق' : 'Previous Club'),
+                                  (isArabic
+                                      ? 'النادي السابق'
+                                      : 'Previous Club'),
                               style: AppTypography.getBodyMedium(
                                 isDark: isDark,
                                 isArabic: isArabic,
@@ -209,7 +213,8 @@ class TransferCard extends StatelessWidget {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.radiusSm),
                       onTap: () {
                         if (transfer.toTeamName != null) {
                           final tId = Uri.encodeComponent(transfer.toTeamName!);
@@ -270,15 +275,14 @@ class TransferCard extends StatelessWidget {
                 Flexible(
                   child: Text(
                     transfer.transferType ?? '',
-                    style:
-                        AppTypography.getBodySmall(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(
-                          fontSize: isSmall ? 10 : 11,
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      fontSize: isSmall ? 10 : 11,
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

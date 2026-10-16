@@ -131,7 +131,8 @@ void main() {
       await cubit.close();
     });
 
-    test('When isLiveActivityFeatureEnabled is false, cubit is disabled', () async {
+    test('When isLiveActivityFeatureEnabled is false, cubit is disabled',
+        () async {
       final mockStorage = MockLocalStorageService();
       when(() => mockStorage.isLiveActivityFeatureEnabled()).thenReturn(false);
 
@@ -210,10 +211,11 @@ void main() {
         minute: "45'",
       );
 
-      when(() => mockPlatform.startLiveActivity(any())).thenAnswer((_) async => {
-            'activityId': 'act_3003',
-            'pushToken': 'push_token_sample',
-          });
+      when(() => mockPlatform.startLiveActivity(any()))
+          .thenAnswer((_) async => {
+                'activityId': 'act_3003',
+                'pushToken': 'push_token_sample',
+              });
 
       when(() => mockRemote.registerActivity(
             activityId: any(named: 'activityId'),

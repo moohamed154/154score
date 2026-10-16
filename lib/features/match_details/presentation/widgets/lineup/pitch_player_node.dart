@@ -32,8 +32,7 @@ class PitchPlayerNode extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
 
-    final ringColor =
-        teamColor ??
+    final ringColor = teamColor ??
         (isHome ? const Color(0xFF10B981) : const Color(0xFF38BDF8));
 
     return Semantics(
@@ -68,8 +67,7 @@ class PitchPlayerNode extends StatelessWidget {
                     ],
                   ),
                   child: ClipOval(
-                    child:
-                        (UrlHelper.normalizePlayerPhotoUrl(player.photo) !=
+                    child: (UrlHelper.normalizePlayerPhotoUrl(player.photo) !=
                                 null &&
                             UrlHelper.isValidImageUrl(
                               UrlHelper.normalizePlayerPhotoUrl(player.photo),
@@ -111,8 +109,12 @@ class PitchPlayerNode extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF10B981),
-                              shape: player.goals > 1 ? BoxShape.rectangle : BoxShape.circle,
-                              borderRadius: player.goals > 1 ? BorderRadius.circular(8) : null,
+                              shape: player.goals > 1
+                                  ? BoxShape.rectangle
+                                  : BoxShape.circle,
+                              borderRadius: player.goals > 1
+                                  ? BorderRadius.circular(8)
+                                  : null,
                               border: Border.all(
                                 color: Colors.white,
                                 width: 0.9,
@@ -270,11 +272,11 @@ class PitchPlayerNode extends StatelessWidget {
                         isArabic ? 'ق' : 'C',
                         style:
                             (isArabic ? GoogleFonts.cairo : GoogleFonts.outfit)(
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.black,
-                              height: 1.0,
-                            ),
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.black,
+                          height: 1.0,
+                        ),
                       ),
                     ),
                   ),
@@ -429,7 +431,7 @@ class PitchPlayerNode extends StatelessWidget {
                     ),
                   ),
               ],
-            ),         ),
+            ),
 
             const SizedBox(height: 4),
 
@@ -447,8 +449,14 @@ class PitchPlayerNode extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                     shadows: const [
-                      Shadow(color: Colors.black, blurRadius: 4, offset: Offset(0, 1)),
-                      Shadow(color: Colors.black87, blurRadius: 2, offset: Offset(0, 0.5)),
+                      Shadow(
+                          color: Colors.black,
+                          blurRadius: 4,
+                          offset: Offset(0, 1)),
+                      Shadow(
+                          color: Colors.black87,
+                          blurRadius: 2,
+                          offset: Offset(0, 0.5)),
                     ],
                   ),
                   maxLines: 1,
@@ -483,7 +491,8 @@ class PitchPlayerNode extends StatelessWidget {
   static Color _getRatingColor(String ratingStr) {
     final val = double.tryParse(ratingStr);
     if (val == null) return const Color(0xFF10B981);
-    if (val >= 8.0) return const Color(0xFF00B4D8); // Sky blue / Cyan matching Yalla Shoot
+    if (val >= 8.0)
+      return const Color(0xFF00B4D8); // Sky blue / Cyan matching Yalla Shoot
     if (val >= 7.0) return const Color(0xFF22C55E); // Green
     if (val >= 6.0) return const Color(0xFFF59E0B); // Amber / Orange
     return const Color(0xFFDC2626); // Low rating red
@@ -545,8 +554,7 @@ void showLineupPlayerModal(
     }
   } catch (_) {}
 
-  final hasContributions =
-      p.goals > 0 ||
+  final hasContributions = p.goals > 0 ||
       p.assists > 0 ||
       p.yellowCards > 0 ||
       p.redCards > 0 ||
@@ -624,8 +632,7 @@ void showLineupPlayerModal(
                         border: Border.all(color: AppColors.primary, width: 2),
                       ),
                       child: ClipOval(
-                        child:
-                            (UrlHelper.normalizePlayerPhotoUrl(p.photo) !=
+                        child: (UrlHelper.normalizePlayerPhotoUrl(p.photo) !=
                                     null &&
                                 UrlHelper.isValidImageUrl(
                                   UrlHelper.normalizePlayerPhotoUrl(p.photo),
@@ -714,15 +721,14 @@ void showLineupPlayerModal(
                                 (p.isGoalkeeper
                                     ? (isArabic ? 'حارس المرمى' : 'Goalkeeper')
                                     : '-'),
-                            style:
-                                AppTypography.getBodySmall(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextMuted
-                                      : AppColors.lightTextMuted,
-                                ),
+                            style: AppTypography.getBodySmall(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                            ),
                           ),
                         ],
                       ),
@@ -842,16 +848,15 @@ void showLineupPlayerModal(
                               isArabic
                                   ? 'ما قدمه اللاعب في المباراة'
                                   : 'Player Match Contributions',
-                              style:
-                                  (isArabic
+                              style: (isArabic
                                   ? GoogleFonts.cairo
                                   : GoogleFonts.inter)(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 12.5,
-                                    color: isDark
-                                        ? AppColors.darkTextPrimary
-                                        : AppColors.lightTextPrimary,
-                                  ),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12.5,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
                             ),
                           ],
                         ),
@@ -977,20 +982,19 @@ void showLineupPlayerModal(
                           child: Text(
                             isArabic
                                 ? (p.isStarter
-                                      ? 'شارك كأساسي في المباراة دون أحداث مسجلة'
-                                      : 'متواجد على مقاعد البدلاء دون مشاركة')
+                                    ? 'شارك كأساسي في المباراة دون أحداث مسجلة'
+                                    : 'متواجد على مقاعد البدلاء دون مشاركة')
                                 : (p.isStarter
-                                      ? 'Started the match with no logged cards/goals'
-                                      : 'Available on the substitute bench'),
-                            style:
-                                (isArabic
+                                    ? 'Started the match with no logged cards/goals'
+                                    : 'Available on the substitute bench'),
+                            style: (isArabic
                                 ? GoogleFonts.cairo
                                 : GoogleFonts.inter)(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? AppColors.darkTextMuted
-                                      : AppColors.lightTextMuted,
-                                ),
+                              fontSize: 12,
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                            ),
                           ),
                         ),
                       ],
@@ -1077,8 +1081,7 @@ Widget _buildModalAttr({
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color:
-              badgeColor ??
+          color: badgeColor ??
               (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(6),
         ),

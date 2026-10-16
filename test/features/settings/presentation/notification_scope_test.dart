@@ -56,8 +56,10 @@ void main() {
 
     test('Mode 1: Starred Teams & Matches Only (Default)', () async {
       // Set to Starred Only
-      await storage.setMatchNotificationScope(LocalStorageService.matchNotifScopeStarred);
-      expect(storage.getMatchNotificationScope(), equals(LocalStorageService.matchNotifScopeStarred));
+      await storage.setMatchNotificationScope(
+          LocalStorageService.matchNotifScopeStarred);
+      expect(storage.getMatchNotificationScope(),
+          equals(LocalStorageService.matchNotifScopeStarred));
 
       // Star Real Madrid
       await storage.toggleFavoriteTeam('Real Madrid');
@@ -72,8 +74,10 @@ void main() {
 
     test('Mode 2: All Matches (جميع المباريات)', () async {
       // Set to All Matches
-      await storage.setMatchNotificationScope(LocalStorageService.matchNotifScopeAll);
-      expect(storage.getMatchNotificationScope(), equals(LocalStorageService.matchNotifScopeAll));
+      await storage
+          .setMatchNotificationScope(LocalStorageService.matchNotifScopeAll);
+      expect(storage.getMatchNotificationScope(),
+          equals(LocalStorageService.matchNotifScopeAll));
 
       // Verify BOTH Starred and Unstarred Matches ARE tracked
       expect(tracker.isMatchTracked(unstarredMatch), isTrue);
@@ -85,17 +89,22 @@ void main() {
       await storage.toggleFavoriteTeam('Arsenal');
 
       // 1. Start with Starred Only
-      await storage.setMatchNotificationScope(LocalStorageService.matchNotifScopeStarred);
-      expect(tracker.isMatchTracked(unstarredMatch), isTrue); // Arsenal is starred
-      expect(tracker.isMatchTracked(starredMatch), isFalse); // Real Madrid is not starred
+      await storage.setMatchNotificationScope(
+          LocalStorageService.matchNotifScopeStarred);
+      expect(
+          tracker.isMatchTracked(unstarredMatch), isTrue); // Arsenal is starred
+      expect(tracker.isMatchTracked(starredMatch),
+          isFalse); // Real Madrid is not starred
 
       // 2. Switch to All Matches
-      await storage.setMatchNotificationScope(LocalStorageService.matchNotifScopeAll);
+      await storage
+          .setMatchNotificationScope(LocalStorageService.matchNotifScopeAll);
       expect(tracker.isMatchTracked(unstarredMatch), isTrue);
       expect(tracker.isMatchTracked(starredMatch), isTrue);
 
       // 3. Switch back to Starred Only
-      await storage.setMatchNotificationScope(LocalStorageService.matchNotifScopeStarred);
+      await storage.setMatchNotificationScope(
+          LocalStorageService.matchNotifScopeStarred);
       expect(tracker.isMatchTracked(unstarredMatch), isTrue);
       expect(tracker.isMatchTracked(starredMatch), isFalse);
     });

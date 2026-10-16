@@ -25,10 +25,14 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
       }
     } catch (_) {
       try {
-        final dynamic fallbackRaw = await _apiClient.get(ApiEndpoints.maintenance);
-        final Map<String, dynamic>? fallbackData = fallbackRaw is Map<String, dynamic>
-            ? fallbackRaw
-            : (fallbackRaw is Map ? Map<String, dynamic>.from(fallbackRaw) : null);
+        final dynamic fallbackRaw =
+            await _apiClient.get(ApiEndpoints.maintenance);
+        final Map<String, dynamic>? fallbackData =
+            fallbackRaw is Map<String, dynamic>
+                ? fallbackRaw
+                : (fallbackRaw is Map
+                    ? Map<String, dynamic>.from(fallbackRaw)
+                    : null);
 
         if (fallbackData != null) {
           return MaintenanceInfo.fromJson(fallbackData);

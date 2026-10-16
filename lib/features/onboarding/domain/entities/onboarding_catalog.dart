@@ -36,7 +36,8 @@ class OnboardingCatalog {
     OnboardingItem(ar: 'يوفنتوس', en: 'Juventus', id: '9885'),
     OnboardingItem(ar: 'ميلان', en: 'AC Milan', id: '8564'),
     OnboardingItem(ar: 'إنتر ميلان', en: 'Inter Milan', id: '8636'),
-    OnboardingItem(ar: 'باريس سان جيرمان', en: 'Paris Saint-Germain', id: '9847'),
+    OnboardingItem(
+        ar: 'باريس سان جيرمان', en: 'Paris Saint-Germain', id: '9847'),
     OnboardingItem(ar: 'الهلال', en: 'Al Hilal', id: '2529'),
     OnboardingItem(ar: 'النصر', en: 'Al Nassr', id: '101918'),
     OnboardingItem(ar: 'الاتحاد', en: 'Al Ittihad', id: '8577'),

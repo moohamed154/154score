@@ -46,7 +46,10 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
           response['status_code'] == 404 ||
           (response['message'] != null &&
               (response['message'].toString().contains('لا توجد مباريات') ||
-                  response['message'].toString().toLowerCase().contains('no matches')))) {
+                  response['message']
+                      .toString()
+                      .toLowerCase()
+                      .contains('no matches')))) {
         return const [];
       }
       if (response['data'] is List) {

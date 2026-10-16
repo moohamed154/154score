@@ -3,7 +3,8 @@ class TeamResolver {
 
   /// Canonical team dictionary mapping normalized/clean aliases to canonical IDs/keys
   /// and localized names (Arabic & English).
-  static const Map<String, ({String canonical, String ar, String en})> _teamMap = {
+  static const Map<String, ({String canonical, String ar, String en})>
+      _teamMap = {
     // --- National Teams ---
     // Egypt
     'مصر': (canonical: 'egypt', ar: 'مصر', en: 'Egypt'),
@@ -22,10 +23,18 @@ class TeamResolver {
 
     // Saudi Arabia
     'السعودية': (canonical: 'saudi_arabia', ar: 'السعودية', en: 'Saudi Arabia'),
-    'منتخب السعودية': (canonical: 'saudi_arabia', ar: 'السعودية', en: 'Saudi Arabia'),
+    'منتخب السعودية': (
+      canonical: 'saudi_arabia',
+      ar: 'السعودية',
+      en: 'Saudi Arabia'
+    ),
     'الأخضر': (canonical: 'saudi_arabia', ar: 'السعودية', en: 'Saudi Arabia'),
     'الاخضر': (canonical: 'saudi_arabia', ar: 'السعودية', en: 'Saudi Arabia'),
-    'saudi arabia': (canonical: 'saudi_arabia', ar: 'السعودية', en: 'Saudi Arabia'),
+    'saudi arabia': (
+      canonical: 'saudi_arabia',
+      ar: 'السعودية',
+      en: 'Saudi Arabia'
+    ),
     'ksa': (canonical: 'saudi_arabia', ar: 'السعودية', en: 'Saudi Arabia'),
 
     // Morocco
@@ -125,7 +134,11 @@ class TeamResolver {
 
     // Mauritania
     'موريتانيا': (canonical: 'mauritania', ar: 'موريتانيا', en: 'Mauritania'),
-    'منتخب موريتانيا': (canonical: 'mauritania', ar: 'موريتانيا', en: 'Mauritania'),
+    'منتخب موريتانيا': (
+      canonical: 'mauritania',
+      ar: 'موريتانيا',
+      en: 'Mauritania'
+    ),
     'المرابطون': (canonical: 'mauritania', ar: 'موريتانيا', en: 'Mauritania'),
     'mauritania': (canonical: 'mauritania', ar: 'موريتانيا', en: 'Mauritania'),
 
@@ -139,7 +152,11 @@ class TeamResolver {
     // Argentina
     'الأرجنتين': (canonical: 'argentina', ar: 'الأرجنتين', en: 'Argentina'),
     'الارجنتين': (canonical: 'argentina', ar: 'الأرجنتين', en: 'Argentina'),
-    'منتخب الأرجنتين': (canonical: 'argentina', ar: 'الأرجنتين', en: 'Argentina'),
+    'منتخب الأرجنتين': (
+      canonical: 'argentina',
+      ar: 'الأرجنتين',
+      en: 'Argentina'
+    ),
     'التانغو': (canonical: 'argentina', ar: 'الأرجنتين', en: 'Argentina'),
     'argentina': (canonical: 'argentina', ar: 'الأرجنتين', en: 'Argentina'),
 
@@ -215,17 +232,41 @@ class TeamResolver {
     'nigeria': (canonical: 'nigeria', ar: 'نيجيريا', en: 'Nigeria'),
 
     // Ivory Coast
-    'ساحل العاج': (canonical: 'ivory_coast', ar: 'كوت ديفوار', en: 'Ivory Coast'),
-    'كوت ديفوار': (canonical: 'ivory_coast', ar: 'كوت ديفوار', en: 'Ivory Coast'),
-    'منتخب كوت ديفوار': (canonical: 'ivory_coast', ar: 'كوت ديفوار', en: 'Ivory Coast'),
+    'ساحل العاج': (
+      canonical: 'ivory_coast',
+      ar: 'كوت ديفوار',
+      en: 'Ivory Coast'
+    ),
+    'كوت ديفوار': (
+      canonical: 'ivory_coast',
+      ar: 'كوت ديفوار',
+      en: 'Ivory Coast'
+    ),
+    'منتخب كوت ديفوار': (
+      canonical: 'ivory_coast',
+      ar: 'كوت ديفوار',
+      en: 'Ivory Coast'
+    ),
     'الأفيال': (canonical: 'ivory_coast', ar: 'كوت ديفوار', en: 'Ivory Coast'),
-    'ivory coast': (canonical: 'ivory_coast', ar: 'كوت ديفوار', en: 'Ivory Coast'),
-    "cote d'ivoire": (canonical: 'ivory_coast', ar: 'كوت ديفوار', en: 'Ivory Coast'),
+    'ivory coast': (
+      canonical: 'ivory_coast',
+      ar: 'كوت ديفوار',
+      en: 'Ivory Coast'
+    ),
+    "cote d'ivoire": (
+      canonical: 'ivory_coast',
+      ar: 'كوت ديفوار',
+      en: 'Ivory Coast'
+    ),
 
     // Cameroon
     'الكاميرون': (canonical: 'cameroon', ar: 'الكاميرون', en: 'Cameroon'),
     'منتخب الكاميرون': (canonical: 'cameroon', ar: 'الكاميرون', en: 'Cameroon'),
-    'الأسود غير المروضة': (canonical: 'cameroon', ar: 'الكاميرون', en: 'Cameroon'),
+    'الأسود غير المروضة': (
+      canonical: 'cameroon',
+      ar: 'الكاميرون',
+      en: 'Cameroon'
+    ),
     'cameroon': (canonical: 'cameroon', ar: 'الكاميرون', en: 'Cameroon'),
 
     // Ghana
@@ -235,16 +276,48 @@ class TeamResolver {
     'ghana': (canonical: 'ghana', ar: 'غانا', en: 'Ghana'),
 
     // South Africa
-    'جنوب إفريقيا': (canonical: 'south_africa', ar: 'جنوب إفريقيا', en: 'South Africa'),
-    'جنوب افريقيا': (canonical: 'south_africa', ar: 'جنوب إفريقيا', en: 'South Africa'),
-    'بافانا بافانا': (canonical: 'south_africa', ar: 'جنوب إفريقيا', en: 'South Africa'),
-    'south africa': (canonical: 'south_africa', ar: 'جنوب إفريقيا', en: 'South Africa'),
+    'جنوب إفريقيا': (
+      canonical: 'south_africa',
+      ar: 'جنوب إفريقيا',
+      en: 'South Africa'
+    ),
+    'جنوب افريقيا': (
+      canonical: 'south_africa',
+      ar: 'جنوب إفريقيا',
+      en: 'South Africa'
+    ),
+    'بافانا بافانا': (
+      canonical: 'south_africa',
+      ar: 'جنوب إفريقيا',
+      en: 'South Africa'
+    ),
+    'south africa': (
+      canonical: 'south_africa',
+      ar: 'جنوب إفريقيا',
+      en: 'South Africa'
+    ),
 
     // DR Congo
-    'الكونغو الديمقراطية': (canonical: 'dr_congo', ar: 'الكونغو الديمقراطية', en: 'DR Congo'),
-    'الكونغو': (canonical: 'dr_congo', ar: 'الكونغو الديمقراطية', en: 'DR Congo'),
-    'dr congo': (canonical: 'dr_congo', ar: 'الكونغو الديمقراطية', en: 'DR Congo'),
-    'congo dr': (canonical: 'dr_congo', ar: 'الكونغو الديمقراطية', en: 'DR Congo'),
+    'الكونغو الديمقراطية': (
+      canonical: 'dr_congo',
+      ar: 'الكونغو الديمقراطية',
+      en: 'DR Congo'
+    ),
+    'الكونغو': (
+      canonical: 'dr_congo',
+      ar: 'الكونغو الديمقراطية',
+      en: 'DR Congo'
+    ),
+    'dr congo': (
+      canonical: 'dr_congo',
+      ar: 'الكونغو الديمقراطية',
+      en: 'DR Congo'
+    ),
+    'congo dr': (
+      canonical: 'dr_congo',
+      ar: 'الكونغو الديمقراطية',
+      en: 'DR Congo'
+    ),
 
     // USA
     'أمريكا': (canonical: 'usa', ar: 'أمريكا', en: 'USA'),
@@ -264,18 +337,46 @@ class TeamResolver {
     'japan': (canonical: 'japan', ar: 'اليابان', en: 'Japan'),
 
     // South Korea
-    'كوريا الجنوبية': (canonical: 'south_korea', ar: 'كوريا الجنوبية', en: 'South Korea'),
-    'منتخب كوريا الجنوبية': (canonical: 'south_korea', ar: 'كوريا الجنوبية', en: 'South Korea'),
-    'south korea': (canonical: 'south_korea', ar: 'كوريا الجنوبية', en: 'South Korea'),
-    'korea republic': (canonical: 'south_korea', ar: 'كوريا الجنوبية', en: 'South Korea'),
+    'كوريا الجنوبية': (
+      canonical: 'south_korea',
+      ar: 'كوريا الجنوبية',
+      en: 'South Korea'
+    ),
+    'منتخب كوريا الجنوبية': (
+      canonical: 'south_korea',
+      ar: 'كوريا الجنوبية',
+      en: 'South Korea'
+    ),
+    'south korea': (
+      canonical: 'south_korea',
+      ar: 'كوريا الجنوبية',
+      en: 'South Korea'
+    ),
+    'korea republic': (
+      canonical: 'south_korea',
+      ar: 'كوريا الجنوبية',
+      en: 'South Korea'
+    ),
 
     // --- Major European Clubs ---
     // Real Madrid
-    'ريال مدريد': (canonical: 'real_madrid', ar: 'ريال مدريد', en: 'Real Madrid'),
+    'ريال مدريد': (
+      canonical: 'real_madrid',
+      ar: 'ريال مدريد',
+      en: 'Real Madrid'
+    ),
     'الميرنجي': (canonical: 'real_madrid', ar: 'ريال مدريد', en: 'Real Madrid'),
     'الملكي': (canonical: 'real_madrid', ar: 'ريال مدريد', en: 'Real Madrid'),
-    'real madrid': (canonical: 'real_madrid', ar: 'ريال مدريد', en: 'Real Madrid'),
-    'real madrid cf': (canonical: 'real_madrid', ar: 'ريال مدريد', en: 'Real Madrid'),
+    'real madrid': (
+      canonical: 'real_madrid',
+      ar: 'ريال مدريد',
+      en: 'Real Madrid'
+    ),
+    'real madrid cf': (
+      canonical: 'real_madrid',
+      ar: 'ريال مدريد',
+      en: 'Real Madrid'
+    ),
 
     // Barcelona
     'برشلونة': (canonical: 'barcelona', ar: 'برشلونة', en: 'Barcelona'),
@@ -287,11 +388,31 @@ class TeamResolver {
     'barca': (canonical: 'barcelona', ar: 'برشلونة', en: 'Barcelona'),
 
     // Atletico Madrid
-    'أتلتيكو مدريد': (canonical: 'atletico_madrid', ar: 'أتلتيكو مدريد', en: 'Atletico Madrid'),
-    'اتلتيكو مدريد': (canonical: 'atletico_madrid', ar: 'أتلتيكو مدريد', en: 'Atletico Madrid'),
-    'الروخي بلانكوس': (canonical: 'atletico_madrid', ar: 'أتلتيكو مدريد', en: 'Atletico Madrid'),
-    'atletico madrid': (canonical: 'atletico_madrid', ar: 'أتلتيكو مدريد', en: 'Atletico Madrid'),
-    'atletico de madrid': (canonical: 'atletico_madrid', ar: 'أتلتيكو مدريد', en: 'Atletico Madrid'),
+    'أتلتيكو مدريد': (
+      canonical: 'atletico_madrid',
+      ar: 'أتلتيكو مدريد',
+      en: 'Atletico Madrid'
+    ),
+    'اتلتيكو مدريد': (
+      canonical: 'atletico_madrid',
+      ar: 'أتلتيكو مدريد',
+      en: 'Atletico Madrid'
+    ),
+    'الروخي بلانكوس': (
+      canonical: 'atletico_madrid',
+      ar: 'أتلتيكو مدريد',
+      en: 'Atletico Madrid'
+    ),
+    'atletico madrid': (
+      canonical: 'atletico_madrid',
+      ar: 'أتلتيكو مدريد',
+      en: 'Atletico Madrid'
+    ),
+    'atletico de madrid': (
+      canonical: 'atletico_madrid',
+      ar: 'أتلتيكو مدريد',
+      en: 'Atletico Madrid'
+    ),
 
     // Liverpool
     'ليفربول': (canonical: 'liverpool', ar: 'ليفربول', en: 'Liverpool'),
@@ -300,20 +421,68 @@ class TeamResolver {
     'liverpool fc': (canonical: 'liverpool', ar: 'ليفربول', en: 'Liverpool'),
 
     // Manchester City
-    'مانشستر سيتي': (canonical: 'man_city', ar: 'مانشستر سيتي', en: 'Manchester City'),
-    'مان سيتي': (canonical: 'man_city', ar: 'مانشستر سيتي', en: 'Manchester City'),
-    'السيتيزنز': (canonical: 'man_city', ar: 'مانشستر سيتي', en: 'Manchester City'),
-    'manchester city': (canonical: 'man_city', ar: 'مانشستر سيتي', en: 'Manchester City'),
-    'man city': (canonical: 'man_city', ar: 'مانشستر سيتي', en: 'Manchester City'),
-    'manchester city fc': (canonical: 'man_city', ar: 'مانشستر سيتي', en: 'Manchester City'),
+    'مانشستر سيتي': (
+      canonical: 'man_city',
+      ar: 'مانشستر سيتي',
+      en: 'Manchester City'
+    ),
+    'مان سيتي': (
+      canonical: 'man_city',
+      ar: 'مانشستر سيتي',
+      en: 'Manchester City'
+    ),
+    'السيتيزنز': (
+      canonical: 'man_city',
+      ar: 'مانشستر سيتي',
+      en: 'Manchester City'
+    ),
+    'manchester city': (
+      canonical: 'man_city',
+      ar: 'مانشستر سيتي',
+      en: 'Manchester City'
+    ),
+    'man city': (
+      canonical: 'man_city',
+      ar: 'مانشستر سيتي',
+      en: 'Manchester City'
+    ),
+    'manchester city fc': (
+      canonical: 'man_city',
+      ar: 'مانشستر سيتي',
+      en: 'Manchester City'
+    ),
 
     // Manchester United
-    'مانشستر يونايتد': (canonical: 'man_united', ar: 'مانشستر يونايتد', en: 'Manchester United'),
-    'مان يونايتد': (canonical: 'man_united', ar: 'مانشستر يونايتد', en: 'Manchester United'),
-    'الشياطين الحمر مانشستر': (canonical: 'man_united', ar: 'مانشستر يونايتد', en: 'Manchester United'),
-    'manchester united': (canonical: 'man_united', ar: 'مانشستر يونايتد', en: 'Manchester United'),
-    'man united': (canonical: 'man_united', ar: 'مانشستر يونايتد', en: 'Manchester United'),
-    'man utd': (canonical: 'man_united', ar: 'مانشستر يونايتد', en: 'Manchester United'),
+    'مانشستر يونايتد': (
+      canonical: 'man_united',
+      ar: 'مانشستر يونايتد',
+      en: 'Manchester United'
+    ),
+    'مان يونايتد': (
+      canonical: 'man_united',
+      ar: 'مانشستر يونايتد',
+      en: 'Manchester United'
+    ),
+    'الشياطين الحمر مانشستر': (
+      canonical: 'man_united',
+      ar: 'مانشستر يونايتد',
+      en: 'Manchester United'
+    ),
+    'manchester united': (
+      canonical: 'man_united',
+      ar: 'مانشستر يونايتد',
+      en: 'Manchester United'
+    ),
+    'man united': (
+      canonical: 'man_united',
+      ar: 'مانشستر يونايتد',
+      en: 'Manchester United'
+    ),
+    'man utd': (
+      canonical: 'man_united',
+      ar: 'مانشستر يونايتد',
+      en: 'Manchester United'
+    ),
 
     // Arsenal
     'أرسنال': (canonical: 'arsenal', ar: 'أرسنال', en: 'Arsenal'),
@@ -331,41 +500,137 @@ class TeamResolver {
 
     // Tottenham
     'توتنهام': (canonical: 'tottenham', ar: 'توتنهام', en: 'Tottenham Hotspur'),
-    'توتنهام هوتسبير': (canonical: 'tottenham', ar: 'توتنهام', en: 'Tottenham Hotspur'),
+    'توتنهام هوتسبير': (
+      canonical: 'tottenham',
+      ar: 'توتنهام',
+      en: 'Tottenham Hotspur'
+    ),
     'السبيرز': (canonical: 'tottenham', ar: 'توتنهام', en: 'Tottenham Hotspur'),
-    'tottenham': (canonical: 'tottenham', ar: 'توتنهام', en: 'Tottenham Hotspur'),
-    'tottenham hotspur': (canonical: 'tottenham', ar: 'توتنهام', en: 'Tottenham Hotspur'),
+    'tottenham': (
+      canonical: 'tottenham',
+      ar: 'توتنهام',
+      en: 'Tottenham Hotspur'
+    ),
+    'tottenham hotspur': (
+      canonical: 'tottenham',
+      ar: 'توتنهام',
+      en: 'Tottenham Hotspur'
+    ),
     'spurs': (canonical: 'tottenham', ar: 'توتنهام', en: 'Tottenham Hotspur'),
 
     // Bayern Munich
-    'بايرن ميونخ': (canonical: 'bayern_munich', ar: 'بايرن ميونخ', en: 'Bayern Munich'),
-    'بايرن ميونيخ': (canonical: 'bayern_munich', ar: 'بايرن ميونخ', en: 'Bayern Munich'),
-    'البايرن': (canonical: 'bayern_munich', ar: 'بايرن ميونخ', en: 'Bayern Munich'),
-    'bayern munich': (canonical: 'bayern_munich', ar: 'بايرن ميونخ', en: 'Bayern Munich'),
-    'fc bayern munchen': (canonical: 'bayern_munich', ar: 'بايرن ميونخ', en: 'Bayern Munich'),
-    'bayern': (canonical: 'bayern_munich', ar: 'بايرن ميونخ', en: 'Bayern Munich'),
+    'بايرن ميونخ': (
+      canonical: 'bayern_munich',
+      ar: 'بايرن ميونخ',
+      en: 'Bayern Munich'
+    ),
+    'بايرن ميونيخ': (
+      canonical: 'bayern_munich',
+      ar: 'بايرن ميونخ',
+      en: 'Bayern Munich'
+    ),
+    'البايرن': (
+      canonical: 'bayern_munich',
+      ar: 'بايرن ميونخ',
+      en: 'Bayern Munich'
+    ),
+    'bayern munich': (
+      canonical: 'bayern_munich',
+      ar: 'بايرن ميونخ',
+      en: 'Bayern Munich'
+    ),
+    'fc bayern munchen': (
+      canonical: 'bayern_munich',
+      ar: 'بايرن ميونخ',
+      en: 'Bayern Munich'
+    ),
+    'bayern': (
+      canonical: 'bayern_munich',
+      ar: 'بايرن ميونخ',
+      en: 'Bayern Munich'
+    ),
 
     // Borussia Dortmund
-    'بوروسيا دورتموند': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
-    'دورتموند': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
+    'بوروسيا دورتموند': (
+      canonical: 'dortmund',
+      ar: 'بوروسيا دورتموند',
+      en: 'Borussia Dortmund'
+    ),
+    'دورتموند': (
+      canonical: 'dortmund',
+      ar: 'بوروسيا دورتموند',
+      en: 'Borussia Dortmund'
+    ),
     'دورتوند': (canonical: 'dortmund', ar: 'دورتموند', en: 'Borussia Dortmund'),
-    'borussia dortmund': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
-    'dortmund': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
-    'bvb': (canonical: 'dortmund', ar: 'بوروسيا دورتموند', en: 'Borussia Dortmund'),
+    'borussia dortmund': (
+      canonical: 'dortmund',
+      ar: 'بوروسيا دورتموند',
+      en: 'Borussia Dortmund'
+    ),
+    'dortmund': (
+      canonical: 'dortmund',
+      ar: 'بوروسيا دورتموند',
+      en: 'Borussia Dortmund'
+    ),
+    'bvb': (
+      canonical: 'dortmund',
+      ar: 'بوروسيا دورتموند',
+      en: 'Borussia Dortmund'
+    ),
 
     // Bayer Leverkusen
-    'باير ليفركوزن': (canonical: 'leverkusen', ar: 'باير ليفركوزن', en: 'Bayer Leverkusen'),
-    'ليفركوزن': (canonical: 'leverkusen', ar: 'باير ليفركوزن', en: 'Bayer Leverkusen'),
-    'bayer leverkusen': (canonical: 'leverkusen', ar: 'باير ليفركوزن', en: 'Bayer Leverkusen'),
-    'leverkusen': (canonical: 'leverkusen', ar: 'باير ليفركوزن', en: 'Bayer Leverkusen'),
+    'باير ليفركوزن': (
+      canonical: 'leverkusen',
+      ar: 'باير ليفركوزن',
+      en: 'Bayer Leverkusen'
+    ),
+    'ليفركوزن': (
+      canonical: 'leverkusen',
+      ar: 'باير ليفركوزن',
+      en: 'Bayer Leverkusen'
+    ),
+    'bayer leverkusen': (
+      canonical: 'leverkusen',
+      ar: 'باير ليفركوزن',
+      en: 'Bayer Leverkusen'
+    ),
+    'leverkusen': (
+      canonical: 'leverkusen',
+      ar: 'باير ليفركوزن',
+      en: 'Bayer Leverkusen'
+    ),
 
     // Paris Saint-Germain
-    'باريس سان جيرمان': (canonical: 'psg', ar: 'باريس سان جيرمان', en: 'Paris Saint-Germain'),
-    'باريس سان جرمان': (canonical: 'psg', ar: 'باريس سان جيرمان', en: 'Paris Saint-Germain'),
-    'باريس': (canonical: 'psg', ar: 'باريس سان جيرمان', en: 'Paris Saint-Germain'),
-    'paris saint-germain': (canonical: 'psg', ar: 'باريس سان جيرمان', en: 'Paris Saint-Germain'),
-    'paris saint germain': (canonical: 'psg', ar: 'باريس سان جيرمان', en: 'Paris Saint-Germain'),
-    'psg': (canonical: 'psg', ar: 'باريس سان جيرمان', en: 'Paris Saint-Germain'),
+    'باريس سان جيرمان': (
+      canonical: 'psg',
+      ar: 'باريس سان جيرمان',
+      en: 'Paris Saint-Germain'
+    ),
+    'باريس سان جرمان': (
+      canonical: 'psg',
+      ar: 'باريس سان جيرمان',
+      en: 'Paris Saint-Germain'
+    ),
+    'باريس': (
+      canonical: 'psg',
+      ar: 'باريس سان جيرمان',
+      en: 'Paris Saint-Germain'
+    ),
+    'paris saint-germain': (
+      canonical: 'psg',
+      ar: 'باريس سان جيرمان',
+      en: 'Paris Saint-Germain'
+    ),
+    'paris saint germain': (
+      canonical: 'psg',
+      ar: 'باريس سان جيرمان',
+      en: 'Paris Saint-Germain'
+    ),
+    'psg': (
+      canonical: 'psg',
+      ar: 'باريس سان جيرمان',
+      en: 'Paris Saint-Germain'
+    ),
 
     // Juventus
     'يوفنتوس': (canonical: 'juventus', ar: 'يوفنتوس', en: 'Juventus'),
@@ -375,14 +640,34 @@ class TeamResolver {
     'juve': (canonical: 'juventus', ar: 'يوفنتوس', en: 'Juventus'),
 
     // Inter Milan
-    'إنتر ميلان': (canonical: 'inter_milan', ar: 'إنتر ميلان', en: 'Inter Milan'),
-    'انتر ميلان': (canonical: 'inter_milan', ar: 'إنتر ميلان', en: 'Inter Milan'),
+    'إنتر ميلان': (
+      canonical: 'inter_milan',
+      ar: 'إنتر ميلان',
+      en: 'Inter Milan'
+    ),
+    'انتر ميلان': (
+      canonical: 'inter_milan',
+      ar: 'إنتر ميلان',
+      en: 'Inter Milan'
+    ),
     'إنتر': (canonical: 'inter_milan', ar: 'إنتر ميلان', en: 'Inter Milan'),
     'انتر': (canonical: 'inter_milan', ar: 'إنتر ميلان', en: 'Inter Milan'),
-    'النيراتزوري': (canonical: 'inter_milan', ar: 'إنتر ميلان', en: 'Inter Milan'),
-    'inter milan': (canonical: 'inter_milan', ar: 'إنتر ميلان', en: 'Inter Milan'),
+    'النيراتزوري': (
+      canonical: 'inter_milan',
+      ar: 'إنتر ميلان',
+      en: 'Inter Milan'
+    ),
+    'inter milan': (
+      canonical: 'inter_milan',
+      ar: 'إنتر ميلان',
+      en: 'Inter Milan'
+    ),
     'inter': (canonical: 'inter_milan', ar: 'إنتر ميلان', en: 'Inter Milan'),
-    'internazionale': (canonical: 'inter_milan', ar: 'إنتر ميلان', en: 'Inter Milan'),
+    'internazionale': (
+      canonical: 'inter_milan',
+      ar: 'إنتر ميلان',
+      en: 'Inter Milan'
+    ),
 
     // AC Milan
     'ميلان': (canonical: 'ac_milan', ar: 'إيه سي ميلان', en: 'AC Milan'),
@@ -449,7 +734,11 @@ class TeamResolver {
 
     // Al Ittihad
     'الاتحاد': (canonical: 'al_ittihad', ar: 'الاتحاد', en: 'Al Ittihad'),
-    'الاتحاد السعودي': (canonical: 'al_ittihad', ar: 'الاتحاد', en: 'Al Ittihad'),
+    'الاتحاد السعودي': (
+      canonical: 'al_ittihad',
+      ar: 'الاتحاد',
+      en: 'Al Ittihad'
+    ),
     'نادي الاتحاد': (canonical: 'al_ittihad', ar: 'الاتحاد', en: 'Al Ittihad'),
     'العميد': (canonical: 'al_ittihad', ar: 'الاتحاد', en: 'Al Ittihad'),
     'al ittihad': (canonical: 'al_ittihad', ar: 'الاتحاد', en: 'Al Ittihad'),
@@ -457,10 +746,26 @@ class TeamResolver {
     'ittihad': (canonical: 'al_ittihad', ar: 'الاتحاد', en: 'Al Ittihad'),
 
     // Al Ahli Saudi
-    'الأهلي السعودي': (canonical: 'al_ahli_saudi', ar: 'الأهلي السعودي', en: 'Al Ahli'),
-    'الاهلي السعودي': (canonical: 'al_ahli_saudi', ar: 'الأهلي السعودي', en: 'Al Ahli'),
-    'al ahli saudi': (canonical: 'al_ahli_saudi', ar: 'الأهلي السعودي', en: 'Al Ahli'),
-    'al-ahli saudi': (canonical: 'al_ahli_saudi', ar: 'الأهلي السعودي', en: 'Al Ahli'),
+    'الأهلي السعودي': (
+      canonical: 'al_ahli_saudi',
+      ar: 'الأهلي السعودي',
+      en: 'Al Ahli'
+    ),
+    'الاهلي السعودي': (
+      canonical: 'al_ahli_saudi',
+      ar: 'الأهلي السعودي',
+      en: 'Al Ahli'
+    ),
+    'al ahli saudi': (
+      canonical: 'al_ahli_saudi',
+      ar: 'الأهلي السعودي',
+      en: 'Al Ahli'
+    ),
+    'al-ahli saudi': (
+      canonical: 'al_ahli_saudi',
+      ar: 'الأهلي السعودي',
+      en: 'Al Ahli'
+    ),
 
     // Al Shabab
     'الشباب': (canonical: 'al_shabab', ar: 'الشباب', en: 'Al Shabab'),
@@ -488,16 +793,44 @@ class TeamResolver {
 
     // Esperance
     'الترجي': (canonical: 'esperance', ar: 'الترجي', en: 'Esperance Tunis'),
-    'الترجي الرياضي': (canonical: 'esperance', ar: 'الترجي', en: 'Esperance Tunis'),
-    'الترجي التونسي': (canonical: 'esperance', ar: 'الترجي', en: 'Esperance Tunis'),
+    'الترجي الرياضي': (
+      canonical: 'esperance',
+      ar: 'الترجي',
+      en: 'Esperance Tunis'
+    ),
+    'الترجي التونسي': (
+      canonical: 'esperance',
+      ar: 'الترجي',
+      en: 'Esperance Tunis'
+    ),
     'esperance': (canonical: 'esperance', ar: 'الترجي', en: 'Esperance Tunis'),
-    'esperance de tunis': (canonical: 'esperance', ar: 'الترجي', en: 'Esperance Tunis'),
+    'esperance de tunis': (
+      canonical: 'esperance',
+      ar: 'الترجي',
+      en: 'Esperance Tunis'
+    ),
 
     // Mamelodi Sundowns
-    'صن داونز': (canonical: 'sundowns', ar: 'صن داونز', en: 'Mamelodi Sundowns'),
-    'ماميلودي صن داونز': (canonical: 'sundowns', ar: 'صن داونز', en: 'Mamelodi Sundowns'),
-    'mamelodi sundowns': (canonical: 'sundowns', ar: 'صن داونز', en: 'Mamelodi Sundowns'),
-    'sundowns': (canonical: 'sundowns', ar: 'صن داونز', en: 'Mamelodi Sundowns'),
+    'صن داونز': (
+      canonical: 'sundowns',
+      ar: 'صن داونز',
+      en: 'Mamelodi Sundowns'
+    ),
+    'ماميلودي صن داونز': (
+      canonical: 'sundowns',
+      ar: 'صن داونز',
+      en: 'Mamelodi Sundowns'
+    ),
+    'mamelodi sundowns': (
+      canonical: 'sundowns',
+      ar: 'صن داونز',
+      en: 'Mamelodi Sundowns'
+    ),
+    'sundowns': (
+      canonical: 'sundowns',
+      ar: 'صن داونز',
+      en: 'Mamelodi Sundowns'
+    ),
   };
 
   /// Normalizes Arabic text for tolerant matching (standardizes letters, strips diacritics).

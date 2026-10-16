@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
@@ -8,7 +8,8 @@ import 'package:score154/core/websocket/websocket_service.dart';
 
 void main() {
   group('Production 154Score WebSocket Backend Dynamic Verification', () {
-    test('Direct Socket.IO connection & handshake to live production endpoint', () async {
+    test('Direct Socket.IO connection & handshake to live production endpoint',
+        () async {
       final completer = Completer<bool>();
       final errorCompleter = Completer<String>();
 

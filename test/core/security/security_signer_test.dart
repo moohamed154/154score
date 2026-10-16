@@ -42,7 +42,9 @@ void main() {
       expect(RegExp(r'^[0-9a-f]{64}$').hasMatch(sig1), isTrue);
     });
 
-    test('generateSignature changes when method, path, timestamp, or nonce change', () {
+    test(
+        'generateSignature changes when method, path, timestamp, or nonce change',
+        () {
       final baseSig = SecuritySigner.generateSignature(
         method: 'GET',
         path: '/api/matches',

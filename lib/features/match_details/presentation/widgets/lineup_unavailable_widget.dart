@@ -66,15 +66,13 @@ class LineupUnavailableWidget extends StatelessWidget {
             isArabic
                 ? 'بيانات التشكيلة غير متوفرة حالياً من مصدر البيانات.\nسيتم إضافتها عند توفرها من واجهة البرمجة.'
                 : 'Lineup data is not yet available from the data source.\nIt will be added when the API supports it.',
-            style:
-                AppTypography.getBodyMedium(
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ).copyWith(
-                  color: isDark
-                      ? AppColors.darkTextMuted
-                      : AppColors.lightTextMuted,
-                ),
+            style: AppTypography.getBodyMedium(
+              isDark: isDark,
+              isArabic: isArabic,
+            ).copyWith(
+              color:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            ),
             textAlign: TextAlign.center,
           ),
         ],

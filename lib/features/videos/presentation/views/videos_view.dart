@@ -82,19 +82,18 @@ class _VideosViewState extends State<VideosView> {
                         selected: isSelected,
                         onSelected: (_) {
                           context.read<VideosBloc>().add(
-                            SelectVideoCategoryEvent(cat.id),
-                          );
+                                SelectVideoCategoryEvent(cat.id),
+                              );
                         },
-                        backgroundColor: isDark
-                            ? AppColors.darkCard
-                            : AppColors.lightCard,
+                        backgroundColor:
+                            isDark ? AppColors.darkCard : AppColors.lightCard,
                         selectedColor: AppColors.primary,
                         side: BorderSide(
                           color: isSelected
                               ? Colors.transparent
                               : (isDark
-                                    ? AppColors.darkBorder
-                                    : AppColors.lightBorder),
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder),
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
@@ -103,20 +102,18 @@ class _VideosViewState extends State<VideosView> {
                         ),
                         label: Text(
                           cat.title,
-                          style:
-                              AppTypography.getBodySmall(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                fontWeight: isSelected
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: isSelected
-                                    ? Colors.black
-                                    : (isDark
-                                          ? AppColors.darkTextPrimary
-                                          : AppColors.lightTextPrimary),
-                              ),
+                          style: AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected
+                                ? Colors.black
+                                : (isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary),
+                          ),
                         ),
                       );
                     },
@@ -130,12 +127,12 @@ class _VideosViewState extends State<VideosView> {
                   onRefresh: () async {
                     final completer = Completer<void>();
                     context.read<VideosBloc>().add(
-                      LoadVideosEvent(
-                        champId: state.selectedCategory,
-                        isRefresh: true,
-                        completer: completer,
-                      ),
-                    );
+                          LoadVideosEvent(
+                            champId: state.selectedCategory,
+                            isRefresh: true,
+                            completer: completer,
+                          ),
+                        );
                     try {
                       await completer.future.timeout(
                         const Duration(seconds: 3),
@@ -181,8 +178,8 @@ class _VideosViewState extends State<VideosView> {
             child: ErrorView(
               message: state.errorMessage,
               onRetry: () => context.read<VideosBloc>().add(
-                LoadVideosEvent(champId: state.selectedCategory),
-              ),
+                    LoadVideosEvent(champId: state.selectedCategory),
+                  ),
             ),
           ),
         ],

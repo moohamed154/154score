@@ -52,7 +52,6 @@ import '../../../leagues/presentation/bloc/league_event.dart';
 import '../../../leagues/presentation/bloc/league_state.dart';
 import '../../../leagues/presentation/widgets/top_scorers_table.dart';
 import '../../../live_activity/presentation/cubit/live_activity_cubit.dart';
-import '../../../live_activity/presentation/cubit/live_activity_state.dart';
 import '../../../live_activity/presentation/widgets/live_activity_toggle_button.dart';
 
 // Filter for Events tab: الأبرز (Highlights) vs كل الأحداث (All Events)
@@ -93,9 +92,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     final effectiveMatch = match ?? widget.initialMatch;
     if (effectiveMatch != null) {
       if (ScoreHelper.isCancelledOrPostponed(
-            effectiveMatch.status,
-            effectiveMatch.statusCode,
-          )) {
+        effectiveMatch.status,
+        effectiveMatch.statusCode,
+      )) {
         return true;
       }
       final phase = MatchStatusHelper.parseMatch(effectiveMatch);
@@ -105,9 +104,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     }
     if (widget.initialMatch != null) {
       if (ScoreHelper.isCancelledOrPostponed(
-            widget.initialMatch!.status,
-            widget.initialMatch!.statusCode,
-          )) {
+        widget.initialMatch!.status,
+        widget.initialMatch!.statusCode,
+      )) {
         return true;
       }
       final phase = MatchStatusHelper.parseMatch(widget.initialMatch!);
@@ -117,9 +116,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     }
     if (state != null) {
       if (ScoreHelper.isCancelledOrPostponed(
-            state.liveStatus,
-            state.liveStatusCode,
-          )) {
+        state.liveStatus,
+        state.liveStatusCode,
+      )) {
         return true;
       }
       if (ScoreHelper.isCancelledOrPostponed(state.overview?.status)) {
@@ -158,7 +157,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
 
     if (effectiveMatch != null) {
       final phase = MatchStatusHelper.parseMatch(effectiveMatch);
-      if (MatchStatusHelper.isLive(phase) || MatchStatusHelper.isFinished(phase)) {
+      if (MatchStatusHelper.isLive(phase) ||
+          MatchStatusHelper.isFinished(phase)) {
         return false;
       }
       if (MatchStatusHelper.isUpcoming(phase)) {
@@ -236,9 +236,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     });
 
     try {
-      final boundary =
-          _screenBoundaryKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
+      final boundary = _screenBoundaryKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
 
       if (boundary == null) {
         throw Exception('Render boundary is not available');
@@ -299,7 +298,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     }
   }
 
-  bool _isMatchNotificationActive(MatchEntity match, [FavoritesState? favState]) {
+  bool _isMatchNotificationActive(MatchEntity match,
+      [FavoritesState? favState]) {
     if (match.id.isEmpty) return false;
     try {
       final storage = sl<LocalStorageService>();
@@ -331,7 +331,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     String? name,
     FavoritesState? favState,
   ) {
-    final key = (id != null && id.trim().isNotEmpty) ? id.trim() : (name?.trim() ?? '');
+    final key =
+        (id != null && id.trim().isNotEmpty) ? id.trim() : (name?.trim() ?? '');
     if (key.isEmpty) return false;
     if (storage.isTeamNotificationMuted(key)) return false;
     if (storage.isTeamNotificationEnabled(key)) return true;
@@ -341,7 +342,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     return isFav;
   }
 
-  Future<void> _toggleMatchNotification(MatchEntity match, AppLocalizations l10n) async {
+  Future<void> _toggleMatchNotification(
+      MatchEntity match, AppLocalizations l10n) async {
     final matchId = match.id;
     if (matchId.isEmpty) return;
 
@@ -358,7 +360,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.notifications_off_rounded, color: Color(0xFFF59E0B), size: 20),
+                  const Icon(Icons.notifications_off_rounded,
+                      color: Color(0xFFF59E0B), size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -406,8 +409,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             content: Row(
               children: [
                 Icon(
-                  nextStatus ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
-                  color: nextStatus ? AppColors.primary : const Color(0xFF94A3B8),
+                  nextStatus
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_off_rounded,
+                  color:
+                      nextStatus ? AppColors.primary : const Color(0xFF94A3B8),
                   size: 20,
                 ),
                 const SizedBox(width: 10),
@@ -511,26 +517,22 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     }
 
     // 3. Resolve Team IDs
-    final effectiveTeam1Id =
-        fallbackMatch.team1Id ??
+    final effectiveTeam1Id = fallbackMatch.team1Id ??
         state.overview?.homeTeamId ??
         state.lineup?.home?.teamId;
-    final effectiveTeam2Id =
-        fallbackMatch.team2Id ??
+    final effectiveTeam2Id = fallbackMatch.team2Id ??
         state.overview?.awayTeamId ??
         state.lineup?.away?.teamId;
 
     // 4. Resolve Logos
-    final effectiveLogo1 =
-        fallbackMatch.team1Logo ??
+    final effectiveLogo1 = fallbackMatch.team1Logo ??
         state.overview?.homeTeamLogo ??
         state.lineup?.home?.teamLogo ??
         (effectiveTeam1Id != null
             ? UrlHelper.resolveTeamLogo(effectiveTeam1Id)
             : null);
 
-    final effectiveLogo2 =
-        fallbackMatch.team2Logo ??
+    final effectiveLogo2 = fallbackMatch.team2Logo ??
         state.overview?.awayTeamLogo ??
         state.lineup?.away?.teamLogo ??
         (effectiveTeam2Id != null
@@ -538,13 +540,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             : null);
 
     // 5. Resolve Scores
-    String? effectiveScore1 =
-        state.liveScore1 ??
+    String? effectiveScore1 = state.liveScore1 ??
         liveFromMatches?.score1 ??
         fallbackMatch.score1 ??
         state.overview?.score1;
-    String? effectiveScore2 =
-        state.liveScore2 ??
+    String? effectiveScore2 = state.liveScore2 ??
         liveFromMatches?.score2 ??
         fallbackMatch.score2 ??
         state.overview?.score2;
@@ -574,27 +574,23 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     }
 
     // 6. Resolve League Info
-    final effectiveLeagueTitle =
-        (fallbackMatch.leagueTitle != null &&
+    final effectiveLeagueTitle = (fallbackMatch.leagueTitle != null &&
             fallbackMatch.leagueTitle!.isNotEmpty)
         ? fallbackMatch.leagueTitle
         : (state.overview?.championshipTitle ??
-              _getEffectiveLeagueTitle(fallbackMatch, state));
+            _getEffectiveLeagueTitle(fallbackMatch, state));
 
-    final effectiveLeagueId =
-        state.championshipId ??
+    final effectiveLeagueId = state.championshipId ??
         state.overview?.championshipId ??
         fallbackMatch.leagueId ??
         LeagueResolver.resolveId(effectiveLeagueTitle ?? '');
 
-    final effectiveLeagueLogo =
-        fallbackMatch.leagueLogo ??
+    final effectiveLeagueLogo = fallbackMatch.leagueLogo ??
         state.overview?.championshipLogo ??
         UrlHelper.resolveChampionshipLogo(effectiveLeagueId);
 
     // 7. Status & Time & Date
-    final bool isLiveFromFeed =
-        (liveFromMatches != null &&
+    final bool isLiveFromFeed = (liveFromMatches != null &&
             (ScoreHelper.isLiveStatus(liveFromMatches.status) ||
                 MatchStatusHelper.isLive(
                   MatchStatusHelper.parseMatch(liveFromMatches),
@@ -608,8 +604,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     String? effectiveStatus;
     String? effectiveStatusCode;
 
-    final bool isCancelledOrPostponed =
-        ScoreHelper.isCancelledOrPostponed(
+    final bool isCancelledOrPostponed = ScoreHelper.isCancelledOrPostponed(
           liveFromMatches?.status,
           liveFromMatches?.statusCode,
         ) ||
@@ -628,23 +623,22 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         );
 
     if (isCancelledOrPostponed) {
-      effectiveStatus =
-          (ScoreHelper.isCancelledOrPostponed(
-                liveFromMatches?.status,
-                liveFromMatches?.statusCode,
-              )
+      effectiveStatus = (ScoreHelper.isCancelledOrPostponed(
+            liveFromMatches?.status,
+            liveFromMatches?.statusCode,
+          )
               ? liveFromMatches?.status
               : null) ??
           (ScoreHelper.isCancelledOrPostponed(
-                fallbackMatch.status,
-                fallbackMatch.statusCode,
-              )
+            fallbackMatch.status,
+            fallbackMatch.statusCode,
+          )
               ? fallbackMatch.status
               : null) ??
           (ScoreHelper.isCancelledOrPostponed(
-                widget.initialMatch?.status,
-                widget.initialMatch?.statusCode,
-              )
+            widget.initialMatch?.status,
+            widget.initialMatch?.statusCode,
+          )
               ? widget.initialMatch?.status
               : null) ??
           (ScoreHelper.isCancelledOrPostponed(state.overview?.status)
@@ -652,30 +646,28 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               : null) ??
           state.liveStatus;
 
-      effectiveStatusCode =
-          (ScoreHelper.isCancelledOrPostponed(
-                liveFromMatches?.status,
-                liveFromMatches?.statusCode,
-              )
+      effectiveStatusCode = (ScoreHelper.isCancelledOrPostponed(
+            liveFromMatches?.status,
+            liveFromMatches?.statusCode,
+          )
               ? liveFromMatches?.statusCode
               : null) ??
           (ScoreHelper.isCancelledOrPostponed(
-                fallbackMatch.status,
-                fallbackMatch.statusCode,
-              )
+            fallbackMatch.status,
+            fallbackMatch.statusCode,
+          )
               ? fallbackMatch.statusCode
               : null) ??
           (ScoreHelper.isCancelledOrPostponed(
-                widget.initialMatch?.status,
-                widget.initialMatch?.statusCode,
-              )
+            widget.initialMatch?.status,
+            widget.initialMatch?.statusCode,
+          )
               ? widget.initialMatch?.statusCode
               : null) ??
           state.liveStatusCode;
     } else if (isLiveFromFeed) {
       // Prioritize live values if the match is actively in-play
-      effectiveStatus =
-          (ScoreHelper.isLiveStatus(state.liveStatus)
+      effectiveStatus = (ScoreHelper.isLiveStatus(state.liveStatus)
               ? state.liveStatus
               : null) ??
           liveFromMatches?.status ??
@@ -683,8 +675,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           state.overview?.status ??
           state.liveStatus;
 
-      effectiveStatusCode =
-          (state.liveStatusCode == 'LIVE' ||
+      effectiveStatusCode = (state.liveStatusCode == 'LIVE' ||
                   state.liveStatusCode?.startsWith('IN_PLAY') == true
               ? state.liveStatusCode
               : null) ??
@@ -692,14 +683,12 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           widget.initialMatch?.statusCode ??
           state.liveStatusCode;
     } else {
-      effectiveStatus =
-          state.liveStatus ??
+      effectiveStatus = state.liveStatus ??
           liveFromMatches?.status ??
           fallbackMatch.status ??
           state.overview?.status;
 
-      effectiveStatusCode =
-          state.liveStatusCode ??
+      effectiveStatusCode = state.liveStatusCode ??
           liveFromMatches?.statusCode ??
           fallbackMatch.statusCode;
     }
@@ -708,8 +697,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     final effectiveDate = fallbackMatch.date ?? state.overview?.date;
     final effectiveMinute =
         state.liveMinute ?? liveFromMatches?.minute ?? fallbackMatch.minute;
-    final effectiveExtraTime =
-        state.liveExtraTime ??
+    final effectiveExtraTime = state.liveExtraTime ??
         liveFromMatches?.extraTime ??
         fallbackMatch.extraTime;
     final effectivePeriod =
@@ -744,8 +732,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           name.contains('match finished');
     });
 
-    final isPastMatch =
-        effectiveDate != null &&
+    final isPastMatch = effectiveDate != null &&
         DateTime.tryParse(effectiveDate)?.isBefore(
               DateTime(
                 DateTime.now().year,
@@ -779,12 +766,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       team2Id: effectiveTeam2Id,
       score1: effectiveScore1,
       score2: effectiveScore2,
-      penaltyScore1:
-          state.livePenaltyScore1 ??
+      penaltyScore1: state.livePenaltyScore1 ??
           liveFromMatches?.penaltyScore1 ??
           fallbackMatch.penaltyScore1,
-      penaltyScore2:
-          state.livePenaltyScore2 ??
+      penaltyScore2: state.livePenaltyScore2 ??
           liveFromMatches?.penaltyScore2 ??
           fallbackMatch.penaltyScore2,
       status: effectiveStatus,
@@ -803,12 +788,12 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
   Future<void> _handleRefresh() async {
     final completer = Completer<void>();
     context.read<MatchDetailsBloc>().add(
-      LoadMatchDetailsEvent(
-        widget.matchId,
-        isRefresh: true,
-        completer: completer,
-      ),
-    );
+          LoadMatchDetailsEvent(
+            widget.matchId,
+            isRefresh: true,
+            completer: completer,
+          ),
+        );
     if (_leagueBloc != null && _currentLeagueId != null) {
       _leagueBloc!.add(
         LoadLeagueDetailsEvent(_currentLeagueId!, isRefresh: true),
@@ -831,13 +816,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         ? effectiveTitle
         : (isArabic ? 'مركز المباراة' : 'Match Center');
 
-    final effectiveLeagueId =
-        state.championshipId ??
+    final effectiveLeagueId = state.championshipId ??
         match.leagueId ??
         LeagueResolver.resolveId(effectiveTitle);
 
-    final effectiveLogo =
-        match.leagueLogo ??
+    final effectiveLogo = match.leagueLogo ??
         UrlHelper.resolveChampionshipLogo(effectiveLeagueId);
 
     return InkWell(
@@ -871,17 +854,16 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             Flexible(
               child: Text(
                 displayTitle,
-                style:
-                    AppTypography.getBodyLarge(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
+                style: AppTypography.getBodyLarge(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -935,8 +917,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       for (final league in matchesBloc.state.allLeagues) {
         for (final m in league.matches) {
           final mCleanId = m.id.replaceAll('match:', '').trim();
-          final teamsMatch =
-              (widget.initialMatch != null &&
+          final teamsMatch = (widget.initialMatch != null &&
               m.team1.toLowerCase().trim() ==
                   widget.initialMatch!.team1.toLowerCase().trim() &&
               m.team2.toLowerCase().trim() ==
@@ -950,8 +931,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       }
     } catch (_) {}
 
-    final fallbackMatch =
-        liveFromMatches ??
+    final fallbackMatch = liveFromMatches ??
         widget.initialMatch ??
         MatchEntity(id: widget.matchId, team1: 'Home Team', team2: 'Away Team');
 
@@ -993,7 +973,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                     liveFromMatches: liveFromMatches,
                     state: state,
                   );
-                  final isNotifActive = _isMatchNotificationActive(activeMatch, favState);
+                  final isNotifActive =
+                      _isMatchNotificationActive(activeMatch, favState);
                   return IconButton(
                     icon: Icon(
                       isNotifActive
@@ -1009,7 +990,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                         : (isNotifActive
                             ? 'Mute match notifications'
                             : 'Enable match notifications'),
-                    onPressed: () => _toggleMatchNotification(activeMatch, l10n),
+                    onPressed: () =>
+                        _toggleMatchNotification(activeMatch, l10n),
                   );
                 },
               );
@@ -1123,8 +1105,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               );
               _currentTabs = activeTabs;
 
-              final effectiveLeagueId =
-                  state.championshipId ??
+              final effectiveLeagueId = state.championshipId ??
                   state.overview?.championshipId ??
                   activeMatch.leagueId ??
                   LeagueResolver.resolveId(activeMatch.leagueTitle ?? '') ??
@@ -1145,8 +1126,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                       children: [
                         // ── Top Score Hero Banner ──────────────────────────────────
                         Skeletonizer(
-                          enabled:
-                              widget.initialMatch == null &&
+                          enabled: widget.initialMatch == null &&
                               (state.status == MatchDetailsStatus.loading ||
                                   state.status == MatchDetailsStatus.initial),
                           effect: ShimmerEffect(
@@ -1164,16 +1144,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                             liveScore2: activeMatch.score2,
                             liveStatus: activeMatch.status,
                             liveStatusCode: activeMatch.statusCode,
-                            liveMinute:
-                                activeMatch.minute ??
+                            liveMinute: activeMatch.minute ??
                                 state.liveMinute ??
                                 liveFromMatches?.minute,
-                            liveExtraTime:
-                                activeMatch.extraTime ??
+                            liveExtraTime: activeMatch.extraTime ??
                                 state.liveExtraTime ??
                                 liveFromMatches?.extraTime,
-                            livePeriod:
-                                activeMatch.period ??
+                            livePeriod: activeMatch.period ??
                                 state.livePeriod ??
                                 liveFromMatches?.period,
                             penaltyScore1: activeMatch.penaltyScore1,
@@ -1183,7 +1160,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
 
                         // ── Lock Screen Live Activity Button ───────────────────────
                         if (sl.isRegistered<LocalStorageService>() &&
-                            sl<LocalStorageService>().isLiveActivityFeatureEnabled())
+                            sl<LocalStorageService>()
+                                .isLiveActivityFeatureEnabled())
                           Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16.0, vertical: 8.0),
@@ -1226,21 +1204,29 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                             tabs: activeTabs.map((tab) {
                               switch (tab) {
                                 case _MatchTabType.events:
-                                  return Tab(text: isArabic ? 'الأحداث' : 'Events');
+                                  return Tab(
+                                      text: isArabic ? 'الأحداث' : 'Events');
                                 case _MatchTabType.details:
-                                  return Tab(text: isArabic ? 'التفاصيل' : 'Details');
+                                  return Tab(
+                                      text: isArabic ? 'التفاصيل' : 'Details');
                                 case _MatchTabType.lineups:
-                                  return Tab(text: isArabic ? 'التشكيلة' : 'Lineups');
+                                  return Tab(
+                                      text: isArabic ? 'التشكيلة' : 'Lineups');
                                 case _MatchTabType.stats:
-                                  return Tab(text: isArabic ? 'الإحصائيات' : 'Stats');
+                                  return Tab(
+                                      text: isArabic ? 'الإحصائيات' : 'Stats');
                                 case _MatchTabType.standings:
-                                  return Tab(text: isArabic ? 'الترتيب' : 'Standings');
+                                  return Tab(
+                                      text: isArabic ? 'الترتيب' : 'Standings');
                                 case _MatchTabType.scorers:
-                                  return Tab(text: isArabic ? 'الهدافون' : 'Scorers');
+                                  return Tab(
+                                      text: isArabic ? 'الهدافون' : 'Scorers');
                                 case _MatchTabType.assists:
-                                  return Tab(text: isArabic ? 'الصناع' : 'Assists');
+                                  return Tab(
+                                      text: isArabic ? 'الصناع' : 'Assists');
                                 case _MatchTabType.news:
-                                  return Tab(text: isArabic ? 'الأخبار' : 'News');
+                                  return Tab(
+                                      text: isArabic ? 'الأخبار' : 'News');
                               }
                             }).toList(),
                           ),
@@ -1250,95 +1236,97 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
 
                         // ── Tab Content ────────────────────────────────────────────
                         Expanded(
-                          child:
-                              (state.status == MatchDetailsStatus.error &&
+                          child: (state.status == MatchDetailsStatus.error &&
                                   state.details.isEmpty &&
                                   state.events.isEmpty)
                               ? ErrorView(
                                   message: state.errorMessage,
-                                  onRetry: () => context.read<MatchDetailsBloc>().add(
-                                    LoadMatchDetailsEvent(
-                                      widget.matchId,
-                                      initialStatus: widget.initialMatch?.status,
-                                      initialStatusCode:
-                                          widget.initialMatch?.statusCode,
-                                    ),
-                                  ),
+                                  onRetry: () =>
+                                      context.read<MatchDetailsBloc>().add(
+                                            LoadMatchDetailsEvent(
+                                              widget.matchId,
+                                              initialStatus:
+                                                  widget.initialMatch?.status,
+                                              initialStatusCode: widget
+                                                  .initialMatch?.statusCode,
+                                            ),
+                                          ),
                                 )
                               : TabBarView(
                                   physics: const NeverScrollableScrollPhysics(),
-                            children: activeTabs.map((tab) {
-                              switch (tab) {
-                                case _MatchTabType.events:
-                                  return _buildEventsTab(
-                                    context,
-                                    state,
-                                    activeMatch,
-                                    isDark,
-                                    isArabic,
-                                  );
-                                case _MatchTabType.details:
-                                  return _buildDetailsTab(
-                                    context,
-                                    state,
-                                    activeMatch,
-                                    isDark,
-                                    isArabic,
-                                  );
-                                case _MatchTabType.lineups:
-                                  return LineupTabView(matchId: widget.matchId);
-                                case _MatchTabType.stats:
-                                  return _buildStatsTab(
-                                    context,
-                                    state,
-                                    activeMatch,
-                                    isDark,
-                                    isArabic,
-                                  );
-                                case _MatchTabType.standings:
-                                  return _buildStandingsTab(
-                                    context,
-                                    state,
-                                    activeMatch,
-                                    isDark,
-                                    isArabic,
-                                  );
-                                case _MatchTabType.scorers:
-                                  return _buildScorersTab(
-                                    context,
-                                    effectiveLeagueId,
-                                    isDark,
-                                    isArabic,
-                                  );
-                                case _MatchTabType.assists:
-                                  return _buildAssistsTab(
-                                    context,
-                                    effectiveLeagueId,
-                                    isDark,
-                                    isArabic,
-                                  );
-                                case _MatchTabType.news:
-                                  return _buildNewsTab(
-                                    context,
-                                    state,
-                                    isDark,
-                                    isArabic,
-                                  );
-                              }
-                            }).toList(),
-                          ),
-                  ),
-                        ],
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+                                  children: activeTabs.map((tab) {
+                                    switch (tab) {
+                                      case _MatchTabType.events:
+                                        return _buildEventsTab(
+                                          context,
+                                          state,
+                                          activeMatch,
+                                          isDark,
+                                          isArabic,
+                                        );
+                                      case _MatchTabType.details:
+                                        return _buildDetailsTab(
+                                          context,
+                                          state,
+                                          activeMatch,
+                                          isDark,
+                                          isArabic,
+                                        );
+                                      case _MatchTabType.lineups:
+                                        return LineupTabView(
+                                            matchId: widget.matchId);
+                                      case _MatchTabType.stats:
+                                        return _buildStatsTab(
+                                          context,
+                                          state,
+                                          activeMatch,
+                                          isDark,
+                                          isArabic,
+                                        );
+                                      case _MatchTabType.standings:
+                                        return _buildStandingsTab(
+                                          context,
+                                          state,
+                                          activeMatch,
+                                          isDark,
+                                          isArabic,
+                                        );
+                                      case _MatchTabType.scorers:
+                                        return _buildScorersTab(
+                                          context,
+                                          effectiveLeagueId,
+                                          isDark,
+                                          isArabic,
+                                        );
+                                      case _MatchTabType.assists:
+                                        return _buildAssistsTab(
+                                          context,
+                                          effectiveLeagueId,
+                                          isDark,
+                                          isArabic,
+                                        );
+                                      case _MatchTabType.news:
+                                        return _buildNewsTab(
+                                          context,
+                                          state,
+                                          isDark,
+                                          isArabic,
+                                        );
+                                    }
+                                  }).toList(),
+                                ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
   // ── Tab 1: الأحداث (Events) ────────────────────────────────────────────────
   Widget _buildEventsTab(
@@ -1355,8 +1343,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       return _buildEventsSkeleton(context, isDark, isArabic);
     }
 
-    final hasShootout =
-        (state.penaltiesDetail != null && state.penaltiesDetail!.hasKicks) ||
+    final hasShootout = (state.penaltiesDetail != null &&
+            state.penaltiesDetail!.hasKicks) ||
         match.hasPenalties ||
         (state.livePenaltyScore1 != null && state.livePenaltyScore2 != null);
 
@@ -1564,9 +1552,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
   Widget _buildEventFilterSelector(bool isDark, bool isArabic) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkCardElevated
-            : AppColors.lightCardElevated,
+        color:
+            isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
         borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -1619,18 +1606,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         ),
         child: Text(
           label,
-          style:
-              AppTypography.getBodySmall(
-                isDark: isSelected ? true : isDark,
-                isArabic: isArabic,
-              ).copyWith(
-                fontWeight: FontWeight.w700,
-                color: isSelected
-                    ? Colors.white
-                    : (isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary),
-              ),
+          style: AppTypography.getBodySmall(
+            isDark: isSelected ? true : isDark,
+            isArabic: isArabic,
+          ).copyWith(
+            fontWeight: FontWeight.w700,
+            color: isSelected
+                ? Colors.white
+                : (isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary),
+          ),
         ),
       ),
     );
@@ -1707,9 +1693,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       enabled: true,
       effect: ShimmerEffect(
         baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
-        highlightColor: isDark
-            ? const Color(0xFF2E3D52)
-            : const Color(0xFFF1F5F9),
+        highlightColor:
+            isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
         duration: const Duration(milliseconds: 1500),
       ),
       child: ListView(
@@ -1784,9 +1769,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             ),
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Column(
-              children: dummyEvents
-                  .map((e) => TimelineEventItem(event: e))
-                  .toList(),
+              children:
+                  dummyEvents.map((e) => TimelineEventItem(event: e)).toList(),
             ),
           ),
         ],
@@ -1806,9 +1790,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       enabled: true,
       effect: ShimmerEffect(
         baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
-        highlightColor: isDark
-            ? const Color(0xFF2E3D52)
-            : const Color(0xFFF1F5F9),
+        highlightColor:
+            isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
         duration: const Duration(milliseconds: 1500),
       ),
       child: ListView(
@@ -1935,9 +1918,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       enabled: true,
       effect: ShimmerEffect(
         baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
-        highlightColor: isDark
-            ? const Color(0xFF2E3D52)
-            : const Color(0xFFF1F5F9),
+        highlightColor:
+            isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
         duration: const Duration(milliseconds: 1500),
       ),
       child: ListView(
@@ -1994,9 +1976,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       enabled: true,
       effect: ShimmerEffect(
         baseColor: isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
-        highlightColor: isDark
-            ? const Color(0xFF2E3D52)
-            : const Color(0xFFF1F5F9),
+        highlightColor:
+            isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
         duration: const Duration(milliseconds: 1500),
       ),
       child: ListView.separated(
@@ -2024,9 +2005,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurface
-                      : AppColors.lightSurface,
+                  color:
+                      isDark ? AppColors.darkSurface : AppColors.lightSurface,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
                 ),
               ),
@@ -2103,8 +2083,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final video = videoItems[index];
-          final isGoal =
-              video.type == 'goals' ||
+          final isGoal = video.type == 'goals' ||
               video.title.contains('هدف') ||
               video.title.toLowerCase().contains('goal');
 
@@ -2116,9 +2095,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                 UrlHelper.navigateToVideo(
                   context,
                   url: video.url,
-                  fallbackErrorMessage: isArabic
-                      ? 'تعذر تشغيل الفيديو'
-                      : 'Could not play video',
+                  fallbackErrorMessage:
+                      isArabic ? 'تعذر تشغيل الفيديو' : 'Could not play video',
                 );
               },
               child: Container(
@@ -2132,9 +2110,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                       : AppColors.lightCardElevated,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                   border: Border.all(
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : AppColors.lightBorder,
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   ),
                 ),
                 child: Row(
@@ -2180,9 +2157,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkCardElevated
-            : AppColors.lightCardElevated,
+        color:
+            isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -2213,15 +2189,14 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                   Expanded(
                     child: Text(
                       st.title,
-                      style:
-                          AppTypography.getBodyMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
+                      style: AppTypography.getBodyMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ).copyWith(
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -2260,14 +2235,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               child: Center(
                 child: Text(
                   isArabic ? 'أظهر المزيد' : 'Show More',
-                  style:
-                      AppTypography.getBodyMedium(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
+                  style: AppTypography.getBodyMedium(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ),
@@ -2422,11 +2396,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     final homeTeamName = (match.team1.isNotEmpty && match.team1 != 'Home Team')
         ? match.team1
         : (widget.initialMatch?.team1 ??
-              _extractTeamNameFromDetails(detailsList, isHome: true));
+            _extractTeamNameFromDetails(detailsList, isHome: true));
     final awayTeamName = (match.team2.isNotEmpty && match.team2 != 'Away Team')
         ? match.team2
         : (widget.initialMatch?.team2 ??
-              _extractTeamNameFromDetails(detailsList, isHome: false));
+            _extractTeamNameFromDetails(detailsList, isHome: false));
 
     String? noticeText = state.alert ??
         overview?.note ??
@@ -2506,46 +2480,44 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             ),
 
           // 5. Enriched Info Sections
-          ...detailsList
-              .where((sec) {
-                if (overview != null) {
-                  if (overview.h2hSummary != null &&
-                      (sec.section.contains('المواجهات المباشرة') ||
-                          sec.section.toLowerCase().contains('head-to-head'))) {
-                    return false;
-                  }
-                  if (overview.recentForm != null &&
-                      (sec.section.contains('آخر المباريات') ||
-                          sec.section.toLowerCase().contains('recent form'))) {
-                    return false;
-                  }
-                  if (overview.quickStats != null &&
-                      (sec.section.contains('إحصائيات سريعة') ||
-                          sec.section.toLowerCase().contains(
+          ...detailsList.where((sec) {
+            if (overview != null) {
+              if (overview.h2hSummary != null &&
+                  (sec.section.contains('المواجهات المباشرة') ||
+                      sec.section.toLowerCase().contains('head-to-head'))) {
+                return false;
+              }
+              if (overview.recentForm != null &&
+                  (sec.section.contains('آخر المباريات') ||
+                      sec.section.toLowerCase().contains('recent form'))) {
+                return false;
+              }
+              if (overview.quickStats != null &&
+                  (sec.section.contains('إحصائيات سريعة') ||
+                      sec.section.toLowerCase().contains(
                             'quick statistics',
                           ))) {
-                    return false;
-                  }
-                }
-                final lowerTitle = sec.section.toLowerCase();
-                if (lowerTitle.contains('alert') ||
-                    lowerTitle.contains('notice') ||
-                    lowerTitle.contains('hint') ||
-                    lowerTitle.contains('تنبيه') ||
-                    lowerTitle.contains('ملاحظة') ||
-                    lowerTitle.contains('إلغاء') ||
-                    lowerTitle.contains('تأجيل')) {
-                  return false;
-                }
-                return true;
-              })
-              .map(
-                (sec) => MatchInfoCard(
-                  section: sec,
-                  isDark: isDark,
-                  isArabic: isArabic,
-                ),
-              ),
+                return false;
+              }
+            }
+            final lowerTitle = sec.section.toLowerCase();
+            if (lowerTitle.contains('alert') ||
+                lowerTitle.contains('notice') ||
+                lowerTitle.contains('hint') ||
+                lowerTitle.contains('تنبيه') ||
+                lowerTitle.contains('ملاحظة') ||
+                lowerTitle.contains('إلغاء') ||
+                lowerTitle.contains('تأجيل')) {
+              return false;
+            }
+            return true;
+          }).map(
+            (sec) => MatchInfoCard(
+              section: sec,
+              isDark: isDark,
+              isArabic: isArabic,
+            ),
+          ),
         ],
       ),
     );
@@ -2793,16 +2765,15 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               const SizedBox(width: 8),
               Text(
                 entry.key,
-                style:
-                    AppTypography.getBodySmall(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
               ),
             ],
           ),
@@ -2985,12 +2956,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             return Skeletonizer(
               enabled: true,
               effect: ShimmerEffect(
-                baseColor: isDark
-                    ? const Color(0xFF1E2836)
-                    : const Color(0xFFE2E8F0),
-                highlightColor: isDark
-                    ? const Color(0xFF2E3D52)
-                    : const Color(0xFFF1F5F9),
+                baseColor:
+                    isDark ? const Color(0xFF1E2836) : const Color(0xFFE2E8F0),
+                highlightColor:
+                    isDark ? const Color(0xFF2E3D52) : const Color(0xFFF1F5F9),
                 duration: const Duration(milliseconds: 1500),
               ),
               child: ListView(
@@ -3068,7 +3037,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                   : widget.initialMatch?.team2Id)
               ?.trim();
 
-          List<MapEntry<String, List<StandingRowEntity>>> sortedGroupEntries = [];
+          List<MapEntry<String, List<StandingRowEntity>>> sortedGroupEntries =
+              [];
           if (hasGroups) {
             final rawEntries = standings.groups!.entries.toList();
 
@@ -3081,20 +3051,25 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
 
               if (t1Name.isNotEmpty) {
                 final target = t1Name.toLowerCase();
-                if (rName == target || rName.contains(target) || target.contains(rName)) {
+                if (rName == target ||
+                    rName.contains(target) ||
+                    target.contains(rName)) {
                   return true;
                 }
               }
               if (t2Name.isNotEmpty) {
                 final target = t2Name.toLowerCase();
-                if (rName == target || rName.contains(target) || target.contains(rName)) {
+                if (rName == target ||
+                    rName.contains(target) ||
+                    target.contains(rName)) {
                   return true;
                 }
               }
               return false;
             }
 
-            int countMatchingTeams(MapEntry<String, List<StandingRowEntity>> entry) {
+            int countMatchingTeams(
+                MapEntry<String, List<StandingRowEntity>> entry) {
               int count = 0;
               for (final row in entry.value) {
                 if (rowMatchesTeam(row)) {
@@ -3146,7 +3121,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                           child: Row(
                             children: [
                               Text(
-                                AppLocalizations.of(context).formatGroupName(groupEntry.key),
+                                AppLocalizations.of(context)
+                                    .formatGroupName(groupEntry.key),
                                 style: AppTypography.getHeadingMedium(
                                   isDark: isDark,
                                   isArabic: isArabic,
@@ -3160,17 +3136,21 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.12),
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(
                                       AppDimensions.radiusSm,
                                     ),
                                     border: Border.all(
-                                      color: AppColors.primary.withValues(alpha: 0.3),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.3),
                                       width: 0.8,
                                     ),
                                   ),
                                   child: Text(
-                                    isArabic ? 'مجموعة المباراة' : 'Match Group',
+                                    isArabic
+                                        ? 'مجموعة المباراة'
+                                        : 'Match Group',
                                     style: AppTypography.getBodySmall(
                                       isDark: isDark,
                                       isArabic: isArabic,
@@ -3238,16 +3218,15 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                             const SizedBox(width: 6),
                             Text(
                               item.description,
-                              style:
-                                  AppTypography.getBodySmall(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    color: isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.lightTextSecondary,
-                                    fontSize: 11,
-                                  ),
+                              style: AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         );
@@ -3294,7 +3273,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         if (state.status == LeagueStatus.error && state.topScorers.isEmpty) {
           return ErrorView(
             message: state.errorMessage,
-            onRetry: () => bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true)),
+            onRetry: () =>
+                bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true)),
           );
         }
 
@@ -3369,7 +3349,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         if (state.status == LeagueStatus.error && state.topAssists.isEmpty) {
           return ErrorView(
             message: state.errorMessage,
-            onRetry: () => bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true)),
+            onRetry: () =>
+                bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true)),
           );
         }
 
@@ -3561,28 +3542,27 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               ),
               subtitle:
                   (item.description != null && item.description!.isNotEmpty) ||
-                      (item.date != null && item.date!.isNotEmpty)
-                  ? Directionality(
-                      textDirection: itemDir,
-                      child: Column(
-                        crossAxisAlignment: isItemArabic
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
-                        children: [
-                          if (item.description != null &&
-                              item.description!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                item.description!,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textDirection: itemDir,
-                                textAlign: isItemArabic
-                                    ? TextAlign.right
-                                    : TextAlign.start,
-                                style:
-                                    AppTypography.getBodySmall(
+                          (item.date != null && item.date!.isNotEmpty)
+                      ? Directionality(
+                          textDirection: itemDir,
+                          child: Column(
+                            crossAxisAlignment: isItemArabic
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
+                            children: [
+                              if (item.description != null &&
+                                  item.description!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    item.description!,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textDirection: itemDir,
+                                    textAlign: isItemArabic
+                                        ? TextAlign.right
+                                        : TextAlign.start,
+                                    style: AppTypography.getBodySmall(
                                       isDark: isDark,
                                       isArabic: effectiveItemArabic,
                                     ).copyWith(
@@ -3591,15 +3571,14 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                                           : AppColors.lightTextSecondary,
                                       fontSize: 12,
                                     ),
-                              ),
-                            ),
-                          if (item.date != null && item.date!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                item.date!,
-                                style:
-                                    AppTypography.getBodySmall(
+                                  ),
+                                ),
+                              if (item.date != null && item.date!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    item.date!,
+                                    style: AppTypography.getBodySmall(
                                       isDark: isDark,
                                       isArabic: effectiveItemArabic,
                                     ).copyWith(
@@ -3608,12 +3587,12 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                                           : AppColors.lightTextMuted,
                                       fontSize: 11,
                                     ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    )
-                  : null,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        )
+                      : null,
               onTap: () {
                 final articleId =
                     item.articleId ?? UrlHelper.parseNewsUrl(item.link).id;

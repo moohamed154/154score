@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/errors/failures.dart';
 import 'package:score154/core/network/api_result.dart';
@@ -42,8 +42,8 @@ void main() {
 
       when(() => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')))
           .thenAnswer(
-            (_) async => ApiSuccess(makeProfile(id, slug, 'إسبن إسكاس')),
-          );
+        (_) async => ApiSuccess(makeProfile(id, slug, 'إسبن إسكاس')),
+      );
 
       final result = await repo.getRefereeProfile(id, slug, lang: 'ar');
 
@@ -82,8 +82,8 @@ void main() {
 
       when(() => repo.getRefereeProfile(id1, slug1, lang: any(named: 'lang')))
           .thenAnswer(
-            (_) async => ApiSuccess(makeProfile(id1, slug1, 'إسبن إسكاس')),
-          );
+        (_) async => ApiSuccess(makeProfile(id1, slug1, 'إسبن إسكاس')),
+      );
 
       when(
         () => repo.getRefereeProfile(id2, slug2, lang: any(named: 'lang')),
@@ -103,9 +103,9 @@ void main() {
 
       when(() => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')))
           .thenAnswer(
-            (_) async =>
-                const ApiFailure(ServerFailure('Not found', statusCode: 404)),
-          );
+        (_) async =>
+            const ApiFailure(ServerFailure('Not found', statusCode: 404)),
+      );
 
       final result = await repo.getRefereeProfile(id, slug, lang: 'ar');
 
@@ -123,9 +123,9 @@ void main() {
 
         when(() => repo.getRefereeProfile(id, slug, lang: any(named: 'lang')))
             .thenAnswer((_) async {
-              callCount++;
-              return ApiSuccess(makeProfile(id, slug, 'إسبن إسكاس'));
-            });
+          callCount++;
+          return ApiSuccess(makeProfile(id, slug, 'إسبن إسكاس'));
+        });
 
         await repo.getRefereeProfile(id, slug, lang: 'ar');
         await repo.getRefereeProfile(id, slug, lang: 'ar');

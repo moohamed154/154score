@@ -85,16 +85,15 @@ class LiveMatchCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         match.leagueTitle ?? 'Live Match',
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -135,14 +134,13 @@ class LiveMatchCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             match.team1,
-                            style:
-                                AppTypography.getBodyLarge(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
-                                ),
+                            style: AppTypography.getBodyLarge(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -170,14 +168,13 @@ class LiveMatchCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             match.team2,
-                            style:
-                                AppTypography.getBodyLarge(
-                                  isDark: isDark,
-                                  isArabic: isArabic,
-                                ).copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
-                                ),
+                            style: AppTypography.getBodyLarge(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            ).copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

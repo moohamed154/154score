@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:score154/core/constants/app_colors.dart';
 import 'package:score154/core/constants/app_dimensions.dart';
 import 'package:score154/core/di/injection_container.dart';
 import 'package:score154/core/utils/url_helper.dart';
@@ -96,12 +95,15 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
 
     final sheetBg = isDark ? const Color(0xFF0B131E) : const Color(0xFFF8FAFC);
     final cardBg = isDark ? const Color(0xFF131D2E) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF1E2D44) : const Color(0xFFE2E8F0);
+    final cardBorder =
+        isDark ? const Color(0xFF1E2D44) : const Color(0xFFE2E8F0);
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final mutedTextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final mutedTextColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     final ratingString = r?.player.rating ?? p.rating;
-    final playerName = r?.player.name.isNotEmpty == true ? r!.player.name : p.name;
+    final playerName =
+        r?.player.name.isNotEmpty == true ? r!.player.name : p.name;
     final positionTitle = r?.player.positionTitle ??
         p.detailedPosition ??
         p.position ??
@@ -132,201 +134,212 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
           top: false,
           child: Column(
             children: [
-            // Drag Handle
-            const SizedBox(height: 12),
-            Center(
-              child: Container(
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white24 : Colors.black12,
-                  borderRadius: BorderRadius.circular(2),
+              // Drag Handle
+              const SizedBox(height: 12),
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // Main Scrollable Area
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Row (Photo, Number, Name, Position, Rating)
-                    _buildHeaderRow(
-                      isDark: isDark,
-                      isArabic: isArabic,
-                      name: playerName,
-                      positionTitle: positionTitle,
-                      photo: playerPhoto,
-                      number: playerNumber,
-                      rating: ratingString,
-                      primaryColor: primaryTextColor,
-                      mutedColor: mutedTextColor,
-                    ),
-                    const SizedBox(height: 16),
-
-                    if (_isLoading)
-                      _buildLoadingSkeleton(isDark: isDark)
-                    else if (r != null) ...[
-                      // Goals & Assists Highlight Box
-                      _buildGoalsAssistsBox(
+              // Main Scrollable Area
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Row (Photo, Number, Name, Position, Rating)
+                      _buildHeaderRow(
                         isDark: isDark,
                         isArabic: isArabic,
-                        cardBg: cardBg,
-                        cardBorder: cardBorder,
-                        goals: r.highlights.goals > 0 ? r.highlights.goals : p.goals,
-                        assists: r.highlights.assists > 0 ? r.highlights.assists : p.assists,
+                        name: playerName,
+                        positionTitle: positionTitle,
+                        photo: playerPhoto,
+                        number: playerNumber,
+                        rating: ratingString,
+                        primaryColor: primaryTextColor,
+                        mutedColor: mutedTextColor,
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 16),
 
-                      // Section: Shooting
-                      if (_hasShootingStats(r)) ...[
-                        _buildSectionHeader(
-                          color: const Color(0xFFF43F5E),
-                          icon: Icons.sports_soccer_rounded,
-                          title: isArabic ? 'التسديدات' : 'Shooting',
+                      if (_isLoading)
+                        _buildLoadingSkeleton(isDark: isDark)
+                      else if (r != null) ...[
+                        // Goals & Assists Highlight Box
+                        _buildGoalsAssistsBox(
+                          isDark: isDark,
                           isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildShootingSection(
-                          r: r,
                           cardBg: cardBg,
                           cardBorder: cardBorder,
-                          primaryTextColor: primaryTextColor,
-                          isArabic: isArabic,
+                          goals: r.highlights.goals > 0
+                              ? r.highlights.goals
+                              : p.goals,
+                          assists: r.highlights.assists > 0
+                              ? r.highlights.assists
+                              : p.assists,
                         ),
                         const SizedBox(height: 18),
-                      ],
 
-                      // Section: Passing
-                      if (_hasPassingStats(r)) ...[
-                        _buildSectionHeader(
-                          color: const Color(0xFF3B82F6),
-                          icon: Icons.swap_horiz_rounded,
-                          title: isArabic ? 'التمريرات' : 'Passing',
+                        // Section: Shooting
+                        if (_hasShootingStats(r)) ...[
+                          _buildSectionHeader(
+                            color: const Color(0xFFF43F5E),
+                            icon: Icons.sports_soccer_rounded,
+                            title: isArabic ? 'التسديدات' : 'Shooting',
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildShootingSection(
+                            r: r,
+                            cardBg: cardBg,
+                            cardBorder: cardBorder,
+                            primaryTextColor: primaryTextColor,
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+
+                        // Section: Passing
+                        if (_hasPassingStats(r)) ...[
+                          _buildSectionHeader(
+                            color: const Color(0xFF3B82F6),
+                            icon: Icons.swap_horiz_rounded,
+                            title: isArabic ? 'التمريرات' : 'Passing',
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildPassingSection(
+                            r: r,
+                            cardBg: cardBg,
+                            cardBorder: cardBorder,
+                            primaryTextColor: primaryTextColor,
+                            mutedTextColor: mutedTextColor,
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+
+                        // Section: Defending & Duels
+                        if (_hasDefendingStats(r)) ...[
+                          _buildSectionHeader(
+                            color: const Color(0xFF10B981),
+                            icon: Icons.shield_outlined,
+                            title: isArabic
+                                ? 'الدفاع والالتحامات'
+                                : 'Defending & Duels',
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDefendingSection(
+                            r: r,
+                            cardBg: cardBg,
+                            cardBorder: cardBorder,
+                            primaryTextColor: primaryTextColor,
+                            mutedTextColor: mutedTextColor,
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+
+                        // Section: Dribbles & Duels
+                        if (_hasDribblesStats(r)) ...[
+                          _buildSectionHeader(
+                            color: const Color(0xFFF59E0B),
+                            icon: Icons.directions_run_rounded,
+                            title: isArabic
+                                ? 'المراوغات والالتحامات'
+                                : 'Dribbles & Duels',
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDribblesSection(
+                            r: r,
+                            cardBg: cardBg,
+                            cardBorder: cardBorder,
+                            primaryTextColor: primaryTextColor,
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+
+                        // Section: Discipline & Fouls
+                        if (_hasDisciplineStats(r, p)) ...[
+                          _buildSectionHeader(
+                            color: const Color(0xFFFB7185),
+                            icon: Icons.style_outlined,
+                            title: isArabic
+                                ? 'الانضباط والأخطاء'
+                                : 'Discipline & Fouls',
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDisciplineSection(
+                            r: r,
+                            p: p,
+                            cardBg: cardBg,
+                            cardBorder: cardBorder,
+                            primaryTextColor: primaryTextColor,
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+
+                        // Section: Other statistics
+                        if (r.otherStatistics.isNotEmpty) ...[
+                          _buildSectionHeader(
+                            color: const Color(0xFF64748B),
+                            icon: Icons.trending_up_rounded,
+                            title:
+                                isArabic ? 'إحصائيات أخرى' : 'Other statistics',
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildOtherStatsSection(
+                            stats: r.otherStatistics,
+                            cardBg: cardBg,
+                            cardBorder: cardBorder,
+                            primaryTextColor: primaryTextColor,
+                            isArabic: isArabic,
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+                      ] else ...[
+                        // Fallback when detailed stats are not available
+                        _buildFallbackSummary(
+                          isDark: isDark,
                           isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildPassingSection(
-                          r: r,
                           cardBg: cardBg,
                           cardBorder: cardBorder,
                           primaryTextColor: primaryTextColor,
                           mutedTextColor: mutedTextColor,
-                          isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 18),
-                      ],
-
-                      // Section: Defending & Duels
-                      if (_hasDefendingStats(r)) ...[
-                        _buildSectionHeader(
-                          color: const Color(0xFF10B981),
-                          icon: Icons.shield_outlined,
-                          title: isArabic ? 'الدفاع والالتحامات' : 'Defending & Duels',
-                          isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDefendingSection(
-                          r: r,
-                          cardBg: cardBg,
-                          cardBorder: cardBorder,
-                          primaryTextColor: primaryTextColor,
-                          mutedTextColor: mutedTextColor,
-                          isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 18),
-                      ],
-
-                      // Section: Dribbles & Duels
-                      if (_hasDribblesStats(r)) ...[
-                        _buildSectionHeader(
-                          color: const Color(0xFFF59E0B),
-                          icon: Icons.directions_run_rounded,
-                          title: isArabic ? 'المراوغات والالتحامات' : 'Dribbles & Duels',
-                          isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDribblesSection(
-                          r: r,
-                          cardBg: cardBg,
-                          cardBorder: cardBorder,
-                          primaryTextColor: primaryTextColor,
-                          isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 18),
-                      ],
-
-                      // Section: Discipline & Fouls
-                      if (_hasDisciplineStats(r, p)) ...[
-                        _buildSectionHeader(
-                          color: const Color(0xFFFB7185),
-                          icon: Icons.style_outlined,
-                          title: isArabic ? 'الانضباط والأخطاء' : 'Discipline & Fouls',
-                          isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDisciplineSection(
-                          r: r,
                           p: p,
-                          cardBg: cardBg,
-                          cardBorder: cardBorder,
-                          primaryTextColor: primaryTextColor,
-                          isArabic: isArabic,
                         ),
                         const SizedBox(height: 18),
                       ],
-
-                      // Section: Other statistics
-                      if (r.otherStatistics.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          color: const Color(0xFF64748B),
-                          icon: Icons.trending_up_rounded,
-                          title: isArabic ? 'إحصائيات أخرى' : 'Other statistics',
-                          isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildOtherStatsSection(
-                          stats: r.otherStatistics,
-                          cardBg: cardBg,
-                          cardBorder: cardBorder,
-                          primaryTextColor: primaryTextColor,
-                          isArabic: isArabic,
-                        ),
-                        const SizedBox(height: 18),
-                      ],
-                    ] else ...[
-                      // Fallback when detailed stats are not available
-                      _buildFallbackSummary(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                        cardBg: cardBg,
-                        cardBorder: cardBorder,
-                        primaryTextColor: primaryTextColor,
-                        mutedTextColor: mutedTextColor,
-                        p: p,
-                      ),
-                      const SizedBox(height: 18),
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
 
-            // Sticky Bottom Action Bar
-            _buildStickyBottomButton(
-              context: context,
-              player: p,
-              isArabic: isArabic,
-            ),
-          ],
+              // Sticky Bottom Action Bar
+              _buildStickyBottomButton(
+                context: context,
+                player: p,
+                isArabic: isArabic,
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // -------------------------------------------------------------
   // Header Row
@@ -368,13 +381,17 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isDark ? const Color(0xFF1E2D44) : const Color(0xFFCBD5E1),
+                  color: isDark
+                      ? const Color(0xFF1E2D44)
+                      : const Color(0xFFCBD5E1),
                   width: 1.5,
                 ),
-                color: isDark ? const Color(0xFF131D2E) : const Color(0xFFF1F5F9),
+                color:
+                    isDark ? const Color(0xFF131D2E) : const Color(0xFFF1F5F9),
               ),
               child: ClipOval(
-                child: (normalizedPhoto != null && UrlHelper.isValidImageUrl(normalizedPhoto))
+                child: (normalizedPhoto != null &&
+                        UrlHelper.isValidImageUrl(normalizedPhoto))
                     ? CachedNetworkImage(
                         imageUrl: normalizedPhoto,
                         width: 54,
@@ -393,7 +410,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 top: -2,
                 end: -4,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F172A),
                     borderRadius: BorderRadius.circular(10),
@@ -516,7 +534,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -552,7 +572,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -694,7 +716,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
           // Pass Accuracy
           _buildProgressBarRow(
             title: isArabic ? 'دقة التمريرات' : 'Pass accuracy',
-            fraction: '${r.passing.accuracy.success}/${r.passing.accuracy.total}',
+            fraction:
+                '${r.passing.accuracy.success}/${r.passing.accuracy.total}',
             percent: r.passing.accuracy.percent,
             barColor: const Color(0xFF2563EB),
             primaryTextColor: primaryTextColor,
@@ -718,7 +741,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
           // Long balls
           _buildProgressBarRow(
             title: isArabic ? 'كرات طويلة' : 'Long balls',
-            fraction: '${r.passing.longBalls.success}/${r.passing.longBalls.total}',
+            fraction:
+                '${r.passing.longBalls.success}/${r.passing.longBalls.total}',
             percent: r.passing.longBalls.percent,
             barColor: const Color(0xFF14B8A6),
             primaryTextColor: primaryTextColor,
@@ -767,7 +791,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     final totalDuels = duels.total;
     final wonDuels = duels.won;
     final lostDuels = duels.lost;
-    final wonRatio = totalDuels > 0 ? (wonDuels / totalDuels).clamp(0.0, 1.0) : 0.0;
+    final wonRatio =
+        totalDuels > 0 ? (wonDuels / totalDuels).clamp(0.0, 1.0) : 0.0;
 
     return Column(
       children: [
@@ -793,7 +818,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                     ),
                   ),
                   Text(
-                    isArabic ? 'الالتحامات ($totalDuels)' : 'Duels ($totalDuels)',
+                    isArabic
+                        ? 'الالتحامات ($totalDuels)'
+                        : 'Duels ($totalDuels)',
                     style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -939,9 +966,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
           Expanded(
             child: _buildMetricTile(
               title: isArabic ? 'البطاقات' : 'Cards',
-              value: p.redCards > 0
-                  ? '🟥 ${p.redCards}'
-                  : '🟨 ${p.yellowCards}',
+              value:
+                  p.redCards > 0 ? '🟥 ${p.redCards}' : '🟨 ${p.yellowCards}',
               cardBg: cardBg,
               cardBorder: cardBorder,
               primaryTextColor: primaryTextColor,
@@ -1043,7 +1069,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               ),
               _buildAttrCol(
                 title: isArabic ? 'القائد' : 'Captain',
-                value: p.isCaptain ? (isArabic ? 'نعم' : 'Yes') : (isArabic ? 'لا' : 'No'),
+                value: p.isCaptain
+                    ? (isArabic ? 'نعم' : 'Yes')
+                    : (isArabic ? 'لا' : 'No'),
                 isArabic: isArabic,
                 primaryColor: primaryTextColor,
                 mutedColor: mutedTextColor,
@@ -1058,7 +1086,10 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 ),
             ],
           ),
-          if (p.goals > 0 || p.assists > 0 || p.yellowCards > 0 || p.redCards > 0) ...[
+          if (p.goals > 0 ||
+              p.assists > 0 ||
+              p.yellowCards > 0 ||
+              p.redCards > 0) ...[
             const SizedBox(height: 14),
             const Divider(height: 1),
             const SizedBox(height: 12),
@@ -1083,7 +1114,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 if (p.yellowCards > 0)
                   _buildTag(
                     icon: Icons.style_rounded,
-                    label: '${p.yellowCards} ${isArabic ? "بطاقة صفراء" : "Yellow"}',
+                    label:
+                        '${p.yellowCards} ${isArabic ? "بطاقة صفراء" : "Yellow"}',
                     color: const Color(0xFFFBBF24),
                     isArabic: isArabic,
                   ),
@@ -1268,7 +1300,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             width: double.infinity,
             color: const Color(0xFF1E293B),
             child: FractionallySizedBox(
-              alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+              alignment:
+                  isArabic ? Alignment.centerRight : Alignment.centerLeft,
               widthFactor: (percent / 100.0).clamp(0.0, 1.0),
               child: Container(color: barColor),
             ),
@@ -1414,7 +1447,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
   }
 
   bool _hasShootingStats(PlayerMatchRatingEntity r) =>
-      r.shooting.bigChances > 0 || r.shooting.onTarget > 0 || r.shooting.offTarget > 0;
+      r.shooting.bigChances > 0 ||
+      r.shooting.onTarget > 0 ||
+      r.shooting.offTarget > 0;
 
   bool _hasPassingStats(PlayerMatchRatingEntity r) =>
       r.passing.accuracy.total > 0 ||
@@ -1424,11 +1459,16 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
       r.passing.finalThird > 0;
 
   bool _hasDefendingStats(PlayerMatchRatingEntity r) =>
-      r.dribblesDuels.duels.total > 0 || r.tacklesWon > 0 || r.interceptions > 0;
+      r.dribblesDuels.duels.total > 0 ||
+      r.tacklesWon > 0 ||
+      r.interceptions > 0;
 
   bool _hasDribblesStats(PlayerMatchRatingEntity r) =>
       r.possessionLost > 0 || r.dispossessed > 0;
 
   bool _hasDisciplineStats(PlayerMatchRatingEntity r, LineupPlayerEntity p) =>
-      r.foulsDrawn > 0 || r.foulsCommitted > 0 || p.yellowCards > 0 || p.redCards > 0;
+      r.foulsDrawn > 0 ||
+      r.foulsCommitted > 0 ||
+      p.yellowCards > 0 ||
+      p.redCards > 0;
 }

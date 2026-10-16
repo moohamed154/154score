@@ -57,7 +57,8 @@ class ThemeSettingsView extends StatelessWidget {
 
                   // 3. Section Title
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12, left: 4, right: 4),
+                    padding:
+                        const EdgeInsets.only(bottom: 12, left: 4, right: 4),
                     child: Text(
                       l10n.translate('settings_theme_mode'),
                       style: AppTypography.getBodySmall(
@@ -189,9 +190,12 @@ class ThemeSettingsView extends StatelessWidget {
       ThemeMode.system => isDark,
     };
 
-    final previewBg = isPreviewDark ? const Color(0xFF111726) : const Color(0xFFF8FAFC);
-    final previewCardBg = isPreviewDark ? const Color(0xFF1E293B) : Colors.white;
-    final previewBorder = isPreviewDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final previewBg =
+        isPreviewDark ? const Color(0xFF111726) : const Color(0xFFF8FAFC);
+    final previewCardBg =
+        isPreviewDark ? const Color(0xFF1E293B) : Colors.white;
+    final previewBorder =
+        isPreviewDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
     final previewText = isPreviewDark ? Colors.white : const Color(0xFF0F172A);
 
     return RepaintBoundary(
@@ -239,7 +243,8 @@ class ThemeSettingsView extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                    borderRadius:
+                        BorderRadius.circular(AppDimensions.radiusFull),
                     border: Border.all(
                       color: AppColors.primary.withValues(alpha: 0.3),
                     ),
@@ -296,7 +301,8 @@ class ThemeSettingsView extends StatelessWidget {
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.liveRed,
                           borderRadius: BorderRadius.circular(4),
@@ -318,7 +324,8 @@ class ThemeSettingsView extends StatelessWidget {
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       color: previewCardBg,
                       borderRadius: BorderRadius.circular(10),
@@ -330,7 +337,8 @@ class ThemeSettingsView extends StatelessWidget {
                         Expanded(
                           child: Row(
                             children: [
-                              const Icon(Icons.shield_rounded, size: 16, color: AppColors.primary),
+                              const Icon(Icons.shield_rounded,
+                                  size: 16, color: AppColors.primary),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
@@ -349,9 +357,12 @@ class ThemeSettingsView extends StatelessWidget {
                         ),
                         // Score
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: isPreviewDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+                            color: isPreviewDark
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFFE2E8F0),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -382,7 +393,8 @@ class ThemeSettingsView extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              const Icon(Icons.shield_outlined, size: 16, color: AppColors.accent),
+                              const Icon(Icons.shield_outlined,
+                                  size: 16, color: AppColors.accent),
                             ],
                           ),
                         ),
@@ -556,7 +568,9 @@ class ThemeSettingsView extends StatelessWidget {
                               isDark: isDark,
                               isArabic: isArabic,
                             ).copyWith(
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                               color: isSelected
                                   ? (isDark
                                       ? AppColors.darkTextPrimary
@@ -580,7 +594,8 @@ class ThemeSettingsView extends StatelessWidget {
                                   : (isDark
                                       ? AppColors.darkSurface
                                       : AppColors.lightSurface),
-                              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                              borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusFull),
                               border: Border.all(
                                 color: isSelected
                                     ? primary.withValues(alpha: 0.4)

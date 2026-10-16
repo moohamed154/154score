@@ -73,7 +73,9 @@ class PlayerStatsTabView extends StatelessWidget {
               children: [
                 if (l.logo != null || l.logoLight != null) ...[
                   AppImage(
-                    imageUrl: (!isDark && l.logoLight != null && l.logoLight!.isNotEmpty)
+                    imageUrl: (!isDark &&
+                            l.logoLight != null &&
+                            l.logoLight!.isNotEmpty)
                         ? l.logoLight!
                         : (l.logo ?? ''),
                     width: 24,
@@ -165,11 +167,10 @@ class PlayerStatsTabView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color:
-                  (isDark
-                          ? AppColors.darkBackground
-                          : AppColors.lightBackground)
-                      .withValues(alpha: 0.5),
+              color: (isDark
+                      ? AppColors.darkBackground
+                      : AppColors.lightBackground)
+                  .withValues(alpha: 0.5),
               border: Border(
                 top: BorderSide(
                   color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -245,11 +246,9 @@ class PlayerStatsTabView extends StatelessWidget {
           label,
           style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
               .copyWith(
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
-                fontSize: 11,
-              ),
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            fontSize: 11,
+          ),
         ),
       ],
     );

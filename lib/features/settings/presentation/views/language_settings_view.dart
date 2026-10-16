@@ -78,7 +78,9 @@ class LanguageSettingsView extends StatelessWidget {
                       isSelected: currentAppLang == 'ar',
                       isDark: isDark,
                       onTap: () {
-                        context.read<LocaleCubit>().setLocale(const Locale('ar'));
+                        context
+                            .read<LocaleCubit>()
+                            .setLocale(const Locale('ar'));
                       },
                     ),
                     const Divider(height: 1),
@@ -89,7 +91,9 @@ class LanguageSettingsView extends StatelessWidget {
                       isSelected: currentAppLang == 'en',
                       isDark: isDark,
                       onTap: () {
-                        context.read<LocaleCubit>().setLocale(const Locale('en'));
+                        context
+                            .read<LocaleCubit>()
+                            .setLocale(const Locale('en'));
                       },
                     ),
                   ],
@@ -121,10 +125,12 @@ class LanguageSettingsView extends StatelessWidget {
                           isSelected: newsLang == 'app',
                           isDark: isDark,
                           onTap: () {
-                            context.read<NewsLanguageCubit>().setNewsLanguage('app');
+                            context
+                                .read<NewsLanguageCubit>()
+                                .setNewsLanguage('app');
                             context.read<NewsBloc>().add(
-                              ChangeNewsLanguageEvent(currentAppLang),
-                            );
+                                  ChangeNewsLanguageEvent(currentAppLang),
+                                );
                           },
                         ),
                         const Divider(height: 1),
@@ -137,10 +143,12 @@ class LanguageSettingsView extends StatelessWidget {
                           isSelected: newsLang == 'ar',
                           isDark: isDark,
                           onTap: () {
-                            context.read<NewsLanguageCubit>().setNewsLanguage('ar');
+                            context
+                                .read<NewsLanguageCubit>()
+                                .setNewsLanguage('ar');
                             context.read<NewsBloc>().add(
-                              const ChangeNewsLanguageEvent('ar'),
-                            );
+                                  const ChangeNewsLanguageEvent('ar'),
+                                );
                           },
                         ),
                         const Divider(height: 1),
@@ -153,10 +161,12 @@ class LanguageSettingsView extends StatelessWidget {
                           isSelected: newsLang == 'en',
                           isDark: isDark,
                           onTap: () {
-                            context.read<NewsLanguageCubit>().setNewsLanguage('en');
+                            context
+                                .read<NewsLanguageCubit>()
+                                .setNewsLanguage('en');
                             context.read<NewsBloc>().add(
-                              const ChangeNewsLanguageEvent('en'),
-                            );
+                                  const ChangeNewsLanguageEvent('en'),
+                                );
                           },
                         ),
                       ],
@@ -272,9 +282,8 @@ class LanguageSettingsView extends StatelessWidget {
               isDark: isDark,
               isArabic: isArabic,
             ).copyWith(
-              color: isDark
-                  ? AppColors.darkTextMuted
-                  : AppColors.lightTextMuted,
+              color:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               fontSize: 12,
             ),
           ),
@@ -312,7 +321,9 @@ class LanguageSettingsView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.primary.withAlpha(30)
-                        : (isDark ? Colors.white10 : Colors.black.withAlpha(10)),
+                        : (isDark
+                            ? Colors.white10
+                            : Colors.black.withAlpha(10)),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -330,7 +341,8 @@ class LanguageSettingsView extends StatelessWidget {
                       title,
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected
                             ? AppColors.primary
                             : (isDark
@@ -358,7 +370,9 @@ class LanguageSettingsView extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? AppColors.primary : Colors.grey.withAlpha(120),
+                    color: isSelected
+                        ? AppColors.primary
+                        : Colors.grey.withAlpha(120),
                     width: 2,
                   ),
                   color: isSelected ? AppColors.primary : Colors.transparent,

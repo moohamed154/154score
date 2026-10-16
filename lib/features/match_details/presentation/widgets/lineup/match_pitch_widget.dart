@@ -52,9 +52,6 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
 
     final currentTeam = _currentIndex == 0 ? widget.home : widget.away;
     final isHome = _currentIndex == 0;
-    final ringColor = isHome
-        ? const Color(0xFF10B981)
-        : const Color(0xFF38BDF8);
 
     return Center(
       child: ConstrainedBox(
@@ -87,9 +84,8 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                   border: Border.all(
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : AppColors.lightBorder,
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
                     width: 1.5,
                   ),
                   boxShadow: [
@@ -239,9 +235,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark
-              ? const Color(0xFF0F172A)
-              : AppColors.lightCardElevated,
+          color: isDark ? const Color(0xFF0F172A) : AppColors.lightCardElevated,
           borderRadius: BorderRadius.circular(26),
           border: Border.all(
             color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -290,9 +284,9 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
     final displayName = team.displayName.isNotEmpty
         ? team.displayName
         : (team.teamName ??
-              (isHome
-                  ? (isArabic ? 'صاحب الأرض' : 'Home')
-                  : (isArabic ? 'الضيف' : 'Away')));
+            (isHome
+                ? (isArabic ? 'صاحب الأرض' : 'Home')
+                : (isArabic ? 'الضيف' : 'Away')));
 
     return GestureDetector(
       onTap: onTap,
@@ -303,9 +297,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF2DD4BF) // Mint/Teal solid pill from Yalla Shoot
-              : (isDark
-                    ? const Color(0xFF131D2E)
-                    : const Color(0xFFE2E8F0)),
+              : (isDark ? const Color(0xFF131D2E) : const Color(0xFFE2E8F0)),
           borderRadius: BorderRadius.circular(24),
           boxShadow: isSelected
               ? [
@@ -325,9 +317,7 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
             color: isSelected
                 ? const Color(0xFF0F172A)
-                : (isDark
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF64748B)),
+                : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -351,15 +341,15 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
       final teamName = team.displayName.isNotEmpty
           ? team.displayName
           : (team.teamName ??
-                (isHome
-                    ? (isArabic ? 'صاحب الأرض' : 'Home')
-                    : (isArabic ? 'الضيف' : 'Away')));
+              (isHome
+                  ? (isArabic ? 'صاحب الأرض' : 'Home')
+                  : (isArabic ? 'الضيف' : 'Away')));
       final otherName = otherTeam.displayName.isNotEmpty
           ? otherTeam.displayName
           : (otherTeam.teamName ??
-                (!isHome
-                    ? (isArabic ? 'صاحب الأرض' : 'Home')
-                    : (isArabic ? 'الضيف' : 'Away')));
+              (!isHome
+                  ? (isArabic ? 'صاحب الأرض' : 'Home')
+                  : (isArabic ? 'الضيف' : 'Away')));
 
       return Center(
         child: Container(
@@ -457,14 +447,13 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                             isArabic
                                 ? 'عرض تشكيلة $otherName'
                                 : 'View $otherName Lineup',
-                            style:
-                                (isArabic
+                            style: (isArabic
                                 ? GoogleFonts.cairo
                                 : GoogleFonts.inter)(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ],
                       ),

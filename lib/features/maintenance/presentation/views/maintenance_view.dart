@@ -104,8 +104,7 @@ class _MaintenanceViewState extends State<MaintenanceView>
         }
       },
       builder: (context, state) {
-        final displayMessage =
-            state.info?.getDisplayMessage(isArabic) ??
+        final displayMessage = state.info?.getDisplayMessage(isArabic) ??
             (isArabic
                 ? 'الخوادم تخضع لأعمال الصيانة والتطوير حالياً لتحسين الخدمة. يرجى المحاولة لاحقاً.'
                 : 'Servers are currently undergoing scheduled maintenance. Please try again shortly.');
@@ -115,9 +114,8 @@ class _MaintenanceViewState extends State<MaintenanceView>
         return PopScope(
           canPop: false,
           child: Scaffold(
-            backgroundColor: isDark
-                ? const Color(0xFF0B0E14)
-                : const Color(0xFFF8FAFC),
+            backgroundColor:
+                isDark ? const Color(0xFF0B0E14) : const Color(0xFFF8FAFC),
             body: SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -235,9 +233,8 @@ class _MaintenanceViewState extends State<MaintenanceView>
                           width: double.infinity,
                           padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color(0xFF131A26)
-                                : Colors.white,
+                            color:
+                                isDark ? const Color(0xFF131A26) : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isDark
@@ -260,16 +257,15 @@ class _MaintenanceViewState extends State<MaintenanceView>
                               Text(
                                 displayMessage,
                                 textAlign: TextAlign.center,
-                                style:
-                                    AppTypography.getBodyMedium(
-                                      isDark: isDark,
-                                      isArabic: isArabic,
-                                    ).copyWith(
-                                      height: 1.6,
-                                      color: isDark
-                                          ? AppColors.darkTextSecondary
-                                          : AppColors.lightTextSecondary,
-                                    ),
+                                style: AppTypography.getBodyMedium(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  height: 1.6,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                ),
                               ),
                               if (state.info?.updatedAt != null) ...[
                                 const SizedBox(height: 12),
@@ -295,9 +291,8 @@ class _MaintenanceViewState extends State<MaintenanceView>
                           width: double.infinity,
                           height: 52,
                           child: ElevatedButton(
-                            onPressed: isChecking
-                                ? null
-                                : () => _onRetry(context),
+                            onPressed:
+                                isChecking ? null : () => _onRetry(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.black,

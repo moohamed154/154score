@@ -48,7 +48,8 @@ class ApnsNotificationService {
 
       // Startup trigger: if cached APNs token exists, register with backend
       if (_cachedToken != null && _cachedToken!.trim().isNotEmpty) {
-        debugPrint('[ApnsNotificationService] Startup: registering cached APNs token.');
+        debugPrint(
+            '[ApnsNotificationService] Startup: registering cached APNs token.');
         await PushNotificationService.instance.registerTokenWithBackend(
           _cachedToken!.trim(),
           platformOverride: 'ios',
@@ -81,7 +82,8 @@ class ApnsNotificationService {
     if (call.method == 'onTokenReceived') {
       final token = call.arguments?.toString();
       if (token == null || token.trim().isEmpty) {
-        debugPrint('[ApnsNotificationService] Empty or null native APNs token received, rejecting.');
+        debugPrint(
+            '[ApnsNotificationService] Empty or null native APNs token received, rejecting.');
         return;
       }
       final cleanToken = token.trim();

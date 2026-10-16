@@ -78,7 +78,8 @@ class _HomeViewState extends State<HomeView> {
   }
 
   int _indexForDate(DateTime date) {
-    final baseUtc = DateTime.utc(_baseDate.year, _baseDate.month, _baseDate.day);
+    final baseUtc =
+        DateTime.utc(_baseDate.year, _baseDate.month, _baseDate.day);
     final targetUtc = DateTime.utc(date.year, date.month, date.day);
     return _kInitialPage + targetUtc.difference(baseUtc).inDays;
   }
@@ -99,16 +100,16 @@ class _HomeViewState extends State<HomeView> {
       if (animate) {
         _pageController
             .animateToPage(
-              targetIndex,
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.fastOutSlowIn,
-            )
+          targetIndex,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.fastOutSlowIn,
+        )
             .then((_) {
-              _isProgrammaticScroll = false;
-              if (mounted) {
-                bloc.add(LoadMatchesEvent(date: date));
-              }
-            });
+          _isProgrammaticScroll = false;
+          if (mounted) {
+            bloc.add(LoadMatchesEvent(date: date));
+          }
+        });
       } else {
         _pageController.jumpToPage(targetIndex);
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -204,7 +205,8 @@ class _HomeViewState extends State<HomeView> {
                               onDateSelected: (date) {
                                 final targetIndex = _indexForDate(date);
                                 final currentPos = _pageController.hasClients
-                                    ? (_pageController.page?.round() ?? _currentPage)
+                                    ? (_pageController.page?.round() ??
+                                        _currentPage)
                                     : _currentPage;
                                 final diff = (targetIndex - currentPos).abs();
                                 _goToDate(date, animate: diff == 1);
@@ -222,9 +224,8 @@ class _HomeViewState extends State<HomeView> {
                   Divider(
                     height: 1,
                     thickness: 0.8,
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : AppColors.lightBorder,
+                    color:
+                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   ),
                 ],
               ),
@@ -232,7 +233,6 @@ class _HomeViewState extends State<HomeView> {
           },
         ),
       ),
-
       body: MultiBlocListener(
         listeners: [
           BlocListener<AppUpdateCubit, AppUpdateState>(
@@ -290,7 +290,8 @@ class _HomeViewState extends State<HomeView> {
                 _currentPage = page;
                 final newDate = _dateForIndex(page);
                 final bloc = context.read<MatchesBloc>();
-                if (!DateFormatter.isSameDay(newDate, bloc.state.selectedDate)) {
+                if (!DateFormatter.isSameDay(
+                    newDate, bloc.state.selectedDate)) {
                   bloc.add(LoadMatchesEvent(date: newDate));
                 }
               }
@@ -308,7 +309,8 @@ class _HomeViewState extends State<HomeView> {
                   textDirection:
                       isArabic ? TextDirection.rtl : TextDirection.ltr,
                   child: _HomeDayPage(
-                    key: ValueKey('day_${DateFormatter.toApiDateString(pageDate)}'),
+                    key: ValueKey(
+                        'day_${DateFormatter.toApiDateString(pageDate)}'),
                     pageDate: pageDate,
                     isDark: isDark,
                     isArabic: isArabic,
@@ -369,8 +371,8 @@ class _HomeDayPageState extends State<_HomeDayPage>
           return false;
         },
         builder: (context, matchesState) {
-          final isSelectedDate =
-              DateFormatter.isSameDay(widget.pageDate, matchesState.selectedDate);
+          final isSelectedDate = DateFormatter.isSameDay(
+              widget.pageDate, matchesState.selectedDate);
 
           final List<LeagueGroupEntity>? leagues;
           final bool isLoading;
@@ -392,8 +394,11 @@ class _HomeDayPageState extends State<_HomeDayPage>
             } else if (isSelectedDate) {
               final isNoMatchesError = matchesState.errorMessage != null &&
                   (matchesState.errorMessage!.contains('لا توجد مباريات') ||
-                      matchesState.errorMessage!.toLowerCase().contains('no matches'));
-              if (matchesState.status == MatchesStatus.empty || isNoMatchesError) {
+                      matchesState.errorMessage!
+                          .toLowerCase()
+                          .contains('no matches'));
+              if (matchesState.status == MatchesStatus.empty ||
+                  isNoMatchesError) {
                 isLoading = false;
                 isError = false;
                 errorMessage = null;
@@ -415,72 +420,74 @@ class _HomeDayPageState extends State<_HomeDayPage>
             }
           }
 
-        final dateKey = DateFormatter.toApiDateString(widget.pageDate);
+          final dateKey = DateFormatter.toApiDateString(widget.pageDate);
 
-        return RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: () async {
-            final matchesCompleter = Completer<void>();
-            bloc.add(
-              LoadMatchesEvent(
-                date: widget.pageDate,
-                isRefresh: true,
-                completer: matchesCompleter,
-              ),
-            );
-            try {
-              await matchesCompleter.future.timeout(const Duration(seconds: 3));
-            } catch (_) {}
-          },
-          child: isLoading
-              ? ListView(
-                  key: PageStorageKey<String>('skel_$dateKey'),
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-                  children: [
-                    _buildMatchesSkeleton(
-                      context,
-                      widget.isDark,
-                      widget.isArabic,
-                      widget.pageDate,
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              final matchesCompleter = Completer<void>();
+              bloc.add(
+                LoadMatchesEvent(
+                  date: widget.pageDate,
+                  isRefresh: true,
+                  completer: matchesCompleter,
+                ),
+              );
+              try {
+                await matchesCompleter.future
+                    .timeout(const Duration(seconds: 3));
+              } catch (_) {}
+            },
+            child: isLoading
+                ? ListView(
+                    key: PageStorageKey<String>('skel_$dateKey'),
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
                     ),
-                  ],
-                )
-              : isError
-                  ? ListView(
-                      key: PageStorageKey<String>('err_$dateKey'),
-                      physics: const AlwaysScrollableScrollPhysics(
-                        parent: BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
+                    children: [
+                      _buildMatchesSkeleton(
+                        context,
+                        widget.isDark,
+                        widget.isArabic,
+                        widget.pageDate,
                       ),
-                      padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-                      children: [
-                        _buildDateHeader(
-                          widget.pageDate,
-                          widget.isDark,
-                          widget.isArabic,
+                    ],
+                  )
+                : isError
+                    ? ListView(
+                        key: PageStorageKey<String>('err_$dateKey'),
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
                         ),
-                        ErrorView(
-                          message: errorMessage,
-                          onRetry: () =>
-                              bloc.add(LoadMatchesEvent(date: widget.pageDate)),
-                        ),
-                      ],
-                    )
-                  : _buildMatchesContent(
-                      context: context,
-                      pageDate: widget.pageDate,
-                      displayLeagues: leagues ?? const [],
-                      state: matchesState,
-                      isDark: widget.isDark,
-                      isArabic: widget.isArabic,
-                    ),
-        );
-      },
-    ),
-  );
-}
+                        padding:
+                            const EdgeInsets.only(bottom: AppDimensions.xxxl),
+                        children: [
+                          _buildDateHeader(
+                            widget.pageDate,
+                            widget.isDark,
+                            widget.isArabic,
+                          ),
+                          ErrorView(
+                            message: errorMessage,
+                            onRetry: () => bloc
+                                .add(LoadMatchesEvent(date: widget.pageDate)),
+                          ),
+                        ],
+                      )
+                    : _buildMatchesContent(
+                        context: context,
+                        pageDate: widget.pageDate,
+                        displayLeagues: leagues ?? const [],
+                        state: matchesState,
+                        isDark: widget.isDark,
+                        isArabic: widget.isArabic,
+                      ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildDateHeader(DateTime date, bool isDark, bool isArabic) {
     return Padding(
@@ -493,9 +500,8 @@ class _HomeDayPageState extends State<_HomeDayPage>
         ).copyWith(
           fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+          color:
+              isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
         ),
       ),
     );
@@ -575,7 +581,8 @@ class _HomeDayPageState extends State<_HomeDayPage>
     // Extract Favorite Matches (pinned on top like Yalla Shoot) - Optimized O(N) lookup
     final List<MatchEntity> favoriteMatches = [];
     final seenMatchIds = <String>{};
-    if (state.activeFilter != MatchFilterType.favorites && !state.hideFavorites) {
+    if (state.activeFilter != MatchFilterType.favorites &&
+        !state.hideFavorites) {
       for (final league in displayLeagues) {
         for (final m in league.matches) {
           if (m.isFavorite && seenMatchIds.add(m.id)) {
@@ -663,12 +670,10 @@ class _HomeDayPageState extends State<_HomeDayPage>
           enabled: true,
           ignoreContainers: false,
           effect: ShimmerEffect(
-            baseColor: isDark
-                ? const Color(0xFF222F3E)
-                : const Color(0xFFE2E8F0),
-            highlightColor: isDark
-                ? const Color(0xFF384B66)
-                : const Color(0xFFF1F5F9),
+            baseColor:
+                isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
+            highlightColor:
+                isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
             duration: const Duration(milliseconds: 1500),
           ),
           child: Padding(
@@ -689,7 +694,9 @@ class _HomeDayPageState extends State<_HomeDayPage>
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          color: isDark
+                              ? AppColors.darkCardElevated
+                              : Colors.white,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -698,7 +705,9 @@ class _HomeDayPageState extends State<_HomeDayPage>
                         width: 70,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          color: isDark
+                              ? AppColors.darkCardElevated
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -707,7 +716,9 @@ class _HomeDayPageState extends State<_HomeDayPage>
                         width: 48,
                         height: 22,
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          color: isDark
+                              ? AppColors.darkCardElevated
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
@@ -716,7 +727,9 @@ class _HomeDayPageState extends State<_HomeDayPage>
                         width: 70,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          color: isDark
+                              ? AppColors.darkCardElevated
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -725,7 +738,9 @@ class _HomeDayPageState extends State<_HomeDayPage>
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkCardElevated : Colors.white,
+                          color: isDark
+                              ? AppColors.darkCardElevated
+                              : Colors.white,
                           shape: BoxShape.circle,
                         ),
                       ),

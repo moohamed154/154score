@@ -83,9 +83,8 @@ class LiveActivityToggleButton extends StatelessWidget {
 
         // Full banner button layout
         return InkWell(
-          onTap: isLoading
-              ? null
-              : () => _handleToggle(context, isTracking, l10n),
+          onTap:
+              isLoading ? null : () => _handleToggle(context, isTracking, l10n),
           borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 250),
@@ -102,7 +101,9 @@ class LiveActivityToggleButton extends StatelessWidget {
               border: Border.all(
                 color: isTracking
                     ? AppColors.primary
-                    : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                    : (isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFCBD5E1)),
                 width: isTracking ? 1.5 : 1.0,
               ),
             ),
@@ -135,14 +136,22 @@ class LiveActivityToggleButton extends StatelessWidget {
                   Icon(
                     Icons.screen_lock_portrait_rounded,
                     size: 16,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
                   ),
                 const SizedBox(width: 8),
                 Text(
                   isTracking
-                      ? (isArabic ? 'معروض على شاشة القفل' : 'Live on Lock Screen')
-                      : (isArabic ? 'عرض على شاشة القفل' : 'Show on Lock Screen'),
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
+                      ? (isArabic
+                          ? 'معروض على شاشة القفل'
+                          : 'Live on Lock Screen')
+                      : (isArabic
+                          ? 'عرض على شاشة القفل'
+                          : 'Show on Lock Screen'),
+                  style: AppTypography.getBodySmall(
+                          isDark: isDark, isArabic: isArabic)
+                      .copyWith(
                     fontWeight: FontWeight.bold,
                     color: isTracking
                         ? AppColors.primary
@@ -152,14 +161,17 @@ class LiveActivityToggleButton extends StatelessWidget {
                 if (isTracking) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       isArabic ? 'إيقاف' : 'Stop',
-                      style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
+                      style: AppTypography.getBodySmall(
+                              isDark: isDark, isArabic: isArabic)
+                          .copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.redAccent,

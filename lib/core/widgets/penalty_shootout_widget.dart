@@ -29,8 +29,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
-    final hasDetailedAttempts =
-        attempts1 != null &&
+    final hasDetailedAttempts = attempts1 != null &&
         attempts2 != null &&
         (attempts1!.isNotEmpty || attempts2!.isNotEmpty);
 
@@ -277,7 +276,8 @@ class PenaltyShootoutWidget extends StatelessWidget {
             shape: BoxShape.circle,
             color: success ? const Color(0xFF10B981) : const Color(0xFFEF4444),
             border: Border.all(
-              color: success ? const Color(0xFF059669) : const Color(0xFFDC2626),
+              color:
+                  success ? const Color(0xFF059669) : const Color(0xFFDC2626),
               width: 0.6,
             ),
           ),

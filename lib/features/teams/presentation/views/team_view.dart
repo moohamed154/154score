@@ -62,12 +62,12 @@ class _TeamViewState extends State<TeamView>
     });
 
     context.read<TeamBloc>().add(
-      LoadTeamProfileEvent(
-        widget.teamId,
-        teamName: widget.initialName,
-        leagueId: widget.leagueId,
-      ),
-    );
+          LoadTeamProfileEvent(
+            widget.teamId,
+            teamName: widget.initialName,
+            leagueId: widget.leagueId,
+          ),
+        );
   }
 
   @override
@@ -76,16 +76,21 @@ class _TeamViewState extends State<TeamView>
     super.dispose();
   }
 
-  bool _isNotificationActive(String? id, String? name, [FavoritesState? favState]) {
+  bool _isNotificationActive(String? id, String? name,
+      [FavoritesState? favState]) {
     try {
       final storage = sl<LocalStorageService>();
       final cleanId = id?.trim();
       final cleanName = name?.trim();
 
-      if (cleanId != null && cleanId.isNotEmpty && storage.isTeamNotificationMuted(cleanId)) {
+      if (cleanId != null &&
+          cleanId.isNotEmpty &&
+          storage.isTeamNotificationMuted(cleanId)) {
         return false;
       }
-      if (cleanName != null && cleanName.isNotEmpty && storage.isTeamNotificationMuted(cleanName)) {
+      if (cleanName != null &&
+          cleanName.isNotEmpty &&
+          storage.isTeamNotificationMuted(cleanName)) {
         return false;
       }
 
@@ -97,20 +102,26 @@ class _TeamViewState extends State<TeamView>
         return true;
       }
 
-      if (cleanId != null && cleanId.isNotEmpty && storage.isTeamNotificationEnabled(cleanId)) {
+      if (cleanId != null &&
+          cleanId.isNotEmpty &&
+          storage.isTeamNotificationEnabled(cleanId)) {
         return true;
       }
-      if (cleanName != null && cleanName.isNotEmpty && storage.isTeamNotificationEnabled(cleanName)) {
+      if (cleanName != null &&
+          cleanName.isNotEmpty &&
+          storage.isTeamNotificationEnabled(cleanName)) {
         return true;
       }
     } catch (_) {}
     return false;
   }
 
-  Future<void> _toggleNotification(String? id, String name, bool isArabic) async {
+  Future<void> _toggleNotification(
+      String? id, String name, bool isArabic) async {
     try {
       final storage = sl<LocalStorageService>();
-      final keyToToggle = (id != null && id.trim().isNotEmpty) ? id.trim() : name.trim();
+      final keyToToggle =
+          (id != null && id.trim().isNotEmpty) ? id.trim() : name.trim();
       if (keyToToggle.isEmpty) return;
 
       final isCurrentlyActive = _isNotificationActive(id, name);
@@ -128,7 +139,8 @@ class _TeamViewState extends State<TeamView>
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.notifications_off_rounded, color: Color(0xFFF59E0B), size: 20),
+                  const Icon(Icons.notifications_off_rounded,
+                      color: Color(0xFFF59E0B), size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -161,7 +173,8 @@ class _TeamViewState extends State<TeamView>
         }
       }
 
-      if (name.trim().isNotEmpty && name.trim().toLowerCase() != keyToToggle.toLowerCase()) {
+      if (name.trim().isNotEmpty &&
+          name.trim().toLowerCase() != keyToToggle.toLowerCase()) {
         if (newStatus) {
           await storage.setTeamNotificationMuted(name.trim(), false);
         } else {
@@ -177,8 +190,11 @@ class _TeamViewState extends State<TeamView>
             content: Row(
               children: [
                 Icon(
-                  newStatus ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
-                  color: newStatus ? AppColors.primary : const Color(0xFF94A3B8),
+                  newStatus
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_off_rounded,
+                  color:
+                      newStatus ? AppColors.primary : const Color(0xFF94A3B8),
                   size: 20,
                 ),
                 const SizedBox(width: 10),
@@ -226,8 +242,7 @@ class _TeamViewState extends State<TeamView>
 
     return BlocBuilder<TeamBloc, TeamState>(
       builder: (context, state) {
-        final displayName =
-            state.profile?.teamName ??
+        final displayName = state.profile?.teamName ??
             state.teamName ??
             widget.initialName ??
             'Team';
@@ -324,14 +339,14 @@ class _TeamViewState extends State<TeamView>
                   onRefresh: () async {
                     final completer = Completer<void>();
                     context.read<TeamBloc>().add(
-                      LoadTeamProfileEvent(
-                        widget.teamId,
-                        teamName: widget.initialName,
-                        leagueId: widget.leagueId,
-                        isRefresh: true,
-                        completer: completer,
-                      ),
-                    );
+                          LoadTeamProfileEvent(
+                            widget.teamId,
+                            teamName: widget.initialName,
+                            leagueId: widget.leagueId,
+                            isRefresh: true,
+                            completer: completer,
+                          ),
+                        );
                     try {
                       await completer.future.timeout(
                         const Duration(seconds: 4),
@@ -360,9 +375,8 @@ class _TeamViewState extends State<TeamView>
                                   match: MatchEntity(
                                     id: 'skeleton_$i',
                                     team1: displayName,
-                                    team2: isArabic
-                                        ? 'نادي منافس'
-                                        : 'Opponent FC',
+                                    team2:
+                                        isArabic ? 'نادي منافس' : 'Opponent FC',
                                     score1: '0',
                                     score2: '0',
                                     status: 'لم تبدأ',
@@ -374,44 +388,46 @@ class _TeamViewState extends State<TeamView>
                           ),
                         )
                       : state.status == TeamStatus.error
-                      ? ErrorView(
-                          message: state.errorMessage,
-                          onRetry: () => context.read<TeamBloc>().add(
-                            LoadTeamProfileEvent(
-                              widget.teamId,
-                              teamName: widget.initialName,
-                              leagueId: widget.leagueId,
+                          ? ErrorView(
+                              message: state.errorMessage,
+                              onRetry: () => context.read<TeamBloc>().add(
+                                    LoadTeamProfileEvent(
+                                      widget.teamId,
+                                      teamName: widget.initialName,
+                                      leagueId: widget.leagueId,
+                                    ),
+                                  ),
+                            )
+                          : TabBarView(
+                              controller: _tabController,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: [
+                                _buildMatchesTab(
+                                    context, state, isDark, isArabic),
+                                _buildNewsTab(context, state, isDark, isArabic),
+                                _buildStandingsTab(
+                                  context,
+                                  state,
+                                  isDark,
+                                  isArabic,
+                                  displayName,
+                                ),
+                                _buildPlayersTab(
+                                    context, state, isDark, isArabic),
+                                _buildInformationTab(
+                                  context,
+                                  state,
+                                  isDark,
+                                  isArabic,
+                                ),
+                                _buildTransfersTab(
+                                  context,
+                                  state,
+                                  isDark,
+                                  isArabic,
+                                ),
+                              ],
                             ),
-                          ),
-                        )
-                      : TabBarView(
-                          controller: _tabController,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            _buildMatchesTab(context, state, isDark, isArabic),
-                            _buildNewsTab(context, state, isDark, isArabic),
-                            _buildStandingsTab(
-                              context,
-                              state,
-                              isDark,
-                              isArabic,
-                              displayName,
-                            ),
-                            _buildPlayersTab(context, state, isDark, isArabic),
-                            _buildInformationTab(
-                              context,
-                              state,
-                              isDark,
-                              isArabic,
-                            ),
-                            _buildTransfersTab(
-                              context,
-                              state,
-                              isDark,
-                              isArabic,
-                            ),
-                          ],
-                        ),
                 ),
               ),
             ],
@@ -584,16 +600,15 @@ class _TeamViewState extends State<TeamView>
                           item.description!.isNotEmpty) ...[
                         Text(
                           item.description!,
-                          style:
-                              AppTypography.getBodySmall(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted,
-                                fontSize: 11,
-                              ),
+                          style: AppTypography.getBodySmall(
+                            isDark: isDark,
+                            isArabic: isArabic,
+                          ).copyWith(
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                            fontSize: 11,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -612,16 +627,15 @@ class _TeamViewState extends State<TeamView>
                             const SizedBox(width: 4),
                             Text(
                               item.createdAt!.split(' ').first,
-                              style:
-                                  AppTypography.getBodySmall(
-                                    isDark: isDark,
-                                    isArabic: isArabic,
-                                  ).copyWith(
-                                    color: isDark
-                                        ? AppColors.darkTextMuted
-                                        : AppColors.lightTextMuted,
-                                    fontSize: 10,
-                                  ),
+                              style: AppTypography.getBodySmall(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted,
+                                fontSize: 10,
+                              ),
                             ),
                           ],
                         ),
@@ -665,8 +679,7 @@ class _TeamViewState extends State<TeamView>
               itemBuilder: (context, index) {
                 final champ = championships[index];
                 final champKey = champ.urlId ?? champ.id;
-                final isSelected =
-                    state.selectedChampionshipId == champKey ||
+                final isSelected = state.selectedChampionshipId == champKey ||
                     (state.selectedChampionshipId == null && index == 0);
 
                 return FilterChip(
@@ -683,16 +696,15 @@ class _TeamViewState extends State<TeamView>
                     color: isSelected
                         ? Colors.white
                         : (isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary),
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary),
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     fontSize: 12,
                   ),
                   selected: isSelected,
                   selectedColor: AppColors.primary,
-                  backgroundColor: isDark
-                      ? AppColors.darkCard
-                      : AppColors.lightCard,
+                  backgroundColor:
+                      isDark ? AppColors.darkCard : AppColors.lightCard,
                   checkmarkColor: Colors.white,
                   showCheckmark: false,
                   shape: RoundedRectangleBorder(
@@ -701,14 +713,14 @@ class _TeamViewState extends State<TeamView>
                       color: isSelected
                           ? AppColors.primary
                           : (isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder),
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder),
                     ),
                   ),
                   onSelected: (_) {
                     context.read<TeamBloc>().add(
-                      SelectChampionshipStandingsEvent(champKey),
-                    );
+                          SelectChampionshipStandingsEvent(champKey),
+                        );
                   },
                 );
               },
@@ -888,8 +900,8 @@ class _TeamViewState extends State<TeamView>
       child: InkWell(
         onTap: player.id.isNotEmpty
             ? () => context.push(
-                '/player/${player.id}?slug=${Uri.encodeComponent(player.name)}',
-              )
+                  '/player/${player.id}?slug=${Uri.encodeComponent(player.name)}',
+                )
             : null,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         child: Padding(
@@ -907,14 +919,13 @@ class _TeamViewState extends State<TeamView>
                 ),
                 child: Text(
                   player.number?.isNotEmpty == true ? player.number! : '-',
-                  style:
-                      AppTypography.getBodySmall(
-                        isDark: isDark,
-                        isArabic: isArabic,
-                      ).copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                      ),
+                  style: AppTypography.getBodySmall(
+                    isDark: isDark,
+                    isArabic: isArabic,
+                  ).copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -949,16 +960,15 @@ class _TeamViewState extends State<TeamView>
                       const SizedBox(height: 2),
                       Text(
                         player.position!,
-                        style:
-                            AppTypography.getBodySmall(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                              fontSize: 11,
-                            ),
+                        style: AppTypography.getBodySmall(
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ).copyWith(
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ],
@@ -1051,11 +1061,13 @@ class _TeamViewState extends State<TeamView>
                         // Cup / Trophy image
                         Builder(
                           builder: (context) {
-                            final trophyUrl = (cup.logo != null && cup.logo!.isNotEmpty)
-                                ? cup.logo
-                                : (cup.cupImage != null && !cup.cupImage!.contains('/cups/')
-                                    ? cup.cupImage
-                                    : null);
+                            final trophyUrl =
+                                (cup.logo != null && cup.logo!.isNotEmpty)
+                                    ? cup.logo
+                                    : (cup.cupImage != null &&
+                                            !cup.cupImage!.contains('/cups/')
+                                        ? cup.cupImage
+                                        : null);
                             if (trophyUrl != null && trophyUrl.isNotEmpty) {
                               return AppImage(
                                 imageUrl: trophyUrl,
@@ -1222,10 +1234,8 @@ class _TeamViewState extends State<TeamView>
           label,
           style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic)
               .copyWith(
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted,
-              ),
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+          ),
         ),
         const Spacer(),
         if (flagUrl != null && flagUrl.isNotEmpty) ...[
@@ -1272,11 +1282,13 @@ class _TeamViewState extends State<TeamView>
                 children: [
                   Builder(
                     builder: (context) {
-                      final trophyUrl = (cup.logo != null && cup.logo!.isNotEmpty)
-                          ? cup.logo
-                          : (cup.cupImage != null && !cup.cupImage!.contains('/cups/')
-                              ? cup.cupImage
-                              : null);
+                      final trophyUrl =
+                          (cup.logo != null && cup.logo!.isNotEmpty)
+                              ? cup.logo
+                              : (cup.cupImage != null &&
+                                      !cup.cupImage!.contains('/cups/')
+                                  ? cup.cupImage
+                                  : null);
                       if (trophyUrl != null && trophyUrl.isNotEmpty) {
                         return Padding(
                           padding: const EdgeInsetsDirectional.only(end: 10),
@@ -1406,8 +1418,8 @@ class _TeamViewState extends State<TeamView>
                         color: _transfersSegmentIndex == 0
                             ? Colors.white
                             : (isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary),
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary),
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -1436,8 +1448,8 @@ class _TeamViewState extends State<TeamView>
                         color: _transfersSegmentIndex == 1
                             ? Colors.white
                             : (isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary),
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary),
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -1507,16 +1519,15 @@ class _TeamViewState extends State<TeamView>
                                 item.player.position!.isNotEmpty)
                               Text(
                                 item.player.position!,
-                                style:
-                                    AppTypography.getBodySmall(
-                                      isDark: isDark,
-                                      isArabic: isArabic,
-                                    ).copyWith(
-                                      color: isDark
-                                          ? AppColors.darkTextMuted
-                                          : AppColors.lightTextMuted,
-                                      fontSize: 11,
-                                    ),
+                                style: AppTypography.getBodySmall(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                  fontSize: 11,
+                                ),
                               ),
                           ],
                         ),

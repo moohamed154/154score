@@ -49,13 +49,13 @@ class HomeState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    liveMatches,
-    todayLeagues,
-    recentVideos,
-    recentTransfers,
-    errorMessage,
-  ];
+        status,
+        liveMatches,
+        todayLeagues,
+        recentVideos,
+        recentTransfers,
+        errorMessage,
+      ];
 }
 
 class HomeCubit extends Cubit<HomeState> {
@@ -107,9 +107,8 @@ class HomeCubit extends Cubit<HomeState> {
         state.copyWith(
           status: HomeStatus.success,
           recentVideos: videosRes.isNotEmpty ? videosRes : state.recentVideos,
-          recentTransfers: transfersRes.isNotEmpty
-              ? transfersRes
-              : state.recentTransfers,
+          recentTransfers:
+              transfersRes.isNotEmpty ? transfersRes : state.recentTransfers,
           errorMessage: null,
         ),
       );
@@ -144,9 +143,8 @@ class HomeCubit extends Cubit<HomeState> {
         state.copyWith(
           status: HomeStatus.success,
           recentVideos: videosRes.isNotEmpty ? videosRes : state.recentVideos,
-          recentTransfers: transfersRes.isNotEmpty
-              ? transfersRes
-              : state.recentTransfers,
+          recentTransfers:
+              transfersRes.isNotEmpty ? transfersRes : state.recentTransfers,
           errorMessage: null,
         ),
       );

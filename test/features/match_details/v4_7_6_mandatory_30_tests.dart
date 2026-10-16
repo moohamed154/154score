@@ -1,4 +1,4 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -447,7 +447,9 @@ void main() {
     );
 
     // TEST 13
-    test('TEST 13: A valid commentator ID navigates to the correct commentator route', () {
+    test(
+        'TEST 13: A valid commentator ID navigates to the correct commentator route',
+        () {
       expect(
         ApiEndpoints.commentator('55', 'hafid-darragi'),
         equals('/api/commentator/55/hafid-darragi'),
