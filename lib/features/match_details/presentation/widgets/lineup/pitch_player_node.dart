@@ -95,25 +95,27 @@ class PitchPlayerNode extends StatelessWidget {
                 // Goals & Assists Badges Stacked Vertically on Left Edge
                 if (player.goals > 0 || player.assists > 0)
                   Positioned(
-                    left: -19,
-                    top: 3,
+                    left: -13,
+                    top: 5,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Goals Badge (e.g. "2 ⚽" or "⚽")
+                        // Goals Badge (solid green circle with white ball matching Yalla Shoot)
                         if (player.goals > 0)
                           Container(
+                            width: player.goals > 1 ? null : 16,
+                            height: 16,
                             padding: EdgeInsets.symmetric(
-                              horizontal: player.goals > 1 ? 4.0 : 2.5,
-                              vertical: 2.0,
+                              horizontal: player.goals > 1 ? 3.5 : 0,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0F172A),
-                              borderRadius: BorderRadius.circular(10),
+                              color: const Color(0xFF10B981),
+                              shape: player.goals > 1 ? BoxShape.rectangle : BoxShape.circle,
+                              borderRadius: player.goals > 1 ? BorderRadius.circular(8) : null,
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.35),
-                                width: 0.7,
+                                color: Colors.white,
+                                width: 0.9,
                               ),
                               boxShadow: [
                                 BoxShadow(
@@ -122,6 +124,7 @@ class PitchPlayerNode extends StatelessWidget {
                                 ),
                               ],
                             ),
+                            alignment: Alignment.center,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -135,12 +138,12 @@ class PitchPlayerNode extends StatelessWidget {
                                       height: 1.0,
                                     ),
                                   ),
-                                  const SizedBox(width: 2.5),
+                                  const SizedBox(width: 1.5),
                                 ],
                                 const Icon(
                                   Icons.sports_soccer_rounded,
                                   size: 11,
-                                  color: Color(0xFF34D399),
+                                  color: Colors.white,
                                 ),
                               ],
                             ),
@@ -149,18 +152,18 @@ class PitchPlayerNode extends StatelessWidget {
                         if (player.goals > 0 && player.assists > 0)
                           const SizedBox(height: 2),
 
-                        // Assists Badge (e.g. "2 👟" or "👟")
+                        // Assists Badge (dark capsule with white boot matching Yalla Shoot)
                         if (player.assists > 0)
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: player.assists > 1 ? 4.0 : 3.0,
-                              vertical: 2.5,
+                              horizontal: player.assists > 1 ? 3.5 : 2.5,
+                              vertical: 2.0,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0F172A),
-                              borderRadius: BorderRadius.circular(10),
+                              color: const Color(0xFF1E293B),
+                              borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.35),
+                                color: Colors.white.withValues(alpha: 0.65),
                                 width: 0.7,
                               ),
                               boxShadow: [
@@ -170,6 +173,7 @@ class PitchPlayerNode extends StatelessWidget {
                                 ),
                               ],
                             ),
+                            alignment: Alignment.center,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -183,7 +187,7 @@ class PitchPlayerNode extends StatelessWidget {
                                       height: 1.0,
                                     ),
                                   ),
-                                  const SizedBox(width: 2.5),
+                                  const SizedBox(width: 1.5),
                                 ],
                                 const CustomPaint(
                                   size: Size(11, 7.5),
@@ -275,33 +279,36 @@ class PitchPlayerNode extends StatelessWidget {
                     ),
                   ),
 
-                // Man of the Match Star Badge
+                // Man of the Match Star Badge (Centered at the top of the avatar)
                 if (player.isManOfMatch)
                   Positioned(
-                    top: -5,
-                    right: player.number != null ? 10 : -2,
-                    child: Container(
-                      width: 15,
-                      height: 15,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFFFD700),
-                          width: 1.0,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            blurRadius: 2,
+                    top: -7,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFFFD700),
+                            width: 1.0,
                           ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.star_rounded,
-                        size: 11,
-                        color: Color(0xFFFFD700),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              blurRadius: 3,
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.star_rounded,
+                          size: 12,
+                          color: Color(0xFFFFD700),
+                        ),
                       ),
                     ),
                   ),
@@ -315,12 +322,12 @@ class PitchPlayerNode extends StatelessWidget {
                       width: 17,
                       height: 17,
                       decoration: BoxDecoration(
-                        color: player.isGoalkeeper
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF0F172A),
+                        color: player.isManOfMatch
+                            ? const Color(0xFFE11D48)
+                            : const Color(0xFF1E293B),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: Colors.white,
                           width: 0.9,
                         ),
                         boxShadow: [
@@ -379,69 +386,56 @@ class PitchPlayerNode extends StatelessWidget {
                     ),
                   ),
 
-                // Substitution Swap Indicator (Bottom-Left)
+                // Substitution Swap Indicator (Bottom-Center)
                 if (player.substituteOut || player.substituteIn)
                   Positioned(
-                    bottom: -3,
-                    left: 1,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 3,
-                        vertical: 1.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.white24, width: 0.6),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            blurRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.arrow_back_rounded,
-                            size: 7.5,
-                            color: Color(0xFF10B981),
-                          ),
-                          SizedBox(width: 1),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 7.5,
-                            color: Color(0xFFEF4444),
-                          ),
-                        ],
+                    bottom: -3.5,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 3,
+                          vertical: 1.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.white24, width: 0.6),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.arrow_back_rounded,
+                              size: 7.5,
+                              color: Color(0xFF10B981),
+                            ),
+                            SizedBox(width: 1),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 7.5,
+                              color: Color(0xFFEF4444),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
               ],
-            ),
+            ),         ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
 
-            // Player Short Name Tag (Matches screenshot dark capsule with short name)
-            Container(
-              constraints: const BoxConstraints(maxWidth: 84),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  width: 0.6,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    blurRadius: 3,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
+            // Player Short Name Tag (Clean text with drop shadow matching Yalla Shoot)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2.0),
               child: Text(
                 player.displayName.isNotEmpty
                     ? player.displayName
@@ -450,7 +444,10 @@ class PitchPlayerNode extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
-                  height: 1.15,
+                  shadows: const [
+                    Shadow(color: Colors.black, blurRadius: 4, offset: Offset(0, 1)),
+                    Shadow(color: Colors.black87, blurRadius: 2, offset: Offset(0, 0.5)),
+                  ],
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -483,7 +480,7 @@ class PitchPlayerNode extends StatelessWidget {
   static Color _getRatingColor(String ratingStr) {
     final val = double.tryParse(ratingStr);
     if (val == null) return const Color(0xFF10B981);
-    if (val >= 8.0) return const Color(0xFF38BDF8); // Sky blue
+    if (val >= 8.0) return const Color(0xFF00B4D8); // Sky blue / Cyan matching Yalla Shoot
     if (val >= 7.0) return const Color(0xFF22C55E); // Green
     if (val >= 6.0) return const Color(0xFFF59E0B); // Amber / Orange
     return const Color(0xFFDC2626); // Low rating red
