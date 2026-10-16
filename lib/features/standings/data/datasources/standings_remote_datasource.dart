@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../domain/entities/standings_entity.dart';
 import '../models/standings_dto.dart';
 
@@ -18,19 +22,47 @@ abstract class StandingsRemoteDataSource {
 
 class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
   final ApiClient _client;
+  final LocalStorageService? _localStorageService;
 
-  StandingsRemoteDataSourceImpl(this._client);
+  StandingsRemoteDataSourceImpl(this._client, [this._localStorageService]);
 
   @override
   Future<LeagueStandingsEntity> getStandings(
     String leagueId, {
     required String lang,
   }) async {
-    final response = await _client.get(
-      ApiEndpoints.leagueStandings(leagueId),
-      queryParameters: {'lang': lang},
-    );
-    return parseStandings(response, defaultLeagueId: leagueId, lang: lang);
+    try {
+      final response = await _client.get(
+        ApiEndpoints.leagueStandings(leagueId),
+        queryParameters: {'lang': lang},
+      );
+      if (response != null && _localStorageService != null) {
+        try {
+          unawaited(
+            _localStorageService.setCachedLeagueStandings(
+              leagueId,
+              jsonEncode(response),
+              lang: lang,
+            ),
+          );
+        } catch (_) {}
+      }
+      return parseStandings(response, defaultLeagueId: leagueId, lang: lang);
+    } catch (e) {
+      if (_localStorageService != null) {
+        final cachedJson = _localStorageService.getCachedLeagueStandings(
+          leagueId,
+          lang: lang,
+        );
+        if (cachedJson != null && cachedJson.isNotEmpty) {
+          try {
+            final decoded = jsonDecode(cachedJson);
+            return parseStandings(decoded, defaultLeagueId: leagueId, lang: lang);
+          } catch (_) {}
+        }
+      }
+      rethrow;
+    }
   }
 
   @override

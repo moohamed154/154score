@@ -74,6 +74,10 @@ abstract class LocalStorageService {
   String? getCachedRankings({String? lang});
   Future<bool> setCachedRankings(String json, {String? lang});
 
+  // Cached League Standings
+  String? getCachedLeagueStandings(String leagueId, {String? lang}) => null;
+  Future<bool> setCachedLeagueStandings(String leagueId, String json, {String? lang}) async => false;
+
   // Tips Persistence
   bool isReorderTipDismissed();
   Future<bool> setReorderTipDismissed(bool dismissed);
@@ -162,6 +166,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
       'app_favorite_competition_logos';
   static const String _keyFavoriteMatches = 'app_favorite_matches';
   static const String _keyCachedRankings = 'app_cached_rankings';
+  static const String _keyCachedLeagueStandings = 'app_cached_league_standings';
   static const String _keyReorderTipDismissed = 'app_reorder_tip_dismissed';
   static const String _keyMatchesFilter = 'app_matches_filter';
   static const String _keyMatchesSortOrder = 'app_matches_sort_order';
@@ -890,6 +895,18 @@ class LocalStorageServiceImpl implements LocalStorageService {
   Future<bool> setCachedRankings(String json, {String? lang}) {
     final effectiveLang = lang ?? getLanguage();
     return _prefs.setString('${_keyCachedRankings}_$effectiveLang', json);
+  }
+
+  @override
+  String? getCachedLeagueStandings(String leagueId, {String? lang}) {
+    final effectiveLang = lang ?? getLanguage();
+    return _prefs.getString('${_keyCachedLeagueStandings}_${leagueId}_$effectiveLang');
+  }
+
+  @override
+  Future<bool> setCachedLeagueStandings(String leagueId, String json, {String? lang}) {
+    final effectiveLang = lang ?? getLanguage();
+    return _prefs.setString('${_keyCachedLeagueStandings}_${leagueId}_$effectiveLang', json);
   }
 
   @override

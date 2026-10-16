@@ -114,7 +114,7 @@ Future<void> initDependencies() async {
     () => MatchDetailsRemoteDataSourceImpl(sl()),
   );
   sl.registerLazySingleton<StandingsRemoteDataSource>(
-    () => StandingsRemoteDataSourceImpl(sl()),
+    () => StandingsRemoteDataSourceImpl(sl(), sl()),
   );
   sl.registerLazySingleton<LeaguesRemoteDataSource>(
     () => LeaguesRemoteDataSourceImpl(sl(), sl()),
@@ -149,7 +149,7 @@ Future<void> initDependencies() async {
     () => MatchDetailsRepositoryImpl(sl()),
   );
   sl.registerLazySingleton<StandingsRepository>(
-    () => StandingsRepositoryImpl(sl()),
+    () => StandingsRepositoryImpl(sl(), sl()),
   );
   sl.registerLazySingleton<LeaguesRepository>(
     () => LeaguesRepositoryImpl(sl()),

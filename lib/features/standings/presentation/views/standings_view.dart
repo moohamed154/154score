@@ -623,10 +623,26 @@ class _StandingsViewState extends State<StandingsView> {
     final storage = sl<LocalStorageService>();
     final currentLang = storage.getLanguage();
 
-    // 1. Startup: Load fallback championships instantly for 0ms initial frame
-    final fallbacks = getDefaultFallbackChampionships(currentLang);
-    _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
-    _allLeagues = List<ChampionshipInfo>.from(fallbacks);
+    // 1. Startup: Synchronously restore from cache for true 0ms initial frame without layout shifts
+    final cachedData = storage.getCachedRankings(lang: currentLang);
+    bool cacheLoaded = false;
+    if (cachedData != null && cachedData.isNotEmpty) {
+      final parsed = _parseRankingsJsonData(cachedData);
+      final cachedFeatured = parsed['featured'] ?? [];
+      final cachedAll = parsed['all'] ?? [];
+      if (cachedAll.isNotEmpty || cachedFeatured.isNotEmpty) {
+        _featuredLeagues = cachedFeatured;
+        _allLeagues = cachedAll.isNotEmpty ? cachedAll : cachedFeatured;
+        _isLoading = false;
+        cacheLoaded = true;
+      }
+    }
+
+    if (!cacheLoaded) {
+      final fallbacks = getDefaultFallbackChampionships(currentLang);
+      _featuredLeagues = List<ChampionshipInfo>.from(fallbacks);
+      _allLeagues = List<ChampionshipInfo>.from(fallbacks);
+    }
     _rebuildLeagueIndex();
 
     _searchController.addListener(_onSearchChanged);
