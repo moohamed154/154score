@@ -109,27 +109,29 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     final playerPhoto = r?.player.photo ?? p.photo;
     final playerNumber = r?.player.number ?? p.number;
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.90,
-      ),
-      decoration: BoxDecoration(
-        color: sheetBg,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusLg),
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.90,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
+        decoration: BoxDecoration(
+          color: sheetBg,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppDimensions.radiusLg),
           ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          children: [
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
             // Drag Handle
             const SizedBox(height: 12),
             Center(
@@ -322,8 +324,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // -------------------------------------------------------------
   // Header Row
@@ -386,10 +389,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               ),
             ),
             if (number != null)
-              Positioned(
+              PositionedDirectional(
                 top: -2,
-                left: isArabic ? null : -4,
-                right: isArabic ? -4 : null,
+                end: -4,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                   decoration: BoxDecoration(
@@ -437,6 +439,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   fontWeight: FontWeight.w500,
                   color: mutedColor,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -581,12 +585,16 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
         const SizedBox(width: 8),
         Icon(icon, size: 17, color: color),
         const SizedBox(width: 6),
-        Text(
-          title,
-          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+        Expanded(
+          child: Text(
+            title,
+            style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -1176,14 +1184,19 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF94A3B8),
+          Expanded(
+            child: Text(
+              title,
+              style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF94A3B8),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             value,
             style: GoogleFonts.outfit(
@@ -1211,14 +1224,19 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: primaryTextColor,
+            Expanded(
+              child: Text(
+                title,
+                style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: primaryTextColor,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 8),
             Row(
               children: [
                 Text(

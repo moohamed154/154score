@@ -152,12 +152,12 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                           ),
                         ),
 
-                        // Formation Badge on Bottom-Right of pitch (e.g. 4-2-3-1) matching Yalla Shoot
+                        // Formation Badge on Bottom-Trailing of pitch (e.g. 4-2-3-1) matching Yalla Shoot
                         if (currentTeam.formation != null &&
                             currentTeam.formation!.isNotEmpty)
-                          Positioned(
+                          PositionedDirectional(
                             bottom: 12,
-                            right: 14,
+                            end: 14,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
@@ -174,22 +174,25 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                                   ),
                                 ],
                               ),
-                              child: Text(
-                                currentTeam.formation!,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF0F172A),
-                                  height: 1.1,
+                              child: Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Text(
+                                  currentTeam.formation!,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF0F172A),
+                                    height: 1.1,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
 
-                        // Coach / Tactics Badge on Bottom-Left of pitch matching Yalla Shoot
-                        Positioned(
+                        // Coach / Tactics Badge on Bottom-Leading of pitch matching Yalla Shoot
+                        PositionedDirectional(
                           bottom: 12,
-                          left: 14,
+                          start: 14,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,

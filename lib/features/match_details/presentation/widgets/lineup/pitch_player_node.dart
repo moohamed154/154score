@@ -436,22 +436,25 @@ class PitchPlayerNode extends StatelessWidget {
             // Player Short Name Tag (Clean text with drop shadow matching Yalla Shoot)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2.0),
-              child: Text(
-                player.displayName.isNotEmpty
-                    ? player.displayName
-                    : _getShortName(player.name),
-                style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  shadows: const [
-                    Shadow(color: Colors.black, blurRadius: 4, offset: Offset(0, 1)),
-                    Shadow(color: Colors.black87, blurRadius: 2, offset: Offset(0, 0.5)),
-                  ],
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 68),
+                child: Text(
+                  player.displayName.isNotEmpty
+                      ? player.displayName
+                      : _getShortName(player.name),
+                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    shadows: const [
+                      Shadow(color: Colors.black, blurRadius: 4, offset: Offset(0, 1)),
+                      Shadow(color: Colors.black87, blurRadius: 2, offset: Offset(0, 0.5)),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
               ),
             ),
           ],
