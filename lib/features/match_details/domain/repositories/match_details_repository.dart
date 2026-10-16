@@ -1,5 +1,6 @@
 import '../../../../core/network/api_result.dart';
 import '../entities/match_details_entity.dart';
+import '../entities/player_match_rating_entity.dart';
 
 abstract class MatchDetailsRepository {
   Future<ApiResult<List<MatchEventEntity>>> getEvents(
@@ -30,6 +31,11 @@ abstract class MatchDetailsRepository {
   });
   Future<ApiResult<MatchLineupEntity?>> getLineups(
     String matchId, {
+    required String lang,
+  });
+  Future<ApiResult<PlayerMatchRatingEntity?>> getPlayerMatchRating(
+    String matchId,
+    String playerId, {
     required String lang,
   });
 }

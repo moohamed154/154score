@@ -9,6 +9,7 @@ import '../../../../core/utils/match_event_helper.dart';
 import '../../../../core/utils/match_minute_parser.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
+import '../../domain/entities/player_match_rating_entity.dart';
 
 abstract class MatchDetailsRemoteDataSource {
   Future<List<MatchEventEntity>> getEvents(
@@ -38,6 +39,11 @@ abstract class MatchDetailsRemoteDataSource {
     required String lang,
   });
   Future<MatchLineupEntity?> getLineups(String matchId, {required String lang});
+  Future<PlayerMatchRatingEntity?> getPlayerMatchRating(
+    String matchId,
+    String playerId, {
+    required String lang,
+  });
 }
 
 class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
@@ -1710,6 +1716,40 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         home: homeLineup,
         away: awayLineup,
       );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<PlayerMatchRatingEntity?> getPlayerMatchRating(
+    String matchId,
+    String playerId, {
+    required String lang,
+  }) async {
+    final cleanId = _cleanMatchId(matchId);
+    final cleanPlayerId = playerId.trim();
+    if (cleanPlayerId.isEmpty || cleanPlayerId == '0') return null;
+
+    try {
+      final response = await _client.get(
+        ApiEndpoints.matchPlayerRating(cleanId, cleanPlayerId),
+        queryParameters: {'lang': lang},
+      );
+
+      final Map<String, dynamic>? dataMap;
+      if (response is Map) {
+        if (response['data'] is Map) {
+          dataMap = Map<String, dynamic>.from(response['data'] as Map);
+        } else {
+          dataMap = Map<String, dynamic>.from(response);
+        }
+      } else {
+        dataMap = null;
+      }
+
+      if (dataMap == null || dataMap.isEmpty) return null;
+      return PlayerMatchRatingEntity.fromJson(dataMap);
     } catch (_) {
       return null;
     }

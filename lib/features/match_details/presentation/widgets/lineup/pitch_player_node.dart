@@ -12,6 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 
 import '../../bloc/match_details_bloc.dart';
+import 'player_match_stats_sheet.dart';
 
 /// Renders a single player node positioned tactically on the pitch board.
 class PitchPlayerNode extends StatelessWidget {
@@ -497,7 +498,11 @@ class PitchPlayerNode extends StatelessWidget {
 
 /// Global reusable interactive bottom sheet displaying player match performance,
 /// in-game contributions (goals, assists, cards, substitutions), and MOTM highlight.
-void showLineupPlayerModal(BuildContext context, LineupPlayerEntity p) {
+void showLineupPlayerModal(
+  BuildContext context,
+  LineupPlayerEntity p, {
+  String? matchId,
+}) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final l10n = AppLocalizations.of(context);
   final isArabic = l10n.isArabic;
@@ -551,6 +556,23 @@ void showLineupPlayerModal(BuildContext context, LineupPlayerEntity p) {
       p.isManOfMatch ||
       playerEvents.isNotEmpty;
 
+  String resolvedMatchId = (matchId ?? '').trim();
+  if (resolvedMatchId.isEmpty) {
+    try {
+      resolvedMatchId = context.read<MatchDetailsBloc>().state.matchId;
+    } catch (_) {}
+  }
+
+  PlayerMatchStatsSheet.show(
+    context: context,
+    player: p,
+    matchId: resolvedMatchId,
+    isArabic: isArabic,
+    playerEvents: playerEvents,
+  );
+  return;
+
+  // ignore: dead_code
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,

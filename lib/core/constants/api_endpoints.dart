@@ -41,6 +41,8 @@ class ApiEndpoints {
   static String matchNews(String id) => '/api/matches/$id/news';
   static String matchLineups(String id) => '/api/matches/$id/lineups';
   static String matchLineup(String id) => '/api/matches/$id/lineup';
+  static String matchPlayerRating(String matchId, String playerId) =>
+      '/api/matches/$matchId/player-rating/$playerId';
   static String matchStandings(String id) => '/api/matches/$id/standings';
   static String matchPredictions(String id) => '/api/matches/$id/predictions';
   static String predictions(String id) => '/api/predictions/$id';

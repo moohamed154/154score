@@ -1,5 +1,6 @@
 import '../../../../core/network/api_result.dart';
 import '../../domain/entities/match_details_entity.dart';
+import '../../domain/entities/player_match_rating_entity.dart';
 import '../../domain/repositories/match_details_repository.dart';
 import '../datasources/match_details_remote_datasource.dart';
 
@@ -18,12 +19,14 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
   final Map<String, _CacheEntry<List<MatchStatItemEntity>>> _statsCache = {};
   final Map<String, _CacheEntry<List<MatchNewsItemEntity>>> _newsCache = {};
   final Map<String, _CacheEntry<MatchLineupEntity?>> _lineupsCache = {};
+  final Map<String, _CacheEntry<PlayerMatchRatingEntity?>> _playerRatingCache = {};
 
   static const _eventsTtl = Duration(seconds: 20);
   static const _statsTtl = Duration(seconds: 30);
   static const _detailsTtl = Duration(minutes: 5);
   static const _newsTtl = Duration(minutes: 5);
   static const _lineupsTtl = Duration(minutes: 2);
+  static const _playerRatingTtl = Duration(minutes: 2);
 
   MatchDetailsRepositoryImpl(this._remoteDataSource);
 
@@ -164,6 +167,38 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
     try {
       final data = await _remoteDataSource.getLineups(cleanId, lang: lang);
       _lineupsCache[key] = _CacheEntry(data);
+      return ApiSuccess(data);
+    } catch (e) {
+      if (cached != null) return ApiSuccess(cached.data);
+      return const ApiSuccess(null);
+    }
+  }
+
+  @override
+  Future<ApiResult<PlayerMatchRatingEntity?>> getPlayerMatchRating(
+    String matchId,
+    String playerId, {
+    required String lang,
+  }) async {
+    final cleanId = _cleanMatchId(matchId);
+    final cleanPId = playerId.trim();
+    if (cleanPId.isEmpty || cleanPId == '0') {
+      return const ApiSuccess(null);
+    }
+
+    final key = '$cleanId-$cleanPId-$lang';
+    final cached = _playerRatingCache[key];
+    if (cached != null && cached.isFresh(_playerRatingTtl)) {
+      return ApiSuccess(cached.data);
+    }
+
+    try {
+      final data = await _remoteDataSource.getPlayerMatchRating(
+        cleanId,
+        cleanPId,
+        lang: lang,
+      );
+      _playerRatingCache[key] = _CacheEntry(data);
       return ApiSuccess(data);
     } catch (e) {
       if (cached != null) return ApiSuccess(cached.data);
