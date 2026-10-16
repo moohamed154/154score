@@ -228,6 +228,45 @@ class PlayerProfileDto {
       }
     }
 
+    // Market Value
+    final marketVal = int.tryParse(map['market_val']?.toString() ?? '');
+    var marketValue = map['market_value']?.toString();
+    if (marketValue == null && marketVal != null && marketVal > 0) {
+      if (marketVal >= 1000000) {
+        final m = (marketVal / 1000000).toStringAsFixed(1).replaceAll('.0', '');
+        marketValue = '€${m}M';
+      } else if (marketVal >= 1000) {
+        final k = (marketVal / 1000).toStringAsFixed(0);
+        marketValue = '€${k}K';
+      } else {
+        marketValue = '€$marketVal';
+      }
+    }
+
+    // Injury details
+    final isInjured = map['is_injured'] == true ||
+        map['inj_active'] == 1 ||
+        map['inj_active'] == true ||
+        map['injury'] != null;
+
+    PlayerInjuryEntity? injury;
+    if (map['injury'] is Map) {
+      final injMap = map['injury'] as Map;
+      final remDays = int.tryParse(injMap['remaining_days']?.toString() ?? '');
+      injury = PlayerInjuryEntity(
+        injury: (injMap['injury'] ?? '').toString(),
+        injuryDescription: (injMap['injury_description'] ?? '').toString(),
+        injuryDate: (injMap['injury_date'] ?? '').toString(),
+        player: injMap['player']?.toString(),
+        playerId: injMap['player_id']?.toString(),
+        remainingDays: remDays,
+        expectedReturn: injMap['expected_return']?.toString() ??
+            (remDays != null
+                ? (lang == 'en' ? 'after $remDays days' : 'بعد $remDays يوم')
+                : injMap['return']?.toString()),
+      );
+    }
+
     return PlayerProfileEntity(
       id: id,
       name: name,
@@ -251,6 +290,10 @@ class PlayerProfileDto {
       retired: retired,
       died: died,
       playerStatus: playerStatus,
+      marketVal: marketVal,
+      marketValue: marketValue,
+      isInjured: isInjured,
+      injury: injury,
       statistics: stats,
       transfers: transfers,
       metadata: metadata,

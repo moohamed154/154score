@@ -6,6 +6,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../domain/entities/player_profile_entity.dart';
+import 'player_injury_sheet.dart';
 
 class PlayerHeroHeader extends StatelessWidget {
   final PlayerProfileEntity profile;
@@ -145,6 +146,49 @@ class PlayerHeroHeader extends StatelessWidget {
                               color: Colors.white,
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Active Injury Cross Badge on Avatar
+                    if (profile.isInjured)
+                      Positioned(
+                        bottom: 0,
+                        left: (profile.clubNumber != null &&
+                                profile.clubNumber! > 0)
+                            ? (isArabic ? null : -2)
+                            : (isArabic ? -2 : null),
+                        right: (profile.clubNumber != null &&
+                                profile.clubNumber! > 0)
+                            ? (isArabic ? -2 : null)
+                            : (isArabic ? null : -2),
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkCard
+                                  : AppColors.lightCard,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFEF4444,
+                                ).withValues(alpha: 0.4),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.add_rounded,
+                              size: 13,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -345,6 +389,121 @@ class PlayerHeroHeader extends StatelessWidget {
                       ),
                   ],
                 ),
+
+                // Market Value & Injury Pills Row
+                if (profile.marketValue != null || profile.isInjured) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      // Market Value Pill
+                      if (profile.marketValue != null &&
+                          profile.marketValue!.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF0F2936)
+                                : const Color(0xFFE6FFFA),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF14B8A6)
+                                  : const Color(0xFF0D9488),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.paid_rounded,
+                                size: 14,
+                                color: isDark
+                                    ? const Color(0xFF2DD4BF)
+                                    : const Color(0xFF0D9488),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                isArabic
+                                    ? 'القيمة السوقية: ${profile.marketValue}'
+                                    : 'Market value: ${profile.marketValue}',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? const Color(0xFF2DD4BF)
+                                      : const Color(0xFF0D9488),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // Injury Details Button
+                      if (profile.isInjured)
+                        InkWell(
+                          onTap: () {
+                            PlayerInjurySheet.show(
+                              context,
+                              profile: profile,
+                              isDark: isDark,
+                              isArabic: isArabic,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF2D151F)
+                                  : const Color(0xFFFFEEF2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(
+                                  0xFFF43F5E,
+                                ).withValues(alpha: 0.5),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  isArabic
+                                      ? 'تفاصيل الإصابة'
+                                      : 'Injury details',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? const Color(0xFFFB7185)
+                                        : const Color(0xFFE11D48),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(width: 3),
+                                Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  size: 16,
+                                  color: isDark
+                                      ? const Color(0xFFFB7185)
+                                      : const Color(0xFFE11D48),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

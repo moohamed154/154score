@@ -153,6 +153,47 @@ class PlayerTransferEntity extends Equatable {
   ];
 }
 
+class PlayerInjuryEntity extends Equatable {
+  final String injury;
+  final String injuryDescription;
+  final String injuryDate;
+  final String? player;
+  final String? playerId;
+  final int? remainingDays;
+  final String? expectedReturn;
+
+  const PlayerInjuryEntity({
+    required this.injury,
+    this.injuryDescription = '',
+    this.injuryDate = '',
+    this.player,
+    this.playerId,
+    this.remainingDays,
+    this.expectedReturn,
+  });
+
+  String getLocalizedReturn({required bool isArabic}) {
+    if (expectedReturn != null && expectedReturn!.isNotEmpty) {
+      return expectedReturn!;
+    }
+    if (remainingDays != null && remainingDays! > 0) {
+      return isArabic ? 'بعد $remainingDays يوم' : 'after $remainingDays days';
+    }
+    return isArabic ? 'غير محدد' : 'Unknown';
+  }
+
+  @override
+  List<Object?> get props => [
+    injury,
+    injuryDescription,
+    injuryDate,
+    player,
+    playerId,
+    remainingDays,
+    expectedReturn,
+  ];
+}
+
 class PlayerProfileEntity extends Equatable {
   final String id;
   final String name;
@@ -176,6 +217,10 @@ class PlayerProfileEntity extends Equatable {
   final bool retired;
   final bool died;
   final int playerStatus;
+  final int? marketVal;
+  final String? marketValue;
+  final bool isInjured;
+  final PlayerInjuryEntity? injury;
   final List<PlayerStatisticEntity> statistics;
   final List<PlayerTransferEntity> transfers;
   final List<Map<String, String>> metadata;
@@ -204,6 +249,10 @@ class PlayerProfileEntity extends Equatable {
     this.retired = false,
     this.died = false,
     this.playerStatus = 1,
+    this.marketVal,
+    this.marketValue,
+    this.isInjured = false,
+    this.injury,
     this.statistics = const [],
     this.transfers = const [],
     this.metadata = const [],
@@ -234,6 +283,10 @@ class PlayerProfileEntity extends Equatable {
     retired,
     died,
     playerStatus,
+    marketVal,
+    marketValue,
+    isInjured,
+    injury,
     statistics,
     transfers,
     metadata,
