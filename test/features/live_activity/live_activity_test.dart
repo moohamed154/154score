@@ -130,6 +130,39 @@ void main() {
 
       await cubit.close();
     });
+
+    test('When isLiveActivityFeatureEnabled is false, cubit is disabled', () async {
+      final mockStorage = MockLocalStorageService();
+      when(() => mockStorage.isLiveActivityFeatureEnabled()).thenReturn(false);
+
+      final cubit = LiveActivityCubit(
+        repository: mockRepo,
+        localStorage: mockStorage,
+      );
+      await Future.delayed(const Duration(milliseconds: 20));
+
+      expect(cubit.state.isFeatureEnabled, false);
+      expect(cubit.state.isSupported, false);
+      expect(cubit.state.trackedMatchIds.isEmpty, true);
+
+      const match = MatchEntity(
+        id: '9999',
+        team1: 'Team A',
+        team2: 'Team B',
+      );
+      final started = await cubit.startTracking(match: match);
+      expect(started, false);
+
+      // Toggle on
+      when(() => mockStorage.isLiveActivityFeatureEnabled()).thenReturn(true);
+      when(() => mockStorage.getTrackedLiveMatchIds()).thenReturn(['1001']);
+      await cubit.onFeatureToggle(true);
+
+      expect(cubit.state.isFeatureEnabled, true);
+      expect(cubit.state.isSupported, true);
+
+      await cubit.close();
+    });
   });
 
   group('LiveActivityRepositoryImpl Tests', () {

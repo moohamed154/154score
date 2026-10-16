@@ -38,6 +38,18 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
   }
 
   Future<void> _init() async {
+    final featureEnabled = _localStorage != null
+        ? _localStorage!.isLiveActivityFeatureEnabled()
+        : true;
+    if (!featureEnabled) {
+      emit(state.copyWith(
+        isSupported: false,
+        isFeatureEnabled: false,
+        trackedMatchIds: const {},
+      ));
+      return;
+    }
+
     final supported = await _repository.areActivitiesSupported();
     final activeIds = await _repository.getActiveTrackedMatchIds();
     final savedIds = _localStorage?.getTrackedLiveMatchIds() ?? [];
@@ -45,9 +57,11 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
 
     emit(state.copyWith(
       isSupported: supported,
+      isFeatureEnabled: true,
       trackedMatchIds: combinedIds,
     ));
 
+    _trackingStoppedSubscription?.cancel();
     _trackingStoppedSubscription =
         _repository.onTrackingStoppedStream.listen((matchId) {
       final clean = matchId.replaceAll('match:', '').trim();
@@ -61,6 +75,7 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
     });
 
     if (_webSocketService != null) {
+      _wsSubscription?.cancel();
       _wsSubscription = _webSocketService.liveMatchesStream.listen(_onWebSocketUpdate);
     }
     if (Platform.isAndroid) {
@@ -74,12 +89,53 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
     }
   }
 
+  Future<void> onFeatureToggle(bool enabled) async {
+    if (!enabled) {
+      await stopAll();
+      _stopAutoRefreshTimer();
+      _trackingStoppedSubscription?.cancel();
+      _trackingStoppedSubscription = null;
+      _wsSubscription?.cancel();
+      _wsSubscription = null;
+      if (Platform.isAndroid) {
+        try {
+          FlutterForegroundTask.removeTaskDataCallback(_onForegroundTaskData);
+        } catch (_) {}
+      }
+      emit(state.copyWith(
+        isSupported: false,
+        isFeatureEnabled: false,
+        trackedMatchIds: const {},
+      ));
+    } else {
+      await _init();
+    }
+  }
+
+  Future<void> stopAll() async {
+    final ids = List<String>.from(state.trackedMatchIds);
+    for (final id in ids) {
+      await stopTracking(id);
+    }
+  }
+
   Future<void> checkSupport() async {
+    final featureEnabled = _localStorage != null
+        ? _localStorage!.isLiveActivityFeatureEnabled()
+        : true;
+    if (!featureEnabled) {
+      emit(state.copyWith(isSupported: false, isFeatureEnabled: false));
+      return;
+    }
     final supported = await _repository.areActivitiesSupported();
-    emit(state.copyWith(isSupported: supported));
+    emit(state.copyWith(isSupported: supported, isFeatureEnabled: true));
   }
 
   Future<void> loadActiveActivities() async {
+    final featureEnabled = _localStorage != null
+        ? _localStorage!.isLiveActivityFeatureEnabled()
+        : true;
+    if (!featureEnabled) return;
     final activeIds = await _repository.getActiveTrackedMatchIds();
     emit(state.copyWith(trackedMatchIds: activeIds.toSet()));
   }
@@ -93,6 +149,12 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
     String? liveStatusCode,
     String? livePeriod,
   }) async {
+    final featureEnabled = _localStorage != null
+        ? _localStorage!.isLiveActivityFeatureEnabled()
+        : true;
+    if (!featureEnabled) {
+      return false;
+    }
     emit(state.copyWith(status: LiveActivityStatus.loading));
     final cleanId = match.id.replaceAll('match:', '').trim();
     _trackedMatchesCache[cleanId] = match;
@@ -137,6 +199,7 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
     String? penaltyScore1,
     String? penaltyScore2,
   }) async {
+    if (!state.isFeatureEnabled) return;
     final cleanId = match.id.replaceAll('match:', '').trim();
     if (!state.trackedMatchIds.contains(cleanId)) return;
     _trackedMatchesCache[cleanId] = match;

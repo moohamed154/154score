@@ -52,6 +52,7 @@ import '../../../leagues/presentation/bloc/league_event.dart';
 import '../../../leagues/presentation/bloc/league_state.dart';
 import '../../../leagues/presentation/widgets/top_scorers_table.dart';
 import '../../../live_activity/presentation/cubit/live_activity_cubit.dart';
+import '../../../live_activity/presentation/cubit/live_activity_state.dart';
 import '../../../live_activity/presentation/widgets/live_activity_toggle_button.dart';
 
 // Filter for Events tab: الأبرز (Highlights) vs كل الأحداث (All Events)
@@ -128,11 +129,68 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     return false;
   }
 
-  List<_MatchTabType> _getTabsForStatus({required bool isCancelledOrPostponed}) {
+  bool _computeIsUpcoming({
+    MatchEntity? match,
+    MatchDetailsState? state,
+  }) {
+    if (_computeIsCancelledOrPostponed(match: match, state: state)) {
+      return false;
+    }
+
+    final effectiveStatus = state?.liveStatus ??
+        state?.overview?.status ??
+        match?.status ??
+        widget.initialMatch?.status;
+    final effectiveStatusCode = state?.liveStatusCode ??
+        match?.statusCode ??
+        widget.initialMatch?.statusCode;
+
+    final effectiveMatch = match ?? widget.initialMatch;
+
+    if (effectiveStatus == null && effectiveMatch == null) {
+      return false;
+    }
+
+    if (ScoreHelper.isLiveStatus(effectiveStatus, effectiveStatusCode) ||
+        ScoreHelper.isFinishedStatus(effectiveStatus, effectiveStatusCode)) {
+      return false;
+    }
+
+    if (effectiveMatch != null) {
+      final phase = MatchStatusHelper.parseMatch(effectiveMatch);
+      if (MatchStatusHelper.isLive(phase) || MatchStatusHelper.isFinished(phase)) {
+        return false;
+      }
+      if (MatchStatusHelper.isUpcoming(phase)) {
+        return true;
+      }
+    }
+
+    if (effectiveStatus != null && effectiveStatus.trim().isNotEmpty) {
+      return ScoreHelper.isUpcomingStatus(effectiveStatus, effectiveStatusCode);
+    }
+
+    return false;
+  }
+
+  List<_MatchTabType> _getTabsForStatus({
+    required bool isCancelledOrPostponed,
+    bool isUpcoming = false,
+  }) {
     if (isCancelledOrPostponed) {
       return const [
         _MatchTabType.details,
         _MatchTabType.lineups,
+        _MatchTabType.standings,
+        _MatchTabType.scorers,
+        _MatchTabType.assists,
+        _MatchTabType.news,
+      ];
+    } else if (isUpcoming) {
+      return const [
+        _MatchTabType.details,
+        _MatchTabType.lineups,
+        _MatchTabType.stats,
         _MatchTabType.standings,
         _MatchTabType.scorers,
         _MatchTabType.assists,
@@ -841,8 +899,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       match: widget.initialMatch,
       state: null,
     );
+    final initialIsUpcoming = _computeIsUpcoming(
+      match: widget.initialMatch,
+      state: null,
+    );
     _currentTabs = _getTabsForStatus(
       isCancelledOrPostponed: initialIsCancelledOrPostponed,
+      isUpcoming: initialIsUpcoming,
     );
     context.read<MatchDetailsBloc>().add(
           LoadMatchDetailsEvent(
@@ -952,29 +1015,31 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               );
             },
           ),
-          BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
-            builder: (context, state) {
-              final activeMatch = _resolveActiveMatch(
-                fallbackMatch: fallbackMatch,
-                liveFromMatches: liveFromMatches,
-                state: state,
-              );
-              return LiveActivityToggleButton(
-                match: activeMatch,
-                liveScore1: activeMatch.score1,
-                liveScore2: activeMatch.score2,
-                liveMinute: activeMatch.minute ??
-                    state.liveMinute ??
-                    liveFromMatches?.minute,
-                liveStatus: activeMatch.status,
-                liveStatusCode: activeMatch.statusCode,
-                livePeriod: activeMatch.period ??
-                    state.livePeriod ??
-                    liveFromMatches?.period,
-                compact: true,
-              );
-            },
-          ),
+          if (sl.isRegistered<LocalStorageService>() &&
+              sl<LocalStorageService>().isLiveActivityFeatureEnabled())
+            BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
+              builder: (context, state) {
+                final activeMatch = _resolveActiveMatch(
+                  fallbackMatch: fallbackMatch,
+                  liveFromMatches: liveFromMatches,
+                  state: state,
+                );
+                return LiveActivityToggleButton(
+                  match: activeMatch,
+                  liveScore1: activeMatch.score1,
+                  liveScore2: activeMatch.score2,
+                  liveMinute: activeMatch.minute ??
+                      state.liveMinute ??
+                      liveFromMatches?.minute,
+                  liveStatus: activeMatch.status,
+                  liveStatusCode: activeMatch.statusCode,
+                  livePeriod: activeMatch.period ??
+                      state.livePeriod ??
+                      liveFromMatches?.period,
+                  compact: true,
+                );
+              },
+            ),
           _isSharing
               ? const Center(
                   child: Padding(
@@ -1017,17 +1082,25 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                 liveFromMatches: liveFromMatches,
                 state: state,
               );
-              context.read<LiveActivityCubit>().updateTracking(
-                match: activeMatch,
-                liveScore1: activeMatch.score1,
-                liveScore2: activeMatch.score2,
-                liveMinute: activeMatch.minute ?? state.liveMinute,
-                liveStatus: activeMatch.status,
-                liveStatusCode: activeMatch.statusCode,
-                livePeriod: activeMatch.period ?? state.livePeriod,
-                penaltyScore1: activeMatch.penaltyScore1,
-                penaltyScore2: activeMatch.penaltyScore2,
-              );
+              if (sl.isRegistered<LocalStorageService>() &&
+                  sl<LocalStorageService>().isLiveActivityFeatureEnabled()) {
+                try {
+                  final liveCubit = context.read<LiveActivityCubit>();
+                  if (liveCubit.state.isFeatureEnabled) {
+                    liveCubit.updateTracking(
+                      match: activeMatch,
+                      liveScore1: activeMatch.score1,
+                      liveScore2: activeMatch.score2,
+                      liveMinute: activeMatch.minute ?? state.liveMinute,
+                      liveStatus: activeMatch.status,
+                      liveStatusCode: activeMatch.statusCode,
+                      livePeriod: activeMatch.period ?? state.livePeriod,
+                      penaltyScore1: activeMatch.penaltyScore1,
+                      penaltyScore2: activeMatch.penaltyScore2,
+                    );
+                  }
+                } catch (_) {}
+              }
             },
             builder: (context, state) {
               final activeMatch = _resolveActiveMatch(
@@ -1040,8 +1113,13 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                 match: activeMatch,
                 state: state,
               );
+              final isUpcoming = _computeIsUpcoming(
+                match: activeMatch,
+                state: state,
+              );
               final activeTabs = _getTabsForStatus(
                 isCancelledOrPostponed: isCancelledOrPostponed,
+                isUpcoming: isUpcoming,
               );
               _currentTabs = activeTabs;
 
@@ -1104,25 +1182,28 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                         ),
 
                         // ── Lock Screen Live Activity Button ───────────────────────
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                          child: Center(
-                            child: LiveActivityToggleButton(
-                              match: activeMatch,
-                              liveScore1: activeMatch.score1,
-                              liveScore2: activeMatch.score2,
-                              liveMinute: activeMatch.minute ??
-                                  state.liveMinute ??
-                                  liveFromMatches?.minute,
-                              liveStatus: activeMatch.status,
-                              liveStatusCode: activeMatch.statusCode,
-                              livePeriod: activeMatch.period ??
-                                  state.livePeriod ??
-                                  liveFromMatches?.period,
-                              compact: false,
+                        if (sl.isRegistered<LocalStorageService>() &&
+                            sl<LocalStorageService>().isLiveActivityFeatureEnabled())
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 8.0),
+                            child: Center(
+                              child: LiveActivityToggleButton(
+                                match: activeMatch,
+                                liveScore1: activeMatch.score1,
+                                liveScore2: activeMatch.score2,
+                                liveMinute: activeMatch.minute ??
+                                    state.liveMinute ??
+                                    liveFromMatches?.minute,
+                                liveStatus: activeMatch.status,
+                                liveStatusCode: activeMatch.statusCode,
+                                livePeriod: activeMatch.period ??
+                                    state.livePeriod ??
+                                    liveFromMatches?.period,
+                                compact: false,
+                              ),
                             ),
                           ),
-                        ),
 
                         // ── Main Horizontal Scrollable Tab Bar ─────────────────────
                         Container(

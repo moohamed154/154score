@@ -30,7 +30,6 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
   late bool _lineupEnabled;
   late bool _startEndEnabled;
   late bool _newsEnabled;
-  bool _isSendingTest = false;
 
   @override
   void initState() {
@@ -86,72 +85,6 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
     setState(() => _newsEnabled = val);
     await _storage.setNewsNotificationEnabled(val);
     if (val) unawaited(NotificationService.instance.requestPermissions());
-  }
-
-  Future<void> _sendTestAlert(BuildContext context) async {
-    if (_isSendingTest) return;
-    setState(() => _isSendingTest = true);
-
-    final l10n = AppLocalizations.of(context);
-    final isArabic = l10n.isArabic;
-
-    try {
-      final granted = await NotificationService.instance.requestPermissions();
-      if (!granted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.notifications_off_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    isArabic
-                        ? 'يرجى تفعيل إذن الإشعارات من إعدادات الهاتف لتلقي التنبيهات'
-                        : 'Please enable notifications in device settings to receive alerts',
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.amber.shade900,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-        return;
-      }
-
-      await NotificationService.instance.showGoalNotification(
-        matchId: 'preview_demo',
-        title: isArabic
-            ? '⚽ هدف! ريال مدريد 1 - 0 مانشستر سيتي'
-            : '⚽ GOAL! Real Madrid 1 - 0 Manchester City',
-        body: isArabic
-            ? 'فينيسيوس جونيور (34\') - تسديدة صاروخية'
-            : 'Vinicius Jr (34\') - Spectacular strike!',
-      );
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(child: Text(l10n.translate('notif_test_sent'))),
-              ],
-            ),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (_) {} finally {
-      if (mounted) setState(() => _isSendingTest = false);
-    }
   }
 
   Widget _buildCard({
@@ -567,49 +500,6 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                 ),
               );
             },
-          ),
-
-          const SizedBox(height: 24),
-
-          // ── Section 4: Test Alert ────────────────────────────────────────
-          _buildSectionHeader(l10n.translate('notif_test_title'), isDark, isArabic),
-          _buildCard(
-            isDark: isDark,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.translate('notif_test_subtitle'),
-                  style: AppTypography.getBodySmall(isDark: isDark, isArabic: isArabic).copyWith(
-                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isSendingTest ? null : () => _sendTestAlert(context),
-                    icon: _isSendingTest
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.send_rounded, size: 18),
-                    label: Text(l10n.translate('notif_test_button')),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
 
           const SizedBox(height: 40),

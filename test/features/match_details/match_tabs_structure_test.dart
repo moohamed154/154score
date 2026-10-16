@@ -1,3 +1,4 @@
+import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -62,9 +63,16 @@ void main() {
     ws = MockWebSocketService();
     storage = MockLocalStorageService();
 
+    if (GetIt.I.isRegistered<LocalStorageService>()) {
+      GetIt.I.unregister<LocalStorageService>();
+    }
+    GetIt.I.registerSingleton<LocalStorageService>(storage);
+
     // Default stubs
     when(() => storage.getLanguage()).thenReturn('ar');
     when(() => storage.getTimezoneOffset()).thenReturn(3);
+    when(() => storage.getTimeFormat()).thenReturn('12h');
+    when(() => storage.isLiveActivityFeatureEnabled()).thenReturn(false);
     when(() => ws.joinMatchRoom(any())).thenReturn(null);
     when(() => ws.leaveMatchRoom(any())).thenReturn(null);
     when(() => ws.updatesStream).thenAnswer((_) => const Stream.empty());
@@ -85,6 +93,12 @@ void main() {
         .thenAnswer((_) async => const ApiSuccess([]));
     when(() => repo.getLineups(any(), lang: any(named: 'lang')))
         .thenAnswer((_) async => const ApiSuccess(null));
+  });
+
+  tearDown(() {
+    if (GetIt.I.isRegistered<LocalStorageService>()) {
+      GetIt.I.unregister<LocalStorageService>();
+    }
   });
 
   group('Match Tabs Structure — V4.7.6 Reference Match Tabs', () {
@@ -337,6 +351,47 @@ void main() {
         // Verify repository was queried on refresh
         verify(() => repo.getEventsPayload('test123', lang: any(named: 'lang')))
             .called(greaterThanOrEqualTo(1));
+      },
+    );
+
+    // ── 10. Upcoming match hides Events tab ─────────────────────────────────
+    testWidgets(
+      'Upcoming match (لم تبدأ) hides Events (الأحداث) tab',
+      (tester) async {
+        const upcomingMatch = MatchEntity(
+          id: 'upcoming123',
+          team1: 'Arsenal',
+          team2: 'Chelsea',
+          status: 'لم تبدأ',
+          statusCode: 'UPCOMING',
+        );
+
+        await tester.pumpWidget(
+          buildTestApp(
+            BlocProvider(
+              create: (_) => MatchDetailsBloc(
+                repository: repo,
+                webSocketService: ws,
+                localStorageService: storage,
+                matchId: 'upcoming123',
+              ),
+              child: const MatchDetailsView(
+                matchId: 'upcoming123',
+                initialMatch: upcomingMatch,
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        // Events tab should NOT be displayed
+        expect(find.text('الأحداث'), findsNothing);
+        // Details tab should be present
+        expect(find.text('التفاصيل'), findsOneWidget);
+        expect(find.text('التشكيلة'), findsOneWidget);
+        expect(find.text('الترتيب'), findsOneWidget);
       },
     );
   });

@@ -22,6 +22,7 @@ import '../../../../core/websocket/websocket_service.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
+import '../../../live_activity/presentation/cubit/live_activity_cubit.dart';
 import '../../../onboarding/domain/repositories/onboarding_repository.dart';
 import 'debug_console_sheet.dart';
 import 'diagnostics_sheet.dart';
@@ -56,11 +57,13 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
   bool _isTestingPing = false;
   String? _pingLatency;
   bool _onboardingStatus = false;
+  bool _isLiveActivityEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _refreshOnboardingStatus();
+    _isLiveActivityEnabled = sl<LocalStorageService>().isLiveActivityFeatureEnabled();
   }
 
   void _refreshOnboardingStatus() {
@@ -588,9 +591,87 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
 
                 const SizedBox(height: 20),
 
-                // 5. System State Details
+                // 5. Live Activity Feature Control
                 _buildSectionTitle(
-                  isArabic ? '5. معلومات بيئة التشغيل' : '5. Environment Info',
+                  isArabic
+                      ? '5. الإشعارات الحية وشاشة القفل (Live Activity)'
+                      : '5. Live Activity & Dynamic Island',
+                  isDark,
+                ),
+                _buildCard(
+                  isDark: isDark,
+                  child: SwitchListTile(
+                    value: _isLiveActivityEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (val) async {
+                      await HapticFeedback.selectionClick();
+                      await storage.setLiveActivityFeatureEnabled(val);
+                      setState(() {
+                        _isLiveActivityEnabled = val;
+                      });
+                      try {
+                        await sl<LiveActivityCubit>().onFeatureToggle(val);
+                      } catch (_) {}
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              val
+                                  ? (isArabic
+                                      ? '✅ تم تفعيل ميزة Live Activity بنجاح'
+                                      : '✅ Live Activity enabled successfully')
+                                  : (isArabic
+                                      ? '🔒 تم إيقاف ميزة Live Activity'
+                                      : '🔒 Live Activity disabled'),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            backgroundColor:
+                                val ? AppColors.uclGreen : const Color(0xFF1E293B),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    title: Text(
+                      isArabic
+                          ? 'تفعيل خاصية Live Activity'
+                          : 'Enable Live Activity Feature',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      isArabic
+                          ? 'إظهار أزرار تتبع المباراة على شاشة القفل وتحديثها لحظياً'
+                          : 'Show lock screen / dynamic island tracking buttons in match details',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                    secondary: Icon(
+                      Icons.screen_lock_portrait_rounded,
+                      color: _isLiveActivityEnabled
+                          ? AppColors.primary
+                          : (isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // 6. System State Details
+                _buildSectionTitle(
+                  isArabic ? '6. معلومات بيئة التشغيل' : '6. Environment Info',
                   isDark,
                 ),
                 _buildCard(

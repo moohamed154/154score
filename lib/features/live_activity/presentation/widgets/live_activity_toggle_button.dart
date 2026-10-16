@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../matches/domain/entities/match_entity.dart';
 import '../cubit/live_activity_cubit.dart';
 import '../cubit/live_activity_state.dart';
@@ -33,6 +35,10 @@ class LiveActivityToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (sl.isRegistered<LocalStorageService>() &&
+        !sl<LocalStorageService>().isLiveActivityFeatureEnabled()) {
+      return const SizedBox.shrink();
+    }
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -40,6 +46,9 @@ class LiveActivityToggleButton extends StatelessWidget {
 
     return BlocBuilder<LiveActivityCubit, LiveActivityState>(
       builder: (context, state) {
+        if (!state.isFeatureEnabled) {
+          return const SizedBox.shrink();
+        }
         final isTracking = state.isTracking(cleanMatchId);
         final isLoading = state.status == LiveActivityStatus.loading;
 

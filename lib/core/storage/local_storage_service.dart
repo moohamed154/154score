@@ -135,6 +135,10 @@ abstract class LocalStorageService {
   // Developer / Debugging Mode
   bool isDeveloperModeEnabled();
   Future<bool> setDeveloperModeEnabled(bool enabled);
+
+  // Live Activity Feature Toggle
+  bool isLiveActivityFeatureEnabled() => false;
+  Future<bool> setLiveActivityFeatureEnabled(bool enabled) async => false;
 }
 
 class LocalStorageServiceImpl implements LocalStorageService {
@@ -1251,5 +1255,17 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setTrackedLiveMatchIds(List<String> ids) {
     return _prefs.setStringList(_keyTrackedLiveMatches, ids);
+  }
+
+  static const String _keyLiveActivityEnabled = 'app_live_activity_feature_enabled';
+
+  @override
+  bool isLiveActivityFeatureEnabled() {
+    return _prefs.getBool(_keyLiveActivityEnabled) ?? false;
+  }
+
+  @override
+  Future<bool> setLiveActivityFeatureEnabled(bool enabled) {
+    return _prefs.setBool(_keyLiveActivityEnabled, enabled);
   }
 }
