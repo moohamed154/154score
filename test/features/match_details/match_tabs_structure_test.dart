@@ -354,9 +354,9 @@ void main() {
       },
     );
 
-    // ── 10. Upcoming match hides Events tab ─────────────────────────────────
+    // ── 10. Upcoming match hides Events & Statistics tabs ─────────────────
     testWidgets(
-      'Upcoming match (لم تبدأ) hides Events (الأحداث) tab',
+      'Upcoming match (لم تبدأ) hides Events (الأحداث) and Stats (الإحصائيات) tabs',
       (tester) async {
         const upcomingMatch = MatchEntity(
           id: 'upcoming123',
@@ -386,9 +386,10 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
 
-        // Events tab should NOT be displayed
+        // Events and Stats tabs should NOT be displayed
         expect(find.text('الأحداث'), findsNothing);
-        // Details tab should be present
+        expect(find.text('الإحصائيات'), findsNothing);
+        // Details, Lineups, and Standings tabs should be present
         expect(find.text('التفاصيل'), findsOneWidget);
         expect(find.text('التشكيلة'), findsOneWidget);
         expect(find.text('الترتيب'), findsOneWidget);

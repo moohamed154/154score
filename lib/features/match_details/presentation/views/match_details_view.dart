@@ -177,20 +177,10 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     required bool isCancelledOrPostponed,
     bool isUpcoming = false,
   }) {
-    if (isCancelledOrPostponed) {
+    if (isCancelledOrPostponed || isUpcoming) {
       return const [
         _MatchTabType.details,
         _MatchTabType.lineups,
-        _MatchTabType.standings,
-        _MatchTabType.scorers,
-        _MatchTabType.assists,
-        _MatchTabType.news,
-      ];
-    } else if (isUpcoming) {
-      return const [
-        _MatchTabType.details,
-        _MatchTabType.lineups,
-        _MatchTabType.stats,
         _MatchTabType.standings,
         _MatchTabType.scorers,
         _MatchTabType.assists,
