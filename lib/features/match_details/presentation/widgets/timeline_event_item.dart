@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/utils/match_event_helper.dart';
+import '../../../../core/utils/match_minute_parser.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../domain/entities/match_details_entity.dart';
@@ -69,46 +69,39 @@ class TimelineEventItem extends StatelessWidget {
               Text(
                 scoreStr,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                   color: isDark
-                      ? const Color(0xFFCBD5E1)
-                      : const Color(0xFF334155),
+                      ? const Color(0xFFE2E8F0)
+                      : const Color(0xFF1E293B),
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
+            ] else ...[
+              const MatchEventVisualIcon(
+                type: MatchVisualEventType.whistle,
+                isSmall: false,
+              ),
+              const SizedBox(height: 4),
             ],
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                MatchEventVisualIcon(
-                  type: MatchVisualEventType.whistle,
-                  isSmall: true,
-                  isDark: isDark,
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 11.0,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? const Color(0xFF64748B)
-                          : const Color(0xFF94A3B8),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                if (event.hasVideo) ...[
-                  const SizedBox(width: 6),
-                  _buildVideoBadge(context, isDark, isArabic, isSmall),
-                ],
-              ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.0,
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF64748B),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
+            if (event.hasVideo) ...[
+              const SizedBox(height: 4),
+              _buildVideoBadge(context, isDark, isArabic, isSmall),
+            ],
           ],
         ),
       );
@@ -127,10 +120,15 @@ class TimelineEventItem extends StatelessWidget {
       return periodWidget;
     }
 
-    final sanitizedMinute = MatchEventHelper.sanitizeMinute(event.minute);
+    final (visualType, iconColor, eventLabel) = _getVisualEventConfig(
+      event.type,
+      event.secondaryPlayerName,
+      l10n,
+      isDark,
+    );
 
     final eventRow = Padding(
-      padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 4.5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -144,32 +142,20 @@ class TimelineEventItem extends StatelessWidget {
                     isArabic: isArabic,
                     isSmall: isSmall,
                     l10n: l10n,
+                    visualType: visualType,
+                    iconColor: iconColor,
+                    eventLabel: eventLabel,
                   )
                 : const SizedBox.shrink(),
           ),
 
-          // Center Minute Badge
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkCardElevated
-                  : AppColors.lightCardElevated,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-              ),
-            ),
-            child: Text(
-              sanitizedMinute.isNotEmpty ? '$sanitizedMinute\'' : '•',
-              style: TextStyle(
-                fontFamily: isArabic ? 'Cairo' : 'Inter',
-                fontWeight: FontWeight.w700,
-                fontSize: isSmall ? 10.0 : 11.5,
-                color: AppColors.primary,
-              ),
-            ),
+          // Center Minute Badge (Goal inside circle, others plain text)
+          _buildCenterMinute(
+            rawMinute: event.minute,
+            visualType: visualType,
+            isDark: isDark,
+            isArabic: isArabic,
+            isSmall: isSmall,
           ),
 
           // Away Side Event
@@ -182,6 +168,9 @@ class TimelineEventItem extends StatelessWidget {
                     isArabic: isArabic,
                     isSmall: isSmall,
                     l10n: l10n,
+                    visualType: visualType,
+                    iconColor: iconColor,
+                    eventLabel: eventLabel,
                   )
                 : const SizedBox.shrink(),
           ),
@@ -203,6 +192,131 @@ class TimelineEventItem extends StatelessWidget {
     return eventRow;
   }
 
+  Widget _buildCenterMinute({
+    required String rawMinute,
+    required MatchVisualEventType visualType,
+    required bool isDark,
+    required bool isArabic,
+    required bool isSmall,
+  }) {
+    final parsed = MatchMinuteParser.parse(rawMinute);
+    final isGoal = visualType == MatchVisualEventType.goal ||
+        visualType == MatchVisualEventType.ownGoal ||
+        visualType == MatchVisualEventType.successPenalty;
+    final isOwnGoal = visualType == MatchVisualEventType.ownGoal;
+    final size = isSmall ? 28.0 : 32.0;
+    final hasExtra = parsed.extraMinute > 0;
+    final mainMinStr = parsed.mainMinute > 0
+        ? '${parsed.mainMinute}\''
+        : (parsed.formatted.isNotEmpty ? '${parsed.formatted}\'' : '•');
+
+    if (isGoal) {
+      final ringColor = isOwnGoal ? AppColors.redCard : AppColors.primary;
+      return Container(
+        width: size,
+        height: size,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: ringColor.withValues(alpha: isDark ? 0.12 : 0.08),
+          border: Border.all(
+            color: ringColor,
+            width: 1.2,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: hasExtra
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '+${parsed.extraMinute}',
+                    style: TextStyle(
+                      fontSize: isSmall ? 8.0 : 8.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.redCard,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    '${parsed.mainMinute}\'',
+                    style: TextStyle(
+                      fontFamily: isArabic ? 'Cairo' : 'Inter',
+                      fontWeight: FontWeight.w700,
+                      fontSize: isSmall ? 9.5 : 10.5,
+                      color: isDark ? Colors.white : ringColor,
+                      height: 1.0,
+                    ),
+                  ),
+                ],
+              )
+            : Text(
+                mainMinStr,
+                style: TextStyle(
+                  fontFamily: isArabic ? 'Cairo' : 'Inter',
+                  fontWeight: FontWeight.w700,
+                  fontSize: isSmall ? 10.0 : 11.5,
+                  color: isDark ? Colors.white : ringColor,
+                ),
+              ),
+      );
+    }
+
+    if (hasExtra) {
+      return Container(
+        width: size,
+        height: size,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '+${parsed.extraMinute}',
+              style: TextStyle(
+                fontSize: isSmall ? 8.5 : 9.5,
+                fontWeight: FontWeight.w800,
+                color: AppColors.redCard,
+                height: 1.0,
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              '${parsed.mainMinute}\'',
+              style: TextStyle(
+                fontFamily: isArabic ? 'Cairo' : 'Inter',
+                fontWeight: FontWeight.w600,
+                fontSize: isSmall ? 9.5 : 10.5,
+                color:
+                    isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                height: 1.0,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      alignment: Alignment.center,
+      child: Text(
+        mainMinStr,
+        style: TextStyle(
+          fontFamily: isArabic ? 'Cairo' : 'Inter',
+          fontWeight: FontWeight.w600,
+          fontSize: isSmall ? 10.5 : 11.5,
+          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEventContent(
     BuildContext context, {
     required bool isHome,
@@ -210,20 +324,16 @@ class TimelineEventItem extends StatelessWidget {
     required bool isArabic,
     required bool isSmall,
     required AppLocalizations l10n,
+    required MatchVisualEventType visualType,
+    required Color iconColor,
+    required String? eventLabel,
   }) {
-    final (visualType, iconColor, eventLabel) = _getVisualEventConfig(
-      event.type,
-      event.secondaryPlayerName,
-      l10n,
-      isDark,
-    );
-
     final isSub = visualType == MatchVisualEventType.substitution;
     final hasSecondary = event.secondaryPlayerName != null &&
         event.secondaryPlayerName!.trim().isNotEmpty;
 
     // For substitution events, the player coming IN is displayed on top,
-    // and the player going OUT (with red arrow down) is displayed on bottom.
+    // and the player going OUT (with red arrow) is displayed on bottom.
     final mainPlayerName =
         (isSub && hasSecondary) ? event.secondaryPlayerName! : event.playerName;
     final subPlayerOutName =
@@ -235,7 +345,7 @@ class TimelineEventItem extends StatelessWidget {
       isDark: isDark,
     );
 
-    // Substitution events: two distinct players, each with their own avatar
+    // Substitution events: two distinct players, each with horizontal directional arrow
     if (isSub && subPlayerOutName != null && subPlayerOutName.isNotEmpty) {
       final subWidget = Column(
         crossAxisAlignment:
@@ -279,10 +389,10 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 2),
+                    const SizedBox(width: 3),
                     const Icon(
-                      Icons.arrow_upward_rounded,
-                      size: 11,
+                      Icons.arrow_forward_rounded,
+                      size: 12,
                       color: AppColors.primary,
                     ),
                     _buildPlayerAvatar(
@@ -300,11 +410,11 @@ class TimelineEventItem extends StatelessWidget {
                       size: 16,
                     ),
                     const Icon(
-                      Icons.arrow_upward_rounded,
-                      size: 11,
+                      Icons.arrow_forward_rounded,
+                      size: 12,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(width: 2),
+                    const SizedBox(width: 3),
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
@@ -370,10 +480,10 @@ class TimelineEventItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 2),
+                    const SizedBox(width: 3),
                     const Icon(
-                      Icons.arrow_downward_rounded,
-                      size: 11,
+                      Icons.arrow_back_rounded,
+                      size: 12,
                       color: AppColors.redCard,
                     ),
                     _buildPlayerAvatar(
@@ -391,11 +501,11 @@ class TimelineEventItem extends StatelessWidget {
                       size: 16,
                     ),
                     const Icon(
-                      Icons.arrow_downward_rounded,
-                      size: 11,
+                      Icons.arrow_back_rounded,
+                      size: 12,
                       color: AppColors.redCard,
                     ),
-                    const SizedBox(width: 2),
+                    const SizedBox(width: 3),
                     Flexible(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
@@ -436,12 +546,8 @@ class TimelineEventItem extends StatelessWidget {
                   const SizedBox(width: 4),
                 ],
                 Flexible(child: subWidget),
-                const SizedBox(width: 4),
-                iconWidget,
               ]
             : [
-                iconWidget,
-                const SizedBox(width: 4),
                 Flexible(child: subWidget),
                 if (event.hasVideo) ...[
                   const SizedBox(width: 4),
@@ -834,23 +940,32 @@ class TimelineEventItem extends StatelessWidget {
         redColor,
         l10n.isArabic ? 'هدف ملغى' : 'Disallowed Goal',
       );
-    } else if (lower.contains('penalty_goal') ||
-        lower.contains('penalty-goal') ||
-        lower.contains('ضربة جزاء') ||
-        lower.contains('ركلة جزاء ناجحة') ||
-        lower.contains('success_penalty')) {
-      return (
-        MatchVisualEventType.successPenalty,
-        primaryColor,
-        l10n.isArabic ? 'ركلة جزاء' : 'Penalty Goal',
-      );
     } else if (lower.contains('missed_penalty') ||
         lower.contains('missed-penalty') ||
-        lower.contains('ركلة جزاء ضائعة')) {
+        lower.contains('ركلة جزاء ضائعة') ||
+        lower.contains('ضربة جزاء ضائعة') ||
+        lower.contains('ضائعة') ||
+        lower.contains('مهدرة')) {
       return (
         MatchVisualEventType.missedPenalty,
         redColor,
         l10n.isArabic ? 'ركلة جزاء ضائعة' : 'Missed Penalty',
+      );
+    } else if (lower.contains('penalty_goal') ||
+        lower.contains('penalty-goal') ||
+        lower.contains('penalty scored') ||
+        lower.contains('penalty_scored') ||
+        lower.contains('ركلة جزاء ناجحة') ||
+        lower.contains('ضربة جزاء ناجحة') ||
+        lower.contains('ركلة جزاء مسجلة') ||
+        lower.contains('success_penalty') ||
+        lower.contains('ضربة جزاء') ||
+        lower.contains('ركلة جزاء') ||
+        lower.contains('penalty')) {
+      return (
+        MatchVisualEventType.successPenalty,
+        primaryColor,
+        l10n.isArabic ? 'ركلة جزاء' : 'Penalty Scored',
       );
     } else if (lower.contains('crossbar') ||
         lower.contains('shoot_crossbar') ||

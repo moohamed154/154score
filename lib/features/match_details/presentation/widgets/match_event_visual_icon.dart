@@ -191,132 +191,65 @@ class MatchEventVisualIcon extends StatelessWidget {
     );
   }
 
-  // ── Regular Goal (Green circle + soccer ball) ─────────────────────────────
+  // ── Regular Goal (Crisp soccer ball) ────────────────────────────────────
   Widget _buildGoal(bool isDark) {
     final primaryColor = isDark ? AppColors.primary : const Color(0xFF16A34A);
-    return Container(
-      padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: isDark ? 0.15 : 0.12),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.3),
-          width: 0.8,
-        ),
-      ),
-      child: Icon(
-        Icons.sports_soccer_rounded,
-        size: isSmall ? 13 : 15,
-        color: primaryColor,
-      ),
+    return Icon(
+      Icons.sports_soccer_rounded,
+      size: isSmall ? 15 : 17,
+      color: primaryColor,
     );
   }
 
-  // ── Own Goal (Red circle + soccer ball) ───────────────────────────────────
+  // ── Own Goal (Red soccer ball) ───────────────────────────────────────────
   Widget _buildOwnGoal(bool isDark) {
     final redColor = isDark ? AppColors.redCard : const Color(0xFFDC2626);
-    return Container(
-      padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-      decoration: BoxDecoration(
-        color: redColor.withValues(alpha: isDark ? 0.15 : 0.12),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: redColor.withValues(alpha: isDark ? 0.35 : 0.3),
-          width: 0.8,
-        ),
-      ),
-      child: Icon(
-        Icons.sports_soccer_rounded,
-        size: isSmall ? 13 : 15,
-        color: redColor,
-      ),
+    return Icon(
+      Icons.sports_soccer_rounded,
+      size: isSmall ? 15 : 17,
+      color: redColor,
     );
   }
 
-  // ── Converted Penalty (Green soccer ball + 'P' badge) ─────────────────────
+  // ── Converted Penalty (Soccer ball + 'P' badge) ──────────────────────────
+  // ── Converted Penalty / Penalty Scored (Goal Net with Soccer Ball inside) ─
   Widget _buildSuccessPenalty(bool isDark) {
-    final size = isSmall ? 22.0 : 24.0;
+    final width = isSmall ? 18.0 : 20.0;
+    final height = isSmall ? 14.0 : 16.0;
     final primaryColor = isDark ? AppColors.primary : const Color(0xFF16A34A);
 
     return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: isDark ? 0.15 : 0.12),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.3),
-                width: 0.8,
-              ),
-            ),
-            child: Icon(
-              Icons.sports_soccer_rounded,
-              size: isSmall ? 13 : 15,
-              color: primaryColor,
-            ),
-          ),
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              width: 9,
-              height: 9,
-              decoration: BoxDecoration(
-                color: primaryColor,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                'P',
-                style: TextStyle(
-                  fontSize: 6.5,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  height: 1.0,
-                ),
-              ),
-            ),
-          ),
-        ],
+      width: width,
+      height: height,
+      child: CustomPaint(
+        painter: _GoalNetPainter(
+          color: primaryColor,
+          isDark: isDark,
+        ),
       ),
     );
   }
 
   // ── Missed Penalty (Red soccer ball + Cross) ──────────────────────────────
   Widget _buildMissedPenalty(bool isDark) {
-    final size = isSmall ? 22.0 : 24.0;
+    final size = isSmall ? 17.0 : 19.0;
     final redColor = isDark ? AppColors.redCard : const Color(0xFFDC2626);
 
     return SizedBox(
       width: size,
       height: size,
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          Container(
-            padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-            decoration: BoxDecoration(
-              color: redColor.withValues(alpha: isDark ? 0.15 : 0.12),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: redColor.withValues(alpha: isDark ? 0.35 : 0.3),
-                width: 0.8,
-              ),
-            ),
-            child: Icon(
-              Icons.sports_soccer_rounded,
-              size: isSmall ? 13 : 15,
-              color: redColor.withValues(alpha: 0.6),
-            ),
+          Icon(
+            Icons.sports_soccer_rounded,
+            size: isSmall ? 15 : 17,
+            color: redColor.withValues(alpha: 0.65),
           ),
           Positioned(
-            right: 0,
-            bottom: 0,
+            right: -2,
+            bottom: -2,
             child: Container(
               width: 9,
               height: 9,
@@ -339,34 +272,24 @@ class MatchEventVisualIcon extends StatelessWidget {
 
   // ── Disallowed Goal (Red soccer ball + Cancel overlay) ───────────────────
   Widget _buildDisallowedGoal(bool isDark) {
-    final size = isSmall ? 22.0 : 24.0;
+    final size = isSmall ? 17.0 : 19.0;
     final redColor = isDark ? AppColors.redCard : const Color(0xFFDC2626);
 
     return SizedBox(
       width: size,
       height: size,
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          Container(
-            padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-            decoration: BoxDecoration(
-              color: redColor.withValues(alpha: isDark ? 0.15 : 0.12),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: redColor.withValues(alpha: isDark ? 0.35 : 0.3),
-                width: 0.8,
-              ),
-            ),
-            child: Icon(
-              Icons.sports_soccer_rounded,
-              size: isSmall ? 13 : 15,
-              color: redColor,
-            ),
+          Icon(
+            Icons.sports_soccer_rounded,
+            size: isSmall ? 15 : 17,
+            color: redColor,
           ),
           Positioned(
-            right: 0,
-            bottom: 0,
+            right: -2,
+            bottom: -2,
             child: Container(
               width: 9,
               height: 9,
@@ -387,97 +310,60 @@ class MatchEventVisualIcon extends StatelessWidget {
     );
   }
 
-  // ── Substitution (Cyan circle + swap icon) ────────────────────────────────
+  // ── Substitution (Clean swap icon) ────────────────────────────────────────
   Widget _buildSubstitution(bool isDark) {
     final subColor = isDark ? AppColors.substitution : const Color(0xFF0891B2);
-    return Container(
-      padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-      decoration: BoxDecoration(
-        color: subColor.withValues(alpha: isDark ? 0.15 : 0.12),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: subColor.withValues(alpha: isDark ? 0.35 : 0.3),
-          width: 0.8,
-        ),
-      ),
-      child: Icon(
-        Icons.swap_horiz_rounded,
-        size: isSmall ? 13 : 15,
-        color: subColor,
-      ),
+    return Icon(
+      Icons.swap_horiz_rounded,
+      size: isSmall ? 14 : 16,
+      color: subColor,
     );
   }
 
-  // ── Missed Chance (Amber circle + trending down) ──────────────────────────
+  // ── Missed Chance (Soccer ball with impact spark rays as in Yalla Shoot) ──
   Widget _buildMissChance(bool isDark) {
-    final amberColor =
-        isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706);
-    return Container(
-      padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-      decoration: BoxDecoration(
-        color: amberColor.withValues(alpha: isDark ? 0.15 : 0.12),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: amberColor.withValues(alpha: isDark ? 0.35 : 0.3),
-          width: 0.8,
+    final width = isSmall ? 18.0 : 20.0;
+    final height = isSmall ? 15.0 : 17.0;
+    final color = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+
+    return SizedBox(
+      width: width,
+      height: height,
+      child: CustomPaint(
+        painter: _MissedChancePainter(
+          color: color,
+          isDark: isDark,
         ),
-      ),
-      child: Icon(
-        Icons.trending_down_rounded,
-        size: isSmall ? 13 : 15,
-        color: amberColor,
       ),
     );
   }
 
-  // ── Shot Crossbar / Post (Orange circle + goalpost icon) ──────────────────
+  // ── Shot Crossbar / Post (Goal frame with impact dot on crossbar) ────────
   Widget _buildShootCrossbar(bool isDark) {
-    final orangeColor =
-        isDark ? const Color(0xFFF97316) : const Color(0xFFEA580C);
-    return Container(
-      padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-      decoration: BoxDecoration(
-        color: orangeColor.withValues(alpha: isDark ? 0.15 : 0.12),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: orangeColor.withValues(alpha: isDark ? 0.35 : 0.3),
-          width: 0.8,
+    final width = isSmall ? 18.0 : 20.0;
+    final height = isSmall ? 13.0 : 15.0;
+    final frameColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    const hitColor = Color(0xFFEF4444);
+
+    return SizedBox(
+      width: width,
+      height: height,
+      child: CustomPaint(
+        painter: _CrossbarPainter(
+          frameColor: frameColor,
+          hitColor: hitColor,
         ),
-      ),
-      child: Icon(
-        Icons.vertical_align_top_rounded,
-        size: isSmall ? 13 : 15,
-        color: orangeColor,
       ),
     );
   }
 
-  // ── Whistle / Period Marker (Theme-aware slate circle + whistle icon) ─────
+  // ── Whistle / Period Marker (Sky blue whistle as in Yalla Shoot) ──────────
   Widget _buildWhistle(bool isDark) {
-    final bgColor = isDark
-        ? const Color(0xFF64748B).withValues(alpha: 0.15)
-        : const Color(0xFFF1F5F9);
-    final borderColor = isDark
-        ? const Color(0xFF64748B).withValues(alpha: 0.35)
-        : const Color(0xFFCBD5E1);
-    final iconColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
-
-    return Container(
-      padding: EdgeInsets.all(isSmall ? 3.5 : 4.5),
-      decoration: BoxDecoration(
-        color: bgColor,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor,
-          width: 0.8,
-        ),
-      ),
-      child: Icon(
-        Icons.sports_rounded,
-        size: isSmall ? 13 : 15,
-        color: iconColor,
-      ),
+    return Icon(
+      Icons.sports_rounded,
+      size: isSmall ? 15 : 18,
+      color: const Color(0xFF38BDF8),
     );
   }
 
@@ -536,4 +422,169 @@ class MatchEventVisualIcon extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom Painters for Yalla Shoot-styled Match Events
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GoalNetPainter extends CustomPainter {
+  final Color color;
+  final bool isDark;
+
+  const _GoalNetPainter({required this.color, required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final framePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final netPaint = Paint()
+      ..color = color.withValues(alpha: 0.45)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+
+    // Goal frame: Left post, top crossbar, right post
+    final path = Path()
+      ..moveTo(2, size.height - 1)
+      ..lineTo(2, 2.5)
+      ..lineTo(size.width - 2, 2.5)
+      ..lineTo(size.width - 2, size.height - 1);
+    canvas.drawPath(path, framePaint);
+
+    // Ground bottom line
+    canvas.drawLine(
+      Offset(2, size.height - 1),
+      Offset(size.width - 2, size.height - 1),
+      netPaint,
+    );
+
+    // Vertical net grid lines
+    final stepX = (size.width - 4) / 4;
+    for (int i = 1; i <= 3; i++) {
+      final x = 2 + stepX * i;
+      canvas.drawLine(Offset(x, 2.5), Offset(x, size.height - 1), netPaint);
+    }
+    // Horizontal net grid line
+    canvas.drawLine(
+      Offset(2, size.height * 0.52),
+      Offset(size.width - 2, size.height * 0.52),
+      netPaint,
+    );
+
+    // Soccer ball inside the net
+    final ballCenter = Offset(size.width * 0.5, size.height * 0.62);
+    const ballRadius = 3.2;
+    final ballPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(ballCenter, ballRadius, ballPaint);
+
+    final innerPaint = Paint()
+      ..color = isDark ? const Color(0xFF0F172A) : Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(ballCenter, 1.2, innerPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GoalNetPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.isDark != isDark;
+}
+
+class _MissedChancePainter extends CustomPainter {
+  final Color color;
+  final bool isDark;
+
+  const _MissedChancePainter({required this.color, required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Soccer ball
+    final ballCenter = Offset(size.width * 0.36, size.height * 0.62);
+    const ballRadius = 4.2;
+
+    final ballStroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    canvas.drawCircle(ballCenter, ballRadius, ballStroke);
+
+    final innerPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(ballCenter, 1.8, innerPaint);
+
+    // Impact burst / sparks radiating from ball on top-right
+    final sparkPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.3
+      ..strokeCap = StrokeCap.round;
+
+    // Ray 1 (diagonal)
+    canvas.drawLine(
+      Offset(size.width * 0.60, size.height * 0.40),
+      Offset(size.width * 0.85, size.height * 0.18),
+      sparkPaint,
+    );
+    // Ray 2 (vertical-ish)
+    canvas.drawLine(
+      Offset(size.width * 0.44, size.height * 0.28),
+      Offset(size.width * 0.44, size.height * 0.08),
+      sparkPaint,
+    );
+    // Ray 3 (horizontal-ish)
+    canvas.drawLine(
+      Offset(size.width * 0.70, size.height * 0.58),
+      Offset(size.width * 0.94, size.height * 0.58),
+      sparkPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _MissedChancePainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.isDark != isDark;
+}
+
+class _CrossbarPainter extends CustomPainter {
+  final Color frameColor;
+  final Color hitColor;
+
+  const _CrossbarPainter({
+    required this.frameColor,
+    required this.hitColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final framePaint = Paint()
+      ..color = frameColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Goal frame
+    final path = Path()
+      ..moveTo(2, size.height - 1)
+      ..lineTo(2, 2.5)
+      ..lineTo(size.width - 2, 2.5)
+      ..lineTo(size.width - 2, size.height - 1);
+    canvas.drawPath(path, framePaint);
+
+    // Impact dot on the crossbar
+    final hitCenter = Offset(size.width * 0.5, 2.5);
+    final hitPaint = Paint()
+      ..color = hitColor
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(hitCenter, 2.4, hitPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CrossbarPainter oldDelegate) =>
+      oldDelegate.frameColor != frameColor || oldDelegate.hitColor != hitColor;
 }
