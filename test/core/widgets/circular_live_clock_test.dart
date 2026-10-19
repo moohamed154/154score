@@ -241,5 +241,77 @@ void main() {
         expect(find.text('58:20'), findsOneWidget);
       },
     );
+
+    testWidgets('Displays "استراحة" for Half Time in Arabic', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CircularLiveClock(
+              status: 'استراحة',
+              statusCode: 'HT',
+              period: 'ht',
+              isArabic: true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('استراحة'), findsOneWidget);
+      expect(find.text('HT'), findsNothing);
+    });
+
+    testWidgets('Displays "HT" for Half Time in English', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CircularLiveClock(
+              status: 'Half Time',
+              statusCode: 'HT',
+              period: 'ht',
+              isArabic: false,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('HT'), findsOneWidget);
+      expect(find.text('استراحة'), findsNothing);
+    });
+
+    testWidgets('Displays "ترجيح" for Penalties in Arabic', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CircularLiveClock(
+              status: 'ركلات الترجيح',
+              statusCode: 'PENALTIES',
+              period: 'penalties',
+              isArabic: true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('ترجيح'), findsOneWidget);
+      expect(find.text('PEN'), findsNothing);
+    });
+
+    testWidgets('Displays "PEN" for Penalties in English', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CircularLiveClock(
+              status: 'Penalties',
+              statusCode: 'PENALTIES',
+              period: 'penalties',
+              isArabic: false,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('PEN'), findsOneWidget);
+      expect(find.text('ترجيح'), findsNothing);
+    });
   });
 }

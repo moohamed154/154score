@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../localization/app_localizations.dart';
 import '../utils/live_clock_sync.dart';
 import '../utils/match_status_helper.dart';
 
@@ -26,6 +27,7 @@ class CircularLiveClock extends StatefulWidget {
   final Color notchColor;
   final Color? textColor;
   final List<int>? goalMinutes;
+  final bool? isArabic;
 
   const CircularLiveClock({
     super.key,
@@ -46,6 +48,7 @@ class CircularLiveClock extends StatefulWidget {
     this.notchColor = const Color(0xFFFFD200),
     this.textColor,
     this.goalMinutes,
+    this.isArabic,
   });
 
   @override
@@ -453,6 +456,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final isArabic = widget.isArabic ?? l10n.isArabic;
     final effectiveTextColor = widget.textColor ?? widget.arcColor;
 
     // Calculate match progress between 0.0 and 1.0 (90 min full cycle)
@@ -471,6 +476,17 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     final s1 = int.tryParse(widget.score1 ?? '');
     final s2 = int.tryParse(widget.score2 ?? '');
     final totalGoals = (s1 != null && s2 != null) ? (s1 + s2) : 0;
+
+    String displayText;
+    final isSpecialStatus =
+        _phase == MatchPhase.halfTime || _phase == MatchPhase.penalties;
+    if (_phase == MatchPhase.halfTime) {
+      displayText = isArabic ? 'استراحة' : 'HT';
+    } else if (_phase == MatchPhase.penalties) {
+      displayText = isArabic ? 'ترجيح' : 'PEN';
+    } else {
+      displayText = _displayMinute;
+    }
 
     final clockWidget = RepaintBoundary(
       child: SizedBox(
@@ -491,16 +507,21 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: widget.size * 0.08),
+              padding: EdgeInsets.symmetric(
+                horizontal:
+                    widget.size * (isSpecialStatus && isArabic ? 0.12 : 0.08),
+              ),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  _displayMinute,
+                  displayText,
                   style: TextStyle(
                     color: effectiveTextColor,
-                    fontSize: widget.size * 0.24,
+                    fontSize: isSpecialStatus
+                        ? (isArabic ? widget.size * 0.20 : widget.size * 0.24)
+                        : widget.size * 0.24,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
+                    letterSpacing: isSpecialStatus && isArabic ? 0.0 : -0.5,
                   ),
                 ),
               ),

@@ -267,6 +267,7 @@ class MatchCard extends StatelessWidget {
               timestamp: match.timestamp,
               htTime: match.htTime,
               size: isSmall ? 48 : 56,
+              isArabic: isArabic,
             ),
             if (hasPenalties) ...[
               const SizedBox(height: 3),
