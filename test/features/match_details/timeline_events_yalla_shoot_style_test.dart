@@ -1,8 +1,9 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:score154/core/localization/app_localizations.dart';
 import 'package:score154/core/theme/app_theme.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
+import 'package:score154/features/match_details/presentation/widgets/match_event_visual_icon.dart';
 import 'package:score154/features/match_details/presentation/widgets/timeline_event_item.dart';
 
 Widget buildTestWidget(Widget child, {bool isDark = true}) {
@@ -14,13 +15,20 @@ Widget buildTestWidget(Widget child, {bool isDark = true}) {
       ...GlobalMaterialLocalizations.delegates,
     ],
     theme: isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
-    home: Scaffold(body: Center(child: child)),
+    home: Scaffold(
+      body: SingleChildScrollView(
+        child: SizedBox(
+          width: 400,
+          child: child,
+        ),
+      ),
+    ),
   );
 }
 
 void main() {
   group('Timeline Events — Yalla Shoot Inspired Style with App Theme', () {
-    testWidgets('1. Goal event renders minute in circular outline badge and soccer ball icon', (
+    testWidgets('1. Goal event renders minute in circular outline badge and custom visual icon', (
       tester,
     ) async {
       const goalEvent = MatchEventEntity(
@@ -35,8 +43,8 @@ void main() {
 
       // Minute text
       expect(find.text("82'"), findsOneWidget);
-      // Soccer ball icon
-      expect(find.byIcon(Icons.sports_soccer_rounded), findsOneWidget);
+      // Event visual icon
+      expect(find.byType(MatchEventVisualIcon), findsOneWidget);
 
       // Verify container with circular border around minute
       final containers = tester.widgetList<Container>(find.byType(Container));
@@ -110,11 +118,25 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('بداية الشوط الأول'), findsOneWidget);
-      expect(find.byIcon(Icons.sports_rounded), findsOneWidget);
+      expect(find.byType(MatchEventVisualIcon), findsOneWidget);
+    });
 
-      // Verify sky blue whistle icon
-      final icon = tester.widget<Icon>(find.byIcon(Icons.sports_rounded));
-      expect(icon.color, equals(const Color(0xFF38BDF8)));
+    testWidgets('5. Penalty scored, missed chance, and crossbar render custom visual icons', (
+      tester,
+    ) async {
+      const penEvent = MatchEventEntity(
+        minute: '82',
+        playerName: 'زيزو',
+        type: 'penalty_goal',
+        isHomeTeam: true,
+      );
+
+      await tester.pumpWidget(buildTestWidget(const TimelineEventItem(event: penEvent)));
+      await tester.pumpAndSettle();
+
+      expect(find.text("82'"), findsOneWidget);
+      expect(find.text('زيزو'), findsOneWidget);
+      expect(find.byType(MatchEventVisualIcon), findsOneWidget);
     });
   });
 }

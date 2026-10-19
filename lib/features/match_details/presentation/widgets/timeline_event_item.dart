@@ -451,87 +451,100 @@ class TimelineEventItem extends StatelessWidget {
 
           // Player OUT (subPlayerOutName)
           const SizedBox(height: 2),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: isHome
-                ? [
-                    Flexible(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(4),
-                        onTap: () => _navigateToPlayer(
-                          context,
-                          subPlayerOutName,
-                          id: event.secondaryPlayerId,
-                          photo: event.secondaryPlayerPhoto,
-                        ),
-                        child: Text(
-                          subPlayerOutName,
-                          style: (isArabic
-                              ? GoogleFonts.cairo
-                              : GoogleFonts.inter)(
-                            fontSize: isSmall ? 9.5 : 10.5,
-                            color: AppColors.redCard,
-                            fontWeight: FontWeight.w600,
+          Builder(builder: (context) {
+            final isInjuredSub = subPlayerOutName.contains('+') ||
+                subPlayerOutName.contains('إصابة') ||
+                event.type.toLowerCase().contains('injury');
+            final cleanOutName = subPlayerOutName
+                .replaceAll('+', '')
+                .replaceAll('(إصابة)', '')
+                .replaceAll('إصابة', '')
+                .trim();
+
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: isHome
+                  ? [
+                      if (isInjuredSub) _buildInjuryBadge(),
+                      Flexible(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(4),
+                          onTap: () => _navigateToPlayer(
+                            context,
+                            cleanOutName,
+                            id: event.secondaryPlayerId,
+                            photo: event.secondaryPlayerPhoto,
                           ),
-                          textAlign: isHome ? TextAlign.end : TextAlign.start,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          child: Text(
+                            cleanOutName,
+                            style: (isArabic
+                                ? GoogleFonts.cairo
+                                : GoogleFonts.inter)(
+                              fontSize: isSmall ? 9.5 : 10.5,
+                              color: AppColors.redCard,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: isHome ? TextAlign.end : TextAlign.start,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 3),
-                    const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 12,
-                      color: AppColors.redCard,
-                    ),
-                    _buildPlayerAvatar(
-                      event.secondaryPlayerPhoto,
-                      event.secondaryPlayerNumber,
-                      isDark,
-                      size: 16,
-                    ),
-                  ]
-                : [
-                    _buildPlayerAvatar(
-                      event.secondaryPlayerPhoto,
-                      event.secondaryPlayerNumber,
-                      isDark,
-                      size: 16,
-                    ),
-                    const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 12,
-                      color: AppColors.redCard,
-                    ),
-                    const SizedBox(width: 3),
-                    Flexible(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(4),
-                        onTap: () => _navigateToPlayer(
-                          context,
-                          subPlayerOutName,
-                          id: event.secondaryPlayerId,
-                          photo: event.secondaryPlayerPhoto,
-                        ),
-                        child: Text(
-                          subPlayerOutName,
-                          style: (isArabic
-                              ? GoogleFonts.cairo
-                              : GoogleFonts.inter)(
-                            fontSize: isSmall ? 9.5 : 10.5,
-                            color: AppColors.redCard,
-                            fontWeight: FontWeight.w600,
+                      const SizedBox(width: 3),
+                      const Icon(
+                        Icons.arrow_back_rounded,
+                        size: 12,
+                        color: AppColors.redCard,
+                      ),
+                      _buildPlayerAvatar(
+                        event.secondaryPlayerPhoto,
+                        event.secondaryPlayerNumber,
+                        isDark,
+                        size: 16,
+                      ),
+                    ]
+                  : [
+                      _buildPlayerAvatar(
+                        event.secondaryPlayerPhoto,
+                        event.secondaryPlayerNumber,
+                        isDark,
+                        size: 16,
+                      ),
+                      const Icon(
+                        Icons.arrow_back_rounded,
+                        size: 12,
+                        color: AppColors.redCard,
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(4),
+                          onTap: () => _navigateToPlayer(
+                            context,
+                            cleanOutName,
+                            id: event.secondaryPlayerId,
+                            photo: event.secondaryPlayerPhoto,
                           ),
-                          textAlign: isHome ? TextAlign.end : TextAlign.start,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          child: Text(
+                            cleanOutName,
+                            style: (isArabic
+                                ? GoogleFonts.cairo
+                                : GoogleFonts.inter)(
+                              fontSize: isSmall ? 9.5 : 10.5,
+                              color: AppColors.redCard,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: isHome ? TextAlign.end : TextAlign.start,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-          ),
+                      if (isInjuredSub) _buildInjuryBadge(),
+                    ],
+            );
+          }),
         ],
       );
 
@@ -674,7 +687,8 @@ class TimelineEventItem extends StatelessWidget {
             style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
               fontSize: isSmall ? 9.0 : 9.5,
               fontWeight: FontWeight.w600,
-              color: iconColor,
+              color:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
             ),
             textAlign: isHome ? TextAlign.end : TextAlign.start,
             maxLines: 1,
@@ -739,21 +753,42 @@ class TimelineEventItem extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.15),
+            color: AppColors.primary,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.5),
-              width: 0.8,
-            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.35),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
           child: Center(
             child: Icon(
               Icons.play_arrow_rounded,
               size: isSmall ? 12 : 13.5,
-              color: AppColors.primary,
+              color: Colors.white,
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInjuryBadge() {
+    return Container(
+      width: 12,
+      height: 12,
+      margin: const EdgeInsets.symmetric(horizontal: 2.5),
+      decoration: const BoxDecoration(
+        color: AppColors.redCard,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.add_rounded,
+        size: 9.0,
+        color: Colors.white,
       ),
     );
   }
