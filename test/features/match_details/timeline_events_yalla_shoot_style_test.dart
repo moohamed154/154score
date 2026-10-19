@@ -99,10 +99,9 @@ void main() {
       expect(find.text('إيدير ميليتاو'), findsOneWidget);
       expect(find.text('فالفيردي'), findsOneWidget);
 
-      // Forward arrow (green, player in)
-      expect(find.byIcon(Icons.arrow_forward_rounded), findsOneWidget);
-      // Back arrow (red, player out)
-      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+      // Substitution directional arrows
+      expect(find.byIcon(Icons.east_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.west_rounded), findsOneWidget);
     });
 
     testWidgets('4. Period markers stack whistle icon vertically above label', (

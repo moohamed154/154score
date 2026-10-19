@@ -328,12 +328,11 @@ class TimelineEventItem extends StatelessWidget {
     required Color iconColor,
     required String? eventLabel,
   }) {
+    final isLeftColumn = isArabic ? !isHome : isHome;
     final isSub = visualType == MatchVisualEventType.substitution;
     final hasSecondary = event.secondaryPlayerName != null &&
         event.secondaryPlayerName!.trim().isNotEmpty;
 
-    // For substitution events, the player coming IN is displayed on top,
-    // and the player going OUT (with red arrow) is displayed on bottom.
     final mainPlayerName =
         (isSub && hasSecondary) ? event.secondaryPlayerName! : event.playerName;
     final subPlayerOutName =
@@ -345,384 +344,266 @@ class TimelineEventItem extends StatelessWidget {
       isDark: isDark,
     );
 
-    // Substitution events: two distinct players, each with horizontal directional arrow
+    // Substitution events: two distinct players, each aligned to the same grid
     if (isSub && subPlayerOutName != null && subPlayerOutName.isNotEmpty) {
-      final subWidget = Column(
-        crossAxisAlignment:
-            isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      final isInjuredSub = subPlayerOutName.contains('+') ||
+          subPlayerOutName.contains('إصابة') ||
+          event.type.toLowerCase().contains('injury');
+      final cleanOutName = subPlayerOutName
+          .replaceAll('+', '')
+          .replaceAll('(إصابة)', '')
+          .replaceAll('إصابة', '')
+          .trim();
+
+      final content = Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Player IN (mainPlayerName)
+          // Line 1: Player IN
           Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: isHome
-                ? [
-                    if (event.score != null && event.score!.isNotEmpty) ...[
-                      _buildScorePill(event.score!, isDark),
-                      const SizedBox(width: 4),
-                    ],
-                    Flexible(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(4),
-                        onTap: () => _navigateToPlayer(
-                          context,
-                          mainPlayerName,
-                          id: event.playerId,
-                          photo: event.playerPhoto,
-                        ),
-                        child: Text(
-                          mainPlayerName,
-                          style: (isArabic
-                              ? GoogleFonts.cairo
-                              : GoogleFonts.inter)(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 11.0 : 12.0,
-                            height: 1.2,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                          textAlign: isHome ? TextAlign.end : TextAlign.start,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 12,
-                      color: AppColors.primary,
-                    ),
-                    _buildPlayerAvatar(
-                      event.playerPhoto,
-                      event.playerNumber,
-                      isDark,
-                      size: 16,
-                    ),
-                  ]
-                : [
-                    _buildPlayerAvatar(
-                      event.playerPhoto,
-                      event.playerNumber,
-                      isDark,
-                      size: 16,
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 12,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 3),
-                    Flexible(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(4),
-                        onTap: () => _navigateToPlayer(
-                          context,
-                          mainPlayerName,
-                          id: event.playerId,
-                          photo: event.playerPhoto,
-                        ),
-                        child: Text(
-                          mainPlayerName,
-                          style: (isArabic
-                              ? GoogleFonts.cairo
-                              : GoogleFonts.inter)(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 11.0 : 12.0,
-                            height: 1.2,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                          textAlign: isHome ? TextAlign.end : TextAlign.start,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    if (event.score != null && event.score!.isNotEmpty) ...[
-                      const SizedBox(width: 4),
-                      _buildScorePill(event.score!, isDark),
-                    ],
-                  ],
-          ),
-
-          // Player OUT (subPlayerOutName)
-          const SizedBox(height: 2),
-          Builder(builder: (context) {
-            final isInjuredSub = subPlayerOutName.contains('+') ||
-                subPlayerOutName.contains('إصابة') ||
-                event.type.toLowerCase().contains('injury');
-            final cleanOutName = subPlayerOutName
-                .replaceAll('+', '')
-                .replaceAll('(إصابة)', '')
-                .replaceAll('إصابة', '')
-                .trim();
-
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: isHome
-                  ? [
-                      if (isInjuredSub) _buildInjuryBadge(),
-                      Flexible(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(4),
-                          onTap: () => _navigateToPlayer(
-                            context,
-                            cleanOutName,
-                            id: event.secondaryPlayerId,
-                            photo: event.secondaryPlayerPhoto,
-                          ),
-                          child: Text(
-                            cleanOutName,
-                            style: (isArabic
-                                ? GoogleFonts.cairo
-                                : GoogleFonts.inter)(
-                              fontSize: isSmall ? 9.5 : 10.5,
-                              color: AppColors.redCard,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: isHome ? TextAlign.end : TextAlign.start,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 3),
-                      const Icon(
-                        Icons.arrow_back_rounded,
-                        size: 12,
-                        color: AppColors.redCard,
-                      ),
-                      _buildPlayerAvatar(
-                        event.secondaryPlayerPhoto,
-                        event.secondaryPlayerNumber,
-                        isDark,
-                        size: 16,
-                      ),
-                    ]
-                  : [
-                      _buildPlayerAvatar(
-                        event.secondaryPlayerPhoto,
-                        event.secondaryPlayerNumber,
-                        isDark,
-                        size: 16,
-                      ),
-                      const Icon(
-                        Icons.arrow_back_rounded,
-                        size: 12,
-                        color: AppColors.redCard,
-                      ),
-                      const SizedBox(width: 3),
-                      Flexible(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(4),
-                          onTap: () => _navigateToPlayer(
-                            context,
-                            cleanOutName,
-                            id: event.secondaryPlayerId,
-                            photo: event.secondaryPlayerPhoto,
-                          ),
-                          child: Text(
-                            cleanOutName,
-                            style: (isArabic
-                                ? GoogleFonts.cairo
-                                : GoogleFonts.inter)(
-                              fontSize: isSmall ? 9.5 : 10.5,
-                              color: AppColors.redCard,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: isHome ? TextAlign.end : TextAlign.start,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      if (isInjuredSub) _buildInjuryBadge(),
-                    ],
-            );
-          }),
-        ],
-      );
-
-      return Row(
-        mainAxisAlignment:
-            isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: isHome
-            ? [
-                if (event.hasVideo) ...[
-                  _buildVideoBadge(context, isDark, isArabic, isSmall),
-                  const SizedBox(width: 4),
-                ],
-                Flexible(child: subWidget),
-              ]
-            : [
-                Flexible(child: subWidget),
-                if (event.hasVideo) ...[
-                  const SizedBox(width: 4),
-                  _buildVideoBadge(context, isDark, isArabic, isSmall),
-                ],
-              ],
-      );
-    }
-
-    // Standard events (Goal, Card, Penalty, VAR, etc.): Single player avatar beside the text column
-    final playerAvatar = _buildPlayerAvatar(
-      event.playerPhoto,
-      event.playerNumber,
-      isDark,
-    );
-
-    final textWidget = Column(
-      crossAxisAlignment:
-          isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Player Name & Score
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment:
-              isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: isHome
-              ? [
-                  if (event.score != null && event.score!.isNotEmpty) ...[
-                    _buildScorePill(event.score!, isDark),
-                    const SizedBox(width: 4),
-                  ],
-                  Flexible(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      onTap: () => _navigateToPlayer(
-                        context,
-                        mainPlayerName,
-                        id: event.playerId,
-                        photo: event.playerPhoto,
-                      ),
-                      child: Text(
-                        mainPlayerName,
-                        style:
-                            (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                          fontWeight: FontWeight.w600,
-                          fontSize: isSmall ? 11.0 : 12.0,
-                          height: 1.2,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
-                        textAlign: isHome ? TextAlign.end : TextAlign.start,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ]
-              : [
-                  Flexible(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      onTap: () => _navigateToPlayer(
-                        context,
-                        mainPlayerName,
-                        id: event.playerId,
-                        photo: event.playerPhoto,
-                      ),
-                      child: Text(
-                        mainPlayerName,
-                        style:
-                            (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                          fontWeight: FontWeight.w600,
-                          fontSize: isSmall ? 11.0 : 12.0,
-                          height: 1.2,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
-                        textAlign: isHome ? TextAlign.end : TextAlign.start,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  if (event.score != null && event.score!.isNotEmpty) ...[
-                    const SizedBox(width: 4),
-                    _buildScorePill(event.score!, isDark),
-                  ],
-                ],
-        ),
-
-        // Subtitle / Event Label / Assist Player
-        if (event.secondaryPlayerName != null &&
-            event.secondaryPlayerName!.isNotEmpty) ...[
-          const SizedBox(height: 1),
-          InkWell(
-            borderRadius: BorderRadius.circular(4),
-            onTap: () => _navigateToPlayer(
-              context,
-              event.secondaryPlayerName,
-              id: event.secondaryPlayerId,
-              photo: event.secondaryPlayerPhoto,
-            ),
-            child: Text(
-              event.secondaryPlayerName!,
-              style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-                fontSize: isSmall ? 9.5 : 10.0,
-                fontWeight: FontWeight.w500,
-                color:
-                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            children: [
+              Container(
+                width: 22,
+                height: 18,
+                alignment: Alignment.center,
+                child: Icon(
+                  isLeftColumn ? Icons.west_rounded : Icons.east_rounded,
+                  size: 13,
+                  color: AppColors.primary,
+                ),
               ),
-              textAlign: isHome ? TextAlign.end : TextAlign.start,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ] else if (eventLabel != null) ...[
-          const SizedBox(height: 1),
-          Text(
-            eventLabel,
-            style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-              fontSize: isSmall ? 9.0 : 9.5,
-              fontWeight: FontWeight.w600,
-              color:
-                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-            ),
-            textAlign: isHome ? TextAlign.end : TextAlign.start,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ],
-    );
-
-    return Row(
-      mainAxisAlignment:
-          isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: isHome
-          ? [
-              if (event.hasVideo) ...[
-                _buildVideoBadge(context, isDark, isArabic, isSmall),
+              const SizedBox(width: 4),
+              Container(
+                width: 20,
+                alignment: Alignment.center,
+                child: _buildPlayerAvatar(
+                  event.playerPhoto,
+                  event.playerNumber,
+                  isDark,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () => _navigateToPlayer(
+                    context,
+                    mainPlayerName,
+                    id: event.playerId,
+                    photo: event.playerPhoto,
+                  ),
+                  child: Text(
+                    mainPlayerName,
+                    style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                      fontWeight: FontWeight.w600,
+                      fontSize: isSmall ? 11.0 : 12.0,
+                      height: 1.2,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                    textAlign: TextAlign.start,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              if (event.score != null && event.score!.isNotEmpty) ...[
                 const SizedBox(width: 4),
+                _buildScorePill(event.score!, isDark),
               ],
-              Flexible(child: textWidget),
-              playerAvatar,
-              const SizedBox(width: 3),
-              iconWidget,
-            ]
-          : [
-              iconWidget,
-              const SizedBox(width: 3),
-              playerAvatar,
-              Flexible(child: textWidget),
               if (event.hasVideo) ...[
                 const SizedBox(width: 4),
                 _buildVideoBadge(context, isDark, isArabic, isSmall),
               ],
             ],
+          ),
+          const SizedBox(height: 2),
+          // Line 2: Player OUT
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 22,
+                height: 18,
+                alignment: Alignment.center,
+                child: Icon(
+                  isLeftColumn ? Icons.east_rounded : Icons.west_rounded,
+                  size: 13,
+                  color: AppColors.redCard,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Container(
+                width: 20,
+                alignment: Alignment.center,
+                child: _buildPlayerAvatar(
+                  event.secondaryPlayerPhoto,
+                  event.secondaryPlayerNumber,
+                  isDark,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () => _navigateToPlayer(
+                    context,
+                    cleanOutName,
+                    id: event.secondaryPlayerId,
+                    photo: event.secondaryPlayerPhoto,
+                  ),
+                  child: Text(
+                    cleanOutName,
+                    style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                      fontSize: isSmall ? 9.5 : 10.5,
+                      color: AppColors.redCard,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.start,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              if (isInjuredSub) _buildInjuryBadge(),
+            ],
+          ),
+        ],
+      );
+
+      return Directionality(
+        textDirection: isLeftColumn ? TextDirection.rtl : TextDirection.ltr,
+        child: content,
+      );
+    }
+
+    // Standard events (Goal, Card, Penalty, VAR, Crossbar, Miss Chance, etc.)
+    final content = Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          alignment: Alignment.center,
+          child: iconWidget,
+        ),
+        const SizedBox(width: 4),
+        Container(
+          width: 20,
+          alignment: Alignment.center,
+          child: _buildPlayerAvatar(
+            event.playerPhoto,
+            event.playerNumber,
+            isDark,
+            size: 18,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Player Name & Score
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () => _navigateToPlayer(
+                        context,
+                        mainPlayerName,
+                        id: event.playerId,
+                        photo: event.playerPhoto,
+                      ),
+                      child: Text(
+                        mainPlayerName,
+                        style:
+                            (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 11.0 : 12.0,
+                          height: 1.2,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                        textAlign: TextAlign.start,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  if (event.score != null && event.score!.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    _buildScorePill(event.score!, isDark),
+                  ],
+                ],
+              ),
+
+              // Subtitle / Event Label / Assist Player
+              if (event.secondaryPlayerName != null &&
+                  event.secondaryPlayerName!.isNotEmpty) ...[
+                const SizedBox(height: 1),
+                InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () => _navigateToPlayer(
+                    context,
+                    event.secondaryPlayerName,
+                    id: event.secondaryPlayerId,
+                    photo: event.secondaryPlayerPhoto,
+                  ),
+                  child: Text(
+                    event.secondaryPlayerName!,
+                    style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                      fontSize: isSmall ? 9.5 : 10.0,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
+                    textAlign: TextAlign.start,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ] else if (eventLabel != null) ...[
+                const SizedBox(height: 1),
+                Text(
+                  eventLabel,
+                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                    fontSize: isSmall ? 9.0 : 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                  ),
+                  textAlign: TextAlign.start,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (event.hasVideo) ...[
+          const SizedBox(width: 4),
+          _buildVideoBadge(context, isDark, isArabic, isSmall),
+        ],
+      ],
+    );
+
+    return Directionality(
+      textDirection: isLeftColumn ? TextDirection.rtl : TextDirection.ltr,
+      child: content,
     );
   }
 
