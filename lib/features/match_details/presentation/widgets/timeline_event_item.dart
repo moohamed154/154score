@@ -484,6 +484,12 @@ class TimelineEventItem extends StatelessWidget {
     }
 
     // Standard events (Goal, Card, Penalty, VAR, Crossbar, Miss Chance, etc.)
+    final isAssist = visualType == MatchVisualEventType.goal &&
+        event.secondaryPlayerName != null &&
+        event.secondaryPlayerName!.isNotEmpty &&
+        event.secondaryPlayerId != null &&
+        event.secondaryPlayerId != '0';
+
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -550,8 +556,7 @@ class TimelineEventItem extends StatelessWidget {
               ),
 
               // Subtitle / Event Label / Assist Player
-              if (event.secondaryPlayerName != null &&
-                  event.secondaryPlayerName!.isNotEmpty) ...[
+              if (isAssist) ...[
                 const SizedBox(height: 1),
                 InkWell(
                   borderRadius: BorderRadius.circular(4),
@@ -575,10 +580,12 @@ class TimelineEventItem extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ] else if (eventLabel != null) ...[
+              ] else if (eventLabel != null ||
+                  (event.secondaryPlayerName != null &&
+                      event.secondaryPlayerName!.isNotEmpty)) ...[
                 const SizedBox(height: 1),
                 Text(
-                  eventLabel,
+                  eventLabel ?? event.secondaryPlayerName!,
                   style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                     fontSize: isSmall ? 9.0 : 9.5,
                     fontWeight: FontWeight.w600,
@@ -858,6 +865,8 @@ class TimelineEventItem extends StatelessWidget {
       );
     } else if (lower.contains('missed_penalty') ||
         lower.contains('missed-penalty') ||
+        lower.contains('penalty_miss') ||
+        lower.contains('penalty-miss') ||
         lower.contains('ركلة جزاء ضائعة') ||
         lower.contains('ضربة جزاء ضائعة') ||
         lower.contains('ضائعة') ||
@@ -865,7 +874,7 @@ class TimelineEventItem extends StatelessWidget {
       return (
         MatchVisualEventType.missedPenalty,
         redColor,
-        l10n.isArabic ? 'ركلة جزاء ضائعة' : 'Missed Penalty',
+        l10n.isArabic ? 'ضربة جزاء ضائعة' : 'Missed Penalty',
       );
     } else if (lower.contains('penalty_goal') ||
         lower.contains('penalty-goal') ||
@@ -881,7 +890,7 @@ class TimelineEventItem extends StatelessWidget {
       return (
         MatchVisualEventType.successPenalty,
         primaryColor,
-        l10n.isArabic ? 'ركلة جزاء' : 'Penalty Scored',
+        l10n.isArabic ? 'ضربة جزاء' : 'Penalty Scored',
       );
     } else if (lower.contains('crossbar') ||
         lower.contains('shoot_crossbar') ||
