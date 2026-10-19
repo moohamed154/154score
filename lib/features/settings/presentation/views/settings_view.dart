@@ -325,18 +325,7 @@ class _SettingsViewState extends State<SettingsView> {
               return _buildCard(
                 isDark: isDark,
                 child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      modeIcon,
-                      color: AppColors.primary,
-                      size: 22,
-                    ),
-                  ),
+                  leading: _buildLeadingIcon(modeIcon),
                   title: Text(
                     l10n.translate('settings_appearance'),
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -420,18 +409,7 @@ class _SettingsViewState extends State<SettingsView> {
                   return _buildCard(
                     isDark: isDark,
                     child: ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(25),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.language_rounded,
-                          color: AppColors.primary,
-                          size: 22,
-                        ),
-                      ),
+                      leading: _buildLeadingIcon(Icons.language_rounded),
                       title: Text(
                         l10n.translate('settings_language'),
                         style: const TextStyle(fontWeight: FontWeight.w600),
@@ -519,7 +497,7 @@ class _SettingsViewState extends State<SettingsView> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.access_time_rounded),
+                  leading: _buildLeadingIcon(Icons.access_time_rounded),
                   title: Text(l10n.translate('time_format')),
                   subtitle: Text(
                     storage.getTimeFormat() == '12h'
@@ -588,7 +566,7 @@ class _SettingsViewState extends State<SettingsView> {
                         : info.title(isArabic);
 
                     return ListTile(
-                      leading: const Icon(Icons.public_rounded),
+                      leading: _buildLeadingIcon(Icons.public_rounded),
                       title: Text(l10n.translate('timezone_offset')),
                       subtitle: Text(
                         subtitleText,
@@ -660,10 +638,8 @@ class _SettingsViewState extends State<SettingsView> {
           _buildCard(
             isDark: isDark,
             child: ListTile(
-              leading: const Icon(
-                Icons.notifications_active_rounded,
-                color: AppColors.primary,
-              ),
+              leading:
+                  _buildLeadingIcon(Icons.notifications_active_rounded),
               title: Text(l10n.translate('settings_notifications')),
               subtitle: Text(
                 storage.getMatchNotificationScope() ==
@@ -708,9 +684,8 @@ class _SettingsViewState extends State<SettingsView> {
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(
+                    leading: _buildLeadingIcon(
                       Icons.dashboard_customize_rounded,
-                      color: AppColors.primary,
                     ),
                     title: Text(
                       isArabic
@@ -745,7 +720,7 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(
+                    leading: _buildLeadingIcon(
                       Icons.restart_alt_rounded,
                       color: AppColors.accent,
                     ),
@@ -788,9 +763,8 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(
+                    leading: _buildLeadingIcon(
                       Icons.health_and_safety_rounded,
-                      color: AppColors.primary,
                     ),
                     title: Text(l10n.translate('diag_title')),
                     subtitle: Text(l10n.translate('settings_diagnostics')),
@@ -812,9 +786,8 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(
+                    leading: _buildLeadingIcon(
                       Icons.terminal_rounded,
-                      color: AppColors.primary,
                     ),
                     title: Text(l10n.translate('debug_console_title')),
                     subtitle: Text(l10n.translate('debug_console_subtitle')),
@@ -831,7 +804,7 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(
+                    leading: _buildLeadingIcon(
                       Icons.lock_rounded,
                       color: AppColors.liveRed,
                     ),
@@ -1067,6 +1040,22 @@ class _SettingsViewState extends State<SettingsView> {
 
           const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLeadingIcon(IconData icon, {Color? color}) {
+    final effectiveColor = color ?? AppColors.primary;
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: effectiveColor.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        icon,
+        color: effectiveColor,
+        size: 22,
       ),
     );
   }
