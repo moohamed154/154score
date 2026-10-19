@@ -185,38 +185,6 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                             ),
                           ),
 
-                        // Coach / Tactics Badge on Bottom-Leading of pitch matching Yalla Shoot
-                        PositionedDirectional(
-                          bottom: 12,
-                          start: 14,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2DD4BF),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.35),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.sports_rounded,
-                                  size: 13,
-                                  color: Color(0xFF0F172A),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -229,19 +197,20 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
     );
   }
 
-  /// Segmented team toggle tab bar above the pitch board matching Yalla Shoot.
+  /// Segmented team toggle tab bar above the pitch board matching app design language.
   Widget _buildTeamToggleBar({required bool isDark, required bool isArabic}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F172A) : AppColors.lightCardElevated,
-          borderRadius: BorderRadius.circular(26),
+          color: isDark
+              ? AppColors.darkCardElevated
+              : AppColors.lightCardElevated,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           border: Border.all(
             color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
           ),
         ),
-        padding: const EdgeInsets.all(3),
         child: Row(
           children: [
             // Home Team Tab
@@ -255,7 +224,6 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                 onTap: () => _onSelectTeam(0),
               ),
             ),
-            const SizedBox(width: 4),
             // Away Team Tab
             Expanded(
               child: _buildTeamToggleItem(
@@ -292,36 +260,78 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8.5),
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF2DD4BF) // Mint/Teal solid pill from Yalla Shoot
-              : (isDark ? const Color(0xFF131D2E) : const Color(0xFFE2E8F0)),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF2DD4BF).withValues(alpha: 0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
+              ? AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd - 1),
+          border: isSelected
+              ? Border.all(color: AppColors.primary, width: 1.5)
               : null,
         ),
-        alignment: Alignment.center,
-        child: Text(
-          displayName,
-          style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
-            fontSize: 12.5,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected
-                ? const Color(0xFF0F172A)
-                : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                displayName,
+                style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected
+                      ? (isDark ? Colors.white : AppColors.primary)
+                      : (isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (team.formation != null && team.formation!.isNotEmpty) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary
+                      : (isDark ? Colors.white12 : Colors.black12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  team.formation!,
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected ? Colors.black : Colors.white70,
+                  ),
+                ),
+              ),
+            ] else if (team.startingXi.isEmpty) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white10
+                      : Colors.black.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  isArabic ? 'غير معلنة' : 'Unavailable',
+                  style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

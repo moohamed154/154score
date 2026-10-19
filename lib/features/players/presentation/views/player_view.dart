@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -193,50 +194,68 @@ class _PlayerViewState extends State<PlayerView>
               indicatorColor: AppColors.primary,
               indicatorWeight: 3,
               indicatorSize: TabBarIndicatorSize.tab,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               labelColor: AppColors.primary,
               unselectedLabelColor:
                   isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-              labelStyle: const TextStyle(
+              labelStyle: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                 fontWeight: FontWeight.w700,
-                fontSize: 13,
+                fontSize: 12.5,
+              ),
+              unselectedLabelStyle:
+                  (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5,
               ),
               tabs: [
                 Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.bar_chart_rounded, size: 16),
-                      const SizedBox(width: 6),
-                      Text(isArabic ? 'الإحصائيات' : 'Statistics'),
-                      if (profile.statistics.isNotEmpty) ...[
-                        const SizedBox(width: 4),
-                        _buildTabCountBadge(profile.statistics.length, isDark),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.bar_chart_rounded, size: 16),
+                        const SizedBox(width: 5),
+                        Text(isArabic ? 'الإحصائيات' : 'Statistics'),
+                        if (profile.statistics.isNotEmpty) ...[
+                          const SizedBox(width: 4),
+                          _buildTabCountBadge(profile.statistics.length, isDark),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
                 Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.swap_horiz_rounded, size: 16),
-                      const SizedBox(width: 6),
-                      Text(isArabic ? 'الانتقالات' : 'Transfers'),
-                      if (profile.transfers.isNotEmpty) ...[
-                        const SizedBox(width: 4),
-                        _buildTabCountBadge(profile.transfers.length, isDark),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.swap_horiz_rounded, size: 16),
+                        const SizedBox(width: 5),
+                        Text(isArabic ? 'الانتقالات' : 'Transfers'),
+                        if (profile.transfers.isNotEmpty) ...[
+                          const SizedBox(width: 4),
+                          _buildTabCountBadge(profile.transfers.length, isDark),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
                 Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.info_outline_rounded, size: 16),
-                      const SizedBox(width: 6),
-                      Text(isArabic ? 'معلومات' : 'Overview'),
-                    ],
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.info_outline_rounded, size: 16),
+                        const SizedBox(width: 5),
+                        Text(isArabic ? 'معلومات' : 'Overview'),
+                      ],
+                    ),
                   ),
                 ),
               ],

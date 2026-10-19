@@ -1291,19 +1291,29 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
     required bool isDark,
     required bool isArabic,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF131A2A) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-          width: 0.8,
-        ),
-      ),
-      child: Row(
-        children: [
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            showLineupPlayerModal(context, injury.toPlayerEntity());
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF131A2A) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+                width: 0.8,
+              ),
+            ),
+            child: Row(
+              children: [
           SizedBox(
             width: 44,
             height: 44,
@@ -1400,10 +1410,13 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
               );
             },
           ),
-        ],
+            ],
+          ),
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   /// Maps missing player reasons to visual icons catalog (MOBILE_ENDPOINTS.md Section 5)
   static (IconData, Color) _getMissingReasonVisual(

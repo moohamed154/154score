@@ -38,9 +38,8 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
   }
 
   Future<void> _init() async {
-    final featureEnabled = _localStorage != null
-        ? _localStorage!.isLiveActivityFeatureEnabled()
-        : true;
+    final featureEnabled =
+        _localStorage?.isLiveActivityFeatureEnabled() ?? true;
     if (!featureEnabled) {
       emit(state.copyWith(
         isSupported: false,
@@ -61,7 +60,7 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
       trackedMatchIds: combinedIds,
     ));
 
-    _trackingStoppedSubscription?.cancel();
+    await _trackingStoppedSubscription?.cancel();
     _trackingStoppedSubscription =
         _repository.onTrackingStoppedStream.listen((matchId) {
       final clean = matchId.replaceAll('match:', '').trim();
@@ -75,7 +74,7 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
     });
 
     if (_webSocketService != null) {
-      _wsSubscription?.cancel();
+      await _wsSubscription?.cancel();
       _wsSubscription =
           _webSocketService.liveMatchesStream.listen(_onWebSocketUpdate);
     }
@@ -94,9 +93,9 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
     if (!enabled) {
       await stopAll();
       _stopAutoRefreshTimer();
-      _trackingStoppedSubscription?.cancel();
+      await _trackingStoppedSubscription?.cancel();
       _trackingStoppedSubscription = null;
-      _wsSubscription?.cancel();
+      await _wsSubscription?.cancel();
       _wsSubscription = null;
       if (Platform.isAndroid) {
         try {
@@ -121,9 +120,8 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
   }
 
   Future<void> checkSupport() async {
-    final featureEnabled = _localStorage != null
-        ? _localStorage!.isLiveActivityFeatureEnabled()
-        : true;
+    final featureEnabled =
+        _localStorage?.isLiveActivityFeatureEnabled() ?? true;
     if (!featureEnabled) {
       emit(state.copyWith(isSupported: false, isFeatureEnabled: false));
       return;
@@ -133,9 +131,8 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
   }
 
   Future<void> loadActiveActivities() async {
-    final featureEnabled = _localStorage != null
-        ? _localStorage!.isLiveActivityFeatureEnabled()
-        : true;
+    final featureEnabled =
+        _localStorage?.isLiveActivityFeatureEnabled() ?? true;
     if (!featureEnabled) return;
     final activeIds = await _repository.getActiveTrackedMatchIds();
     emit(state.copyWith(trackedMatchIds: activeIds.toSet()));
@@ -150,9 +147,8 @@ class LiveActivityCubit extends Cubit<LiveActivityState> {
     String? liveStatusCode,
     String? livePeriod,
   }) async {
-    final featureEnabled = _localStorage != null
-        ? _localStorage!.isLiveActivityFeatureEnabled()
-        : true;
+    final featureEnabled =
+        _localStorage?.isLiveActivityFeatureEnabled() ?? true;
     if (!featureEnabled) {
       return false;
     }

@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -406,37 +407,62 @@ class PlayerHeroHeader extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: isDark
-                                ? const Color(0xFF0F2936)
-                                : const Color(0xFFE6FFFA),
+                                ? AppColors.darkCardElevated
+                                : AppColors.lightCardElevated,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isDark
-                                  ? const Color(0xFF14B8A6)
-                                  : const Color(0xFF0D9488),
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder,
                               width: 1,
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.paid_rounded,
-                                size: 14,
-                                color: isDark
-                                    ? const Color(0xFF2DD4BF)
-                                    : const Color(0xFF0D9488),
+                              Container(
+                                padding: const EdgeInsets.all(2.5),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.monetization_on_rounded,
+                                  size: 13,
+                                  color: AppColors.primary,
+                                ),
                               ),
-                              const SizedBox(width: 5),
-                              Text(
-                                isArabic
-                                    ? 'القيمة السوقية: ${profile.marketValue}'
-                                    : 'Market value: ${profile.marketValue}',
-                                style: TextStyle(
-                                  color: isDark
-                                      ? const Color(0xFF2DD4BF)
-                                      : const Color(0xFF0D9488),
+                              const SizedBox(width: 6),
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: isArabic
+                                          ? 'القيمة السوقية: '
+                                          : 'Market value: ',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? AppColors.darkTextSecondary
+                                            : AppColors.lightTextSecondary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: profile.marketValue,
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? AppColors.primary
+                                            : const Color(0xFF00963E),
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                style: (isArabic
+                                    ? GoogleFonts.cairo
+                                    : GoogleFonts.inter)(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
@@ -445,57 +471,60 @@ class PlayerHeroHeader extends StatelessWidget {
 
                       // Injury Details Button
                       if (profile.isInjured)
-                        InkWell(
-                          onTap: () {
-                            PlayerInjurySheet.show(
-                              context,
-                              profile: profile,
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF2D151F)
-                                  : const Color(0xFFFFEEF2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(
-                                  0xFFF43F5E,
-                                ).withValues(alpha: 0.5),
-                                width: 1,
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              PlayerInjurySheet.show(
+                                context,
+                                profile: profile,
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 5,
                               ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  isArabic
-                                      ? 'تفاصيل الإصابة'
-                                      : 'Injury details',
-                                  style: TextStyle(
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF2D151F)
+                                    : const Color(0xFFFFEEF2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFFF43F5E,
+                                  ).withValues(alpha: 0.5),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    isArabic
+                                        ? 'تفاصيل الإصابة'
+                                        : 'Injury details',
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? const Color(0xFFFB7185)
+                                          : const Color(0xFFE11D48),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    size: 16,
                                     color: isDark
                                         ? const Color(0xFFFB7185)
                                         : const Color(0xFFE11D48),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
                                   ),
-                                ),
-                                const SizedBox(width: 3),
-                                Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  size: 16,
-                                  color: isDark
-                                      ? const Color(0xFFFB7185)
-                                      : const Color(0xFFE11D48),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

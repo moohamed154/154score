@@ -371,6 +371,7 @@ class LineupPlayerEntity extends Equatable {
   final int? substitutePlus;
   final String? subbedForName;
   final String? subbedForId;
+  final String? absenceReason;
 
   const LineupPlayerEntity({
     this.playerId,
@@ -398,6 +399,7 @@ class LineupPlayerEntity extends Equatable {
     this.substitutePlus,
     this.subbedForName,
     this.subbedForId,
+    this.absenceReason,
   });
 
   String? get id => playerId;
@@ -437,6 +439,7 @@ class LineupPlayerEntity extends Equatable {
     int? substitutePlus,
     String? subbedForName,
     String? subbedForId,
+    String? absenceReason,
   }) {
     return LineupPlayerEntity(
       playerId: playerId ?? this.playerId,
@@ -464,6 +467,7 @@ class LineupPlayerEntity extends Equatable {
       substitutePlus: substitutePlus ?? this.substitutePlus,
       subbedForName: subbedForName ?? this.subbedForName,
       subbedForId: subbedForId ?? this.subbedForId,
+      absenceReason: absenceReason ?? this.absenceReason,
     );
   }
 
@@ -494,6 +498,7 @@ class LineupPlayerEntity extends Equatable {
         substitutePlus,
         subbedForName,
         subbedForId,
+        absenceReason,
       ];
 }
 
@@ -533,6 +538,18 @@ class LineupInjuryEntity extends Equatable {
   String get displayName => (shortName != null && shortName!.trim().isNotEmpty)
       ? shortName!.trim()
       : name;
+
+  LineupPlayerEntity toPlayerEntity() => LineupPlayerEntity(
+        playerId: playerId,
+        name: name,
+        shortName: shortName,
+        number: number,
+        position: position,
+        photo: photo,
+        isStarter: false,
+        isSubstitute: false,
+        absenceReason: absenceReason,
+      );
 
   @override
   List<Object?> get props => [

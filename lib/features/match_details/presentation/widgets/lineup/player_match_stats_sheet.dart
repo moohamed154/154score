@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:score154/core/constants/app_colors.dart';
 import 'package:score154/core/constants/app_dimensions.dart';
 import 'package:score154/core/di/injection_container.dart';
 import 'package:score154/core/utils/url_helper.dart';
@@ -93,13 +94,14 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     final p = widget.player;
     final r = _ratingData;
 
-    final sheetBg = isDark ? const Color(0xFF0B131E) : const Color(0xFFF8FAFC);
-    final cardBg = isDark ? const Color(0xFF131D2E) : Colors.white;
+    final sheetBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
     final cardBorder =
-        isDark ? const Color(0xFF1E2D44) : const Color(0xFFE2E8F0);
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+        isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final primaryTextColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final mutedTextColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     final ratingString = r?.player.rating ?? p.rating;
     final playerName =
@@ -120,11 +122,17 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
         decoration: BoxDecoration(
           color: sheetBg,
           borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppDimensions.radiusLg),
+            top: Radius.circular(AppDimensions.radiusXl),
+          ),
+          border: Border(
+            top: BorderSide(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              width: 1.5,
+            ),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -138,7 +146,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               const SizedBox(height: 12),
               Center(
                 child: Container(
-                  width: 38,
+                  width: 40,
                   height: 4,
                   decoration: BoxDecoration(
                     color: isDark ? Colors.white24 : Colors.black12,
@@ -146,7 +154,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Main Scrollable Area
               Expanded(
@@ -167,6 +175,51 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                         primaryColor: primaryTextColor,
                         mutedColor: mutedTextColor,
                       ),
+                      if (p.absenceReason != null &&
+                          p.absenceReason!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444)
+                                .withValues(alpha: isDark ? 0.15 : 0.10),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFEF4444)
+                                  .withValues(alpha: 0.35),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.info_outline_rounded,
+                                size: 18,
+                                color: Color(0xFFEF4444),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  isArabic
+                                      ? 'سبب الغياب: ${p.absenceReason}'
+                                      : 'Absence Reason: ${p.absenceReason}',
+                                  style: (isArabic
+                                          ? GoogleFonts.cairo
+                                          : GoogleFonts.inter)(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFEF4444),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
 
                       if (_isLoading)
@@ -193,6 +246,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             color: const Color(0xFFF43F5E),
                             icon: Icons.sports_soccer_rounded,
                             title: isArabic ? 'التسديدات' : 'Shooting',
+                            textColor: primaryTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 8),
@@ -201,6 +255,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             cardBg: cardBg,
                             cardBorder: cardBorder,
                             primaryTextColor: primaryTextColor,
+                            mutedTextColor: mutedTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 18),
@@ -212,6 +267,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             color: const Color(0xFF3B82F6),
                             icon: Icons.swap_horiz_rounded,
                             title: isArabic ? 'التمريرات' : 'Passing',
+                            textColor: primaryTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 8),
@@ -222,6 +278,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             primaryTextColor: primaryTextColor,
                             mutedTextColor: mutedTextColor,
                             isArabic: isArabic,
+                            isDark: isDark,
                           ),
                           const SizedBox(height: 18),
                         ],
@@ -229,11 +286,12 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                         // Section: Defending & Duels
                         if (_hasDefendingStats(r)) ...[
                           _buildSectionHeader(
-                            color: const Color(0xFF10B981),
+                            color: AppColors.primary,
                             icon: Icons.shield_outlined,
                             title: isArabic
                                 ? 'الدفاع والالتحامات'
                                 : 'Defending & Duels',
+                            textColor: primaryTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 8),
@@ -256,6 +314,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             title: isArabic
                                 ? 'المراوغات والالتحامات'
                                 : 'Dribbles & Duels',
+                            textColor: primaryTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 8),
@@ -264,6 +323,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             cardBg: cardBg,
                             cardBorder: cardBorder,
                             primaryTextColor: primaryTextColor,
+                            mutedTextColor: mutedTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 18),
@@ -277,6 +337,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             title: isArabic
                                 ? 'الانضباط والأخطاء'
                                 : 'Discipline & Fouls',
+                            textColor: primaryTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 8),
@@ -286,6 +347,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             cardBg: cardBg,
                             cardBorder: cardBorder,
                             primaryTextColor: primaryTextColor,
+                            mutedTextColor: mutedTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 18),
@@ -294,10 +356,13 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                         // Section: Other statistics
                         if (r.otherStatistics.isNotEmpty) ...[
                           _buildSectionHeader(
-                            color: const Color(0xFF64748B),
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
                             icon: Icons.trending_up_rounded,
                             title:
                                 isArabic ? 'إحصائيات أخرى' : 'Other statistics',
+                            textColor: primaryTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 8),
@@ -306,6 +371,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                             cardBg: cardBg,
                             cardBorder: cardBorder,
                             primaryTextColor: primaryTextColor,
+                            mutedTextColor: mutedTextColor,
                             isArabic: isArabic,
                           ),
                           const SizedBox(height: 18),
@@ -357,15 +423,15 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
   }) {
     final ratingNum = double.tryParse(rating ?? '');
     final ratingBg = ratingNum != null && ratingNum >= 7.0
-        ? const Color(0xFF0F3932)
+        ? AppColors.primary.withValues(alpha: isDark ? 0.20 : 0.15)
         : (ratingNum != null && ratingNum >= 6.0
-            ? const Color(0xFF332A15)
-            : const Color(0xFF232D3F));
+            ? const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.20 : 0.15)
+            : (isDark ? AppColors.darkCardElevated : const Color(0xFFE2E8F0)));
     final ratingTextColor = ratingNum != null && ratingNum >= 7.0
-        ? const Color(0xFF00E599)
+        ? (isDark ? AppColors.primary : const Color(0xFF00963E))
         : (ratingNum != null && ratingNum >= 6.0
-            ? const Color(0xFFFBBF24)
-            : const Color(0xFF94A3B8));
+            ? const Color(0xFFD97706)
+            : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary));
 
     final normalizedPhoto = UrlHelper.normalizePlayerPhotoUrl(photo);
 
@@ -381,13 +447,10 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isDark
-                      ? const Color(0xFF1E2D44)
-                      : const Color(0xFFCBD5E1),
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                   width: 1.5,
                 ),
-                color:
-                    isDark ? const Color(0xFF131D2E) : const Color(0xFFF1F5F9),
+                color: isDark ? AppColors.darkCard : AppColors.lightCard,
               ),
               child: ClipOval(
                 child: (normalizedPhoto != null &&
@@ -399,10 +462,12 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                         fit: BoxFit.cover,
                         memCacheWidth: 120,
                         memCacheHeight: 120,
-                        placeholder: (_, __) => _buildJerseyNumber(number),
-                        errorWidget: (_, __, ___) => _buildJerseyNumber(number),
+                        placeholder: (_, __) =>
+                            _buildJerseyNumber(number, isDark),
+                        errorWidget: (_, __, ___) =>
+                            _buildJerseyNumber(number, isDark),
                       )
-                    : _buildJerseyNumber(number),
+                    : _buildJerseyNumber(number, isDark),
               ),
             ),
             if (number != null)
@@ -411,17 +476,21 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 end: -4,
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                      const EdgeInsets.symmetric(horizontal: 5.5, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
+                    color: isDark
+                        ? AppColors.darkCardElevated
+                        : const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: const Color(0xFF334155),
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : const Color(0xFF334155),
                       width: 1,
                     ),
                   ),
                   child: Text(
-                    '$number',
+                    '#$number',
                     style: GoogleFonts.outfit(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -516,7 +585,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               children: [
                 const Icon(
                   Icons.sports_soccer_rounded,
-                  color: Color(0xFF10B981),
+                  color: AppColors.primary,
                   size: 22,
                 ),
                 const SizedBox(width: 8),
@@ -535,8 +604,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
                     color: isDark
-                        ? const Color(0xFF94A3B8)
-                        : const Color(0xFF64748B),
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
                   ),
                 ),
               ],
@@ -554,7 +623,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               children: [
                 const Icon(
                   Icons.directions_run_rounded,
-                  color: Color(0xFF94A3B8),
+                  color: Color(0xFF3B82F6),
                   size: 22,
                 ),
                 const SizedBox(width: 8),
@@ -573,8 +642,8 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
                     color: isDark
-                        ? const Color(0xFF94A3B8)
-                        : const Color(0xFF64748B),
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
                   ),
                 ),
               ],
@@ -593,6 +662,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required IconData icon,
     required String title,
     required bool isArabic,
+    Color? textColor,
   }) {
     return Row(
       children: [
@@ -613,7 +683,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: textColor ?? Colors.white,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -631,6 +701,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required Color cardBg,
     required Color cardBorder,
     required Color primaryTextColor,
+    required Color mutedTextColor,
     required bool isArabic,
   }) {
     return Column(
@@ -644,6 +715,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 cardBg: cardBg,
                 cardBorder: cardBorder,
                 primaryTextColor: primaryTextColor,
+                mutedTextColor: mutedTextColor,
                 isArabic: isArabic,
               ),
             ),
@@ -652,10 +724,11 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               child: _buildMetricTile(
                 title: isArabic ? 'على المرمى' : 'On target',
                 value: '${r.shooting.onTarget}',
-                valueColor: const Color(0xFF10B981),
+                valueColor: AppColors.primary,
                 cardBg: cardBg,
                 cardBorder: cardBorder,
                 primaryTextColor: primaryTextColor,
+                mutedTextColor: mutedTextColor,
                 isArabic: isArabic,
               ),
             ),
@@ -671,6 +744,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 cardBg: cardBg,
                 cardBorder: cardBorder,
                 primaryTextColor: primaryTextColor,
+                mutedTextColor: mutedTextColor,
                 isArabic: isArabic,
               ),
             ),
@@ -683,6 +757,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   cardBg: cardBg,
                   cardBorder: cardBorder,
                   primaryTextColor: primaryTextColor,
+                  mutedTextColor: mutedTextColor,
                   isArabic: isArabic,
                 ),
               ),
@@ -703,6 +778,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required Color primaryTextColor,
     required Color mutedTextColor,
     required bool isArabic,
+    required bool isDark,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -723,6 +799,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             primaryTextColor: primaryTextColor,
             mutedTextColor: mutedTextColor,
             isArabic: isArabic,
+            isDark: isDark,
           ),
           const SizedBox(height: 14),
 
@@ -731,10 +808,11 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             title: isArabic ? 'عرضيات دقيقة' : 'Accurate crosses',
             fraction: '${r.passing.crosses.success}/${r.passing.crosses.total}',
             percent: r.passing.crosses.percent,
-            barColor: const Color(0xFF9333EA),
+            barColor: const Color(0xFF8B5CF6),
             primaryTextColor: primaryTextColor,
             mutedTextColor: mutedTextColor,
             isArabic: isArabic,
+            isDark: isDark,
           ),
           const SizedBox(height: 14),
 
@@ -744,10 +822,11 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             fraction:
                 '${r.passing.longBalls.success}/${r.passing.longBalls.total}',
             percent: r.passing.longBalls.percent,
-            barColor: const Color(0xFF14B8A6),
+            barColor: AppColors.primary,
             primaryTextColor: primaryTextColor,
             mutedTextColor: mutedTextColor,
             isArabic: isArabic,
+            isDark: isDark,
           ),
           const SizedBox(height: 14),
 
@@ -759,6 +838,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   title: isArabic ? 'تمريرات مفتاحية' : 'Key Passes',
                   value: '${r.passing.keyPasses}',
                   isArabic: isArabic,
+                  isDark: isDark,
+                  primaryTextColor: primaryTextColor,
+                  mutedTextColor: mutedTextColor,
                 ),
               ),
               const SizedBox(width: 10),
@@ -767,6 +849,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   title: isArabic ? 'في الثلث الأخير' : 'Passes In Final Third',
                   value: '${r.passing.finalThird}',
                   isArabic: isArabic,
+                  isDark: isDark,
+                  primaryTextColor: primaryTextColor,
+                  mutedTextColor: mutedTextColor,
                 ),
               ),
             ],
@@ -814,7 +899,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                     style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF10B981),
+                      color: AppColors.primary,
                     ),
                   ),
                   Text(
@@ -832,7 +917,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                     style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFF43F5E),
+                      color: const Color(0xFFEF4444),
                     ),
                   ),
                 ],
@@ -844,11 +929,12 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 child: Container(
                   height: 6,
                   width: double.infinity,
-                  color: const Color(0xFFF43F5E),
+                  color: const Color(0xFFEF4444),
                   child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
+                    alignment:
+                        isArabic ? Alignment.centerRight : Alignment.centerLeft,
                     widthFactor: wonRatio,
-                    child: Container(color: const Color(0xFF10B981)),
+                    child: Container(color: AppColors.primary),
                   ),
                 ),
               ),
@@ -869,6 +955,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 cardBg: cardBg,
                 cardBorder: cardBorder,
                 primaryTextColor: primaryTextColor,
+                mutedTextColor: mutedTextColor,
                 isArabic: isArabic,
               ),
             ),
@@ -880,6 +967,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                 cardBg: cardBg,
                 cardBorder: cardBorder,
                 primaryTextColor: primaryTextColor,
+                mutedTextColor: mutedTextColor,
                 isArabic: isArabic,
               ),
             ),
@@ -897,6 +985,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required Color cardBg,
     required Color cardBorder,
     required Color primaryTextColor,
+    required Color mutedTextColor,
     required bool isArabic,
   }) {
     return Row(
@@ -908,6 +997,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             cardBg: cardBg,
             cardBorder: cardBorder,
             primaryTextColor: primaryTextColor,
+            mutedTextColor: mutedTextColor,
             isArabic: isArabic,
           ),
         ),
@@ -919,6 +1009,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             cardBg: cardBg,
             cardBorder: cardBorder,
             primaryTextColor: primaryTextColor,
+            mutedTextColor: mutedTextColor,
             isArabic: isArabic,
           ),
         ),
@@ -935,6 +1026,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required Color cardBg,
     required Color cardBorder,
     required Color primaryTextColor,
+    required Color mutedTextColor,
     required bool isArabic,
   }) {
     return Row(
@@ -946,6 +1038,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             cardBg: cardBg,
             cardBorder: cardBorder,
             primaryTextColor: primaryTextColor,
+            mutedTextColor: mutedTextColor,
             isArabic: isArabic,
           ),
         ),
@@ -958,6 +1051,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               cardBg: cardBg,
               cardBorder: cardBorder,
               primaryTextColor: primaryTextColor,
+              mutedTextColor: mutedTextColor,
               isArabic: isArabic,
             ),
           ),
@@ -971,6 +1065,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               cardBg: cardBg,
               cardBorder: cardBorder,
               primaryTextColor: primaryTextColor,
+              mutedTextColor: mutedTextColor,
               isArabic: isArabic,
             ),
           ),
@@ -987,6 +1082,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required Color cardBg,
     required Color cardBorder,
     required Color primaryTextColor,
+    required Color mutedTextColor,
     required bool isArabic,
   }) {
     return Column(
@@ -1014,7 +1110,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isArabic ? Colors.white70 : const Color(0xFFCBD5E1),
+                    color: mutedTextColor,
                   ),
                 ),
               ),
@@ -1060,11 +1156,19 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             children: [
               _buildAttrCol(
                 title: isArabic ? 'الحالة' : 'Status',
-                value: p.isStarter
-                    ? (isArabic ? 'أساسي' : 'Starter')
-                    : (isArabic ? 'بديل' : 'Substitute'),
+                value: p.absenceReason != null &&
+                        p.absenceReason!.trim().isNotEmpty
+                    ? p.absenceReason!.trim()
+                    : (p.isStarter
+                        ? (isArabic ? 'أساسي' : 'Starter')
+                        : (p.isSubstitute
+                            ? (isArabic ? 'بديل' : 'Substitute')
+                            : (isArabic ? 'غائب' : 'Absent'))),
                 isArabic: isArabic,
-                primaryColor: primaryTextColor,
+                primaryColor: p.absenceReason != null &&
+                        p.absenceReason!.trim().isNotEmpty
+                    ? const Color(0xFFEF4444)
+                    : primaryTextColor,
                 mutedColor: mutedTextColor,
               ),
               _buildAttrCol(
@@ -1101,7 +1205,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   _buildTag(
                     icon: Icons.sports_soccer_rounded,
                     label: '${p.goals} ${isArabic ? "هدف" : "Goals"}',
-                    color: const Color(0xFF10B981),
+                    color: AppColors.primary,
                     isArabic: isArabic,
                   ),
                 if (p.assists > 0)
@@ -1142,15 +1246,20 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required LineupPlayerEntity player,
     required bool isArabic,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF0B131E)
-            : const Color(0xFFF8FAFC),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        border: Border(
+          top: BorderSide(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            width: 1,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
             blurRadius: 10,
             offset: const Offset(0, -3),
           ),
@@ -1158,7 +1267,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
       ),
       child: SizedBox(
         width: double.infinity,
-        height: 50,
+        height: 48,
         child: ElevatedButton.icon(
           onPressed: () {
             Navigator.pop(context);
@@ -1167,26 +1276,33 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             final slug = Uri.encodeComponent(
               cleanName.replaceAll(RegExp(r'\s+'), '-'),
             );
-            context.push('/player/$pId/$slug');
+            context.push(
+              '/player/$pId/$slug',
+              extra: {
+                'name': player.name,
+                'photo': player.photo,
+              },
+            );
           },
           icon: const Icon(
             Icons.visibility_outlined,
             size: 20,
-            color: Color(0xFF0F172A),
+            color: Colors.black,
           ),
           label: Text(
             isArabic ? 'عرض الملف الشخصي للاعب' : 'View player profile',
             style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
               fontSize: 14.5,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
             ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00E599),
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.black,
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
             ),
           ),
         ),
@@ -1204,6 +1320,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required Color cardBg,
     required Color cardBorder,
     required Color primaryTextColor,
+    required Color mutedTextColor,
     required bool isArabic,
   }) {
     return Container(
@@ -1222,7 +1339,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF94A3B8),
+                color: mutedTextColor,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1250,6 +1367,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required Color primaryTextColor,
     required Color mutedTextColor,
     required bool isArabic,
+    required bool isDark,
   }) {
     return Column(
       children: [
@@ -1285,7 +1403,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                   style: GoogleFonts.outfit(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF10B981),
+                    color: AppColors.primary,
                   ),
                 ),
               ],
@@ -1298,7 +1416,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
           child: Container(
             height: 5,
             width: double.infinity,
-            color: const Color(0xFF1E293B),
+            color: isDark ? AppColors.darkCardElevated : const Color(0xFFE2E8F0),
             child: FractionallySizedBox(
               alignment:
                   isArabic ? Alignment.centerRight : Alignment.centerLeft,
@@ -1315,13 +1433,19 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     required String title,
     required String value,
     required bool isArabic,
+    required bool isDark,
+    required Color primaryTextColor,
+    required Color mutedTextColor,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: isDark ? AppColors.darkCardElevated : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF1E293B), width: 1),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1332,7 +1456,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               style: (isArabic ? GoogleFonts.cairo : GoogleFonts.inter)(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF94A3B8),
+                color: mutedTextColor,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1344,7 +1468,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             style: GoogleFonts.outfit(
               fontSize: 13.5,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: primaryTextColor,
             ),
           ),
         ],
@@ -1413,9 +1537,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
     );
   }
 
-  Widget _buildJerseyNumber(int? number) {
+  Widget _buildJerseyNumber(int? number, bool isDark) {
     return Container(
-      color: const Color(0xFF131D2E),
+      color: isDark ? AppColors.darkCard : AppColors.lightCard,
       alignment: Alignment.center,
       child: number != null
           ? Text(
@@ -1423,10 +1547,16 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
               style: GoogleFonts.outfit(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF00E599),
+                color: AppColors.primary,
               ),
             )
-          : const Icon(Icons.person, size: 24, color: Colors.white70),
+          : Icon(
+              Icons.person,
+              size: 24,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
     );
   }
 

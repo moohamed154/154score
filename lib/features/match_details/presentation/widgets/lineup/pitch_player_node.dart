@@ -491,8 +491,9 @@ class PitchPlayerNode extends StatelessWidget {
   static Color _getRatingColor(String ratingStr) {
     final val = double.tryParse(ratingStr);
     if (val == null) return const Color(0xFF10B981);
-    if (val >= 8.0)
+    if (val >= 8.0) {
       return const Color(0xFF00B4D8); // Sky blue / Cyan matching Yalla Shoot
+    }
     if (val >= 7.0) return const Color(0xFF22C55E); // Green
     if (val >= 6.0) return const Color(0xFFF59E0B); // Amber / Orange
     return const Color(0xFFDC2626); // Low rating red

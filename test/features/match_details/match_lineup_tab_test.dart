@@ -1463,5 +1463,60 @@ void main() {
         expect(find.text('علي حسن'), findsWidgets);
       },
     );
+
+    testWidgets(
+      '12. Tapping an injury tile in squad list opens player details sheet with absence reason',
+      (tester) async {
+        final bloc = MatchDetailsBloc(
+          repository: mockRepo,
+          webSocketService: mockWs,
+          localStorageService: mockStorage,
+          matchId: sampleMatchId,
+        );
+
+        bloc.emit(
+          const MatchDetailsState(
+            matchId: sampleMatchId,
+            status: MatchDetailsStatus.success,
+            lineup: sampleLineup,
+          ),
+        );
+
+        await tester.pumpWidget(
+          buildTestApp(
+            child: BlocProvider.value(
+              value: bloc,
+              child: const LineupTabView(matchId: sampleMatchId),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // 1. Switch to Squad List view
+        final listBtn = find.text('القائمة');
+        await tester.tap(listBtn);
+        await tester.pumpAndSettle();
+
+        // 2. Ensure injury card (ألابا) is scrolled into view
+        await tester.scrollUntilVisible(
+          find.text('ألابا'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('ألابا'), findsOneWidget);
+        expect(find.text('رباط صليبي'), findsOneWidget);
+
+        // 3. Tap on the injury card
+        await tester.tap(find.text('ألابا'));
+        await tester.pumpAndSettle();
+
+        // 4. Modal bottom sheet opens with PlayerMatchStatsSheet showing absence reason
+        expect(find.text('سبب الغياب: رباط صليبي'), findsOneWidget);
+        expect(find.text('عرض الملف الشخصي للاعب'), findsOneWidget);
+      },
+    );
   });
 }

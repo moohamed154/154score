@@ -1,5 +1,9 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:score154/core/localization/app_localizations.dart';
 import 'package:score154/features/players/data/models/player_profile_dto.dart';
+import 'package:score154/features/players/domain/entities/player_profile_entity.dart';
+import 'package:score154/features/players/presentation/widgets/player_hero_header.dart';
 
 void main() {
   group('PlayerProfileDto', () {
@@ -129,4 +133,55 @@ void main() {
       expect(profile.died, false);
     });
   });
+
+  testWidgets(
+    'PlayerHeroHeader tapping Injury details opens PlayerInjurySheet without error',
+    (tester) async {
+      const profile = PlayerProfileEntity(
+        id: '123',
+        name: 'ميلوت راشيكا',
+        isInjured: true,
+        injury: PlayerInjuryEntity(
+          injury: 'إصابة عضلية',
+          injuryDate: '14/10/2026',
+          remainingDays: 11,
+        ),
+        positionName: 'جناح أيمن',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ar'),
+          home: const Scaffold(
+            body: SingleChildScrollView(
+              child: PlayerHeroHeader(
+                profile: profile,
+                isDark: true,
+                isArabic: true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Verify Injury details button exists
+      expect(find.text('تفاصيل الإصابة'), findsOneWidget);
+
+      // Tap Injury details button
+      await tester.tap(find.text('تفاصيل الإصابة'));
+      await tester.pumpAndSettle();
+
+      // Verify sheet opened with details
+      expect(find.text('إصابة عضلية'), findsOneWidget);
+      expect(find.text('14/10/2026'), findsOneWidget);
+      expect(find.text('بعد 11 يوم'), findsOneWidget);
+    },
+  );
 }

@@ -1945,11 +1945,24 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           final pMap = iMap['player'] is Map
               ? Map<String, dynamic>.from(iMap['player'] as Map)
               : null;
+          var pId = iMap['player_id']?.toString() ??
+              iMap['id']?.toString() ??
+              pMap?['row_id']?.toString() ??
+              pMap?['player_id']?.toString() ??
+              pMap?['id']?.toString();
+          if ((pId == null || pId.isEmpty || pId == '0')) {
+            final linkStr = (iMap['link'] ?? pMap?['link'])?.toString();
+            if (linkStr != null) {
+              final match = RegExp(r'/player/(\d+)').firstMatch(linkStr);
+              if (match != null) {
+                pId = match.group(1);
+              }
+            }
+          }
+
           injuries.add(
             LineupInjuryEntity(
-              playerId: iMap['player_id']?.toString() ??
-                  iMap['id']?.toString() ??
-                  pMap?['row_id']?.toString(),
+              playerId: pId,
               name: iMap['name']?.toString() ??
                   pMap?['title']?.toString() ??
                   pMap?['name']?.toString() ??
@@ -1965,10 +1978,12 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
               ),
               position:
                   iMap['position']?.toString() ?? pMap?['position']?.toString(),
-              photo: UrlHelper.normalizeImageUrl(
+              photo: UrlHelper.normalizePlayerPhotoUrl(
                 iMap['photo']?.toString() ??
                     iMap['image']?.toString() ??
-                    pMap?['image']?.toString(),
+                    pMap?['image']?.toString() ??
+                    pMap?['photo']?.toString() ??
+                    pId,
               ),
               absenceReason: iMap['absence_reason']?.toString() ??
                   iMap['type_name']?.toString() ??
