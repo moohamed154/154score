@@ -8,7 +8,12 @@ abstract class VideosRemoteDataSource {
   Future<(List<VideoItemEntity>, List<VideoCategoryEntity>)>
       getVideosAndCategories({required String champId, required String lang});
 
-  Future<VideoDetailEntity> getVideoDetail(String id, {required String lang});
+  Future<VideoDetailEntity> getVideoDetail(
+    String id, {
+    required String lang,
+    String? url,
+    String? title,
+  });
 }
 
 class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
@@ -90,13 +95,19 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
   Future<VideoDetailEntity> getVideoDetail(
     String id, {
     required String lang,
+    String? url,
+    String? title,
   }) async {
+    final query = <String, dynamic>{'lang': lang};
+    if (url != null && url.isNotEmpty) query['url'] = url;
+    if (title != null && title.isNotEmpty) query['title'] = title;
+
     final response = await _client.get(
       ApiEndpoints.videoDetails(id),
-      queryParameters: {'lang': lang},
+      queryParameters: query,
     );
 
-    String title = 'Video Highlight';
+    String parsedTitle = title ?? 'Video Highlight';
     String? rawImage;
     String? rawVideoUrl;
     String? embed;
@@ -126,7 +137,8 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
                 if (itemTitle.contains('title') ||
                     itemTitle.contains('عنوان') ||
                     itemTitle.contains('الاسم')) {
-                  title = itemContent ?? it['name']?.toString() ?? title;
+                  parsedTitle =
+                      itemContent ?? it['name']?.toString() ?? parsedTitle;
                 }
 
                 if (itemTitle.contains('image') ||
@@ -223,7 +235,7 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
 
     return VideoDetailEntity(
       id: id,
-      title: title,
+      title: parsedTitle,
       image: normalizedImg,
       videoUrl: normalizedVideoUrl,
       embedUrl: embed ?? normalizedVideoUrl,

@@ -32,6 +32,16 @@ class UrlHelper {
       return null;
     }
 
+    final lower = trimmed.toLowerCase();
+    if (lower.contains('video_default') ||
+        lower.contains('default.png') ||
+        lower.contains('/images/video_') ||
+        lower.contains('ysscores.com/images') ||
+        lower.contains('ysscores.com/assets') ||
+        lower.contains('placeholder')) {
+      return null;
+    }
+
     // 1. Repair broken double-dot domains from API (e.g. 'imgs..com' -> 'imgs.ysscores.com' or 'https://..com')
     if (trimmed.contains('imgs..com')) {
       trimmed = trimmed.replaceAll('imgs..com', 'imgs.ysscores.com');
@@ -171,10 +181,14 @@ class UrlHelper {
       return false;
     }
 
-    // 2. Reject known broken CDN paths that return HTTP 200 text/html (<!-- 404 -->)
+    // 2. Reject known broken CDN paths and default placeholders
     if (lower.contains('/champ/64/') ||
         lower.contains('/stadium/820/') ||
-        lower.contains('/stadium/800/')) {
+        lower.contains('/stadium/800/') ||
+        lower.contains('video_default') ||
+        lower.contains('default.png') ||
+        lower.contains('ysscores.com/images') ||
+        lower.contains('placeholder')) {
       return false;
     }
 

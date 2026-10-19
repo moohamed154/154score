@@ -5,8 +5,10 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../domain/entities/video_entity.dart';
+import 'video_thumbnail_placeholder.dart';
 
 class VideoCard extends StatelessWidget {
   final VideoItemEntity video;
@@ -19,6 +21,8 @@ class VideoCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
+    final hasValidImage =
+        video.image != null && UrlHelper.isValidImageUrl(video.image);
 
     if (isHorizontal) {
       return Container(
@@ -41,20 +45,36 @@ class VideoCard extends StatelessWidget {
               children: [
                 Stack(
                   children: [
-                    AppImage(
-                      imageUrl: video.image,
-                      width: 220,
-                      height: 120,
-                      borderRadius: AppDimensions.radiusMd,
-                      placeholderIcon: Icons.play_circle_outline_rounded,
-                    ),
+                    if (hasValidImage)
+                      AppImage(
+                        imageUrl: video.image,
+                        width: 220,
+                        height: 120,
+                        borderRadius: AppDimensions.radiusMd,
+                        placeholderIcon: Icons.play_circle_outline_rounded,
+                      )
+                    else
+                      VideoThumbnailPlaceholder(
+                        width: 220,
+                        height: 120,
+                        borderRadius: AppDimensions.radiusMd,
+                        isDark: isDark,
+                        showBadge: false,
+                      ),
                     Positioned.fill(
                       child: Center(
                         child: Container(
                           padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.black54,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.9),
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
                           ),
                           child: const Icon(
                             Icons.play_arrow_rounded,
@@ -106,20 +126,35 @@ class VideoCard extends StatelessWidget {
             children: [
               Stack(
                 children: [
-                  AppImage(
-                    imageUrl: video.image,
-                    width: double.infinity,
-                    height: 180,
-                    borderRadius: AppDimensions.radiusMd,
-                    placeholderIcon: Icons.play_circle_outline_rounded,
-                  ),
+                  if (hasValidImage)
+                    AppImage(
+                      imageUrl: video.image,
+                      width: double.infinity,
+                      height: 180,
+                      borderRadius: AppDimensions.radiusMd,
+                      placeholderIcon: Icons.play_circle_outline_rounded,
+                    )
+                  else
+                    VideoThumbnailPlaceholder(
+                      width: double.infinity,
+                      height: 180,
+                      borderRadius: AppDimensions.radiusMd,
+                      isDark: isDark,
+                    ),
                   Positioned.fill(
                     child: Center(
                       child: Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: const BoxDecoration(
-                          color: Colors.black54,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.9),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.4),
+                              blurRadius: 16,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.play_arrow_rounded,
@@ -166,6 +201,7 @@ class VideoCard extends StatelessWidget {
   }
 
   void _openVideo(BuildContext context) {
-    context.push('/video/${Uri.encodeComponent(video.id)}', extra: video);
+    final safeId = video.id.trim().isNotEmpty ? video.id.trim() : 'highlight';
+    context.push('/video/${Uri.encodeComponent(safeId)}', extra: video);
   }
 }

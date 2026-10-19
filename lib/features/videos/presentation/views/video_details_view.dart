@@ -13,6 +13,7 @@ import '../../../../core/widgets/error_view.dart';
 import '../../data/datasources/videos_remote_datasource.dart';
 import '../../domain/entities/video_entity.dart';
 import '../widgets/video_card.dart';
+import '../widgets/video_thumbnail_placeholder.dart';
 
 class VideoDetailsView extends StatefulWidget {
   final String videoId;
@@ -32,14 +33,27 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialVideo != null) {
+      _detail = VideoDetailEntity(
+        id: widget.videoId,
+        title: widget.initialVideo!.title,
+        image: widget.initialVideo!.image,
+        videoUrl: widget.initialVideo!.link,
+        matchInfo:
+            widget.initialVideo!.championship ?? widget.initialVideo!.date,
+      );
+      _isLoading = false;
+    }
     _loadDetail();
   }
 
   Future<void> _loadDetail() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    if (_detail == null) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     final lang = sl<LocalStorageService>().getLanguage();
 
@@ -48,6 +62,8 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
       final detail = await dataSource.getVideoDetail(
         widget.videoId,
         lang: lang,
+        url: widget.initialVideo?.link,
+        title: widget.initialVideo?.title,
       );
       if (!mounted) return;
       setState(() {
@@ -56,6 +72,20 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
       });
     } catch (e) {
       if (!mounted) return;
+      if (_detail != null || widget.initialVideo != null) {
+        setState(() {
+          _detail ??= VideoDetailEntity(
+            id: widget.videoId,
+            title: widget.initialVideo!.title,
+            image: widget.initialVideo!.image,
+            videoUrl: widget.initialVideo!.link,
+            matchInfo:
+                widget.initialVideo!.championship ?? widget.initialVideo!.date,
+          );
+          _isLoading = false;
+        });
+        return;
+      }
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
@@ -93,6 +123,9 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
         widget.initialVideo?.title ??
         (isArabic ? 'ملخص المباراة' : 'Video Highlight');
     final imageUrl = _detail?.image ?? widget.initialVideo?.image;
+
+    final hasValidImage =
+        imageUrl != null && UrlHelper.isValidImageUrl(imageUrl);
 
     return Scaffold(
       appBar: AppBar(
@@ -195,14 +228,22 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
                               aspectRatio: 16 / 9,
                               child: Stack(
                                 children: [
-                                  AppImage(
-                                    imageUrl: imageUrl,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    borderRadius: AppDimensions.radiusLg,
-                                    placeholderIcon:
-                                        Icons.play_circle_outline_rounded,
-                                  ),
+                                  if (hasValidImage)
+                                    AppImage(
+                                      imageUrl: imageUrl,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      borderRadius: AppDimensions.radiusLg,
+                                      placeholderIcon:
+                                          Icons.play_circle_outline_rounded,
+                                    )
+                                  else
+                                    VideoThumbnailPlaceholder(
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      borderRadius: AppDimensions.radiusLg,
+                                      isDark: isDark,
+                                    ),
                                   Positioned.fill(
                                     child: Container(
                                       decoration: BoxDecoration(

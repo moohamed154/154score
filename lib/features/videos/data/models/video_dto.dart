@@ -17,12 +17,14 @@ class VideoDto {
   });
 
   factory VideoDto.fromJson(Map<String, dynamic> json) {
-    final rawLink = json['link']?.toString() ?? json['url']?.toString();
-    String id = json['id']?.toString() ?? '';
+    final rawLink = json['link']?.toString() ??
+        json['url']?.toString() ??
+        json['video_url']?.toString();
+    String id = json['id']?.toString() ?? json['video_id']?.toString() ?? '';
     if (id.isEmpty && rawLink != null) {
-      final segments = rawLink.split('/');
+      final segments = rawLink.split('/').where((s) => s.isNotEmpty).toList();
       if (segments.isNotEmpty) {
-        id = segments.last;
+        id = segments.last.split('?').first;
       }
     }
 
