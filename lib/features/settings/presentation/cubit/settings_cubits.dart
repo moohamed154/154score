@@ -32,7 +32,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
     };
     if (mode == state) return;
     emit(mode);
-    await _storage.setThemeMode(modeStr);
+    unawaited(_storage.setThemeMode(modeStr));
   }
 }
 

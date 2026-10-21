@@ -790,7 +790,6 @@ class _TeamViewState extends State<TeamView>
         // 1. Coach Card (if available)
         if (catSquad?.coach != null) ...[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             margin: const EdgeInsets.only(bottom: 14),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -799,41 +798,72 @@ class _TeamViewState extends State<TeamView>
                 color: AppColors.primary.withValues(alpha: 0.3),
               ),
             ),
-            child: Row(
-              children: [
-                AppImage(
-                  imageUrl: catSquad!.coach!.photo,
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  fit: BoxFit.cover,
-                  placeholderIcon: Icons.sports_rounded,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: (catSquad!.coach!.id.isNotEmpty &&
+                        catSquad.coach!.id != '0')
+                    ? () {
+                        final slug = Uri.encodeComponent(
+                          catSquad.coach!.name.trim().replaceAll(
+                                RegExp(r'\s+'),
+                                '-',
+                              ),
+                        );
+                        context.push('/coach/${catSquad.coach!.id}/$slug');
+                      }
+                    : null,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(
                     children: [
-                      Text(
-                        catSquad.coach!.name,
-                        style: AppTypography.getBodyMedium(
-                          isDark: isDark,
-                          isArabic: isArabic,
-                        ).copyWith(fontWeight: FontWeight.w800),
+                      AppImage(
+                        imageUrl: catSquad.coach!.photo,
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        fit: BoxFit.cover,
+                        placeholderIcon: Icons.sports_rounded,
                       ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'المدير الفني',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              catSquad.coach!.name,
+                              style: AppTypography.getBodyMedium(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isArabic ? 'المدير الفني' : 'Head Coach',
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      if (catSquad.coach!.id.isNotEmpty &&
+                          catSquad.coach!.id != '0')
+                        Icon(
+                          isArabic
+                              ? Icons.chevron_left_rounded
+                              : Icons.chevron_right_rounded,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ],

@@ -253,4 +253,68 @@ void main() {
       expect(dto2.toEntity().timestamp, 1774396900);
     });
   });
+
+  group('MatchStatusHelper.localizeStatus', () {
+    test('localizes finished status in both Arabic and English', () {
+      expect(
+        MatchStatusHelper.localizeStatus('انتهت', isArabic: false),
+        'Finished',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('انتهت', isArabic: true),
+        'انتهت',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('Finished', isArabic: true),
+        'انتهت',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('Finished', isArabic: false),
+        'Finished',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('انتهت (90\')', isArabic: false),
+        'Finished (90\')',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('انتهت بركلات الترجيح', isArabic: false),
+        'Finished (Penalties)',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('انتهت بعد الوقت الإضافي', isArabic: false),
+        'Finished (AET)',
+      );
+    });
+
+    test('localizes live and upcoming statuses correctly', () {
+      expect(
+        MatchStatusHelper.localizeStatus('مباشر', isArabic: false, minute: '45'),
+        'Live (45\')',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('مباشر', isArabic: true, minute: '45'),
+        'مباشر (45\')',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('لم تبدأ', isArabic: false),
+        'Not Started',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('Not Started', isArabic: true),
+        'لم تبدأ',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('استراحة', isArabic: false),
+        'Half Time',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('تأجلت', isArabic: false),
+        'Postponed',
+      );
+      expect(
+        MatchStatusHelper.localizeStatus('ألغيت', isArabic: false),
+        'Cancelled',
+      );
+    });
+  });
 }

@@ -14,8 +14,15 @@ class MatchNotificationTracker {
   MatchNotificationTracker._();
   static final MatchNotificationTracker instance = MatchNotificationTracker._();
 
-  final Map<String, ({int score1, int score2, String status, int timestamp})>
-      _matchStates = {};
+  final Map<
+      String,
+      ({
+        int score1,
+        int score2,
+        String status,
+        int timestamp,
+        bool hasLineup,
+      })> _matchStates = {};
   final Set<String> _sentAlertKeys = {};
   SharedPreferences? _prefs;
 
@@ -63,14 +70,16 @@ class MatchNotificationTracker {
     await _ensurePrefs();
     final prefScoreKey = '154score_last_score_$cleanId';
     final prefStatusKey = '154score_last_status_$cleanId';
+    final prefLineupKey = '154score_last_lineup_$cleanId';
 
     // 1. Get previous state from memory or prefs
-    ({int score1, int score2, String status, int timestamp})? previous =
-        _matchStates[cleanId];
+    ({int score1, int score2, String status, int timestamp, bool hasLineup})?
+        previous = _matchStates[cleanId];
 
     if (previous == null) {
       final savedScoreStr = _prefs?.getString(prefScoreKey);
       final savedStatusStr = _prefs?.getString(prefStatusKey);
+      final savedLineup = _prefs?.getBool(prefLineupKey) ?? false;
       if (savedScoreStr != null) {
         final parts = savedScoreStr.split('-');
         final p1 = int.tryParse(parts.first.trim()) ?? 0;
@@ -80,6 +89,7 @@ class MatchNotificationTracker {
           score2: p2,
           status: savedStatusStr ?? '',
           timestamp: 0,
+          hasLineup: savedLineup,
         );
         _matchStates[cleanId] = previous;
       }
@@ -88,17 +98,20 @@ class MatchNotificationTracker {
     // 2. If no previous state, this is the first time seeing this match.
     // Record baseline without firing notification (prevents spam on app start).
     if (previous == null) {
-      if (s1 != null || s2 != null || status.isNotEmpty) {
+      if (s1 != null || s2 != null || status.isNotEmpty || match.hasLineup) {
         final initialScore1 = s1 ?? 0;
         final initialScore2 = s2 ?? 0;
+        final initialLineup = match.hasLineup;
         _matchStates[cleanId] = (
           score1: initialScore1,
           score2: initialScore2,
           status: status,
           timestamp: match.timestamp ?? 0,
+          hasLineup: initialLineup,
         );
         await _prefs?.setString(prefScoreKey, '$initialScore1-$initialScore2');
         await _prefs?.setString(prefStatusKey, status);
+        await _prefs?.setBool(prefLineupKey, initialLineup);
       }
       return;
     }
@@ -218,21 +231,35 @@ class MatchNotificationTracker {
           }
         }
       }
+
+      // ── D. Lineup Detection ──────────────────────────────────────────
+      final lineupEnabled = storage?.isMatchLineupNotificationEnabled() ??
+          (_prefs?.getBool('notif_lineup_enabled') ?? true);
+      if (lineupEnabled && match.hasLineup && !previous.hasLineup) {
+        final alertKey = 'lineup_$cleanId';
+        if (!_sentAlertKeys.contains(alertKey)) {
+          await _recordAlert(alertKey);
+          await _sendLineupNotification(match);
+        }
+      }
     }
 
     // 4. Update memory & persistence
     final updatedScore1 = s1 ?? previous.score1;
     final updatedScore2 = s2 ?? previous.score2;
     final updatedStatus = status.isNotEmpty ? status : previous.status;
+    final updatedLineup = match.hasLineup || previous.hasLineup;
 
     _matchStates[cleanId] = (
       score1: updatedScore1,
       score2: updatedScore2,
       status: updatedStatus,
       timestamp: match.timestamp ?? previous.timestamp,
+      hasLineup: updatedLineup,
     );
     await _prefs?.setString(prefScoreKey, '$updatedScore1-$updatedScore2');
     await _prefs?.setString(prefStatusKey, updatedStatus);
+    await _prefs?.setBool(prefLineupKey, updatedLineup);
   }
 
   /// Checks if notifications should be fired for this match based on
@@ -345,8 +372,9 @@ class MatchNotificationTracker {
     final matchNotifs = (_prefs!.getStringList('match_notifications') ?? [])
         .map((s) => s.replaceAll('match:', '').trim())
         .toSet();
-    if (favMatches.contains(cleanId) || matchNotifs.contains(cleanId))
+    if (favMatches.contains(cleanId) || matchNotifs.contains(cleanId)) {
       return true;
+    }
 
     final mutedTeams = (_prefs!.getStringList('team_notifications_muted') ?? [])
         .map((s) => s.toLowerCase().trim())
@@ -399,10 +427,12 @@ class MatchNotificationTracker {
     // 3. Fallback name match if IDs missing on match
     for (final name in targetNames) {
       if (name.isEmpty) continue;
-      if (!hasT1Id && (t1 == name || t1.contains(name) || name.contains(t1)))
+      if (!hasT1Id && (t1 == name || t1.contains(name) || name.contains(t1))) {
         return true;
-      if (!hasT2Id && (t2 == name || t2.contains(name) || name.contains(t2)))
+      }
+      if (!hasT2Id && (t2 == name || t2.contains(name) || name.contains(t2))) {
         return true;
+      }
     }
 
     return false;
@@ -543,6 +573,33 @@ class MatchNotificationTracker {
     });
 
     await NotificationService.instance.showMatchEndNotification(
+      matchId: match.id,
+      title: title,
+      body: body,
+      payload: payload,
+    );
+  }
+
+  Future<void> _sendLineupNotification(MatchEntity match) async {
+    final lang = _prefs?.getString('154score_notif_lang') ?? 'ar';
+    final isArabic = lang == 'ar';
+
+    final title = isArabic
+        ? 'تشكيلة المباراة: ${match.team1} ضد ${match.team2}'
+        : 'Official Lineups: ${match.team1} vs ${match.team2}';
+    final body = isArabic
+        ? 'تم الإعلان عن التشكيلة الرسمية لمباراة ${match.team1} و ${match.team2}'
+        : 'Official lineups announced for ${match.team1} vs ${match.team2}';
+
+    final payload = jsonEncode({
+      'type': 'match',
+      'match_id': match.id,
+      'event_type': 'lineup',
+      'home_team': match.team1,
+      'away_team': match.team2,
+    });
+
+    await NotificationService.instance.showLineupNotification(
       matchId: match.id,
       title: title,
       body: body,

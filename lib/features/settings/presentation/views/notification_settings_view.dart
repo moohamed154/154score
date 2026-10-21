@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -12,7 +10,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/notifications/live_match_foreground_service.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
-import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 
 class NotificationSettingsView extends StatefulWidget {
   const NotificationSettingsView({super.key});
@@ -62,6 +59,9 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
   Future<void> _setScope(String scope) async {
     setState(() => _matchScope = scope);
     await _storage.setMatchNotificationScope(scope);
+    if (scope == LocalStorageService.matchNotifScopeAll) {
+      unawaited(NotificationService.instance.requestPermissions());
+    }
   }
 
   Future<void> _toggleGoals(bool val) async {
@@ -528,42 +528,6 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
             ),
           ),
 
-          const SizedBox(height: 24),
-
-          // ── Section 3: Favorite Teams Management ─────────────────────────
-          _buildSectionHeader(
-              l10n.translate('notif_favorite_teams_section'), isDark, isArabic),
-          BlocBuilder<FavoritesCubit, FavoritesState>(
-            builder: (context, favState) {
-              final count = favState.favoriteTeams.length;
-              final countText =
-                  l10n.translate('notif_starred_teams_count').replaceAll(
-                        '{count}',
-                        '$count',
-                      );
-
-              return _buildCard(
-                isDark: isDark,
-                child: ListTile(
-                  leading: const Icon(Icons.star_rate_rounded,
-                      color: Colors.amber, size: 28),
-                  title: Text(
-                    l10n.translate('notif_manage_favorites'),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(countText),
-                  trailing: Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
-                  onTap: () => context.push('/favorites'),
-                ),
-              );
-            },
-          ),
 
           const SizedBox(height: 40),
         ],

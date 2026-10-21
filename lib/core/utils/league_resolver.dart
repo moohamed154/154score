@@ -58,11 +58,14 @@ class LeagueResolver {
 
     // European Competitions
     'دوري أبطال أوروبا': '904988',
+    'uefa champions league': '904988',
     'champions league': '904988',
     'ucl': '904988',
     'الدوري الأوروبي': '937603',
+    'uefa europa league': '937603',
     'europa league': '937603',
     'دوري المؤتمر الأوروبي': '937604',
+    'uefa conference league': '937604',
     'conference league': '937604',
     'كأس السوبر الأوروبي': '937605',
     'uefa super cup': '937605',
@@ -349,9 +352,13 @@ class LeagueResolver {
     '7167': (ar: 'دوري روشن السعودي', en: 'Saudi Pro League'),
     '943009': (ar: 'الدوري المصري الممتاز', en: 'Egyptian Premier League'),
     '58553': (ar: 'الدوري المصري الممتاز', en: 'Egyptian Premier League'),
+    '3894': (ar: 'الدوري المصري الممتاز', en: 'Egyptian Premier League'),
     '894789': (ar: 'كأس العالم', en: 'FIFA World Cup'),
     '900001': (ar: 'كأس العالم', en: 'FIFA World Cup'),
-    '97533': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
+    '97533': (
+      ar: 'تصفيات دوري أبطال أفريقيا',
+      en: 'CAF Champions League | Qualification',
+    ),
     '943487': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
     '911131': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
     '77783': (ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League'),
@@ -362,7 +369,10 @@ class LeagueResolver {
     ),
     '943602': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
     '911121': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
-    '76684': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
+    '76684': (
+      ar: 'تصفيات كأس الكونفيدرالية',
+      en: 'CAF Confederation Cup | Qualification',
+    ),
     '88013': (ar: 'كأس السوبر الإسباني', en: 'Spanish Super Cup'),
     '59771441': (ar: 'كأس السوبر الإسباني', en: 'Spanish Super Cup'),
     '943488': (ar: 'كأس السوبر الإسباني', en: 'Spanish Super Cup'),
@@ -545,64 +555,88 @@ class LeagueResolver {
     final hasB = cleanB.isNotEmpty || cleanIdB.isNotEmpty;
     if (!hasA || !hasB) return false;
 
-    // 1. Direct ID match
+    // Resolve effective IDs if passed as ID or if name is a pure numeric string
+    final effIdA = cleanIdA.isNotEmpty
+        ? cleanIdA
+        : (int.tryParse(cleanA) != null ? cleanA : '');
+    final effIdB = cleanIdB.isNotEmpty
+        ? cleanIdB
+        : (int.tryParse(cleanB) != null ? cleanB : '');
+
+    // 1. Strict ID discrimination: If BOTH items provide an ID, they MUST match or alias
+    if (effIdA.isNotEmpty && effIdB.isNotEmpty) {
+      if (effIdA == effIdB) return true;
+      final resIdA = resolveId(effIdA) ?? effIdA;
+      final resIdB = resolveId(effIdB) ?? effIdB;
+      if (resIdA == resIdB) return true;
+      final pairA = _idToTitles[resIdA] ?? _idToTitles[effIdA];
+      final pairB = _idToTitles[resIdB] ?? _idToTitles[effIdB];
+      if (pairA != null && pairB != null && pairA == pairB) return true;
+      // Both entities have explicit, different IDs -> they are NOT the same competition!
+      return false;
+    }
+
+    // 2. Direct ID match if one is ID and other matched
     if (cleanIdA.isNotEmpty && cleanIdB.isNotEmpty && cleanIdA == cleanIdB) {
       return true;
     }
 
-    // 2. Direct name match (case-insensitive)
+    // 2b. Stage-tolerant base name match
+    final baseA =
+        cleanA.contains('|') ? cleanA.split('|').first.trim() : cleanA;
+    final baseB =
+        cleanB.contains('|') ? cleanB.split('|').first.trim() : cleanB;
+
+    // 3. Direct name match (case-insensitive) - only when neither is a sub-stage or both are same sub-stage
     if (cleanA.isNotEmpty &&
         cleanB.isNotEmpty &&
         cleanA.toLowerCase() == cleanB.toLowerCase()) {
       return true;
     }
 
-    // 3. Normalized Arabic match
+    // 4. Normalized Arabic match
     if (cleanA.isNotEmpty && cleanB.isNotEmpty) {
       final normA = normalize(cleanA);
       final normB = normalize(cleanB);
       if (normA == normB) return true;
     }
 
-    // 3b. Stage-tolerant base name match (e.g. "دوري أبطال أفريقيا | الأدوار الإقصائية")
-    final baseA =
-        cleanA.contains('|') ? cleanA.split('|').first.trim() : cleanA;
-    final baseB =
-        cleanB.contains('|') ? cleanB.split('|').first.trim() : cleanB;
+    // 5. Stage-tolerant base name match (only if neither has an explicit conflicting stage)
     if (baseA.isNotEmpty &&
         baseB.isNotEmpty &&
         (baseA != cleanA || baseB != cleanB)) {
       if (baseA.toLowerCase() == baseB.toLowerCase() ||
-          normalize(baseA) == normalize(baseB)) {
+          normalize(baseA) == normalize(baseB) ||
+          areSameCompetition(baseA, baseB, idA: idA, idB: idB)) {
         return true;
       }
     }
 
-    // 4. Resolve IDs from names or IDs
-    final resIdA = cleanIdA.isNotEmpty
-        ? (resolveId(cleanIdA) ?? cleanIdA)
+    // 6. Resolve IDs from names or IDs
+    final resIdA = effIdA.isNotEmpty
+        ? (resolveId(effIdA) ?? effIdA)
         : (cleanA.isNotEmpty ? resolveId(cleanA) : null);
 
-    final resIdB = cleanIdB.isNotEmpty
-        ? (resolveId(cleanIdB) ?? cleanIdB)
+    final resIdB = effIdB.isNotEmpty
+        ? (resolveId(effIdB) ?? effIdB)
         : (cleanB.isNotEmpty ? resolveId(cleanB) : null);
 
     if (resIdA != null && resIdB != null && resIdA == resIdB) {
       return true;
     }
 
-    // 5. Cross-check with _idToTitles (which maps duplicate API IDs to canonical names)
+    // 7. Cross-check with _idToTitles (which maps duplicate API IDs to canonical names)
     // E.g., '1933' and '938652' both have ar: 'الدوري الإسباني', en: 'LaLiga'
     final pairA = (resIdA != null && _idToTitles.containsKey(resIdA))
         ? _idToTitles[resIdA]
-        : ((cleanIdA.isNotEmpty && _idToTitles.containsKey(cleanIdA))
-            ? _idToTitles[cleanIdA]
+        : ((effIdA.isNotEmpty && _idToTitles.containsKey(effIdA))
+            ? _idToTitles[effIdA]
             : null);
 
     final pairB = (resIdB != null && _idToTitles.containsKey(resIdB))
         ? _idToTitles[resIdB]
-        : ((cleanIdB.isNotEmpty && _idToTitles.containsKey(cleanIdB))
-            ? _idToTitles[cleanIdB]
+        : ((effIdB.isNotEmpty && _idToTitles.containsKey(effIdB))
+            ? _idToTitles[effIdB]
             : null);
 
     if (pairA != null && pairB != null) {

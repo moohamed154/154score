@@ -15,30 +15,43 @@ class ThemeSettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
+    final platformDark =
+        MediaQuery.platformBrightnessOf(context) == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.translate('theme_settings_title'),
-          style: AppTypography.getHeadingMedium(
-            isDark: isDark,
-            isArabic: isArabic,
-          ).copyWith(fontWeight: FontWeight.w700),
-        ),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: BlocBuilder<ThemeCubit, ThemeMode>(
-            builder: (context, currentMode) {
-              return ListView(
+    return BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, currentMode) {
+        final effectiveIsDark = switch (currentMode) {
+          ThemeMode.dark => true,
+          ThemeMode.light => false,
+          ThemeMode.system => platformDark,
+        };
+
+        return Scaffold(
+          backgroundColor: effectiveIsDark
+              ? AppColors.darkBackground
+              : AppColors.lightBackground,
+          appBar: AppBar(
+            backgroundColor: effectiveIsDark
+                ? AppColors.darkSurface
+                : AppColors.lightSurface,
+            title: Text(
+              l10n.translate('theme_settings_title'),
+              style: AppTypography.getHeadingMedium(
+                isDark: effectiveIsDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+          body: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: ListView(
                 padding: const EdgeInsets.all(AppDimensions.lg),
                 children: [
                   // 1. Intro Card
                   _buildIntroCard(
-                    isDark: isDark,
+                    isDark: effectiveIsDark,
                     isArabic: isArabic,
                     l10n: l10n,
                   ),
@@ -47,7 +60,7 @@ class ThemeSettingsView extends StatelessWidget {
 
                   // 2. Interactive Live Preview
                   _buildLivePreviewCard(
-                    isDark: isDark,
+                    isDark: effectiveIsDark,
                     isArabic: isArabic,
                     l10n: l10n,
                     currentMode: currentMode,
@@ -62,7 +75,7 @@ class ThemeSettingsView extends StatelessWidget {
                     child: Text(
                       l10n.translate('settings_theme_mode'),
                       style: AppTypography.getBodySmall(
-                        isDark: isDark,
+                        isDark: effectiveIsDark,
                         isArabic: isArabic,
                       ).copyWith(
                         color: AppColors.primary,
@@ -76,7 +89,7 @@ class ThemeSettingsView extends StatelessWidget {
                   _buildOptionsCard(
                     context: context,
                     currentMode: currentMode,
-                    isDark: isDark,
+                    isDark: effectiveIsDark,
                     isArabic: isArabic,
                     l10n: l10n,
                   ),
@@ -85,16 +98,16 @@ class ThemeSettingsView extends StatelessWidget {
 
                   // 5. Applied Notice Card
                   _buildNoticeCard(
-                    isDark: isDark,
+                    isDark: effectiveIsDark,
                     isArabic: isArabic,
                     l10n: l10n,
                   ),
                 ],
-              );
-            },
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -105,8 +118,8 @@ class ThemeSettingsView extends StatelessWidget {
   }) {
     return RepaintBoundary(
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(AppDimensions.lg),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -200,8 +213,8 @@ class ThemeSettingsView extends StatelessWidget {
 
     return RepaintBoundary(
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(AppDimensions.lg),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -419,8 +432,8 @@ class ThemeSettingsView extends StatelessWidget {
   }) {
     return RepaintBoundary(
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -502,8 +515,8 @@ class ThemeSettingsView extends StatelessWidget {
           }
         },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           color: isSelected
               ? primary.withValues(alpha: isDark ? 0.12 : 0.06)
@@ -513,8 +526,8 @@ class ThemeSettingsView extends StatelessWidget {
             children: [
               // Icon Box with Spring Bounce Animation
               AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isSelected
@@ -534,8 +547,8 @@ class ThemeSettingsView extends StatelessWidget {
                 ),
                 child: TweenAnimationBuilder<double>(
                   tween: Tween<double>(begin: 0, end: isSelected ? 1 : 0),
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeOutBack,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
                   builder: (context, anim, _) {
                     return Transform.scale(
                       scale: 0.95 + (anim * 0.18),
@@ -642,8 +655,8 @@ class ThemeSettingsView extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
@@ -690,8 +703,8 @@ class ThemeSettingsView extends StatelessWidget {
   }) {
     return RepaintBoundary(
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(AppDimensions.md),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : AppColors.lightCard,

@@ -58,17 +58,34 @@ class FavoritesState extends Equatable {
       if (norm.isNotEmpty) keys.add(norm);
       final rId = LeagueResolver.resolveId(clean);
       if (rId != null && rId.isNotEmpty) keys.add(rId);
+
+      // Add bidirectional titles (AR and EN) from LeagueResolver
+      final arTitle = LeagueResolver.resolveTitle(clean, isArabic: true);
+      if (arTitle.isNotEmpty && arTitle.toLowerCase() != clean) {
+        final cleanAr = arTitle.trim().toLowerCase();
+        keys.add(cleanAr);
+        final normAr = LeagueResolver.normalize(cleanAr);
+        if (normAr.isNotEmpty) keys.add(normAr);
+        final rIdAr = LeagueResolver.resolveId(cleanAr);
+        if (rIdAr != null && rIdAr.isNotEmpty) keys.add(rIdAr);
+      }
+      final enTitle = LeagueResolver.resolveTitle(clean, isArabic: false);
+      if (enTitle.isNotEmpty && enTitle.toLowerCase() != clean) {
+        final cleanEn = enTitle.trim().toLowerCase();
+        keys.add(cleanEn);
+        final normEn = LeagueResolver.normalize(cleanEn);
+        if (normEn.isNotEmpty) keys.add(normEn);
+        final rIdEn = LeagueResolver.resolveId(cleanEn);
+        if (rIdEn != null && rIdEn.isNotEmpty) keys.add(rIdEn);
+      }
     }
 
-    // Fast O(M) single pass over titles instead of O(N * M) nested regex loop
+    // Only expand title from confirmed ID keys, never add unknown IDs from generic titles
     for (final entry in titles.entries) {
       final idKey = entry.key.trim().toLowerCase();
       final titleVal = entry.value.trim().toLowerCase();
-      if (keys.contains(titleVal) || keys.contains(idKey)) {
-        keys.add(idKey);
+      if (keys.contains(idKey)) {
         keys.add(titleVal);
-        final rId = LeagueResolver.resolveId(idKey);
-        if (rId != null && rId.isNotEmpty) keys.add(rId);
       }
     }
     return keys;
@@ -158,17 +175,66 @@ class FavoritesState extends Equatable {
     if (favoriteCompetitions.isEmpty) return false;
 
     final cleanId = id?.trim().toLowerCase();
+    final cleanName = name?.trim();
+
+    // 1. Strict Match by ID (prevents collisions between same-named leagues e.g. Austrian vs German Bundesliga)
     if (cleanId != null && cleanId.isNotEmpty) {
-      if (cachedFavCompetitionKeys.contains(cleanId)) return true;
-      final rId = LeagueResolver.resolveId(cleanId);
-      if (rId != null && cachedFavCompetitionKeys.contains(rId)) return true;
-      final titleForId =
-          competitionTitles[cleanId] ?? competitionTitles[id?.trim()];
-      if (titleForId != null && isFavoriteCompetition(name: titleForId))
+      if (favoriteCompetitions
+          .any((fav) => fav.trim().toLowerCase() == cleanId)) {
         return true;
+      }
+      // Check ID aliases via LeagueResolver (e.g. 1933 and 938652 for LaLiga)
+      for (final fav in favoriteCompetitions) {
+        final favTrim = fav.trim();
+        if (LeagueResolver.areSameCompetition(
+          cleanId,
+          favTrim,
+          idA: cleanId,
+          idB: int.tryParse(favTrim) != null ? favTrim : null,
+        )) {
+          return true;
+        }
+      }
+
+      // Check name-based favorites only if they belong to this exact tournament and stage
+      for (final fav in favoriteCompetitions) {
+        final favTrim = fav.trim();
+        if (int.tryParse(favTrim) != null) continue;
+        if (cleanName != null && cleanName.contains('|') != favTrim.contains('|')) {
+          continue;
+        }
+
+        final favId = competitionTitles[favTrim] ??
+            competitionTitles[favTrim.toLowerCase()] ??
+            LeagueResolver.resolveId(favTrim) ??
+            LocalStorageServiceImpl.defaultNameToId[favTrim] ??
+            LocalStorageServiceImpl.defaultNameToId[favTrim.toLowerCase()];
+
+        if (favId != null && favId.isNotEmpty) {
+          if (LeagueResolver.areSameCompetition(
+            favId,
+            cleanId,
+            idA: favId,
+            idB: cleanId,
+          )) {
+            return true;
+          }
+        } else if (cleanName != null && cleanName.isNotEmpty) {
+          if (LeagueResolver.areSameCompetition(
+            favTrim,
+            cleanName,
+            idA: favId,
+            idB: cleanId,
+          )) {
+            return true;
+          }
+        }
+      }
+
+      return false;
     }
 
-    final cleanName = name?.trim();
+    // 2. Query only has name (no ID provided):
     if (cleanName != null && cleanName.isNotEmpty) {
       final lowerName = cleanName.toLowerCase();
       if (cachedFavCompetitionKeys.contains(lowerName)) return true;
@@ -177,40 +243,35 @@ class FavoritesState extends Equatable {
         return true;
       }
       final rName = LeagueResolver.resolveId(cleanName);
-      if (rName != null && cachedFavCompetitionKeys.contains(rName)) {
+      if (rName != null &&
+          cachedFavCompetitionKeys.contains(rName.toLowerCase())) {
         return true;
+      }
+
+      final cleanSlug = slug?.trim();
+      if (cleanSlug != null && cleanSlug.isNotEmpty) {
+        final lowerSlug = cleanSlug.toLowerCase();
+        if (cachedFavCompetitionKeys.contains(lowerSlug)) return true;
+        final normSlug = LeagueResolver.normalize(cleanSlug);
+        if (normSlug.isNotEmpty && cachedFavCompetitionKeys.contains(normSlug)) {
+          return true;
+        }
+      }
+
+      for (final fav in favoriteCompetitions) {
+        final favTrim = fav.trim();
+        final mappedId = competitionTitles[favTrim];
+        if (LeagueResolver.areSameCompetition(
+          favTrim,
+          cleanName,
+          idA: mappedId,
+          idB: null,
+        )) {
+          return true;
+        }
       }
     }
 
-    final cleanSlug = slug?.trim();
-    if (cleanSlug != null && cleanSlug.isNotEmpty) {
-      final lowerSlug = cleanSlug.toLowerCase();
-      if (cachedFavCompetitionKeys.contains(lowerSlug)) return true;
-      final normSlug = LeagueResolver.normalize(cleanSlug);
-      if (normSlug.isNotEmpty && cachedFavCompetitionKeys.contains(normSlug)) {
-        return true;
-      }
-      final rSlug = LeagueResolver.resolveId(cleanSlug);
-      if (rSlug != null && cachedFavCompetitionKeys.contains(rSlug)) {
-        return true;
-      }
-    }
-
-    // Safety fallback for any complex dynamic variation
-    final origCleanName = name?.trim();
-    final origCleanId = id?.trim();
-    for (final fav in favoriteCompetitions) {
-      final favTrim = fav.trim();
-      final mappedId = competitionTitles[favTrim];
-      if (LeagueResolver.areSameCompetition(
-        favTrim,
-        origCleanName,
-        idA: mappedId,
-        idB: origCleanId,
-      )) {
-        return true;
-      }
-    }
     return false;
   }
 
@@ -424,6 +485,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     String? name,
     String? slug,
     String? logo,
+    bool? forceFavorite,
   }) async {
     final cleanId = id?.trim();
     final lookupTitle = (cleanId != null && cleanId.isNotEmpty)
@@ -438,26 +500,49 @@ class FavoritesCubit extends Cubit<FavoritesState> {
                 ? slug.trim()
                 : (lookupTitle ?? '')));
 
-    final wasFav = isCompetitionFavorite(
-      id: cleanId,
-      name: effectiveName,
-      slug: slug,
-    );
+    final wasFav = forceFavorite != null
+        ? !forceFavorite
+        : isCompetitionFavorite(
+            id: cleanId,
+            name: effectiveName,
+            slug: slug,
+          );
 
     // Optimistic UI update: 0ms lag
     final updatedList = List<String>.from(state.favoriteCompetitions);
     final updatedTitles = Map<String, String>.from(state.competitionTitles);
     final updatedLogos = Map<String, String>.from(state.competitionLogos);
 
+    final canonicalKey =
+        (cleanId != null && cleanId.isNotEmpty) ? cleanId : effectiveName;
     final canonicalName =
         effectiveName.isNotEmpty ? effectiveName : (cleanId ?? '');
 
     if (wasFav) {
-      final originalLen = updatedList.length;
-      // 1. Fast direct removal
+      if (cleanId != null && cleanId.isNotEmpty) {
+        updatedTitles.remove(cleanId);
+        updatedLogos.remove(cleanId);
+        final rClean = LeagueResolver.resolveId(cleanId);
+        if (rClean != null) {
+          updatedTitles.remove(rClean);
+          updatedLogos.remove(rClean);
+        }
+      }
+      if (effectiveName.isNotEmpty) {
+        updatedTitles.remove(effectiveName);
+        updatedTitles.remove(effectiveName.toLowerCase());
+        updatedLogos.remove(effectiveName);
+      }
+      final baseEffectiveName = effectiveName.contains('|')
+          ? effectiveName.split('|').first.trim()
+          : effectiveName;
+
       updatedList.removeWhere((item) {
         final itemTrim = item.trim();
         final itemLower = itemTrim.toLowerCase();
+        final itemAsId = int.tryParse(itemTrim) != null ? itemTrim : null;
+
+        // 1. Direct match by ID string or name string
         if (cleanId != null &&
             cleanId.isNotEmpty &&
             itemLower == cleanId.toLowerCase()) {
@@ -467,39 +552,83 @@ class FavoritesCubit extends Cubit<FavoritesState> {
             itemLower == effectiveName.toLowerCase()) {
           return true;
         }
-        if (cleanId != null &&
-            state.competitionTitles[cleanId]?.toLowerCase() == itemLower) {
-          return true;
-        }
-        if (state.competitionTitles[itemTrim]?.toLowerCase() ==
-            cleanId?.toLowerCase()) {
-          return true;
-        }
-        if (lookupTitle != null && lookupTitle.toLowerCase() == itemLower) {
-          return true;
-        }
-        return false;
-      });
 
-      // 2. Fallback only if direct comparison didn't match
-      if (updatedList.length == originalLen) {
-        updatedList.removeWhere((item) {
-          final itemTrim = item.trim();
-          final mappedId = state.competitionTitles[itemTrim];
+        // Sub-stage mismatch protection:
+        // E.g. 'CAF Champions League | Qualification' vs 'CAF Champions League'
+        final itemHasStage = itemTrim.contains('|');
+        final targetHasStage = effectiveName.contains('|');
+        if (effectiveName.isNotEmpty && itemHasStage != targetHasStage) {
+          if (cleanId == null || itemAsId == null) {
+            return false;
+          }
+        }
+
+        // 2. Both are numeric IDs: check if they are aliases for the same competition
+        if (cleanId != null && cleanId.isNotEmpty && itemAsId != null) {
           return LeagueResolver.areSameCompetition(
+            cleanId,
+            itemTrim,
+            idA: cleanId,
+            idB: itemAsId,
+          );
+        }
+
+        // 3. One is ID and one is Name, or both are Names:
+        final favId = state.competitionTitles[itemTrim] ??
+            state.competitionTitles[itemLower] ??
+            LeagueResolver.resolveId(itemTrim) ??
+            LocalStorageServiceImpl.defaultNameToId[itemLower];
+
+        if (cleanId != null && cleanId.isNotEmpty) {
+          if (LeagueResolver.areSameCompetition(
+            itemTrim,
+            effectiveName.isNotEmpty ? effectiveName : cleanId,
+            idA: favId,
+            idB: cleanId,
+          )) {
+            return true;
+          }
+          if (favId != null &&
+              LeagueResolver.areSameCompetition(
+                favId,
+                cleanId,
+                idA: favId,
+                idB: cleanId,
+              )) {
+            return true;
+          }
+        }
+
+        if (effectiveName.isNotEmpty) {
+          if (LeagueResolver.areSameCompetition(
             itemTrim,
             effectiveName,
-            idA: mappedId,
+            idA: favId,
             idB: cleanId,
-          );
-        });
-      }
+          )) {
+            return true;
+          }
+        }
+
+        if (baseEffectiveName.isNotEmpty &&
+            (!itemHasStage && !targetHasStage)) {
+          final itemBase = itemTrim.contains('|')
+              ? itemTrim.split('|').first.trim()
+              : itemTrim;
+          if (itemBase.toLowerCase() == baseEffectiveName.toLowerCase()) {
+            return true;
+          }
+        }
+
+        return false;
+      });
     } else {
-      if (canonicalName.isNotEmpty && !updatedList.contains(canonicalName)) {
-        updatedList.add(canonicalName);
+      if (canonicalKey.isNotEmpty && !updatedList.contains(canonicalKey)) {
+        updatedList.add(canonicalKey);
       }
       if (cleanId != null && cleanId.isNotEmpty && canonicalName.isNotEmpty) {
         updatedTitles[cleanId] = canonicalName;
+        updatedTitles[canonicalName.toLowerCase()] = cleanId;
       }
 
       final resolvedLogo = (logo != null && logo.trim().isNotEmpty)
@@ -531,7 +660,7 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     ));
 
     await _storage.setFavoriteCompetitions(updatedList);
-    if (cleanId != null && cleanId.isNotEmpty && canonicalName.isNotEmpty) {
+    if (!wasFav && canonicalName.isNotEmpty && cleanId != null && cleanId.isNotEmpty) {
       unawaited(_storage.registerCompetitionTitles({cleanId: canonicalName}));
     }
   }

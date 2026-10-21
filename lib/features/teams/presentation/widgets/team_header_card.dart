@@ -101,7 +101,7 @@ class TeamHeaderCard extends StatelessWidget {
                   imageUrl: logo,
                   width: isSmall ? 52 : 64,
                   height: isSmall ? 52 : 64,
-                  borderRadius: (isSmall ? 52 : 64) / 2,
+                  borderRadius: 0,
                   fit: BoxFit.contain,
                   placeholderIcon: Icons.shield_outlined,
                 ),

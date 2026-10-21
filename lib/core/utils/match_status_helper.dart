@@ -1028,4 +1028,100 @@ class MatchStatusHelper {
         return rawStatus ?? (isArabic ? 'لم تبدأ' : 'Upcoming');
     }
   }
+
+  /// Localizes a match status string into either Arabic or English.
+  static String localizeStatus(
+    String? status, {
+    required bool isArabic,
+    String? minute,
+  }) {
+    if (status == null ||
+        status.trim().isEmpty ||
+        status == '-' ||
+        status == 'null') {
+      return '';
+    }
+
+    final raw = status.trim();
+
+    // Check if minute is embedded like "(90')" or if minute is passed separately
+    String? embeddedMinute;
+    String cleanStatus = raw;
+    final minMatch = RegExp(r'\((.*?)\)').firstMatch(raw);
+    if (minMatch != null) {
+      embeddedMinute = minMatch.group(1);
+      cleanStatus = raw.replaceAll(RegExp(r'\s*\(.*?\)\s*'), '').trim();
+    } else if (minute != null && minute.isNotEmpty && minute != 'null') {
+      embeddedMinute = minute.replaceAll("'", '').trim();
+      if (!embeddedMinute.endsWith("'")) {
+        embeddedMinute = "$embeddedMinute'";
+      }
+    }
+
+    final phase = parseStatus(cleanStatus);
+    final lower = cleanStatus.toLowerCase();
+
+    final hasPenalties = lower.contains('ترجيح') ||
+        lower.contains('penalties') ||
+        lower.contains('pen');
+    final hasExtraTime = lower.contains('إضافي') ||
+        lower.contains('اضافي') ||
+        lower.contains('extra') ||
+        lower.contains('aet');
+
+    String result;
+    if (phase == MatchPhase.finished) {
+      if (hasPenalties) {
+        result = isArabic ? 'انتهت بركلات الترجيح' : 'Finished (Penalties)';
+      } else if (hasExtraTime) {
+        result = isArabic ? 'انتهت بعد الوقت الإضافي' : 'Finished (AET)';
+      } else {
+        result = isArabic ? 'انتهت' : 'Finished';
+      }
+    } else if (phase == MatchPhase.halfTime) {
+      result = isArabic ? 'استراحة' : 'Half Time';
+    } else if (phase == MatchPhase.penalties) {
+      result = isArabic ? 'ركلات الترجيح' : 'Penalties';
+    } else if (phase == MatchPhase.extraTime) {
+      result = isArabic ? 'وقت إضافي' : 'Extra Time';
+    } else if (phase == MatchPhase.postponed) {
+      result = isArabic ? 'تأجلت' : 'Postponed';
+    } else if (phase == MatchPhase.cancelled) {
+      result = isArabic ? 'ألغيت' : 'Cancelled';
+    } else if (phase == MatchPhase.live) {
+      result = isArabic ? 'مباشر' : 'Live';
+    } else if (phase == MatchPhase.upcoming) {
+      result = isArabic ? 'لم تبدأ' : 'Not Started';
+    } else {
+      if (lower.contains('انتهت') ||
+          lower == 'ft' ||
+          lower == 'ended' ||
+          lower == 'finished') {
+        result = isArabic ? 'انتهت' : 'Finished';
+      } else if (lower.contains('مباشر') || lower == 'live') {
+        result = isArabic ? 'مباشر' : 'Live';
+      } else if (lower.contains('لم تبدأ') ||
+          lower.contains('not started') ||
+          lower.contains('upcoming')) {
+        result = isArabic ? 'لم تبدأ' : 'Not Started';
+      } else if (lower.contains('تأجل') || lower.contains('postponed')) {
+        result = isArabic ? 'تأجلت' : 'Postponed';
+      } else if (lower.contains('ألغ') ||
+          lower.contains('الغ') ||
+          lower.contains('cancel')) {
+        result = isArabic ? 'ألغيت' : 'Cancelled';
+      } else {
+        result = cleanStatus;
+      }
+    }
+
+    if (embeddedMinute != null && embeddedMinute.isNotEmpty) {
+      final formattedMin =
+          embeddedMinute.endsWith("'") ? embeddedMinute : "$embeddedMinute'";
+      return '$result ($formattedMin)';
+    }
+
+    return result;
+  }
 }
+

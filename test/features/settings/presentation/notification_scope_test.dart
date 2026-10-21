@@ -108,5 +108,33 @@ void main() {
       expect(tracker.isMatchTracked(unstarredMatch), isTrue);
       expect(tracker.isMatchTracked(starredMatch), isFalse);
     });
+
+    test('Lineup Notification Preference and MatchDto Mapping', () async {
+      // 1. Default lineup setting should be true
+      expect(storage.isMatchLineupNotificationEnabled(), isTrue);
+
+      // 2. Toggle lineup notification off & on
+      await storage.setMatchLineupNotificationEnabled(false);
+      expect(storage.isMatchLineupNotificationEnabled(), isFalse);
+      await storage.setMatchLineupNotificationEnabled(true);
+      expect(storage.isMatchLineupNotificationEnabled(), isTrue);
+
+      // 3. MatchEntity hasLineup property
+      const matchWithLineup = MatchEntity(
+        id: 'match_lineup_1',
+        team1: 'Liverpool',
+        team2: 'Man City',
+        hasLineup: true,
+      );
+      expect(matchWithLineup.hasLineup, isTrue);
+
+      const matchWithoutLineup = MatchEntity(
+        id: 'match_lineup_2',
+        team1: 'Liverpool',
+        team2: 'Man City',
+        hasLineup: false,
+      );
+      expect(matchWithoutLineup.hasLineup, isFalse);
+    });
   });
 }

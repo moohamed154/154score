@@ -34,6 +34,7 @@ class MatchDto {
   final String? note;
   final List<bool>? penaltyAttempts1;
   final List<bool>? penaltyAttempts2;
+  final bool hasLineup;
 
   const MatchDto({
     this.id,
@@ -68,6 +69,7 @@ class MatchDto {
     this.timestamp,
     this.htTime,
     this.note,
+    this.hasLineup = false,
   });
 
   factory MatchDto.fromJson(
@@ -352,6 +354,11 @@ class MatchDto {
               ? int.tryParse(json['htTime'].toString())
               : null),
       note: (json['notice'] ?? json['comment'] ?? json['note'])?.toString(),
+      hasLineup: json['has_lineup'] == true ||
+          json['has_lineup'] == 1 ||
+          json['lineup'] == 1 ||
+          json['lineup'] == true ||
+          json['lineup_confirmed'] == true,
     );
   }
 
@@ -390,6 +397,7 @@ class MatchDto {
       htTime: htTime,
       note: note,
       isFavorite: isFavorite,
+      hasLineup: hasLineup,
     );
   }
 
@@ -426,6 +434,7 @@ class MatchDto {
     int? timestamp,
     int? htTime,
     String? note,
+    bool? hasLineup,
   }) {
     return MatchDto(
       id: id ?? this.id,
@@ -460,6 +469,7 @@ class MatchDto {
       timestamp: timestamp ?? this.timestamp,
       htTime: htTime ?? this.htTime,
       note: note ?? this.note,
+      hasLineup: hasLineup ?? this.hasLineup,
     );
   }
 }

@@ -404,9 +404,7 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
         '2606' ||
         '938769' ||
-        '286' ||
-        '544491' ||
-        '938366' =>
+        '286' =>
           'https://imgs.ysscores.com/championship/128/17883477127566.png', // Bundesliga (Shield requested by user)
         '1985' ||
         '937873' ||
@@ -524,9 +522,7 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
         '2606' ||
         '938769' ||
-        '286' ||
-        '544491' ||
-        '938366' =>
+        '286' =>
           'https://imgs.ysscores.com/championship/128/17883477127566.png', // Bundesliga (Shield requested by user)
         '1985' ||
         '937873' ||

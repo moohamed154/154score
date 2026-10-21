@@ -7,6 +7,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/commentator_resolver.dart';
 import '../../../../core/utils/league_resolver.dart';
+import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../domain/entities/match_details_entity.dart';
 
@@ -57,7 +58,7 @@ class MatchInfoCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    section.section,
+                    _resolveSectionTitle(section.section, arabic),
                     style: AppTypography.getBodyLarge(
                       isDark: dark,
                       isArabic: arabic,
@@ -87,7 +88,10 @@ class MatchInfoCard extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = section.items[index];
               final isClickable = _canNavigate(item);
-              final itemIcon = _getItemIcon(item.title);
+              final displayTitle = _resolveItemTitle(item.title, arabic);
+              final displayContent =
+                  _resolveItemContent(item.title, item.content, arabic);
+              final itemIcon = _getItemIcon(displayTitle);
 
               return Material(
                 color: Colors.transparent,
@@ -124,7 +128,7 @@ class MatchInfoCard extends StatelessWidget {
                         Expanded(
                           flex: 2,
                           child: Text(
-                            item.title,
+                            displayTitle,
                             style: AppTypography.getBodySmall(
                               isDark: dark,
                               isArabic: arabic,
@@ -146,7 +150,7 @@ class MatchInfoCard extends StatelessWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  item.content,
+                                  displayContent,
                                   style: AppTypography.getBodyMedium(
                                     isDark: dark,
                                     isArabic: arabic,
@@ -384,6 +388,94 @@ class MatchInfoCard extends StatelessWidget {
         lower.contains('loss')) {
       return Icons.highlight_off_rounded;
     }
+    if (lower.contains('حالة') || lower.contains('status')) {
+      return Icons.info_outline_rounded;
+    }
     return Icons.info_outline_rounded;
   }
+
+  String _resolveSectionTitle(String rawTitle, bool isArabic) {
+    final lower = rawTitle.toLowerCase().trim();
+    if (lower == 'معلومات اللقاء' ||
+        lower == 'معلومات المباراة' ||
+        lower == 'match info' ||
+        lower == 'match information') {
+      return isArabic ? 'معلومات اللقاء' : 'Match Info';
+    }
+    if (lower == 'القنوات والمعلقين' ||
+        lower == 'القنوات والمعلقون' ||
+        lower == 'channels and commentators' ||
+        lower == 'channels & commentators') {
+      return isArabic ? 'القنوات والمعلقين' : 'Channels and Commentators';
+    }
+    if (lower == 'حكام المباراة' ||
+        lower == 'الحكام' ||
+        lower == 'referees' ||
+        lower == 'match referees') {
+      return isArabic ? 'حكام المباراة' : 'Referees';
+    }
+    return rawTitle;
+  }
+
+  String _resolveItemTitle(String rawTitle, bool isArabic) {
+    final lower = rawTitle.toLowerCase().trim();
+    if (lower == 'حالة المباراة' || lower == 'match status') {
+      return isArabic ? 'حالة المباراة' : 'Match Status';
+    }
+    if (lower == 'البطولة' || lower == 'competition') {
+      return isArabic ? 'البطولة' : 'Competition';
+    }
+    if (lower == 'تاريخ المباراة' || lower == 'match date') {
+      return isArabic ? 'تاريخ المباراة' : 'Match Date';
+    }
+    if (lower == 'وقت المباراة' || lower == 'match time') {
+      return isArabic ? 'وقت المباراة' : 'Match Time';
+    }
+    if (lower == 'صاحب الأرض' || lower == 'home team') {
+      return isArabic ? 'صاحب الأرض' : 'Home Team';
+    }
+    if (lower == 'الضيف' || lower == 'away team') {
+      return isArabic ? 'الضيف' : 'Away Team';
+    }
+    if (lower == 'النتيجة الحالية' || lower == 'current score') {
+      return isArabic ? 'النتيجة الحالية' : 'Current Score';
+    }
+    if (lower == 'نتيجة الشوط الأول' || lower == 'half-time score') {
+      return isArabic ? 'نتيجة الشوط الأول' : 'Half-time Score';
+    }
+    if (lower == 'الملعب' || lower == 'stadium' || lower == 'venue') {
+      return isArabic ? 'الملعب' : 'Stadium';
+    }
+    if (lower == 'الحكم' || lower == 'حكم الساحة' || lower == 'referee') {
+      return isArabic ? 'الحكم' : 'Referee';
+    }
+    if (lower == 'المعلق' || lower == 'commentator') {
+      return isArabic ? 'المعلق' : 'Commentator';
+    }
+    if (lower == 'القناة' || lower == 'channel') {
+      return isArabic ? 'القناة' : 'Channel';
+    }
+    if (lower == 'الجولة' || lower == 'round') {
+      return isArabic ? 'الجولة' : 'Round';
+    }
+    return rawTitle;
+  }
+
+  String _resolveItemContent(
+    String rawTitle,
+    String rawContent,
+    bool isArabic,
+  ) {
+    final titleLower = rawTitle.toLowerCase().trim();
+    final isStatusItem = titleLower == 'حالة المباراة' ||
+        titleLower == 'match status' ||
+        titleLower.contains('حالة') ||
+        titleLower.contains('status');
+
+    if (isStatusItem) {
+      return MatchStatusHelper.localizeStatus(rawContent, isArabic: isArabic);
+    }
+    return rawContent;
+  }
 }
+

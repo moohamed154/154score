@@ -59,13 +59,20 @@ class _OnboardingViewState extends State<OnboardingView> {
         final chosen = OnboardingCatalog.leagues
             .where((l) => selection.selectedLeagues.contains(l.ar))
             .toList();
-        await favorites.registerCompetitionTitles({
-          for (final l in chosen)
-            if (l.id != null) l.id!: l.ar,
-        });
+        final titlesMap = <String, String>{};
+        for (final l in chosen) {
+          if (l.id != null) {
+            titlesMap[l.id!] = l.ar;
+            titlesMap[l.ar.toLowerCase()] = l.id!;
+            titlesMap[l.en.toLowerCase()] = l.id!;
+          }
+        }
+        await favorites.registerCompetitionTitles(titlesMap);
         await favorites.setFavoriteCompetitions(
           chosen.map((l) => l.ar).toList(),
         );
+      } else {
+        await favorites.setFavoriteCompetitions([]);
       }
 
       for (final team in OnboardingCatalog.teams) {
@@ -73,6 +80,8 @@ class _OnboardingViewState extends State<OnboardingView> {
         await favorites.toggleTeam(team.nameFor(isArabic: isArabic),
             id: team.id);
       }
+    } else {
+      await favorites.setFavoriteCompetitions([]);
     }
 
     await cubit.complete();

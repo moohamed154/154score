@@ -344,6 +344,49 @@ class TimelineEventItem extends StatelessWidget {
       isDark: isDark,
     );
 
+    Widget wrapWithAlignment(Widget innerContent) {
+      final directionalityWrapped = Directionality(
+        textDirection: isLeftColumn ? TextDirection.rtl : TextDirection.ltr,
+        child: innerContent,
+      );
+
+      if (!event.hasVideo) {
+        return Align(
+          alignment:
+              isLeftColumn ? Alignment.centerRight : Alignment.centerLeft,
+          child: directionalityWrapped,
+        );
+      }
+
+      final videoBadge = _buildVideoBadge(context, isDark, isArabic, isSmall);
+
+      return Row(
+        textDirection: TextDirection.ltr,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (isLeftColumn) ...[
+            videoBadge,
+            const SizedBox(width: 6),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: directionalityWrapped,
+              ),
+            ),
+          ] else ...[
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: directionalityWrapped,
+              ),
+            ),
+            const SizedBox(width: 6),
+            videoBadge,
+          ],
+        ],
+      );
+    }
+
     // Substitution events: two distinct players, each aligned to the same grid
     if (isSub && subPlayerOutName != null && subPlayerOutName.isNotEmpty) {
       final isInjuredSub = subPlayerOutName.contains('+') ||
@@ -415,10 +458,6 @@ class TimelineEventItem extends StatelessWidget {
                 const SizedBox(width: 4),
                 _buildScorePill(event.score!, isDark),
               ],
-              if (event.hasVideo) ...[
-                const SizedBox(width: 4),
-                _buildVideoBadge(context, isDark, isArabic, isSmall),
-              ],
             ],
           ),
           const SizedBox(height: 2),
@@ -477,10 +516,7 @@ class TimelineEventItem extends StatelessWidget {
         ],
       );
 
-      return Directionality(
-        textDirection: isLeftColumn ? TextDirection.rtl : TextDirection.ltr,
-        child: content,
-      );
+      return wrapWithAlignment(content);
     }
 
     // Standard events (Goal, Card, Penalty, VAR, Crossbar, Miss Chance, etc.)
@@ -601,17 +637,10 @@ class TimelineEventItem extends StatelessWidget {
             ],
           ),
         ),
-        if (event.hasVideo) ...[
-          const SizedBox(width: 4),
-          _buildVideoBadge(context, isDark, isArabic, isSmall),
-        ],
       ],
     );
 
-    return Directionality(
-      textDirection: isLeftColumn ? TextDirection.rtl : TextDirection.ltr,
-      child: content,
-    );
+    return wrapWithAlignment(content);
   }
 
   void _handleVideoNavigation(BuildContext context) {

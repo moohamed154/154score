@@ -17,6 +17,7 @@ import '../../../onboarding/domain/repositories/onboarding_repository.dart';
 import '../../../app_update/presentation/viewmodels/app_update_cubit.dart';
 import '../../../app_update/presentation/viewmodels/app_update_state.dart';
 import '../../../app_update/presentation/views/app_update_dialog.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../cubit/settings_cubits.dart';
 import '../widgets/debug_console_sheet.dart';
 import '../widgets/developer_tools_sheet.dart';
@@ -666,6 +667,56 @@ class _SettingsViewState extends State<SettingsView> {
                 if (mounted) setState(() {});
               },
             ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Section: Favorite Teams
+          _buildSectionHeader(
+            l10n.translate('notif_favorite_teams_section'),
+            isDark,
+            isArabic,
+          ),
+          BlocBuilder<FavoritesCubit, FavoritesState>(
+            builder: (context, favState) {
+              final count = favState.favoriteTeams.length;
+              final countText = l10n
+                  .translate('notif_starred_teams_count')
+                  .replaceAll('{count}', '$count');
+
+              return _buildCard(
+                isDark: isDark,
+                child: ListTile(
+                  leading: _buildLeadingIcon(
+                    Icons.star_rounded,
+                    color: Colors.amber,
+                  ),
+                  title: Text(
+                    l10n.translate('notif_manage_favorites'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    countText,
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                  ),
+                  onTap: () => context.push('/favorites'),
+                ),
+              );
+            },
           ),
 
           const SizedBox(height: 24),

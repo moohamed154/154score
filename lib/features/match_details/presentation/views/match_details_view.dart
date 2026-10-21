@@ -2297,9 +2297,11 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           m.status!.trim().isNotEmpty &&
           m.status != '-' &&
           m.status != 'null') {
-        final statusContent = m.minute != null && m.minute!.isNotEmpty
-            ? '${m.status!} (${m.minute}\')'
-            : m.status!;
+        final statusContent = MatchStatusHelper.localizeStatus(
+          m.status,
+          isArabic: isArabic,
+          minute: m.minute,
+        );
         fallbackItems.add(
           MatchInfoItemEntity(
             title: isArabic ? 'حالة المباراة' : 'Match Status',

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
@@ -49,10 +50,23 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
     }
 
     try {
-      final metrics = await client.get(ApiEndpoints.metrics);
-      _metricsResult = 'Metrics Online (${(metrics as Map).length} metrics)';
+      final metrics = await client.get(
+        ApiEndpoints.metrics,
+        options: Options(headers: {'X-Developer-Token': 'MOhamed_2002'}),
+      );
+      if (metrics is Map) {
+        final data = metrics['data'] as Map? ?? metrics;
+        final count = data.length;
+        _metricsResult = 'Metrics Online ($count metrics)';
+      } else {
+        _metricsResult = 'Metrics Online';
+      }
     } catch (e) {
-      _metricsResult = 'Error: $e';
+      if (e.toString().contains('ADMIN_AUTH_REQUIRED')) {
+        _metricsResult = 'محمي إدارياً (السيرفر يعمل بنجاح)';
+      } else {
+        _metricsResult = 'Error: $e';
+      }
     }
 
     setState(() => _isLoading = false);

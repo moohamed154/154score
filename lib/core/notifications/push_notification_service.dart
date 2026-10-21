@@ -278,8 +278,12 @@ class PushNotificationService {
         (appLang == 'en' ? data['title_en'] : data['title_ar'])?.toString();
     final localizedBody =
         (appLang == 'en' ? data['body_en'] : data['body_ar'])?.toString();
-    final title = localizedTitle ?? data['title']?.toString();
-    final body = localizedBody ?? data['body']?.toString();
+    final rawTitle = localizedTitle ?? data['title']?.toString();
+    final rawBody = localizedBody ?? data['body']?.toString();
+    final title =
+        rawTitle != null ? NotificationService.sanitizeText(rawTitle) : null;
+    final body =
+        rawBody != null ? NotificationService.sanitizeText(rawBody) : null;
     final matchId = data['match_id']?.toString();
     final eventType = data['event_type']?.toString();
 

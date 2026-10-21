@@ -23,44 +23,51 @@ void main() {
     });
 
     test(
-        '1. Default state: Featured competitions are returned before custom changes',
+        '1. Default state: Favorite competitions are empty before user selection',
         () {
       expect(storage.hasCustomFavoriteCompetitions(), isFalse);
       final defaultFavs = storage.getFavoriteCompetitions();
-      expect(defaultFavs, contains('الدوري الإسباني'));
-      expect(defaultFavs, contains('دوري أبطال أوروبا'));
-      expect(defaultFavs, contains('الدوري الإنجليزي الممتاز'));
+      expect(defaultFavs, isEmpty);
 
-      // Both name and ID for La Liga match out of the box
-      expect(storage.isFavoriteCompetition(name: 'الدوري الإسباني'), isTrue);
-      expect(storage.isFavoriteCompetition(id: '1933'), isTrue);
-      expect(storage.isFavoriteCompetition(id: '938652'), isTrue);
-      expect(cubit.isCompetitionFavorite(name: 'الدوري الإسباني'), isTrue);
-      expect(cubit.isCompetitionFavorite(id: '1933'), isTrue);
+      // Initially not favorited
+      expect(storage.isFavoriteCompetition(name: 'الدوري الإسباني'), isFalse);
+      expect(storage.isFavoriteCompetition(id: '1933'), isFalse);
+      expect(cubit.isCompetitionFavorite(name: 'الدوري الإسباني'), isFalse);
     });
 
     test(
-        '2. Unfavoriting a league from LeagueView (by title or ID) removes it completely',
+        '2. Toggling a league from LeagueView (by title or ID) adds and removes it completely',
         () async {
-      // Initially favorite
       expect(
         storage.isFavoriteCompetition(id: '938652', name: 'الدوري الإسباني'),
-        isTrue,
+        isFalse,
       );
 
       // User taps star in LeagueView (calling toggleCompetition with id & name)
       await cubit.toggleCompetition(id: '938652', name: 'الدوري الإسباني');
 
-      // Must be false everywhere
       expect(storage.hasCustomFavoriteCompetitions(), isTrue);
+      expect(cubit.isCompetitionFavorite(name: 'الدوري الإسباني'), isTrue);
+      expect(cubit.isCompetitionFavorite(id: '938652'), isTrue);
+      expect(cubit.isCompetitionFavorite(id: '1933'), isTrue);
+      expect(storage.isFavoriteCompetition(name: 'الدوري الإسباني'), isTrue);
+      expect(storage.isFavoriteCompetition(id: '938652'), isTrue);
+      expect(
+        storage.getFavoriteCompetitions().any((k) => k == '938652' || k == 'الدوري الإسباني'),
+        isTrue,
+      );
+
+      // Unfavorite
+      await cubit.toggleCompetition(id: '938652', name: 'الدوري الإسباني');
+
       expect(cubit.isCompetitionFavorite(name: 'الدوري الإسباني'), isFalse);
       expect(cubit.isCompetitionFavorite(id: '938652'), isFalse);
       expect(cubit.isCompetitionFavorite(id: '1933'), isFalse);
       expect(storage.isFavoriteCompetition(name: 'الدوري الإسباني'), isFalse);
       expect(storage.isFavoriteCompetition(id: '938652'), isFalse);
       expect(
-        storage.getFavoriteCompetitions(),
-        isNot(contains('الدوري الإسباني')),
+        storage.getFavoriteCompetitions().any((k) => k == '938652' || k == 'الدوري الإسباني'),
+        isFalse,
       );
     });
 
@@ -133,6 +140,9 @@ void main() {
     test(
         '5. Reordering favorites in StandingsView updates order across cubit and storage',
         () async {
+      await cubit.toggleCompetition(id: '12048', name: 'دوري أبطال أوروبا');
+      await cubit.toggleCompetition(id: '6811', name: 'الدوري الإنجليزي الممتاز');
+
       final initialFavs = cubit.state.favoriteCompetitions;
       expect(initialFavs.length, greaterThanOrEqualTo(2));
 
@@ -147,14 +157,13 @@ void main() {
     });
 
     test(
-        '6. Stage variations like "دوري أبطال أفريقيا | الأدوار الإقصائية" match when "دوري أبطال أفريقيا" is favorited',
+        '6. Stage variations match by name when ID is not provided, and ID discriminates stages',
         () async {
       await cubit.toggleCompetition(id: '943487', name: 'دوري أبطال أفريقيا');
 
-      // Knockout stage title with pipe
+      // Matches by name when no conflicting ID is present
       expect(
         cubit.isCompetitionFavorite(
-          id: '97533',
           name: 'دوري أبطال أفريقيا | الأدوار الإقصائية',
         ),
         isTrue,
@@ -166,11 +175,217 @@ void main() {
         isTrue,
       );
 
-      // By champId
+      // 7. Unfavoriting removes the tournament completely
+      await cubit.toggleCompetition(
+        id: '943487',
+        name: 'دوري أبطال أفريقيا',
+      );
+
       expect(
-        cubit.isCompetitionFavorite(id: '97533'),
+        cubit.isCompetitionFavorite(name: 'دوري أبطال أفريقيا'),
+        isFalse,
+      );
+      expect(
+        cubit.isCompetitionFavorite(id: '943487'),
+        isFalse,
+      );
+      expect(
+        storage.getFavoriteCompetitions(),
+        isNot(contains('943487')),
+      );
+    });
+
+    test(
+        '8. Cross-lingual unfavoriting ("Serie A" removing "الدوري الإيطالي") works smoothly',
+        () async {
+      await cubit.toggleCompetition(id: '3734', name: 'الدوري الإيطالي');
+      expect(cubit.isCompetitionFavorite(name: 'Serie A'), isTrue);
+
+      // Now user unstars from English UI (sending 'Serie A')
+      await cubit.toggleCompetition(id: '3734', name: 'Serie A');
+
+      expect(cubit.isCompetitionFavorite(name: 'الدوري الإيطالي'), isFalse);
+      expect(cubit.isCompetitionFavorite(name: 'Serie A'), isFalse);
+      expect(cubit.state.favoriteCompetitions, isEmpty);
+      expect(storage.getFavoriteCompetitions(), isEmpty);
+    });
+
+    test(
+        '9. Name and ID discrimination prevents collisions between German and Austrian Bundesliga',
+        () async {
+      // 1. Favorite German Bundesliga (id: 2606)
+      await cubit.toggleCompetition(id: '2606', name: 'Bundesliga');
+
+      expect(
+        cubit.isCompetitionFavorite(id: '2606', name: 'Bundesliga'),
+        isTrue,
+      );
+      // Austrian Bundesliga (id: 544491) MUST NOT be marked favorite!
+      expect(
+        cubit.isCompetitionFavorite(id: '544491', name: 'Bundesliga'),
+        isFalse,
+      );
+
+      // 2. Favorite Austrian Bundesliga as well
+      await cubit.toggleCompetition(id: '544491', name: 'Bundesliga');
+
+      expect(
+        cubit.isCompetitionFavorite(id: '2606', name: 'Bundesliga'),
+        isTrue,
+      );
+      expect(
+        cubit.isCompetitionFavorite(id: '544491', name: 'Bundesliga'),
+        isTrue,
+      );
+
+      // 3. Unfavorite Austrian Bundesliga -> German Bundesliga must remain favorite!
+      await cubit.toggleCompetition(id: '544491', name: 'Bundesliga');
+
+      expect(
+        cubit.isCompetitionFavorite(id: '544491', name: 'Bundesliga'),
+        isFalse,
+      );
+      expect(
+        cubit.isCompetitionFavorite(id: '2606', name: 'Bundesliga'),
         isTrue,
       );
     });
+
+    test(
+        '10. Favoriting CAF Champions League | Qualification adds it even when CAF Champions League is in favorites',
+        () async {
+      // 1. Favorite CAF Champions League (id: 943487)
+      await cubit.toggleCompetition(
+        id: '943487',
+        name: 'CAF Champions League',
+      );
+
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '943487',
+          name: 'CAF Champions League',
+        ),
+        isTrue,
+      );
+      // Qualification (id: 97533) MUST NOT be considered favorite yet!
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '97533',
+          name: 'CAF Champions League | Qualification',
+        ),
+        isFalse,
+      );
+
+      // 2. Favorite Qualification as well (using forceFavorite: true from Hidden tab)
+      await cubit.toggleCompetition(
+        id: '97533',
+        name: 'CAF Champions League | Qualification',
+        forceFavorite: true,
+      );
+
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '97533',
+          name: 'CAF Champions League | Qualification',
+        ),
+        isTrue,
+      );
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '943487',
+          name: 'CAF Champions League',
+        ),
+        isTrue,
+      );
+
+      // 3. Unfavorite Qualification -> Main tournament must remain favorite
+      await cubit.toggleCompetition(
+        id: '97533',
+        name: 'CAF Champions League | Qualification',
+        forceFavorite: false,
+      );
+
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '97533',
+          name: 'CAF Champions League | Qualification',
+        ),
+        isFalse,
+      );
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '943487',
+          name: 'CAF Champions League',
+        ),
+        isTrue,
+      );
+    });
+
+    test(
+        '11. Unfavoriting UEFA Champions League from LeagueView (using season ID 943230) removes championship ID (12048)',
+        () async {
+      // 1. Initially user selected UEFA Champions League from Onboarding or Standings (stored as '12048')
+      await storage.setFavoriteCompetitions(['12048']);
+      cubit.loadFavorites();
+
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '943230',
+          name: 'UEFA Champions League',
+        ),
+        isTrue,
+      );
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '12048',
+          name: 'UEFA Champions League',
+        ),
+        isTrue,
+      );
+
+      // 2. User navigates to LeagueView where widget.leagueId is '943230' and taps star to unfavorite
+      await cubit.toggleCompetition(
+        id: '943230',
+        name: 'UEFA Champions League',
+      );
+
+      // Must be completely unfavorited across all IDs and storage
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '943230',
+          name: 'UEFA Champions League',
+        ),
+        isFalse,
+      );
+      expect(
+        cubit.isCompetitionFavorite(
+          id: '12048',
+          name: 'UEFA Champions League',
+        ),
+        isFalse,
+      );
+      expect(
+        cubit.isCompetitionFavorite(
+          name: 'دوري أبطال أوروبا',
+        ),
+        isFalse,
+      );
+      expect(
+        storage.isFavoriteCompetition(
+          id: '943230',
+          name: 'UEFA Champions League',
+        ),
+        isFalse,
+      );
+      expect(
+        storage.isFavoriteCompetition(
+          id: '12048',
+          name: 'UEFA Champions League',
+        ),
+        isFalse,
+      );
+      expect(storage.getFavoriteCompetitions(), isEmpty);
+    });
   });
 }
+

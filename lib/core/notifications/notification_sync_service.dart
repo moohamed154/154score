@@ -41,8 +41,9 @@ class NotificationSyncService {
 
   Future<String?> _getToken() async {
     final liveToken = PushNotificationService.instance.fcmToken;
-    if (liveToken != null && liveToken.trim().isNotEmpty)
+    if (liveToken != null && liveToken.trim().isNotEmpty) {
       return liveToken.trim();
+    }
 
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString('154score_fcm_device_token') ??
@@ -56,7 +57,7 @@ class NotificationSyncService {
     List<String>? teams,
     List<String>? matches,
     bool news = true,
-    bool allMatches = false,
+    bool? allMatches,
     Dio? dioClient,
     String? tokenOverride,
   }) async {
@@ -80,7 +81,7 @@ class NotificationSyncService {
       final targetMatches =
           matches ?? prefs.getStringList('app_favorite_matches') ?? [];
       final scope = prefs.getString('app_notif_match_scope');
-      final isAllMatches = allMatches || scope == 'all_matches';
+      final isAllMatches = allMatches ?? (scope == 'all_matches');
       final lang = prefs.getString('app_language') ??
           prefs.getString('154score_notif_lang') ??
           'ar';
@@ -95,6 +96,8 @@ class NotificationSyncService {
             .toList(),
         'news': news,
         'all_matches': isAllMatches,
+        'scope': isAllMatches ? 'all_matches' : 'starred_only',
+        'match_scope': isAllMatches ? 'all_matches' : 'starred_only',
         'lang': lang,
         'language': lang,
       };

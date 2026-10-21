@@ -381,6 +381,63 @@ class NotificationService {
     );
   }
 
+  /// Cleans up any potential mojibake or UTF-8 decoding anomalies.
+  static String sanitizeText(String text) {
+    if (text.isEmpty) return text;
+    var result = text;
+    if (result.contains('ðŸ') ||
+        result.contains('Ø') ||
+        result.contains('â') ||
+        result.contains('Ù')) {
+      const mojibakeMap = {
+        'ðŸ”„': '🔄',
+        'ðŸ’„': '🔄',
+        'ðŸŸ¨': '🟨',
+        'ðŸŸ¥': '🟥',
+        'âš½': '⚽',
+        'â Œ': '❌',
+        'â ±ï¸': '⏱️',
+        'â ±': '⏱️',
+        'ðŸ  ': '🏁',
+        'ðŸ ': '🏁',
+        'â¬†ï¸': '⬆️',
+        'â¬†': '⬆️',
+        'â¬‡ï¸': '⬇️',
+        'â¬‡': '⬇️',
+        'ØªØ¨Ø¯ÙŠÙ„': 'تبديل',
+        'ØªØ³Ø¬ÙŠÙ„': 'تبديل',
+        'Ø¯Ø®ÙˆÙ„:': 'دخول:',
+        'Ø®Ø±ÙˆØ¬:': 'خروج:',
+        'Ù„Ø§Ø¹Ø¨': 'لاعب',
+        'Ù‡Ø¯Ù !': 'هدف!',
+        'Ø³Ø¬Ù„': 'سجل',
+        'ØµÙ†Ø§Ø¹Ø©:': 'صناعة:',
+        'Ø¶Ø¯': 'ضد',
+        'Ø¨Ø·Ø§Ù‚Ø© ØµÙ Ø±Ø§Ø¡': 'بطاقة صفراء',
+        'Ø¨Ø·Ø§Ù‚Ø© Ø­Ù…Ø±Ø§Ø¡!': 'بطاقة حمراء!',
+        'Ø¥Ù†Ø°Ø§Ø± Ù„Ù„Ø§Ø¹Ø¨': 'إنذار للاعب',
+        'Ø·Ø±Ø¯ Ù„Ù„Ø§Ø¹Ø¨': 'طرد للاعب',
+        'Ø±ÙƒÙ„Ø© Ø¬Ø²Ø§Ø¡ Ø¶Ø§Ø¦Ø¹Ø©!': 'ركلة جزاء ضائعة!',
+        'Ø£Ù‡Ø¯Ø±': 'أهدر',
+        'ØµØ§Ù Ø±Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ©': 'صافرة البداية',
+        'Ø§Ù†Ø·Ù„Ù‚Øª Ø§Ù„Ø¢Ù†': 'انطلقت الآن',
+        'Ø§Ø³ØªØ±Ø§Ø­Ø© Ø§Ù„Ø´ÙˆØ·ÙŠÙ†': 'استراحة الشوطين',
+        'Ù†Ù‡Ø§ÙŠØ© Ø§Ù„Ø´ÙˆØ· Ø§Ù„Ø£ÙˆÙ„': 'نهاية الشوط الأول',
+        'ØµØ§Ù Ø±Ø© Ø§Ù„Ø´ÙˆØ· Ø§Ù„Ø«Ø§Ù†ÙŠ': 'صافرة الشوط الثاني',
+        'Ø§Ù†Ø·Ù„Ù‚ Ø§Ù„Ø¢Ù†': 'انطلق الآن',
+        'ØµØ§Ù Ø±Ø© Ø§Ù„Ù†Ù‡Ø§ÙŠØ©': 'صافرة النهاية',
+        'Ø§Ù†ØªÙ‡Øª Ù…Ø¨Ø§Ø±Ø§Ø©': 'انتهت مباراة',
+        'ØªØ´ÙƒÙŠÙ„Ø© Ø§Ù„Ù…Ø¨Ø§Ø±Ø§Ø©:': 'تشكيلة المباراة:',
+        'ØªÙ… Ø§Ù„Ø¥Ø¹Ù„Ø§Ù†': 'تم الإعلان',
+      };
+      mojibakeMap.forEach((corrupted, clean) {
+        result = result.replaceAll(corrupted, clean);
+      });
+      result = result.replaceAll(RegExp(r' {2,}'), ' ').trim();
+    }
+    return result;
+  }
+
   // ── Generic show ───────────────────────────────────────────────────────────
 
   Future<void> _show({
@@ -395,6 +452,8 @@ class NotificationService {
     if (!_initialized) {
       await initialize();
     }
+    final cleanTitle = sanitizeText(title);
+    final cleanBody = sanitizeText(body);
     final isMatch = channelId == _channelMatchId;
     final androidDetails = AndroidNotificationDetails(
       channelId,
@@ -404,11 +463,11 @@ class NotificationService {
       priority: priority,
       playSound: true,
       enableVibration: true,
-      ticker: body,
+      ticker: cleanBody,
       icon: '@mipmap/ic_launcher',
       styleInformation: BigTextStyleInformation(
-        body,
-        contentTitle: title,
+        cleanBody,
+        contentTitle: cleanTitle,
         summaryText: isMatch ? '154Score' : 'News',
       ),
     );
@@ -425,7 +484,7 @@ class NotificationService {
       iOS: iosDetails,
     );
     try {
-      await _plugin.show(id, title, body, details, payload: payload);
+      await _plugin.show(id, cleanTitle, cleanBody, details, payload: payload);
     } catch (e) {
       debugPrint('[NotificationService] _show error: $e');
     }

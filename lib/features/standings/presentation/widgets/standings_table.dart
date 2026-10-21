@@ -367,7 +367,7 @@ class StandingsTable extends StatelessWidget {
                       imageUrl: row.teamLogo,
                       width: isSmall ? 16 : 20,
                       height: isSmall ? 16 : 20,
-                      borderRadius: (isSmall ? 16 : 20) / 2,
+                      borderRadius: 0,
                       fit: BoxFit.contain,
                       placeholderIcon: Icons.shield_outlined,
                     ),

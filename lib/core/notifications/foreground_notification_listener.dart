@@ -68,9 +68,32 @@ class _ForegroundNotificationListenerState
       final matchId = notif.data['match_id']?.toString() ?? '';
       final articleId = notif.data['article_id']?.toString() ?? '';
 
+      // Check user alert type preferences
+      final storage = sl<LocalStorageService>();
+      final isLineupEnabled = storage.isMatchLineupNotificationEnabled();
+      final isGoalsEnabled = storage.isMatchGoalsNotificationEnabled();
+      final isStartEndEnabled = storage.isMatchStartEndNotificationEnabled();
+
+      if (notif.type == NotificationType.lineup && !isLineupEnabled) {
+        await _persistSeenId(notif.id);
+        continue;
+      }
+      if ((notif.type == NotificationType.goal ||
+              notif.type == NotificationType.redCard) &&
+          !isGoalsEnabled) {
+        await _persistSeenId(notif.id);
+        continue;
+      }
+      if ((notif.type == NotificationType.matchStart ||
+              notif.type == NotificationType.matchHalftime ||
+              notif.type == NotificationType.matchEnd) &&
+          !isStartEndEnabled) {
+        await _persistSeenId(notif.id);
+        continue;
+      }
+
       // Check match notification scope (starred vs all)
       if (notif.type != NotificationType.news) {
-        final storage = sl<LocalStorageService>();
         final scope = storage.getMatchNotificationScope();
         if (scope == LocalStorageService.matchNotifScopeStarred) {
           final isStarred = storage.isNotificationMatchingStarredTeams(

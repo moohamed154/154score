@@ -67,48 +67,52 @@ class AppImage extends StatelessWidget {
         height: safeHeight,
         decoration: BoxDecoration(
           color: backgroundColor ?? fallbackBg,
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: borderRadius > 0 ? BorderRadius.circular(borderRadius) : null,
         ),
         child: Center(
           child: Icon(placeholderIcon, size: safeIconSize, color: iconColor),
         ),
       );
     } else {
-      imageContent = ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: CachedNetworkImage(
-          imageUrl: normalizedUrl,
-          width: padding == null ? width : null,
-          height: padding == null ? height : null,
-          fit: fit,
-          memCacheWidth: cacheW,
-          memCacheHeight: cacheH,
-          placeholder: (context, url) => Container(
-            width: width,
-            height: height,
-            color: backgroundColor ?? fallbackBg,
-            child: Center(
-              child: Icon(
-                placeholderIcon,
-                size: safePlaceholderIconSize,
-                color: iconColor.withValues(alpha: 0.5),
-              ),
+      final imageWidget = CachedNetworkImage(
+        imageUrl: normalizedUrl,
+        width: padding == null ? width : null,
+        height: padding == null ? height : null,
+        fit: fit,
+        memCacheWidth: cacheW,
+        memCacheHeight: cacheH,
+        placeholder: (context, url) => Container(
+          width: width,
+          height: height,
+          color: backgroundColor ?? fallbackBg,
+          child: Center(
+            child: Icon(
+              placeholderIcon,
+              size: safePlaceholderIconSize,
+              color: iconColor.withValues(alpha: 0.5),
             ),
           ),
-          errorWidget: (context, url, error) => Container(
-            width: width,
-            height: height,
-            color: backgroundColor ?? fallbackBg,
-            child: Center(
-              child: Icon(
-                placeholderIcon,
-                size: safeIconSize,
-                color: iconColor,
-              ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          width: width,
+          height: height,
+          color: backgroundColor ?? fallbackBg,
+          child: Center(
+            child: Icon(
+              placeholderIcon,
+              size: safeIconSize,
+              color: iconColor,
             ),
           ),
         ),
       );
+
+      imageContent = borderRadius > 0
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: imageWidget,
+            )
+          : imageWidget;
     }
 
     if (backgroundColor != null || padding != null) {

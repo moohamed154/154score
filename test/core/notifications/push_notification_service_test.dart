@@ -47,5 +47,19 @@ void main() {
       expect(id1, isNot(equals(id3)));
       expect(id1, isNonNegative);
     });
+
+    test('sanitizeText cleans corrupted mojibake strings and emoji to Arabic UTF-8',
+        () {
+      const corruptedTitle = 'ðŸ”„ ØªØ¨Ø¯ÙŠÙ„ [نيوم] (\'57)';
+      const corruptedBody =
+          'Ø¯Ø®ÙˆÙ„: خليل العبسي â¬†ï¸  | Ø®Ø±ÙˆØ¬: جورجيوس ماسوراس â¬‡ï¸ ';
+
+      final cleanTitle = NotificationService.sanitizeText(corruptedTitle);
+      final cleanBody = NotificationService.sanitizeText(corruptedBody);
+
+      expect(cleanTitle, equals('🔄 تبديل [نيوم] (\'57)'));
+      expect(cleanBody,
+          equals('دخول: خليل العبسي ⬆️ | خروج: جورجيوس ماسوراس ⬇️'));
+    });
   });
 }

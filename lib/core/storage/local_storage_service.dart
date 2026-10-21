@@ -53,6 +53,7 @@ abstract class LocalStorageService {
     String? id,
     String? name,
     String? slug,
+    bool? forceFavorite,
   });
   bool isFavoriteCompetition({
     String? compName,
@@ -669,9 +670,6 @@ class LocalStorageServiceImpl implements LocalStorageService {
 
   @override
   List<String> getFavoriteCompetitions() {
-    if (!hasCustomFavoriteCompetitions()) {
-      return defaultFeaturedCompetitions;
-    }
     return _prefs.getStringList(_keyFavoriteCompetitions) ?? [];
   }
 
@@ -708,9 +706,10 @@ class LocalStorageServiceImpl implements LocalStorageService {
   Future<bool> registerCompetitionTitles(Map<String, String> titles) async {
     final current = getFavoriteCompetitionTitles();
     current.addAll(titles);
-    // Also store reverse mapping title.toLowerCase() -> id so looking up any name finds the id
+    // Also store reverse mapping title.toLowerCase() -> id so looking up any name finds the id.
+    // Ensure we only store reverse mapping if the key was an ID and the value was a name.
     titles.forEach((id, name) {
-      if (name.trim().isNotEmpty) {
+      if (int.tryParse(id) != null && name.trim().isNotEmpty && int.tryParse(name) == null) {
         current[name.trim().toLowerCase()] = id;
       }
     });
@@ -772,10 +771,67 @@ class LocalStorageServiceImpl implements LocalStorageService {
         : ((compName != null && compName.trim().isNotEmpty)
             ? compName.trim()
             : (slug?.trim() ?? ''));
-    final cleanId = id?.trim();
+    final cleanId = id?.trim().toLowerCase();
 
     final titles = getFavoriteCompetitionTitles();
 
+    // 1. When ID is provided: Strict Match by ID (prevents collisions between same-named leagues e.g. Austrian vs German Bundesliga)
+    if (cleanId != null && cleanId.isNotEmpty) {
+      if (list.any((fav) => fav.trim().toLowerCase() == cleanId)) {
+        return true;
+      }
+      // Check ID aliases via LeagueResolver (e.g. 1933 and 938652 for LaLiga)
+      for (final fav in list) {
+        final favTrim = fav.trim();
+        if (LeagueResolver.areSameCompetition(
+          cleanId,
+          favTrim,
+          idA: cleanId,
+          idB: int.tryParse(favTrim) != null ? favTrim : null,
+        )) {
+          return true;
+        }
+      }
+
+      // Check name-based favorites only if they belong to this exact tournament and stage
+      for (final fav in list) {
+        final favTrim = fav.trim();
+        if (int.tryParse(favTrim) != null) continue;
+        if (effectiveName.contains('|') != favTrim.contains('|')) {
+          continue;
+        }
+
+        final favId = titles[favTrim] ??
+            titles[favTrim.toLowerCase()] ??
+            LeagueResolver.resolveId(favTrim) ??
+            defaultNameToId[favTrim] ??
+            defaultNameToId[favTrim.toLowerCase()];
+
+        if (favId != null && favId.isNotEmpty) {
+          if (LeagueResolver.areSameCompetition(
+            favId,
+            cleanId,
+            idA: favId,
+            idB: cleanId,
+          )) {
+            return true;
+          }
+        } else if (effectiveName.isNotEmpty) {
+          if (LeagueResolver.areSameCompetition(
+            favTrim,
+            effectiveName,
+            idA: favId,
+            idB: cleanId,
+          )) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    // 2. Query only has name (no ID):
     for (final fav in list) {
       final favTrim = fav.trim();
       final favId = titles[favTrim];
@@ -783,29 +839,9 @@ class LocalStorageServiceImpl implements LocalStorageService {
         favTrim,
         effectiveName,
         idA: favId,
-        idB: cleanId,
+        idB: null,
       )) {
         return true;
-      }
-      if (slug != null && slug.trim().isNotEmpty) {
-        if (LeagueResolver.areSameCompetition(
-          favTrim,
-          slug.trim(),
-          idA: favId,
-          idB: cleanId,
-        )) {
-          return true;
-        }
-      }
-      if (cleanId != null && cleanId.isNotEmpty) {
-        if (LeagueResolver.areSameCompetition(
-          favTrim,
-          null,
-          idA: favId,
-          idB: cleanId,
-        )) {
-          return true;
-        }
       }
     }
     return false;
@@ -817,6 +853,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
     String? id,
     String? name,
     String? slug,
+    bool? forceFavorite,
   }) async {
     final list = getFavoriteCompetitions().toList();
     final effectiveName = (name != null && name.trim().isNotEmpty)
@@ -826,31 +863,114 @@ class LocalStorageServiceImpl implements LocalStorageService {
             : (slug?.trim() ?? ''));
     final cleanId = id?.trim();
 
-    final isFav = isFavoriteCompetition(
-      compName: compName,
-      id: cleanId,
-      name: effectiveName,
-      slug: slug,
-    );
+    final isFav = forceFavorite != null
+        ? !forceFavorite
+        : isFavoriteCompetition(
+            compName: compName,
+            id: cleanId,
+            name: effectiveName,
+            slug: slug,
+          );
 
     final titles = getFavoriteCompetitionTitles();
 
     if (isFav) {
+      final baseEffectiveName = effectiveName.contains('|')
+          ? effectiveName.split('|').first.trim()
+          : effectiveName;
+
       list.removeWhere((item) {
         final itemTrim = item.trim();
-        final favId = titles[itemTrim];
-        return LeagueResolver.areSameCompetition(
-          itemTrim,
-          effectiveName,
-          idA: favId,
-          idB: cleanId,
-        );
+        final itemLower = itemTrim.toLowerCase();
+        final itemAsId = int.tryParse(itemTrim) != null ? itemTrim : null;
+
+        // 1. Direct match by ID string or name string
+        if (cleanId != null &&
+            cleanId.isNotEmpty &&
+            itemLower == cleanId.toLowerCase()) {
+          return true;
+        }
+        if (effectiveName.isNotEmpty &&
+            itemLower == effectiveName.toLowerCase()) {
+          return true;
+        }
+
+        // Sub-stage mismatch protection:
+        // E.g. 'CAF Champions League | Qualification' vs 'CAF Champions League'
+        final itemHasStage = itemTrim.contains('|');
+        final targetHasStage = effectiveName.contains('|');
+        if (effectiveName.isNotEmpty && itemHasStage != targetHasStage) {
+          if (cleanId == null || itemAsId == null) {
+            return false;
+          }
+        }
+
+        // 2. Both are numeric IDs: check if they are aliases for the same competition
+        if (cleanId != null && cleanId.isNotEmpty && itemAsId != null) {
+          return LeagueResolver.areSameCompetition(
+            cleanId,
+            itemTrim,
+            idA: cleanId,
+            idB: itemAsId,
+          );
+        }
+
+        // 3. One is ID and one is Name, or both are Names:
+        final favId = titles[itemTrim] ??
+            titles[itemLower] ??
+            LeagueResolver.resolveId(itemTrim) ??
+            defaultNameToId[itemLower];
+
+        if (cleanId != null && cleanId.isNotEmpty) {
+          if (LeagueResolver.areSameCompetition(
+            itemTrim,
+            effectiveName.isNotEmpty ? effectiveName : cleanId,
+            idA: favId,
+            idB: cleanId,
+          )) {
+            return true;
+          }
+          if (favId != null &&
+              LeagueResolver.areSameCompetition(
+                favId,
+                cleanId,
+                idA: favId,
+                idB: cleanId,
+              )) {
+            return true;
+          }
+        }
+
+        if (effectiveName.isNotEmpty) {
+          if (LeagueResolver.areSameCompetition(
+            itemTrim,
+            effectiveName,
+            idA: favId,
+            idB: cleanId,
+          )) {
+            return true;
+          }
+        }
+
+        if (baseEffectiveName.isNotEmpty &&
+            (!itemHasStage && !targetHasStage)) {
+          final itemBase = itemTrim.contains('|')
+              ? itemTrim.split('|').first.trim()
+              : itemTrim;
+          if (itemBase.toLowerCase() == baseEffectiveName.toLowerCase()) {
+            return true;
+          }
+        }
+
+        return false;
       });
     } else {
+      final canonicalKey =
+          (cleanId != null && cleanId.isNotEmpty) ? cleanId : effectiveName;
       final canonicalName =
           effectiveName.isNotEmpty ? effectiveName : (cleanId ?? '');
 
-      if (canonicalName.isNotEmpty &&
+      if (canonicalKey.isNotEmpty &&
           !list.any((item) {
             final itemTrim = item.trim();
             final favId = titles[itemTrim];
@@ -861,10 +981,13 @@ class LocalStorageServiceImpl implements LocalStorageService {
               idB: cleanId,
             );
           })) {
-        list.add(canonicalName);
+        list.add(canonicalKey);
       }
       if (cleanId != null && cleanId.isNotEmpty && canonicalName.isNotEmpty) {
-        unawaited(registerCompetitionTitles({cleanId: canonicalName}));
+        unawaited(registerCompetitionTitles({
+          cleanId: canonicalName,
+          canonicalName.toLowerCase(): cleanId,
+        }));
       }
     }
 
@@ -1155,7 +1278,8 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<bool> setMatchNotificationScope(String scope) async {
     final res = await _prefs.setString(_keyMatchNotifScope, scope);
-    unawaited(NotificationSyncService.instance.syncAllSubscriptions());
+    final isAll = scope == LocalStorageService.matchNotifScopeAll;
+    unawaited(NotificationSyncService.instance.syncAllSubscriptions(allMatches: isAll));
     return res;
   }
 
@@ -1179,8 +1303,9 @@ class LocalStorageServiceImpl implements LocalStorageService {
     if (matchId != null && matchId.isNotEmpty) {
       final favMatches = getFavoriteMatches();
       final matchNotifs = getMatchNotificationIds();
-      if (favMatches.contains(matchId) || matchNotifs.contains(matchId))
+      if (favMatches.contains(matchId) || matchNotifs.contains(matchId)) {
         return true;
+      }
     }
 
     // 2. Collect all starred / subscribed team tokens (IDs & titles, excluding muted)
@@ -1193,30 +1318,35 @@ class LocalStorageServiceImpl implements LocalStorageService {
     final Set<String> targetNames = {};
     for (final t in favTitles.values) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed))
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) {
         targetNames.add(trimmed);
+      }
     }
     for (final t in favTitles.keys) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed))
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) {
         targetNames.add(trimmed);
+      }
     }
     for (final t in teamNotifs) {
       final trimmed = t.trim().toLowerCase();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed))
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed)) {
         targetNames.add(trimmed);
+      }
     }
 
     final Set<String> targetIds = {};
     for (final id in favTeams) {
       final trimmed = id.trim();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase()))
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) {
         targetIds.add(trimmed);
+      }
     }
     for (final id in teamNotifs) {
       final trimmed = id.trim();
-      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase()))
+      if (trimmed.isNotEmpty && !mutedTeams.contains(trimmed.toLowerCase())) {
         targetIds.add(trimmed);
+      }
     }
 
     // If user hasn't starred or subscribed to any teams at all, don't filter out everything

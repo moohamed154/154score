@@ -32,6 +32,7 @@ class MatchEntity extends Equatable {
   final int? htTime;
   final String? note;
   final bool isFavorite;
+  final bool hasLineup;
 
   const MatchEntity({
     required this.id,
@@ -67,6 +68,7 @@ class MatchEntity extends Equatable {
     this.htTime,
     this.note,
     this.isFavorite = false,
+    this.hasLineup = false,
   });
 
   final List<bool>? penaltyAttempts1;
@@ -118,6 +120,7 @@ class MatchEntity extends Equatable {
     int? htTime,
     String? note,
     bool? isFavorite,
+    bool? hasLineup,
   }) {
     return MatchEntity(
       id: id ?? this.id,
@@ -153,6 +156,7 @@ class MatchEntity extends Equatable {
       htTime: htTime ?? this.htTime,
       note: note ?? this.note,
       isFavorite: isFavorite ?? this.isFavorite,
+      hasLineup: hasLineup ?? this.hasLineup,
     );
   }
 
@@ -191,6 +195,7 @@ class MatchEntity extends Equatable {
         htTime,
         note,
         isFavorite,
+        hasLineup,
       ];
 }
 
