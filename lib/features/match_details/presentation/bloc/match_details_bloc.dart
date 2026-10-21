@@ -92,6 +92,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           videos: const MatchVideosEntity(),
         ),
       );
+    } else {
+      repository.clearCache(cleanTarget);
     }
 
     final lang = localStorageService.getLanguage();
@@ -261,10 +263,6 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           errorMessage: null,
         ),
       );
-
-      if (event.completer != null && !event.completer!.isCompleted) {
-        event.completer!.complete();
-      }
 
       // 2. Staged Emission 2: Await details & overview and enrich state seamlessly
       final detailsPayload =

@@ -784,13 +784,26 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             completer: completer,
           ),
         );
+    Completer<void>? leagueCompleter;
     if (_leagueBloc != null && _currentLeagueId != null) {
+      leagueCompleter = Completer<void>();
       _leagueBloc!.add(
-        LoadLeagueDetailsEvent(_currentLeagueId!, isRefresh: true),
+        LoadLeagueDetailsEvent(
+          _currentLeagueId!,
+          isRefresh: true,
+          completer: leagueCompleter,
+        ),
       );
     }
     try {
-      await completer.future.timeout(const Duration(seconds: 3));
+      if (leagueCompleter != null) {
+        await Future.wait([
+          completer.future,
+          leagueCompleter.future,
+        ]).timeout(const Duration(seconds: 4));
+      } else {
+        await completer.future.timeout(const Duration(seconds: 4));
+      }
     } catch (_) {}
   }
 
@@ -2991,8 +3004,21 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
             return RefreshIndicator(
               color: AppColors.primary,
               onRefresh: () async {
-                context.read<StandingsBloc>().add(LoadStandingsEvent(leagueId));
-                await _handleRefresh();
+                final standingsCompleter = Completer<void>();
+                context.read<StandingsBloc>().add(
+                      LoadStandingsEvent(
+                        leagueId,
+                        isRefresh: true,
+                        completer: standingsCompleter,
+                      ),
+                    );
+                await Future.wait([
+                  standingsCompleter.future.timeout(
+                    const Duration(seconds: 4),
+                    onTimeout: () {},
+                  ),
+                  _handleRefresh(),
+                ]);
               },
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -3091,8 +3117,21 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
-              context.read<StandingsBloc>().add(LoadStandingsEvent(leagueId));
-              await _handleRefresh();
+              final standingsCompleter = Completer<void>();
+              context.read<StandingsBloc>().add(
+                    LoadStandingsEvent(
+                      leagueId,
+                      isRefresh: true,
+                      completer: standingsCompleter,
+                    ),
+                  );
+              await Future.wait([
+                standingsCompleter.future.timeout(
+                  const Duration(seconds: 4),
+                  onTimeout: () {},
+                ),
+                _handleRefresh(),
+              ]);
             },
             child: ListView(
               key: const PageStorageKey('match_standings_tab_list'),
@@ -3274,7 +3313,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
-              bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true));
+              final completer = Completer<void>();
+              bloc.add(
+                LoadLeagueDetailsEvent(
+                  leagueId,
+                  isRefresh: true,
+                  completer: completer,
+                ),
+              );
+              try {
+                await completer.future.timeout(const Duration(seconds: 4));
+              } catch (_) {}
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -3294,7 +3343,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         return RefreshIndicator(
           color: AppColors.primary,
           onRefresh: () async {
-            bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true));
+            final completer = Completer<void>();
+            bloc.add(
+              LoadLeagueDetailsEvent(
+                leagueId,
+                isRefresh: true,
+                completer: completer,
+              ),
+            );
+            try {
+              await completer.future.timeout(const Duration(seconds: 4));
+            } catch (_) {}
           },
           child: ListView(
             key: const PageStorageKey('match_scorers_tab_list'),
@@ -3350,7 +3409,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
-              bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true));
+              final completer = Completer<void>();
+              bloc.add(
+                LoadLeagueDetailsEvent(
+                  leagueId,
+                  isRefresh: true,
+                  completer: completer,
+                ),
+              );
+              try {
+                await completer.future.timeout(const Duration(seconds: 4));
+              } catch (_) {}
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -3370,7 +3439,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         return RefreshIndicator(
           color: AppColors.primary,
           onRefresh: () async {
-            bloc.add(LoadLeagueDetailsEvent(leagueId, isRefresh: true));
+            final completer = Completer<void>();
+            bloc.add(
+              LoadLeagueDetailsEvent(
+                leagueId,
+                isRefresh: true,
+                completer: completer,
+              ),
+            );
+            try {
+              await completer.future.timeout(const Duration(seconds: 4));
+            } catch (_) {}
           },
           child: ListView(
             key: const PageStorageKey('match_assists_tab_list'),

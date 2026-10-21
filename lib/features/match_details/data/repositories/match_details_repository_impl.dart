@@ -35,6 +35,26 @@ class MatchDetailsRepositoryImpl implements MatchDetailsRepository {
       Uri.decodeComponent(id).replaceAll('match:', '').trim();
 
   @override
+  void clearCache([String? matchId]) {
+    if (matchId == null) {
+      _eventsCache.clear();
+      _detailsCache.clear();
+      _statsCache.clear();
+      _newsCache.clear();
+      _lineupsCache.clear();
+      _playerRatingCache.clear();
+    } else {
+      final cleanId = _cleanMatchId(matchId);
+      _eventsCache.removeWhere((k, _) => k.startsWith(cleanId));
+      _detailsCache.removeWhere((k, _) => k.startsWith(cleanId));
+      _statsCache.removeWhere((k, _) => k.startsWith(cleanId));
+      _newsCache.removeWhere((k, _) => k.startsWith(cleanId));
+      _lineupsCache.removeWhere((k, _) => k.startsWith(cleanId));
+      _playerRatingCache.removeWhere((k, _) => k.startsWith(cleanId));
+    }
+  }
+
+  @override
   Future<ApiResult<MatchEventsPayload>> getEventsPayload(
     String matchId, {
     required String lang,

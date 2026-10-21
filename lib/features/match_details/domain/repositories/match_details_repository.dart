@@ -3,6 +3,8 @@ import '../entities/match_details_entity.dart';
 import '../entities/player_match_rating_entity.dart';
 
 abstract class MatchDetailsRepository {
+  void clearCache([String? matchId]) {}
+
   Future<ApiResult<List<MatchEventEntity>>> getEvents(
     String matchId, {
     required String lang,

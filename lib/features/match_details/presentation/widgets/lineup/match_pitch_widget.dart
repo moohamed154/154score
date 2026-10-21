@@ -445,10 +445,8 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            isArabic
-                                ? Icons.arrow_back_rounded
-                                : Icons.arrow_forward_rounded,
+                          const Icon(
+                            Icons.arrow_forward_rounded,
                             size: 14,
                             color: AppColors.primary,
                           ),
@@ -571,17 +569,35 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         }
       }
     } else {
-      // Fallback: Group outfield by positionCode (D, M, F)
+      // Fallback: Group outfield by positionCode (D, M, F, S)
       final defenders = outfield.where((p) => p.positionCode == 'D').toList();
-      final midfielders = outfield.where((p) => p.positionCode == 'M').toList();
-      final forwards = outfield
+      final midfielders =
+          outfield.where((p) => p.positionCode == 'M').toList();
+      final attackingMids =
+          outfield.where((p) => p.positionCode == 'F').toList();
+      final strikers = outfield.where((p) => p.positionCode == 'S').toList();
+      final unclassified = outfield
           .where(
             (p) =>
-                p.positionCode == 'F' ||
-                p.positionCode == 'S' ||
-                (!defenders.contains(p) && !midfielders.contains(p)),
+                p.positionCode != 'D' &&
+                p.positionCode != 'M' &&
+                p.positionCode != 'F' &&
+                p.positionCode != 'S',
           )
           .toList();
+
+      for (final p in unclassified) {
+        final w = _tacticalLineWeight(p);
+        if (w == 1) {
+          defenders.add(p);
+        } else if (w == 2) {
+          midfielders.add(p);
+        } else if (w == 3) {
+          attackingMids.add(p);
+        } else {
+          strikers.add(p);
+        }
+      }
 
       defenders.sort(
         (a, b) =>
@@ -591,14 +607,19 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         (a, b) =>
             (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0),
       );
-      forwards.sort(
+      attackingMids.sort(
+        (a, b) =>
+            (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0),
+      );
+      strikers.sort(
         (a, b) =>
             (a.formationPosition ?? 0).compareTo(b.formationPosition ?? 0),
       );
 
       if (defenders.isNotEmpty) tacticalLines.add(defenders);
       if (midfielders.isNotEmpty) tacticalLines.add(midfielders);
-      if (forwards.isNotEmpty) tacticalLines.add(forwards);
+      if (attackingMids.isNotEmpty) tacticalLines.add(attackingMids);
+      if (strikers.isNotEmpty) tacticalLines.add(strikers);
 
       if (tacticalLines.isEmpty && outfield.isNotEmpty) {
         tacticalLines.add(outfield);
@@ -627,7 +648,8 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
     if (!RegExp(r'^\d(-\d)+$').hasMatch(clean)) return null;
 
     try {
-      final numbers = clean.split('-').map((s) => int.parse(s.trim())).toList();
+      final numbers =
+          clean.split('-').map((s) => int.parse(s.trim())).toList();
       if (numbers.isNotEmpty && numbers.every((n) => n > 0 && n <= 6)) {
         return numbers;
       }
@@ -636,10 +658,16 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
   }
 
   static int _tacticalLineWeight(LineupPlayerEntity p) {
+    if (p.isGoalkeeper || p.positionCode == 'G') return 0;
     if (p.positionCode == 'D') return 1;
     if (p.positionCode == 'M') return 2;
-    if (p.positionCode == 'F' || p.positionCode == 'S') return 3;
+    if (p.positionCode == 'F') return 3;
+    if (p.positionCode == 'S') return 4;
+
     final pos = (p.position ?? '').toLowerCase();
+    if (pos.contains('حارس') || pos.contains('goalkeeper') || pos == 'gk') {
+      return 0;
+    }
     if (pos.contains('دفاع') ||
         pos.contains('ظهير') ||
         pos.contains('back') ||
@@ -653,18 +681,25 @@ class _MatchPitchWidgetState extends State<MatchPitchWidget> {
         pos.contains('midfield') ||
         pos == 'cdm' ||
         pos == 'cm' ||
-        pos == 'cam') {
+        pos == 'dm') {
       return 2;
     }
-    if (pos.contains('هجوم') ||
-        pos.contains('جناح') ||
-        pos.contains('forward') ||
-        pos.contains('striker') ||
-        pos == 'cf' ||
-        pos == 'st' ||
+    if (pos.contains('جناح') ||
+        pos.contains('winger') ||
+        pos == 'cam' ||
+        pos == 'am' ||
         pos == 'lw' ||
         pos == 'rw') {
       return 3;
+    }
+    if (pos.contains('هجوم') ||
+        pos.contains('forward') ||
+        pos.contains('striker') ||
+        pos.contains('حربة') ||
+        pos == 'cf' ||
+        pos == 'st' ||
+        pos == 's') {
+      return 4;
     }
     return 2;
   }

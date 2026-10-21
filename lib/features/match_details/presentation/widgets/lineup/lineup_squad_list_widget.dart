@@ -211,10 +211,8 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
-                                    isArabic
-                                        ? Icons.arrow_back_rounded
-                                        : Icons.arrow_forward_rounded,
+                                  const Icon(
+                                    Icons.arrow_forward_rounded,
                                     size: 15,
                                     color: AppColors.primary,
                                   ),
@@ -928,12 +926,10 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                     // IN Row
                     Row(
                       children: [
-                        Icon(
-                          isArabic
-                              ? Icons.arrow_back_rounded
-                              : Icons.arrow_forward_rounded,
+                        const Icon(
+                          Icons.arrow_forward_rounded,
                           size: 15,
-                          color: const Color(0xFF10B981),
+                          color: Color(0xFF10B981),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -956,12 +952,10 @@ class _LineupSquadListWidgetState extends State<LineupSquadListWidget> {
                     // OUT Row
                     Row(
                       children: [
-                        Icon(
-                          isArabic
-                              ? Icons.arrow_forward_rounded
-                              : Icons.arrow_back_rounded,
+                        const Icon(
+                          Icons.arrow_back_rounded,
                           size: 15,
-                          color: const Color(0xFFEF4444),
+                          color: Color(0xFFEF4444),
                         ),
                         const SizedBox(width: 6),
                         Expanded(

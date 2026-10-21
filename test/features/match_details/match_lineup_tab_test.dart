@@ -1518,5 +1518,69 @@ void main() {
         expect(find.text('عرض الملف الشخصي للاعب'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      '13. Correctly positions 4-2-3-1 with single striker at top and wingers/attacking mids in line below',
+      (tester) async {
+        const alAhlyLineup = TeamLineupEntity(
+          teamName: 'الأهلي',
+          formation: '4-2-3-1',
+          startingXi: [
+            LineupPlayerEntity(playerId: '1', name: 'شوبير', number: 31, positionCode: 'G', formationPosition: 1),
+            LineupPlayerEntity(playerId: '2', name: 'توفيق', number: 24, positionCode: 'D', formationPosition: 1),
+            LineupPlayerEntity(playerId: '3', name: 'مرعي', number: 2, positionCode: 'D', formationPosition: 2),
+            LineupPlayerEntity(playerId: '4', name: 'داري', number: 3, positionCode: 'D', formationPosition: 3),
+            LineupPlayerEntity(playerId: '5', name: 'هاني', number: 30, positionCode: 'D', formationPosition: 4),
+            LineupPlayerEntity(playerId: '6', name: 'عطية', number: 13, positionCode: 'M', formationPosition: 1),
+            LineupPlayerEntity(playerId: '7', name: 'الساعي', number: 15, positionCode: 'M', formationPosition: 2),
+            LineupPlayerEntity(playerId: '8', name: 'بن شرقي', number: 17, positionCode: 'F', formationPosition: 1),
+            LineupPlayerEntity(playerId: '9', name: 'عاشور', number: 22, positionCode: 'F', formationPosition: 2),
+            LineupPlayerEntity(playerId: '10', name: 'زيزو', number: 25, positionCode: 'F', formationPosition: 3),
+            LineupPlayerEntity(playerId: '11', name: 'بكرار', number: 10, positionCode: 'S', formationPosition: 1),
+          ],
+        );
+
+        await tester.pumpWidget(
+          buildTestApp(
+            child: const SingleChildScrollView(
+              child: MatchPitchWidget(
+                home: alAhlyLineup,
+                away: TeamLineupEntity(teamName: 'القناة'),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('بكرار'), findsOneWidget);
+        expect(find.text('بن شرقي'), findsOneWidget);
+        expect(find.text('عاشور'), findsOneWidget);
+        expect(find.text('زيزو'), findsOneWidget);
+
+        // Verify vertical order on pitch:
+        // Top-most player must be Bakrar (Striker)
+        final bakrarPos = tester.getCenter(find.text('بكرار'));
+        final ashourPos = tester.getCenter(find.text('عاشور'));
+        final zizoPos = tester.getCenter(find.text('زيزو'));
+        final bencharkiPos = tester.getCenter(find.text('بن شرقي'));
+        final ateyaPos = tester.getCenter(find.text('عطية'));
+        final shobeirPos = tester.getCenter(find.text('شوبير'));
+
+        // Bakrar is higher on the pitch than the attacking midfielders
+        expect(bakrarPos.dy, lessThan(ashourPos.dy));
+        expect(bakrarPos.dy, lessThan(zizoPos.dy));
+        expect(bakrarPos.dy, lessThan(bencharkiPos.dy));
+
+        // Attacking midfielders are higher than defensive midfielders
+        expect(ashourPos.dy, lessThan(ateyaPos.dy));
+
+        // Midfielders are higher than Goalkeeper
+        expect(ateyaPos.dy, lessThan(shobeirPos.dy));
+
+        // Horizontal order of attacking row (LTR): Bencharki (Left) < Ashour (Center) < Zizo (Right)
+        expect(bencharkiPos.dx, lessThan(ashourPos.dx));
+        expect(ashourPos.dx, lessThan(zizoPos.dx));
+      },
+    );
   });
 }

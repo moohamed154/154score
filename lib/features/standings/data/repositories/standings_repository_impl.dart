@@ -20,6 +20,15 @@ class StandingsRepositoryImpl implements StandingsRepository {
   ]);
 
   @override
+  void clearCache([String? leagueId]) {
+    if (leagueId == null) {
+      _standingsCache.clear();
+    } else {
+      _standingsCache.removeWhere((k, _) => k.startsWith(leagueId));
+    }
+  }
+
+  @override
   Future<ApiResult<LeagueStandingsEntity>> getStandings(
     String leagueId, {
     required String lang,

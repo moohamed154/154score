@@ -88,7 +88,7 @@ class _LineupTabViewState extends State<LineupTabView> {
                     ),
                   );
               try {
-                await completer.future.timeout(const Duration(seconds: 3));
+                await completer.future.timeout(const Duration(seconds: 4));
               } catch (_) {}
             },
             child: LineupEmptyStateWidget(matchId: widget.matchId),
@@ -123,7 +123,7 @@ class _LineupTabViewState extends State<LineupTabView> {
                   ),
                 );
             try {
-              await completer.future.timeout(const Duration(seconds: 3));
+              await completer.future.timeout(const Duration(seconds: 4));
             } catch (_) {}
           },
           child: SingleChildScrollView(

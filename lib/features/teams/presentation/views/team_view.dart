@@ -1625,13 +1625,11 @@ class _TeamViewState extends State<TeamView>
                         ),
                       ),
 
-                      // Arrow Icon
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      // Arrow Icon (From Club ➔ To Club, auto-mirrors in RTL)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
                         child: Icon(
-                          isArabic
-                              ? Icons.arrow_back_rounded
-                              : Icons.arrow_forward_rounded,
+                          Icons.arrow_forward_rounded,
                           size: 16,
                           color: AppColors.primary,
                         ),

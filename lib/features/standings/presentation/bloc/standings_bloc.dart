@@ -20,11 +20,17 @@ abstract class StandingsEvent extends Equatable {
 
 class LoadStandingsEvent extends StandingsEvent {
   final String leagueId;
+  final bool isRefresh;
+  final Completer<void>? completer;
 
-  const LoadStandingsEvent(this.leagueId);
+  const LoadStandingsEvent(
+    this.leagueId, {
+    this.isRefresh = false,
+    this.completer,
+  });
 
   @override
-  List<Object?> get props => [leagueId];
+  List<Object?> get props => [leagueId, isRefresh];
 }
 
 class ChangeStandingsLanguageEvent extends StandingsEvent {
@@ -89,37 +95,47 @@ class StandingsBloc extends Bloc<StandingsEvent, StandingsState> {
     LoadStandingsEvent event,
     Emitter<StandingsState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        status: StandingsStatus.loading,
-        selectedLeagueId: event.leagueId,
-      ),
-    );
+    if (event.isRefresh) {
+      repository.clearCache(event.leagueId);
+    } else {
+      emit(
+        state.copyWith(
+          status: StandingsStatus.loading,
+          selectedLeagueId: event.leagueId,
+        ),
+      );
+    }
 
-    final lang = localStorageService.getLanguage();
-    final result = await repository.getStandings(event.leagueId, lang: lang);
+    try {
+      final lang = localStorageService.getLanguage();
+      final result = await repository.getStandings(event.leagueId, lang: lang);
 
-    result.fold(
-      onSuccess: (data) {
-        emit(
-          state.copyWith(
-            status: data.rows.isEmpty
-                ? StandingsStatus.empty
-                : StandingsStatus.success,
-            standings: data,
-            errorMessage: null,
-          ),
-        );
-      },
-      onFailure: (failure) {
-        emit(
-          state.copyWith(
-            status: StandingsStatus.error,
-            errorMessage: failure.message,
-          ),
-        );
-      },
-    );
+      result.fold(
+        onSuccess: (data) {
+          emit(
+            state.copyWith(
+              status: data.rows.isEmpty
+                  ? StandingsStatus.empty
+                  : StandingsStatus.success,
+              standings: data,
+              errorMessage: null,
+            ),
+          );
+        },
+        onFailure: (failure) {
+          emit(
+            state.copyWith(
+              status: StandingsStatus.error,
+              errorMessage: failure.message,
+            ),
+          );
+        },
+      );
+    } finally {
+      if (event.completer != null && !event.completer!.isCompleted) {
+        event.completer!.complete();
+      }
+    }
   }
 
   Future<void> _onChangeStandingsLanguage(
