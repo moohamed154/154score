@@ -22,6 +22,7 @@ import '../bloc/team_bloc.dart';
 import '../bloc/team_event.dart';
 import '../bloc/team_state.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
@@ -525,6 +526,7 @@ class _TeamViewState extends State<TeamView>
     }
 
     final hMargin = AppDimensions.getHorizontalMargin(context);
+    final timeFormat = sl<LocalStorageService>().getTimeFormat();
 
     return ListView.separated(
       padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 12),
@@ -626,7 +628,11 @@ class _TeamViewState extends State<TeamView>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              item.createdAt!.split(' ').first,
+                              DateFormatter.formatDateTime(
+                                item.createdAt,
+                                isArabic: isArabic,
+                                timeFormat: timeFormat,
+                              ),
                               style: AppTypography.getBodySmall(
                                 isDark: isDark,
                                 isArabic: isArabic,

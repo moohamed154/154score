@@ -50,11 +50,12 @@ class AppImage extends StatelessWidget {
         ? (safeWidth * 0.4).clamp(12.0, 36.0)
         : (safeHeight != null ? (safeHeight * 0.25).clamp(14.0, 40.0) : 24.0);
 
+    // Scale by 3x (Retina pixel ratio) so small icons (36-60dp) decode at 108-180 physical px without downsampling blur
     final cacheW = (safeWidth != null && safeWidth > 0)
-        ? (safeWidth * 2).toInt().clamp(32, 1024)
+        ? (safeWidth * 3).toInt().clamp(64, 1200)
         : 600;
     final cacheH = (safeHeight != null && safeHeight > 0)
-        ? (safeHeight * 2).toInt().clamp(32, 1024)
+        ? (safeHeight * 3).toInt().clamp(64, 1200)
         : 600;
 
     final normalizedUrl = UrlHelper.normalizeImageUrl(imageUrl);
@@ -79,6 +80,7 @@ class AppImage extends StatelessWidget {
         width: padding == null ? width : null,
         height: padding == null ? height : null,
         fit: fit,
+        filterQuality: FilterQuality.medium,
         memCacheWidth: cacheW,
         memCacheHeight: cacheH,
         placeholder: (context, url) => Container(

@@ -10,6 +10,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
+import '../../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/video_entity.dart';
@@ -24,13 +25,33 @@ class VideosView extends StatefulWidget {
 }
 
 class _VideosViewState extends State<VideosView> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    AppScrollToTopNotifier.addListener(4, _scrollToTop);
     final bloc = context.read<VideosBloc>();
     if (bloc.state.status == VideosStatus.initial) {
       bloc.add(const LoadVideosEvent());
     }
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    AppScrollToTopNotifier.removeListener(4, _scrollToTop);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -154,6 +175,7 @@ class _VideosViewState extends State<VideosView> {
       return Skeletonizer(
         enabled: true,
         child: ListView.builder(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
           itemCount: 6,
@@ -171,6 +193,7 @@ class _VideosViewState extends State<VideosView> {
 
     if (state.status == VideosStatus.error) {
       return ListView(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(
@@ -188,6 +211,7 @@ class _VideosViewState extends State<VideosView> {
 
     if (state.videos.isEmpty) {
       return ListView(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         children: const [
           SizedBox(
@@ -202,6 +226,7 @@ class _VideosViewState extends State<VideosView> {
     }
 
     return ListView.builder(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
       itemCount: state.videos.length,

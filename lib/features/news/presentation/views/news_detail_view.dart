@@ -18,6 +18,7 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/news_entity.dart';
 import '../../domain/repositories/news_repository.dart';
+import '../../../settings/presentation/cubit/settings_cubits.dart';
 import '../bloc/news_bloc.dart';
 
 class NewsDetailView extends StatelessWidget {
@@ -520,86 +521,105 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
 
         // Article content
         SliverToBoxAdapter(
-          child: Directionality(
-            textDirection: textDir,
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.lg),
-              child: Column(
-                crossAxisAlignment: isContentArabic
-                    ? CrossAxisAlignment.end
-                    : (isArabic
-                        ? CrossAxisAlignment.end
-                        : CrossAxisAlignment.start),
-                children: [
-                  // Title
-                  Text(
-                    detail.title,
-                    textDirection: textDir,
-                    textAlign:
-                        isContentArabic ? TextAlign.right : TextAlign.start,
-                    style: AppTypography.getHeadingMedium(
-                      isDark: isDark,
-                      isArabic: effectiveArabic,
-                    ),
-                  ),
-                  const SizedBox(height: AppDimensions.sm),
-                  // Timestamp
-                  if (detail.publishedAt != null)
-                    Row(
-                      mainAxisAlignment: isContentArabic
-                          ? MainAxisAlignment.end
-                          : MainAxisAlignment.start,
+          child: BlocBuilder<FontSizeCubit, FontSizeState>(
+            builder: (context, fontState) {
+              final mq = MediaQuery.of(context);
+              final newsScaler = fontState.isAuto
+                  ? mq.textScaler
+                  : TextScaler.linear(fontState.newsFontSizeScale);
+
+              return MediaQuery(
+                data: mq.copyWith(textScaler: newsScaler),
+                child: Directionality(
+                  textDirection: textDir,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDimensions.lg),
+                    child: Column(
+                      crossAxisAlignment: isContentArabic
+                          ? CrossAxisAlignment.end
+                          : (isArabic
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start),
                       children: [
-                        Icon(
-                          Icons.calendar_today_rounded,
-                          size: 13,
+                        // Title
+                        Text(
+                          detail.title,
+                          textDirection: textDir,
+                          textAlign: isContentArabic
+                              ? TextAlign.right
+                              : TextAlign.start,
+                          style: AppTypography.getHeadingMedium(
+                            isDark: isDark,
+                            isArabic: effectiveArabic,
+                          ),
+                        ),
+                        const SizedBox(height: AppDimensions.sm),
+                        // Timestamp
+                        if (detail.publishedAt != null)
+                          Row(
+                            mainAxisAlignment: isContentArabic
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 13,
+                                color: isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted,
+                              ),
+                              const SizedBox(width: AppDimensions.xs),
+                              _buildTimestamp(
+                                detail.publishedAt,
+                                isDark,
+                                effectiveArabic,
+                              ),
+                            ],
+                          ),
+                        const SizedBox(height: AppDimensions.lg),
+
+                        Divider(
                           color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder,
+                          thickness: 1,
                         ),
-                        const SizedBox(width: AppDimensions.xs),
-                        _buildTimestamp(
-                          detail.publishedAt,
-                          isDark,
-                          effectiveArabic,
-                        ),
+                        const SizedBox(height: AppDimensions.md),
+
+                        // Paragraphs
+                        ...List<Widget>.generate(detail.paragraphs.length, (i) {
+                          final para = detail.paragraphs[i];
+                          final isParaArabic =
+                              TextDirectionHelper.isArabic(para);
+                          final effectiveParaArabic =
+                              isParaArabic || effectiveArabic;
+                          final paraDir =
+                              isParaArabic ? TextDirection.rtl : textDir;
+
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: AppDimensions.md),
+                            child: Text(
+                              para,
+                              style: AppTypography.getBodyLarge(
+                                isDark: isDark,
+                                isArabic: effectiveParaArabic,
+                              ).copyWith(height: 1.8),
+                              textDirection: paraDir,
+                              textAlign: isParaArabic
+                                  ? TextAlign.right
+                                  : TextAlign.start,
+                            ),
+                          );
+                        }),
+
+                        const SizedBox(height: AppDimensions.xxxl),
                       ],
                     ),
-                  const SizedBox(height: AppDimensions.lg),
-
-                  Divider(
-                    color:
-                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    thickness: 1,
                   ),
-                  const SizedBox(height: AppDimensions.md),
-
-                  // Paragraphs
-                  ...List<Widget>.generate(detail.paragraphs.length, (i) {
-                    final para = detail.paragraphs[i];
-                    final isParaArabic = TextDirectionHelper.isArabic(para);
-                    final effectiveParaArabic = isParaArabic || effectiveArabic;
-                    final paraDir = isParaArabic ? TextDirection.rtl : textDir;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppDimensions.md),
-                      child: Text(
-                        para,
-                        style: AppTypography.getBodyLarge(
-                          isDark: isDark,
-                          isArabic: effectiveParaArabic,
-                        ).copyWith(height: 1.8),
-                        textDirection: paraDir,
-                        textAlign:
-                            isParaArabic ? TextAlign.right : TextAlign.start,
-                      ),
-                    );
-                  }),
-
-                  const SizedBox(height: AppDimensions.xxxl),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         ),
       ],

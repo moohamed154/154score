@@ -11,6 +11,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../../onboarding/domain/repositories/onboarding_repository.dart';
@@ -34,18 +35,32 @@ class _SettingsViewState extends State<SettingsView> {
   int _logoTapCount = 0;
   Timer? _tapResetTimer;
   late bool _isDeveloperModeUnlocked;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _isDeveloperModeUnlocked =
         sl<LocalStorageService>().isDeveloperModeEnabled();
+    AppScrollToTopNotifier.addListener(5, _scrollToTop);
   }
 
   @override
   void dispose() {
+    AppScrollToTopNotifier.removeListener(5, _scrollToTop);
+    _scrollController.dispose();
     _tapResetTimer?.cancel();
     super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   static const String _kDeveloperPassword = 'MOhamed_2002';
@@ -295,6 +310,7 @@ class _SettingsViewState extends State<SettingsView> {
         automaticallyImplyLeading: false,
       ),
       body: ListView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(AppDimensions.lg),
         children: [
           // Section: Appearance
@@ -382,6 +398,83 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                   onTap: () {
                     context.push('/settings/theme');
+                  },
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 12),
+
+          BlocBuilder<FontSizeCubit, FontSizeState>(
+            builder: (context, fontState) {
+              final fontDesc = fontState.isAuto
+                  ? l10n.translate('font_size_auto')
+                  : l10n.translate('font_size_manual');
+
+              final badgeText = fontState.isAuto
+                  ? (isArabic ? 'تلقائي' : 'Auto')
+                  : (isArabic ? 'يدوي' : 'Manual');
+
+              return _buildCard(
+                isDark: isDark,
+                child: ListTile(
+                  leading: _buildLeadingIcon(Icons.format_size_rounded),
+                  title: Text(
+                    l10n.translate('settings_font_size'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    fontDesc,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.getBodySmall(
+                      isDark: isDark,
+                      isArabic: isArabic,
+                    ).copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSm,
+                          ),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          badgeText,
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    context.push('/settings/font-size');
                   },
                 ),
               );

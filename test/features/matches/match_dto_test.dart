@@ -4,26 +4,26 @@ import 'package:score154/core/utils/url_helper.dart';
 
 void main() {
   group('MatchDto & URL Normalization Tests', () {
-    test('UrlHelper correctly normalizes protocol-relative and http URLs', () {
+    test('UrlHelper correctly normalizes protocol-relative and http URLs and upgrades team logos to 150', () {
       expect(
         UrlHelper.normalizeImageUrl('//imgs.ysscores.com/teams/64/123.png'),
-        'https://imgs.ysscores.com/teams/64/123.png',
+        'https://imgs.ysscores.com/teams/150/123.png',
       );
       expect(
         UrlHelper.normalizeImageUrl(
           'http://imgs.ysscores.com/teams/64/123.png',
         ),
-        'https://imgs.ysscores.com/teams/64/123.png',
+        'https://imgs.ysscores.com/teams/150/123.png',
       );
       expect(
         UrlHelper.normalizeImageUrl(
           'https://imgs.ysscores.com/teams/64/123.png',
         ),
-        'https://imgs.ysscores.com/teams/64/123.png',
+        'https://imgs.ysscores.com/teams/150/123.png',
       );
       expect(
         UrlHelper.normalizeImageUrl('https://imgs..com/teams/64/123.png'),
-        'https://imgs.ysscores.com/teams/64/123.png',
+        'https://imgs.ysscores.com/teams/150/123.png',
       );
       expect(
         UrlHelper.normalizePlayerPhotoUrl(
@@ -84,11 +84,11 @@ void main() {
       expect(dto.team2, 'أوساسونا');
       expect(
         dto.team1Logo,
-        'https://imgs.ysscores.com/teams/64/9611690196747.png',
+        'https://imgs.ysscores.com/teams/150/9611690196747.png',
       );
       expect(
         dto.team2Logo,
-        'https://imgs.ysscores.com/teams/64/7961690196745.png',
+        'https://imgs.ysscores.com/teams/150/7961690196745.png',
       );
       expect(dto.score1, '1');
       expect(dto.score2, '1');

@@ -17,6 +17,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/score_helper.dart';
@@ -3528,6 +3529,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     bool isArabic,
   ) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
+    final timeFormat = sl<LocalStorageService>().getTimeFormat();
 
     if (state.status == MatchDetailsStatus.loading ||
         state.status == MatchDetailsStatus.initial) {
@@ -3647,17 +3649,34 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                               if (item.date != null && item.date!.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    item.date!,
-                                    style: AppTypography.getBodySmall(
-                                      isDark: isDark,
-                                      isArabic: effectiveItemArabic,
-                                    ).copyWith(
-                                      color: isDark
-                                          ? AppColors.darkTextMuted
-                                          : AppColors.lightTextMuted,
-                                      fontSize: 11,
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.access_time_rounded,
+                                        size: 11,
+                                        color: isDark
+                                            ? AppColors.darkTextMuted
+                                            : AppColors.lightTextMuted,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        DateFormatter.formatDateTime(
+                                          item.date,
+                                          isArabic: isArabic,
+                                          timeFormat: timeFormat,
+                                        ),
+                                        style: AppTypography.getBodySmall(
+                                          isDark: isDark,
+                                          isArabic: effectiveItemArabic,
+                                        ).copyWith(
+                                          color: isDark
+                                              ? AppColors.darkTextMuted
+                                              : AppColors.lightTextMuted,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                             ],

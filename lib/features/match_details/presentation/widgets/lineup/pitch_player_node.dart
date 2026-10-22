@@ -35,6 +35,11 @@ class PitchPlayerNode extends StatelessWidget {
     final ringColor = teamColor ??
         (isHome ? const Color(0xFF10B981) : const Color(0xFF38BDF8));
 
+    final hasRating = player.rating != null &&
+        player.rating!.isNotEmpty &&
+        player.rating != '0' &&
+        player.rating != '-';
+
     return Semantics(
       label:
           '${player.name}, #${player.number ?? '-'}, ${player.position ?? ''}',
@@ -353,13 +358,10 @@ class PitchPlayerNode extends StatelessWidget {
                   ),
 
                 // Rating Pill (Bottom-Right)
-                if (player.rating != null &&
-                    player.rating!.isNotEmpty &&
-                    player.rating != '0' &&
-                    player.rating != '-')
+                if (hasRating)
                   Positioned(
                     bottom: -2,
-                    right: -6,
+                    right: -5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 4.5,
@@ -388,47 +390,87 @@ class PitchPlayerNode extends StatelessWidget {
                     ),
                   ),
 
-                // Substitution Swap Indicator (Bottom-Center)
+                // Substitution Swap Indicator (Bottom-Left when rating present, Bottom-Center otherwise)
                 if (player.substituteOut || player.substituteIn)
                   Positioned(
-                    bottom: -3.5,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 3,
-                          vertical: 1.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Colors.white24, width: 0.6),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              blurRadius: 2,
+                    bottom: -2,
+                    left: hasRating ? -3 : 0,
+                    right: hasRating ? null : 0,
+                    child: hasRating
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 2.5,
+                              vertical: 1.5,
                             ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.arrow_back_rounded,
-                              size: 7.5,
-                              color: Color(0xFF10B981),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F172A),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: Colors.white24,
+                                width: 0.6,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  blurRadius: 2,
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 1),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 7.5,
-                              color: Color(0xFFEF4444),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.arrow_back_rounded,
+                                  size: 7.0,
+                                  color: Color(0xFF10B981),
+                                ),
+                                SizedBox(width: 1),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 7.0,
+                                  color: Color(0xFFEF4444),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
+                          )
+                        : Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 3,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F172A),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: Colors.white24,
+                                  width: 0.6,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.4),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.arrow_back_rounded,
+                                    size: 7.5,
+                                    color: Color(0xFF10B981),
+                                  ),
+                                  SizedBox(width: 1),
+                                  Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 7.5,
+                                    color: Color(0xFFEF4444),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                   ),
               ],
             ),

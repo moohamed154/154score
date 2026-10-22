@@ -127,6 +127,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<FavoritesCubit>(create: (_) => sl<FavoritesCubit>()),
         BlocProvider<TimezoneCubit>(create: (_) => sl<TimezoneCubit>()),
         BlocProvider<NewsLanguageCubit>(create: (_) => sl<NewsLanguageCubit>()),
+        BlocProvider<FontSizeCubit>(create: (_) => sl<FontSizeCubit>()),
         BlocProvider<AppUpdateCubit>(create: (_) => sl<AppUpdateCubit>()),
         BlocProvider<LiveActivityCubit>(create: (_) => sl<LiveActivityCubit>()),
       ],
@@ -170,6 +171,20 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                       AppLocalizations.delegate,
                       ...GlobalMaterialLocalizations.delegates,
                     ],
+                    builder: (context, child) {
+                      return BlocBuilder<FontSizeCubit, FontSizeState>(
+                        builder: (context, fontState) {
+                          final mq = MediaQuery.of(context);
+                          final textScaler = fontState.isAuto
+                              ? mq.textScaler
+                              : TextScaler.linear(fontState.appFontSizeScale);
+                          return MediaQuery(
+                            data: mq.copyWith(textScaler: textScaler),
+                            child: child ?? const SizedBox.shrink(),
+                          );
+                        },
+                      );
+                    },
                   ),
                 );
               },

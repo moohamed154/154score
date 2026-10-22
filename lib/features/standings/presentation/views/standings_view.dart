@@ -16,6 +16,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/league_resolver.dart';
+import '../../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/error_view.dart';
@@ -352,10 +353,21 @@ class StandingsView extends StatefulWidget {
 
 class _StandingsViewState extends State<StandingsView> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
   bool _isLoading = true;
   String? _errorMessage;
   StandingsTab _activeTab = StandingsTab.favorites;
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
 
   List<ChampionshipInfo> _featuredLeagues = [];
   List<ChampionshipInfo> _allLeagues = [];
@@ -579,6 +591,7 @@ class _StandingsViewState extends State<StandingsView> {
     _rebuildLeagueIndex();
 
     _searchController.addListener(_onSearchChanged);
+    AppScrollToTopNotifier.addListener(2, _scrollToTop);
 
     // 2. Load cached full directory asynchronously & fetch fresh network data post-frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -589,6 +602,16 @@ class _StandingsViewState extends State<StandingsView> {
         }
       });
     });
+  }
+
+  @override
+  void dispose() {
+    AppScrollToTopNotifier.removeListener(2, _scrollToTop);
+    _scrollController.dispose();
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadCachedRankingsAsync(String lang) async {
@@ -714,14 +737,6 @@ class _StandingsViewState extends State<StandingsView> {
         });
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _debounceTimer?.cancel();
-    _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose();
-    super.dispose();
   }
 
   void _toggleFavoriteItem(
@@ -943,6 +958,7 @@ class _StandingsViewState extends State<StandingsView> {
                                           l10n: l10n,
                                         )
                                       : ListView.builder(
+                                          controller: _scrollController,
                                           key: const PageStorageKey(
                                               'standings_search_list'),
                                           padding: const EdgeInsets.symmetric(
@@ -989,6 +1005,8 @@ class _StandingsViewState extends State<StandingsView> {
                                               l10n: l10n,
                                             )
                                           : ReorderableListView.builder(
+                                              scrollController:
+                                                  _scrollController,
                                               key: const PageStorageKey(
                                                   'standings_fav_tab_list'),
                                               padding:
@@ -1044,6 +1062,7 @@ class _StandingsViewState extends State<StandingsView> {
                                               l10n: l10n,
                                             )
                                           : ListView.builder(
+                                              controller: _scrollController,
                                               key: const PageStorageKey(
                                                   'standings_hidden_tab_list'),
                                               padding:

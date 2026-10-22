@@ -15,27 +15,37 @@ class TransfersRepositoryImpl implements TransfersRepository {
   @override
   Future<ApiResult<List<TransferEntity>>> getTransfers({
     required String lang,
+    int page = 1,
+    List<String>? loadedIds,
   }) async {
+    final isFirstPage = page == 1 && (loadedIds == null || loadedIds.isEmpty);
     final cached = _transfersCache[lang];
-    if (cached != null &&
+    if (isFirstPage &&
+        cached != null &&
         DateTime.now().difference(cached.timestamp) <
             const Duration(minutes: 5)) {
       return ApiSuccess(cached.entities);
     }
 
     try {
-      final dtos = await _remoteDataSource.getTransfers(lang: lang);
+      final dtos = await _remoteDataSource.getTransfers(
+        lang: lang,
+        page: page,
+        loadedIds: loadedIds,
+      );
       final entities = dtos.map((d) => d.toEntity()).toList();
-      _transfersCache[lang] = (entities: entities, timestamp: DateTime.now());
+      if (isFirstPage) {
+        _transfersCache[lang] = (entities: entities, timestamp: DateTime.now());
+      }
       return ApiSuccess(entities);
     } on NetworkException catch (e) {
-      if (cached != null) return ApiSuccess(cached.entities);
+      if (isFirstPage && cached != null) return ApiSuccess(cached.entities);
       return ApiFailure(NetworkFailure(e.message));
     } on ServerException catch (e) {
-      if (cached != null) return ApiSuccess(cached.entities);
+      if (isFirstPage && cached != null) return ApiSuccess(cached.entities);
       return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
     } catch (e) {
-      if (cached != null) return ApiSuccess(cached.entities);
+      if (isFirstPage && cached != null) return ApiSuccess(cached.entities);
       return ApiFailure(ServerFailure('Failed to load transfers: $e'));
     }
   }

@@ -67,6 +67,11 @@ class UrlHelper {
       trimmed = trimmed.replaceAll('/players/', '/player/');
     }
 
+    // Upgrade low-res team thumbnails (64x64) to crisp high-res (150x150)
+    if (trimmed.contains('/teams/64/')) {
+      trimmed = trimmed.replaceAll('/teams/64/', '/teams/150/');
+    }
+
     if (trimmed.startsWith('//')) {
       return 'https:$trimmed';
     }
@@ -622,45 +627,45 @@ class UrlHelper {
   }
 
   static const Map<String, String> _knownTeamLogos = {
-    '101745': 'https://imgs.ysscores.com/teams/64/9591694714907.png', // الأهلي
-    '80591': 'https://imgs.ysscores.com/teams/64/7971694082496.png', // الزمالك
-    '10255': 'https://imgs.ysscores.com/teams/64/9301763071949.png', // مصر
+    '101745': 'https://imgs.ysscores.com/teams/150/9591694714907.png', // الأهلي
+    '80591': 'https://imgs.ysscores.com/teams/150/7971694082496.png', // الزمالك
+    '10255': 'https://imgs.ysscores.com/teams/150/9301763071949.png', // مصر
     '8633':
-        'https://imgs.ysscores.com/teams/64/1871690196746.png', // ريال مدريد
-    '8634': 'https://imgs.ysscores.com/teams/64/9541690196746.png', // برشلونة
+        'https://imgs.ysscores.com/teams/150/1871690196746.png', // ريال مدريد
+    '8634': 'https://imgs.ysscores.com/teams/150/9541690196746.png', // برشلونة
     '9906':
-        'https://imgs.ysscores.com/teams/64/1431719588699.png', // أتلتيكو مدريد
+        'https://imgs.ysscores.com/teams/150/1431719588699.png', // أتلتيكو مدريد
     '8456':
-        'https://imgs.ysscores.com/teams/64/4481690118308.png', // مانشستر سيتي
+        'https://imgs.ysscores.com/teams/150/4481690118308.png', // مانشستر سيتي
     '10260':
-        'https://imgs.ysscores.com/teams/64/4871690119302.png', // مانشستر يونايتد
-    '8650': 'https://imgs.ysscores.com/teams/64/4081724601375.png', // ليفربول
-    '9825': 'https://imgs.ysscores.com/teams/64/1701690118820.png', // أرسنال
-    '8455': 'https://imgs.ysscores.com/teams/64/2571690118280.png', // تشيلسي
-    '8586': 'https://imgs.ysscores.com/teams/64/2501692467226.png', // توتنهام
+        'https://imgs.ysscores.com/teams/150/4871690119302.png', // مانشستر يونايتد
+    '8650': 'https://imgs.ysscores.com/teams/150/4081724601375.png', // ليفربول
+    '9825': 'https://imgs.ysscores.com/teams/150/1701690118820.png', // أرسنال
+    '8455': 'https://imgs.ysscores.com/teams/150/2571690118280.png', // تشيلسي
+    '8586': 'https://imgs.ysscores.com/teams/150/2501692467226.png', // توتنهام
     '9823':
-        'https://imgs.ysscores.com/teams/64/2351690288818.png', // بايرن ميونخ
+        'https://imgs.ysscores.com/teams/150/2351690288818.png', // بايرن ميونخ
     '9789':
-        'https://imgs.ysscores.com/teams/64/4201690288818.png', // بوروسيا دورتموند
-    '9885': 'https://imgs.ysscores.com/teams/64/9331690283003.png', // يوفنتوس
-    '8564': 'https://imgs.ysscores.com/teams/64/3181690283002.png', // ميلان
+        'https://imgs.ysscores.com/teams/150/4201690288818.png', // بوروسيا دورتموند
+    '9885': 'https://imgs.ysscores.com/teams/150/9331690283003.png', // يوفنتوس
+    '8564': 'https://imgs.ysscores.com/teams/150/3181690283002.png', // ميلان
     '8636':
-        'https://imgs.ysscores.com/teams/64/3101690283003.png', // إنتر ميلان
+        'https://imgs.ysscores.com/teams/150/3101690283003.png', // إنتر ميلان
     '9847':
-        'https://imgs.ysscores.com/teams/64/4461690287785.png', // باريس سان جيرمان
-    '2529': 'https://imgs.ysscores.com/teams/64/8761690298716.png', // الهلال
-    '101918': 'https://imgs.ysscores.com/teams/64/1371747772080.png', // النصر
-    '8577': 'https://imgs.ysscores.com/teams/64/2231690298782.png', // الاتحاد
-    '7795': 'https://imgs.ysscores.com/teams/64/7171763086301.png', // السعودية
-    '8256': 'https://imgs.ysscores.com/teams/64/4331763069849.png', // البرازيل
-    '6706': 'https://imgs.ysscores.com/teams/64/2861763067235.png', // الأرجنتين
+        'https://imgs.ysscores.com/teams/150/4461690287785.png', // باريس سان جيرمان
+    '2529': 'https://imgs.ysscores.com/teams/150/8761690298716.png', // الهلال
+    '101918': 'https://imgs.ysscores.com/teams/150/1371747772080.png', // النصر
+    '8577': 'https://imgs.ysscores.com/teams/150/2231690298782.png', // الاتحاد
+    '7795': 'https://imgs.ysscores.com/teams/150/7171763086301.png', // السعودية
+    '8256': 'https://imgs.ysscores.com/teams/150/4331763069849.png', // البرازيل
+    '6706': 'https://imgs.ysscores.com/teams/150/2861763067235.png', // الأرجنتين
     '2530':
-        'https://imgs.ysscores.com/teams/64/9091751485160.png', // الأهلي السعودي
+        'https://imgs.ysscores.com/teams/150/9091751485160.png', // الأهلي السعودي
   };
 
   /// Resolves deterministic team logo URL given a team ID, filename, or team name.
   static String? resolveTeamLogo(String? teamId,
-      {int size = 64, String? teamName}) {
+      {int size = 150, String? teamName}) {
     final clean = teamId?.trim();
     if (clean != null && _knownTeamLogos.containsKey(clean)) {
       return _knownTeamLogos[clean];

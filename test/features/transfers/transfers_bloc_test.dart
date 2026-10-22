@@ -1,4 +1,4 @@
-﻿import 'package:bloc_test/bloc_test.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/network/api_result.dart';
@@ -21,7 +21,7 @@ void main() {
     when(() => mockStorage.getLanguage()).thenReturn('en');
   });
 
-  const testTransfers = [
+  const testTransfersPage1 = [
     TransferEntity(
       id: '1',
       playerName: 'Kylian Mbappe',
@@ -31,12 +31,27 @@ void main() {
     ),
   ];
 
+  const testTransfersPage2 = [
+    TransferEntity(
+      id: '2',
+      playerName: 'Erling Haaland',
+      fromTeamName: 'Dortmund',
+      toTeamName: 'Man City',
+      transferPrice: '€60M',
+    ),
+  ];
+
   group('TransfersBloc Tests', () {
     blocTest<TransfersBloc, TransfersState>(
       'emits [loading, success] when LoadTransfersEvent succeeds',
       build: () {
-        when(() => mockRepository.getTransfers(lang: any(named: 'lang')))
-            .thenAnswer((_) async => const ApiSuccess(testTransfers));
+        when(
+          () => mockRepository.getTransfers(
+            lang: any(named: 'lang'),
+            page: any(named: 'page'),
+            loadedIds: any(named: 'loadedIds'),
+          ),
+        ).thenAnswer((_) async => const ApiSuccess(testTransfersPage1));
 
         return TransfersBloc(
           repository: mockRepository,
@@ -52,7 +67,49 @@ void main() {
         ),
         isA<TransfersState>()
             .having((s) => s.status, 'status', TransfersStatus.success)
-            .having((s) => s.allTransfers.length, 'transfers length', 1),
+            .having((s) => s.allTransfers.length, 'transfers length', 1)
+            .having((s) => s.currentPage, 'current page', 1)
+            .having((s) => s.hasReachedMax, 'hasReachedMax', false),
+      ],
+    );
+
+    blocTest<TransfersBloc, TransfersState>(
+      'emits updated transfers when LoadMoreTransfersEvent succeeds',
+      build: () {
+        when(
+          () => mockRepository.getTransfers(
+            lang: any(named: 'lang'),
+            page: 1,
+            loadedIds: any(named: 'loadedIds'),
+          ),
+        ).thenAnswer((_) async => const ApiSuccess(testTransfersPage1));
+
+        when(
+          () => mockRepository.getTransfers(
+            lang: any(named: 'lang'),
+            page: 2,
+            loadedIds: any(named: 'loadedIds'),
+          ),
+        ).thenAnswer((_) async => const ApiSuccess(testTransfersPage2));
+
+        return TransfersBloc(
+          repository: mockRepository,
+          localStorageService: mockStorage,
+        );
+      },
+      seed: () => const TransfersState(
+        status: TransfersStatus.success,
+        allTransfers: testTransfersPage1,
+        filteredTransfers: testTransfersPage1,
+        currentPage: 1,
+      ),
+      act: (bloc) => bloc.add(const LoadMoreTransfersEvent()),
+      expect: () => [
+        isA<TransfersState>().having((s) => s.isLoadingMore, 'isLoadingMore', true),
+        isA<TransfersState>()
+            .having((s) => s.isLoadingMore, 'isLoadingMore', false)
+            .having((s) => s.allTransfers.length, 'allTransfers length', 2)
+            .having((s) => s.currentPage, 'currentPage', 2),
       ],
     );
   });

@@ -3,7 +3,11 @@ import '../../../../core/network/api_client.dart';
 import '../models/transfer_dto.dart';
 
 abstract class TransfersRemoteDataSource {
-  Future<List<TransferDto>> getTransfers({required String lang});
+  Future<List<TransferDto>> getTransfers({
+    required String lang,
+    int page = 1,
+    List<String>? loadedIds,
+  });
 }
 
 class TransfersRemoteDataSourceImpl implements TransfersRemoteDataSource {
@@ -12,10 +16,21 @@ class TransfersRemoteDataSourceImpl implements TransfersRemoteDataSource {
   TransfersRemoteDataSourceImpl(this._client);
 
   @override
-  Future<List<TransferDto>> getTransfers({required String lang}) async {
+  Future<List<TransferDto>> getTransfers({
+    required String lang,
+    int page = 1,
+    List<String>? loadedIds,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'lang': lang,
+      if (page > 1) 'page': page,
+      if (loadedIds != null && loadedIds.isNotEmpty)
+        'loaded_ids': loadedIds.join(','),
+    };
+
     final response = await _client.get(
       ApiEndpoints.transfers,
-      queryParameters: {'lang': lang},
+      queryParameters: queryParams,
     );
 
     if (response is Map && response['data'] is List) {

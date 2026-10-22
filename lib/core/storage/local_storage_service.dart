@@ -35,6 +35,14 @@ abstract class LocalStorageService {
   Future<bool> setTimezoneAuto(bool isAuto) async => true;
   int getDeviceTimezoneOffset() => DateTime.now().timeZoneOffset.inHours;
 
+  // Font Size Settings
+  bool isFontSizeAuto() => true;
+  Future<bool> setFontSizeAuto(bool isAuto) async => true;
+  double getAppFontSizeScale() => 1.0;
+  Future<bool> setAppFontSizeScale(double scale) async => true;
+  double getNewsFontSizeScale() => 1.0;
+  Future<bool> setNewsFontSizeScale(double scale) async => true;
+
   // Favorites
   List<String> getFavoriteTeams();
   Future<bool> toggleFavoriteTeam(String teamName, {String? id});
@@ -164,6 +172,9 @@ class LocalStorageServiceImpl implements LocalStorageService {
   static const String _keyTimeFormat = 'app_time_format';
   static const String _keyTimezoneOffset = 'app_timezone_offset';
   static const String _keyTimezoneAuto = 'app_timezone_auto';
+  static const String _keyFontSizeAuto = 'app_font_size_auto';
+  static const String _keyAppFontSizeScale = 'app_font_size_scale';
+  static const String _keyNewsFontSizeScale = 'app_news_font_size_scale';
   static const String _keyFavoriteTeams = 'app_favorite_teams';
   static const String _keyFavoriteTeamTitles = 'app_favorite_team_titles';
   static const String _keyFavoriteTeamLogos = 'app_favorite_team_logos';
@@ -352,6 +363,36 @@ class LocalStorageServiceImpl implements LocalStorageService {
       return _prefs.setInt(_keyTimezoneOffset, getDeviceTimezoneOffset());
     }
     return true;
+  }
+
+  @override
+  bool isFontSizeAuto() {
+    return _prefs.getBool(_keyFontSizeAuto) ?? true;
+  }
+
+  @override
+  Future<bool> setFontSizeAuto(bool isAuto) {
+    return _prefs.setBool(_keyFontSizeAuto, isAuto);
+  }
+
+  @override
+  double getAppFontSizeScale() {
+    return _prefs.getDouble(_keyAppFontSizeScale) ?? 1.0;
+  }
+
+  @override
+  Future<bool> setAppFontSizeScale(double scale) {
+    return _prefs.setDouble(_keyAppFontSizeScale, scale);
+  }
+
+  @override
+  double getNewsFontSizeScale() {
+    return _prefs.getDouble(_keyNewsFontSizeScale) ?? 1.0;
+  }
+
+  @override
+  Future<bool> setNewsFontSizeScale(double scale) {
+    return _prefs.setDouble(_keyNewsFontSizeScale, scale);
   }
 
   static const Map<String, String> knownTeamNameToId = {

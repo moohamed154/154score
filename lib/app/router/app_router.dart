@@ -23,6 +23,7 @@ import '../../features/players/presentation/views/player_view.dart';
 import '../../features/profiles/presentation/views/generic_profile_view.dart';
 import '../../features/notifications/presentation/views/notifications_view.dart';
 import '../../features/search/presentation/views/search_view.dart';
+import '../../features/settings/presentation/views/font_size_settings_view.dart';
 import '../../features/settings/presentation/views/language_settings_view.dart';
 import '../../features/settings/presentation/views/notification_settings_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
@@ -428,6 +429,14 @@ class AppRouter {
                     pageBuilder: (context, state) => _buildCupertinoPage(
                       state: state,
                       child: const ThemeSettingsView(),
+                    ),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: 'font-size',
+                    pageBuilder: (context, state) => _buildCupertinoPage(
+                      state: state,
+                      child: const FontSizeSettingsView(),
                     ),
                   ),
                 ],

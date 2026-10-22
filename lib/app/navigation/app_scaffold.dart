@@ -10,6 +10,7 @@ import '../../core/constants/app_typography.dart';
 import '../../core/di/injection_container.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/storage/local_storage_service.dart';
+import '../../core/utils/scroll_to_top_notifier.dart';
 import '../../core/widgets/app_brand_logo.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/matches/presentation/bloc/matches_bloc.dart';
@@ -213,10 +214,14 @@ class AppScaffold extends StatelessWidget {
   }
 
   void _onTap(BuildContext context, int index) {
+    final isCurrentTab = index == navigationShell.currentIndex;
     navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: isCurrentTab,
     );
+    if (isCurrentTab) {
+      AppScrollToTopNotifier.scrollToTop(index);
+    }
   }
 
   List<NavigationRailDestination> _buildRailDestinations(

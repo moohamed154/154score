@@ -31,7 +31,7 @@ class AppLocalizations {
       'nav_videos': 'Videos',
       'nav_standings': 'Standings',
       'nav_favorites': 'Favorites',
-      'nav_settings': 'Settings',
+      'nav_settings': 'More',
       'nav_search': 'Search',
 
       // Home & Headers
@@ -198,9 +198,20 @@ class AppLocalizations {
           'No favorites added yet. Tap ⭐ on matches or teams to add.',
 
       // Settings
-      'settings_title': 'Settings',
+      'settings_title': 'More',
       'settings_appearance': 'Appearance',
       'settings_theme_mode': 'Theme',
+      'settings_font_size': 'Font Size',
+      'font_size_title': 'Font Size',
+      'font_size_auto': 'Auto',
+      'font_size_auto_desc': "Your phone's default font size",
+      'font_size_manual': 'Manual',
+      'font_size_manual_desc': 'Choose your preferred font size',
+      'font_size_app': 'App font size',
+      'font_size_news': 'News font size',
+      'font_size_preview_text': 'This is a preview text',
+      'font_size_applied_notice':
+          'Changes are applied smoothly across all screens',
       'theme_dark': 'Dark Mode',
       'theme_light': 'Light Mode',
       'theme_system': 'System Mode',
@@ -417,7 +428,7 @@ class AppLocalizations {
       'nav_videos': 'الفيديوهات',
       'nav_standings': 'الترتيب',
       'nav_favorites': 'المفضلة',
-      'nav_settings': 'الإعدادات',
+      'nav_settings': 'المزيد',
       'nav_search': 'بحث',
 
       // Home & Headers
@@ -582,9 +593,20 @@ class AppLocalizations {
           'لم تقم بإضافة فرق أو مباريات للمفضلة بعد. اضغط ⭐ للإضافة.',
 
       // Settings
-      'settings_title': 'الإعدادات',
+      'settings_title': 'المزيد',
       'settings_appearance': 'المظهر والسمة',
       'settings_theme_mode': 'وضع العرض',
+      'settings_font_size': 'حجم الخط',
+      'font_size_title': 'حجم الخط',
+      'font_size_auto': 'تلقائي',
+      'font_size_auto_desc': 'حجم الخط الافتراضي لهاتفك',
+      'font_size_manual': 'يدوي',
+      'font_size_manual_desc': 'اختر حجم الخط المفضل لديك',
+      'font_size_app': 'حجم خط التطبيق',
+      'font_size_news': 'حجم خط الأخبار',
+      'font_size_preview_text': 'هذا نص تجريبي للمعاينة',
+      'font_size_applied_notice':
+          'يتم تطبيق حجم الخط بسلاسة عبر جميع الشاشات',
       'theme_dark': 'الوضع الداكن (Dark)',
       'theme_light': 'الوضع الفاتح (Light)',
       'theme_system': 'تلقائي (حسب النظام)',

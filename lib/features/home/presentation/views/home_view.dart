@@ -10,6 +10,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
@@ -343,8 +344,41 @@ class _HomeDayPage extends StatefulWidget {
 
 class _HomeDayPageState extends State<_HomeDayPage>
     with AutomaticKeepAliveClientMixin {
+  late final ScrollController _scrollController;
+
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    AppScrollToTopNotifier.addListener(0, _onScrollToTopRequested);
+  }
+
+  @override
+  void dispose() {
+    AppScrollToTopNotifier.removeListener(0, _onScrollToTopRequested);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScrollToTopRequested() {
+    if (!mounted) return;
+    final isSelected = DateFormatter.isSameDay(
+      widget.pageDate,
+      context.read<MatchesBloc>().state.selectedDate,
+    );
+    if (isSelected &&
+        _scrollController.hasClients &&
+        _scrollController.offset > 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -440,6 +474,7 @@ class _HomeDayPageState extends State<_HomeDayPage>
             },
             child: isLoading
                 ? ListView(
+                    controller: _scrollController,
                     key: PageStorageKey<String>('skel_$dateKey'),
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
@@ -456,6 +491,7 @@ class _HomeDayPageState extends State<_HomeDayPage>
                   )
                 : isError
                     ? ListView(
+                        controller: _scrollController,
                         key: PageStorageKey<String>('err_$dateKey'),
                         physics: const AlwaysScrollableScrollPhysics(
                           parent: BouncingScrollPhysics(),
@@ -482,6 +518,7 @@ class _HomeDayPageState extends State<_HomeDayPage>
                         state: matchesState,
                         isDark: widget.isDark,
                         isArabic: widget.isArabic,
+                        scrollController: _scrollController,
                       ),
           );
         },
@@ -541,6 +578,7 @@ class _HomeDayPageState extends State<_HomeDayPage>
     required MatchesState state,
     required bool isDark,
     required bool isArabic,
+    ScrollController? scrollController,
   }) {
     final dateHeader = _buildDateHeader(pageDate, isDark, isArabic);
 
@@ -564,6 +602,7 @@ class _HomeDayPageState extends State<_HomeDayPage>
       }
 
       return ListView(
+        controller: scrollController,
         key: PageStorageKey<String>(
           'empty_${DateFormatter.toApiDateString(pageDate)}',
         ),
@@ -597,6 +636,7 @@ class _HomeDayPageState extends State<_HomeDayPage>
     final dateKey = DateFormatter.toApiDateString(pageDate);
 
     return ListView.builder(
+      controller: scrollController,
       key: PageStorageKey<String>('matches_$dateKey'),
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),

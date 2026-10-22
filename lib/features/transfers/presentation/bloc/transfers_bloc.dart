@@ -27,6 +27,10 @@ class LoadTransfersEvent extends TransfersEvent {
   List<Object?> get props => [isRefresh];
 }
 
+class LoadMoreTransfersEvent extends TransfersEvent {
+  const LoadMoreTransfersEvent();
+}
+
 class SearchTransfersEvent extends TransfersEvent {
   final String query;
 
@@ -63,6 +67,9 @@ class TransfersState extends Equatable {
   final List<TransferEntity> filteredTransfers;
   final String searchQuery;
   final String? errorMessage;
+  final bool isLoadingMore;
+  final bool hasReachedMax;
+  final int currentPage;
 
   const TransfersState({
     this.status = TransfersStatus.initial,
@@ -70,6 +77,9 @@ class TransfersState extends Equatable {
     this.filteredTransfers = const [],
     this.searchQuery = '',
     this.errorMessage,
+    this.isLoadingMore = false,
+    this.hasReachedMax = false,
+    this.currentPage = 1,
   });
 
   TransfersState copyWith({
@@ -78,6 +88,9 @@ class TransfersState extends Equatable {
     List<TransferEntity>? filteredTransfers,
     String? searchQuery,
     String? errorMessage,
+    bool? isLoadingMore,
+    bool? hasReachedMax,
+    int? currentPage,
   }) {
     return TransfersState(
       status: status ?? this.status,
@@ -85,6 +98,9 @@ class TransfersState extends Equatable {
       filteredTransfers: filteredTransfers ?? this.filteredTransfers,
       searchQuery: searchQuery ?? this.searchQuery,
       errorMessage: errorMessage ?? this.errorMessage,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      currentPage: currentPage ?? this.currentPage,
     );
   }
 
@@ -95,6 +111,9 @@ class TransfersState extends Equatable {
         filteredTransfers,
         searchQuery,
         errorMessage,
+        isLoadingMore,
+        hasReachedMax,
+        currentPage,
       ];
 }
 
@@ -111,6 +130,7 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
     this.webSocketService,
   }) : super(const TransfersState()) {
     on<LoadTransfersEvent>(_onLoadTransfers);
+    on<LoadMoreTransfersEvent>(_onLoadMoreTransfers);
     on<SearchTransfersEvent>(_onSearchTransfers);
     on<TransferSocketUpdateEvent>(_onTransferSocketUpdate);
     on<ChangeTransfersLanguageEvent>(_onChangeTransfersLanguage);
@@ -146,6 +166,9 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
               allTransfers: transfers,
               filteredTransfers: filtered,
               errorMessage: null,
+              currentPage: 1,
+              hasReachedMax: false,
+              isLoadingMore: false,
             ),
           );
         },
@@ -162,6 +185,72 @@ class TransfersBloc extends Bloc<TransfersEvent, TransfersState> {
       if (event.completer != null && !event.completer!.isCompleted) {
         event.completer!.complete();
       }
+    }
+  }
+
+  Future<void> _onLoadMoreTransfers(
+    LoadMoreTransfersEvent event,
+    Emitter<TransfersState> emit,
+  ) async {
+    if (state.isLoadingMore ||
+        state.hasReachedMax ||
+        state.status != TransfersStatus.success ||
+        state.searchQuery.trim().isNotEmpty) {
+      return;
+    }
+
+    emit(state.copyWith(isLoadingMore: true));
+
+    try {
+      final lang = localStorageService.getLanguage();
+      final nextPage = state.currentPage + 1;
+      final loadedIds = state.allTransfers
+          .map((t) => t.id)
+          .where((id) => id.isNotEmpty)
+          .toList();
+
+      final result = await repository.getTransfers(
+        lang: lang,
+        page: nextPage,
+        loadedIds: loadedIds,
+      );
+
+      result.fold(
+        onSuccess: (newTransfers) {
+          if (newTransfers.isEmpty) {
+            emit(state.copyWith(isLoadingMore: false, hasReachedMax: true));
+            return;
+          }
+
+          final existingIds = state.allTransfers.map((t) => t.id).toSet();
+          final uniqueNew =
+              newTransfers.where((t) => !existingIds.contains(t.id)).toList();
+
+          if (uniqueNew.isEmpty) {
+            emit(state.copyWith(isLoadingMore: false, hasReachedMax: true));
+            return;
+          }
+
+          final updatedAll = List<TransferEntity>.from(state.allTransfers)
+            ..addAll(uniqueNew);
+          final filtered = _applySearch(updatedAll, state.searchQuery);
+
+          emit(
+            state.copyWith(
+              allTransfers: updatedAll,
+              filteredTransfers: filtered,
+              currentPage: nextPage,
+              isLoadingMore: false,
+              hasReachedMax: uniqueNew.length < 5,
+            ),
+          );
+        },
+        onFailure: (failure) {
+          emit(state.copyWith(isLoadingMore: false));
+        },
+      );
+    } catch (_) {
+      emit(state.copyWith(isLoadingMore: false));
     }
   }
 

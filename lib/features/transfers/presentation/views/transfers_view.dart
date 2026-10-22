@@ -10,6 +10,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
+import '../../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/transfer_entity.dart';
@@ -25,18 +26,43 @@ class TransfersView extends StatefulWidget {
 
 class _TransfersViewState extends State<TransfersView> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
+    AppScrollToTopNotifier.addListener(3, _scrollToTop);
     final bloc = context.read<TransfersBloc>();
     if (bloc.state.status == TransfersStatus.initial) {
       bloc.add(const LoadTransfersEvent());
     }
   }
 
+  void _scrollToTop() {
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    if (currentScroll >= maxScroll - 300) {
+      context.read<TransfersBloc>().add(const LoadMoreTransfersEvent());
+    }
+  }
+
   @override
   void dispose() {
+    AppScrollToTopNotifier.removeListener(3, _scrollToTop);
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -186,10 +212,29 @@ class _TransfersViewState extends State<TransfersView> {
       );
     }
 
+    final showLoadingMore = state.isLoadingMore;
+    final itemCount = state.filteredTransfers.length + (showLoadingMore ? 1 : 0);
+
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.only(bottom: AppDimensions.xxxl),
-      itemCount: state.filteredTransfers.length,
+      itemCount: itemCount,
       itemBuilder: (context, index) {
+        if (index >= state.filteredTransfers.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator.adaptive(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            ),
+          );
+        }
         return TransferCard(transfer: state.filteredTransfers[index]);
       },
     );

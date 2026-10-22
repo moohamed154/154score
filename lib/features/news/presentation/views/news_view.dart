@@ -10,6 +10,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../settings/presentation/cubit/settings_cubits.dart';
@@ -17,8 +18,39 @@ import '../../domain/entities/news_entity.dart';
 import '../bloc/news_bloc.dart';
 import '../widgets/news_widgets.dart';
 
-class NewsView extends StatelessWidget {
+class NewsView extends StatefulWidget {
   const NewsView({super.key});
+
+  @override
+  State<NewsView> createState() => _NewsViewState();
+}
+
+class _NewsViewState extends State<NewsView> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    AppScrollToTopNotifier.addListener(1, _scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    AppScrollToTopNotifier.removeListener(1, _scrollToTop);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +121,7 @@ class NewsView extends StatelessWidget {
                 return completer.future;
               },
               child: _NewsBody(
+                scrollController: _scrollController,
                 isLoading: isLoading,
                 state: state,
                 isDark: isDark,
@@ -104,6 +137,7 @@ class NewsView extends StatelessWidget {
 }
 
 class _NewsBody extends StatelessWidget {
+  final ScrollController scrollController;
   final bool isLoading;
   final NewsState state;
   final bool isDark;
@@ -111,6 +145,7 @@ class _NewsBody extends StatelessWidget {
   final AppLocalizations l10n;
 
   const _NewsBody({
+    required this.scrollController,
     required this.isLoading,
     required this.state,
     required this.isDark,
@@ -175,6 +210,7 @@ class _NewsBody extends StatelessWidget {
         containersColor:
             isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
         child: CustomScrollView(
+          controller: scrollController,
           slivers: [
             // Section label: Latest News
             SliverToBoxAdapter(

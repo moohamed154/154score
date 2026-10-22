@@ -224,3 +224,68 @@ class NewsLanguageCubit extends Cubit<String> {
     emit(lang);
   }
 }
+
+// Font Size State
+class FontSizeState extends Equatable {
+  final bool isAuto;
+  final double appFontSizeScale;
+  final double newsFontSizeScale;
+
+  const FontSizeState({
+    required this.isAuto,
+    required this.appFontSizeScale,
+    required this.newsFontSizeScale,
+  });
+
+  FontSizeState copyWith({
+    bool? isAuto,
+    double? appFontSizeScale,
+    double? newsFontSizeScale,
+  }) {
+    return FontSizeState(
+      isAuto: isAuto ?? this.isAuto,
+      appFontSizeScale: appFontSizeScale ?? this.appFontSizeScale,
+      newsFontSizeScale: newsFontSizeScale ?? this.newsFontSizeScale,
+    );
+  }
+
+  @override
+  List<Object?> get props => [isAuto, appFontSizeScale, newsFontSizeScale];
+}
+
+// Font Size Cubit
+class FontSizeCubit extends Cubit<FontSizeState> {
+  final LocalStorageService _storage;
+
+  FontSizeCubit(this._storage)
+      : super(
+          FontSizeState(
+            isAuto: _storage.isFontSizeAuto(),
+            appFontSizeScale: _storage.getAppFontSizeScale(),
+            newsFontSizeScale: _storage.getNewsFontSizeScale(),
+          ),
+        );
+
+  Future<void> setAuto(bool isAuto) async {
+    if (state.isAuto == isAuto) return;
+    emit(state.copyWith(isAuto: isAuto));
+    await _storage.setFontSizeAuto(isAuto);
+  }
+
+  Future<void> setAppFontSizeScale(double scale) async {
+    final rounded = double.parse(scale.toStringAsFixed(2));
+    if (state.appFontSizeScale == rounded && !state.isAuto) return;
+    emit(state.copyWith(appFontSizeScale: rounded, isAuto: false));
+    await _storage.setFontSizeAuto(false);
+    await _storage.setAppFontSizeScale(rounded);
+  }
+
+  Future<void> setNewsFontSizeScale(double scale) async {
+    final rounded = double.parse(scale.toStringAsFixed(2));
+    if (state.newsFontSizeScale == rounded && !state.isAuto) return;
+    emit(state.copyWith(newsFontSizeScale: rounded, isAuto: false));
+    await _storage.setFontSizeAuto(false);
+    await _storage.setNewsFontSizeScale(rounded);
+  }
+}
+

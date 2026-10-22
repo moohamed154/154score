@@ -89,6 +89,50 @@ class DateFormatter {
     );
   }
 
+  /// Formats a raw date/time string (e.g. "2026-10-21 23:10:08.000000",
+  /// "2026-10-21 23:10:08", or "2026-10-21") into a clean, human-readable format.
+  /// Example outputs:
+  /// - 12h: "2026-10-21 • 11:10 PM" (EN) / "2026-10-21 • 11:10 م" (AR)
+  /// - 24h: "2026-10-21 • 23:10"
+  static String formatDateTime(
+    dynamic rawDate, {
+    required bool isArabic,
+    String? timeFormat,
+  }) {
+    if (rawDate == null) return '';
+    DateTime? dt;
+    String rawStr = '';
+    if (rawDate is DateTime) {
+      dt = rawDate;
+      rawStr = dt.toIso8601String();
+    } else {
+      rawStr = rawDate.toString().trim();
+      if (rawStr.isEmpty) return '';
+      final cleaned = rawStr.replaceAll('.000000', '');
+      dt = DateTime.tryParse(cleaned);
+      if (dt == null) return rawStr;
+    }
+
+    final yyyy = dt.year.toString();
+    final mm = dt.month.toString().padLeft(2, '0');
+    final dd = dt.day.toString().padLeft(2, '0');
+    final datePart = '$yyyy-$mm-$dd';
+
+    if (!rawStr.contains(':')) {
+      return datePart;
+    }
+
+    final activeTimeFormat = timeFormat ?? '24h';
+    final timePart = _formatHourMinute(
+      dt.hour,
+      dt.minute.toString().padLeft(2, '0'),
+      timeFormat: activeTimeFormat,
+      isArabic: isArabic,
+    );
+
+    return '$datePart • $timePart';
+  }
+
   static String _formatHourMinute(
     int hour,
     String minuteStr, {

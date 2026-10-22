@@ -317,4 +317,69 @@ void main() {
       );
     });
   });
+
+  group('DateFormatter.formatDateTime', () {
+    test('formats raw microsecond timestamp 2026-10-21 23:10:08.000000 in 24h', () {
+      expect(
+        DateFormatter.formatDateTime(
+          '2026-10-21 23:10:08.000000',
+          timeFormat: '24h',
+          isArabic: false,
+        ),
+        '2026-10-21 • 23:10',
+      );
+    });
+
+    test('formats raw microsecond timestamp in 12h English', () {
+      expect(
+        DateFormatter.formatDateTime(
+          '2026-10-21 23:10:08.000000',
+          timeFormat: '12h',
+          isArabic: false,
+        ),
+        '2026-10-21 • 11:10 PM',
+      );
+    });
+
+    test('formats raw microsecond timestamp in 12h Arabic', () {
+      expect(
+        DateFormatter.formatDateTime(
+          '2026-10-21 23:10:08.000000',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
+        '2026-10-21 • 11:10 م',
+      );
+    });
+
+    test('formats morning timestamp correctly in 12h', () {
+      expect(
+        DateFormatter.formatDateTime(
+          '2026-10-21 08:05:00.000000',
+          timeFormat: '12h',
+          isArabic: false,
+        ),
+        '2026-10-21 • 08:05 AM',
+      );
+      expect(
+        DateFormatter.formatDateTime(
+          '2026-10-21 08:05:00.000000',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
+        '2026-10-21 • 08:05 ص',
+      );
+    });
+
+    test('handles date-only string without time gracefully', () {
+      expect(
+        DateFormatter.formatDateTime(
+          '2026-10-21',
+          timeFormat: '12h',
+          isArabic: true,
+        ),
+        '2026-10-21',
+      );
+    });
+  });
 }
