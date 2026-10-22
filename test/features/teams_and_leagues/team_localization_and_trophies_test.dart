@@ -62,6 +62,7 @@ class _MockLocalStorageService implements LocalStorageService {
   @override
   Future<bool> toggleFavoriteCompetition({
     String? compName,
+    bool? forceFavorite,
     String? id,
     String? name,
     String? slug,

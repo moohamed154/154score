@@ -374,23 +374,36 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.isArabic;
 
-    return Scaffold(
-      body: switch (_state) {
-        _DetailState.loading => _buildLoading(isDark),
-        _DetailState.error => CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                floating: true,
-                backgroundColor: isDark
-                    ? AppColors.darkBackground
-                    : AppColors.lightBackground,
-              ),
-              SliverFillRemaining(
-                child: ErrorView(message: _error, onRetry: _load),
-              ),
-            ],
+    return BlocBuilder<FontSizeCubit, FontSizeState>(
+      builder: (context, fontState) {
+        final mq = MediaQuery.of(context);
+        final newsScaler = fontState.isAuto
+            ? mq.textScaler
+            : TextScaler.linear(fontState.newsFontSizeScale);
+
+        return MediaQuery(
+          data: mq.copyWith(textScaler: newsScaler),
+          child: Scaffold(
+            body: switch (_state) {
+              _DetailState.loading => _buildLoading(isDark),
+              _DetailState.error => CustomScrollView(
+                  slivers: [
+                    SliverAppBar(
+                      floating: true,
+                      backgroundColor: isDark
+                          ? AppColors.darkBackground
+                          : AppColors.lightBackground,
+                    ),
+                    SliverFillRemaining(
+                      child: ErrorView(message: _error, onRetry: _load),
+                    ),
+                  ],
+                ),
+              _DetailState.success =>
+                _buildSuccess(context, isDark, isArabic, l10n),
+            },
           ),
-        _DetailState.success => _buildSuccess(context, isDark, isArabic, l10n),
+        );
       },
     );
   }
@@ -521,105 +534,93 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
 
         // Article content
         SliverToBoxAdapter(
-          child: BlocBuilder<FontSizeCubit, FontSizeState>(
-            builder: (context, fontState) {
-              final mq = MediaQuery.of(context);
-              final newsScaler = fontState.isAuto
-                  ? mq.textScaler
-                  : TextScaler.linear(fontState.newsFontSizeScale);
-
-              return MediaQuery(
-                data: mq.copyWith(textScaler: newsScaler),
-                child: Directionality(
-                  textDirection: textDir,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppDimensions.lg),
-                    child: Column(
-                      crossAxisAlignment: isContentArabic
-                          ? CrossAxisAlignment.end
-                          : (isArabic
-                              ? CrossAxisAlignment.end
-                              : CrossAxisAlignment.start),
-                      children: [
-                        // Title
-                        Text(
-                          detail.title,
-                          textDirection: textDir,
-                          textAlign: isContentArabic
-                              ? TextAlign.right
-                              : TextAlign.start,
-                          style: AppTypography.getHeadingMedium(
-                            isDark: isDark,
-                            isArabic: effectiveArabic,
-                          ),
-                        ),
-                        const SizedBox(height: AppDimensions.sm),
-                        // Timestamp
-                        if (detail.publishedAt != null)
-                          Row(
-                            mainAxisAlignment: isContentArabic
-                                ? MainAxisAlignment.end
-                                : MainAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.calendar_today_rounded,
-                                size: 13,
-                                color: isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted,
-                              ),
-                              const SizedBox(width: AppDimensions.xs),
-                              _buildTimestamp(
-                                detail.publishedAt,
-                                isDark,
-                                effectiveArabic,
-                              ),
-                            ],
-                          ),
-                        const SizedBox(height: AppDimensions.lg),
-
-                        Divider(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : AppColors.lightBorder,
-                          thickness: 1,
-                        ),
-                        const SizedBox(height: AppDimensions.md),
-
-                        // Paragraphs
-                        ...List<Widget>.generate(detail.paragraphs.length, (i) {
-                          final para = detail.paragraphs[i];
-                          final isParaArabic =
-                              TextDirectionHelper.isArabic(para);
-                          final effectiveParaArabic =
-                              isParaArabic || effectiveArabic;
-                          final paraDir =
-                              isParaArabic ? TextDirection.rtl : textDir;
-
-                          return Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: AppDimensions.md),
-                            child: Text(
-                              para,
-                              style: AppTypography.getBodyLarge(
-                                isDark: isDark,
-                                isArabic: effectiveParaArabic,
-                              ).copyWith(height: 1.8),
-                              textDirection: paraDir,
-                              textAlign: isParaArabic
-                                  ? TextAlign.right
-                                  : TextAlign.start,
-                            ),
-                          );
-                        }),
-
-                        const SizedBox(height: AppDimensions.xxxl),
-                      ],
+          child: Directionality(
+            textDirection: textDir,
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.lg),
+              child: Column(
+                crossAxisAlignment: isContentArabic
+                    ? CrossAxisAlignment.end
+                    : (isArabic
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start),
+                children: [
+                  // Title
+                  Text(
+                    detail.title,
+                    textDirection: textDir,
+                    textAlign: isContentArabic
+                        ? TextAlign.right
+                        : TextAlign.start,
+                    style: AppTypography.getHeadingMedium(
+                      isDark: isDark,
+                      isArabic: effectiveArabic,
                     ),
                   ),
-                ),
-              );
-            },
+                  const SizedBox(height: AppDimensions.sm),
+                  // Timestamp
+                  if (detail.publishedAt != null)
+                    Row(
+                      mainAxisAlignment: isContentArabic
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 13,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                        ),
+                        const SizedBox(width: AppDimensions.xs),
+                        _buildTimestamp(
+                          detail.publishedAt,
+                          isDark,
+                          effectiveArabic,
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: AppDimensions.lg),
+
+                  Divider(
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
+                    thickness: 1,
+                  ),
+                  const SizedBox(height: AppDimensions.md),
+
+                  // Paragraphs
+                  ...List<Widget>.generate(detail.paragraphs.length, (i) {
+                    final para = detail.paragraphs[i];
+                    final isParaArabic =
+                        TextDirectionHelper.isArabic(para);
+                    final effectiveParaArabic =
+                        isParaArabic || effectiveArabic;
+                    final paraDir =
+                        isParaArabic ? TextDirection.rtl : textDir;
+
+                    return Padding(
+                      padding:
+                          const EdgeInsets.only(bottom: AppDimensions.md),
+                      child: Text(
+                        para,
+                        style: AppTypography.getBodyLarge(
+                          isDark: isDark,
+                          isArabic: effectiveParaArabic,
+                        ).copyWith(height: 1.8),
+                        textDirection: paraDir,
+                        textAlign: isParaArabic
+                            ? TextAlign.right
+                            : TextAlign.start,
+                      ),
+                    );
+                  }),
+
+                  const SizedBox(height: AppDimensions.xxxl),
+                ],
+              ),
+            ),
           ),
         ),
       ],

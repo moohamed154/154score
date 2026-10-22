@@ -98,35 +98,49 @@ class _NewsViewState extends State<NewsView> {
             ],
           ),
         ),
-        body: BlocBuilder<NewsBloc, NewsState>(
-          builder: (context, state) {
-            if (state.status == NewsStatus.error && state.feed == null) {
-              return ErrorView(
-                message: state.errorMessage,
-                onRetry: () =>
-                    context.read<NewsBloc>().add(const LoadNewsFeedEvent()),
-              );
-            }
+        body: BlocBuilder<FontSizeCubit, FontSizeState>(
+          builder: (context, fontState) {
+            final mq = MediaQuery.of(context);
+            final newsScaler = fontState.isAuto
+                ? mq.textScaler
+                : TextScaler.linear(fontState.newsFontSizeScale);
 
-            final isLoading =
-                state.status == NewsStatus.loading && state.feed == null;
-
-            return RefreshIndicator(
-              color: AppColors.primary,
-              onRefresh: () {
-                final completer = Completer<void>();
-                context.read<NewsBloc>().add(
-                      LoadNewsFeedEvent(isRefresh: true, completer: completer),
+            return MediaQuery(
+              data: mq.copyWith(textScaler: newsScaler),
+              child: BlocBuilder<NewsBloc, NewsState>(
+                builder: (context, state) {
+                  if (state.status == NewsStatus.error && state.feed == null) {
+                    return ErrorView(
+                      message: state.errorMessage,
+                      onRetry: () => context
+                          .read<NewsBloc>()
+                          .add(const LoadNewsFeedEvent()),
                     );
-                return completer.future;
-              },
-              child: _NewsBody(
-                scrollController: _scrollController,
-                isLoading: isLoading,
-                state: state,
-                isDark: isDark,
-                isArabic: isArabic,
-                l10n: l10n,
+                  }
+
+                  final isLoading =
+                      state.status == NewsStatus.loading && state.feed == null;
+
+                  return RefreshIndicator(
+                    color: AppColors.primary,
+                    onRefresh: () {
+                      final completer = Completer<void>();
+                      context.read<NewsBloc>().add(
+                            LoadNewsFeedEvent(
+                                isRefresh: true, completer: completer),
+                          );
+                      return completer.future;
+                    },
+                    child: _NewsBody(
+                      scrollController: _scrollController,
+                      isLoading: isLoading,
+                      state: state,
+                      isDark: isDark,
+                      isArabic: isArabic,
+                      l10n: l10n,
+                    ),
+                  );
+                },
               ),
             );
           },

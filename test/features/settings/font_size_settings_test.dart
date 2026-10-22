@@ -132,5 +132,22 @@ void main() {
 
       expect(cubit.state.isAuto, isTrue);
     });
+
+    testWidgets(
+        'News preview textScaler responds strictly to newsFontSizeScale',
+        (tester) async {
+      await cubit.setAuto(false);
+      await cubit.setAppFontSizeScale(1.10);
+      await cubit.setNewsFontSizeScale(1.25);
+
+      await tester.pumpWidget(buildTestWidget(locale: const Locale('ar')));
+      await tester.pumpAndSettle();
+
+      final previewTextFinder = find.text('هذا نص تجريبي للمعاينة');
+      expect(previewTextFinder, findsOneWidget);
+
+      final textWidget = tester.widget<Text>(previewTextFinder);
+      expect(textWidget.textScaler, const TextScaler.linear(1.25));
+    });
   });
 }

@@ -40,6 +40,7 @@ dependencies:
   firebase_messaging: ^16.7.0
   package_info_plus: ^10.2.2
   open_filex: ^4.5.0
+  internet_connection_checker_plus: ^3.1.2
 
 dev_dependencies:
   flutter_test:

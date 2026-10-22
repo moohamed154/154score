@@ -44,7 +44,7 @@ class CircularLiveClock extends StatefulWidget {
     this.timestamp,
     this.htTime,
     this.size = 56.0,
-    this.arcColor = const Color(0xFF2EE5A7),
+    this.arcColor = const Color(0xFF00E676),
     this.notchColor = const Color(0xFFFFD200),
     this.textColor,
     this.goalMinutes,

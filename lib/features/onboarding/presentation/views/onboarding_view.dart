@@ -137,8 +137,16 @@ class _OnboardingViewState extends State<OnboardingView> {
                   children: [
                     _LanguagePage(l10n: l10n, isDark: isDark),
                     _ThemePage(l10n: l10n, isDark: isDark),
-                    _TeamsPage(l10n: l10n, isDark: isDark),
-                    _LeaguesPage(l10n: l10n, isDark: isDark),
+                    _TeamsPage(
+                      key: ValueKey('teams_$isDark'),
+                      l10n: l10n,
+                      isDark: isDark,
+                    ),
+                    _LeaguesPage(
+                      key: ValueKey('leagues_$isDark'),
+                      l10n: l10n,
+                      isDark: isDark,
+                    ),
                   ],
                 ),
               ),
@@ -399,7 +407,7 @@ class _ThemePage extends StatelessWidget {
 }
 
 class _TeamsPage extends StatelessWidget {
-  const _TeamsPage({required this.l10n, required this.isDark});
+  const _TeamsPage({super.key, required this.l10n, required this.isDark});
 
   final AppLocalizations l10n;
   final bool isDark;
@@ -431,7 +439,7 @@ class _TeamsPage extends StatelessWidget {
 }
 
 class _LeaguesPage extends StatelessWidget {
-  const _LeaguesPage({required this.l10n, required this.isDark});
+  const _LeaguesPage({super.key, required this.l10n, required this.isDark});
 
   final AppLocalizations l10n;
   final bool isDark;

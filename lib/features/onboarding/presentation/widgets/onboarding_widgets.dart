@@ -215,6 +215,8 @@ class OnboardingChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveIsDark = Theme.of(context).brightness == Brightness.dark;
+
     return Wrap(
       spacing: AppDimensions.sm,
       runSpacing: AppDimensions.sm,
@@ -223,7 +225,7 @@ class OnboardingChips extends StatelessWidget {
         final logoUrl = isLeague
             ? UrlHelper.resolveChampionshipLogo(
                 item.id ?? LeagueResolver.resolveId(item.ar),
-                isDark: isDark,
+                isDark: effectiveIsDark,
               )
             : UrlHelper.resolveTeamLogo(
                 item.id,
@@ -232,43 +234,65 @@ class OnboardingChips extends StatelessWidget {
 
         Widget? avatar;
         if (logoUrl != null && logoUrl.isNotEmpty) {
-          avatar = ClipRRect(
-            borderRadius: BorderRadius.circular(isLeague ? 4 : 10),
-            child: AppImage(
-              imageUrl: logoUrl,
-              width: 20,
-              height: 20,
-              borderRadius: isLeague ? 4 : 10,
-              fit: BoxFit.contain,
-              placeholderIcon: isLeague
-                  ? Icons.emoji_events_outlined
-                  : Icons.shield_outlined,
+          avatar = Container(
+            width: 24,
+            height: 24,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: effectiveIsDark
+                  ? AppColors.darkCardElevated
+                  : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(isLeague ? 6 : 12),
+              border: Border.all(
+                color: effectiveIsDark
+                    ? const Color(0xFF2A3447)
+                    : const Color(0xFFE2E8F0),
+                width: 1,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(isLeague ? 4 : 10),
+              child: AppImage(
+                key: ValueKey('avatar_${item.id ?? item.ar}_$effectiveIsDark'),
+                imageUrl: logoUrl,
+                width: 20,
+                height: 20,
+                borderRadius: isLeague ? 4 : 10,
+                fit: BoxFit.contain,
+                placeholderIcon: isLeague
+                    ? Icons.emoji_events_outlined
+                    : Icons.shield_outlined,
+              ),
             ),
           );
         }
 
         return FilterChip(
+          key: ValueKey('chip_${item.id ?? item.ar}_$effectiveIsDark'),
           avatar: avatar,
           label: Text(item.nameFor(isArabic: isArabic)),
           selected: isSelected,
           showCheckmark: isSelected,
           checkmarkColor: Colors.white,
           selectedColor: AppColors.primary,
-          backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+          backgroundColor:
+              effectiveIsDark ? AppColors.darkCard : AppColors.lightCard,
           side: BorderSide(
             color: isSelected
                 ? AppColors.primary
-                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                : (effectiveIsDark
+                    ? AppColors.darkBorder
+                    : AppColors.lightBorder),
           ),
           labelStyle: AppTypography.getBodyMedium(
-            isDark: isDark,
+            isDark: effectiveIsDark,
             isArabic: isArabic,
           ).copyWith(
             fontWeight: FontWeight.w600,
             fontSize: 13,
             color: isSelected
                 ? Colors.white
-                : (isDark
+                : (effectiveIsDark
                     ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary),
           ),

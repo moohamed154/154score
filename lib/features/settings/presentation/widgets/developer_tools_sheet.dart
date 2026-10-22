@@ -635,7 +635,7 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
                   isDark: isDark,
                   child: SwitchListTile(
                     value: _isLiveActivityEnabled,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     onChanged: (val) async {
                       await HapticFeedback.selectionClick();
                       await storage.setLiveActivityFeatureEnabled(val);

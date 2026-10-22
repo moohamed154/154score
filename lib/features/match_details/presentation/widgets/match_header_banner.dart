@@ -115,44 +115,59 @@ class MatchHeaderBanner extends StatelessWidget {
         children: [
           if (showLeagueBadge) ...[
             // Tappable League Badge
-            InkWell(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-              onTap: () {
+            Builder(
+              builder: (context) {
                 final lId = match.leagueId ??
-                    LeagueResolver.resolveId(match.leagueTitle);
-                if (lId != null && lId.isNotEmpty) {
-                  final logo = UrlHelper.resolveChampionshipLogo(
-                    lId,
-                    currentLogo: match.leagueLogo,
-                    isDark: isDark,
-                  );
-                  context.push(
-                    '/league/$lId',
-                    extra: {'title': match.leagueTitle, 'logo': logo},
-                  );
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (match.leagueLogo != null) ...[
-                      AppImage(
-                        imageUrl: UrlHelper.resolveChampionshipLogo(
-                          match.leagueId ??
-                              LeagueResolver.resolveId(match.leagueTitle),
-                          currentLogo: match.leagueLogo,
-                          isDark: isDark,
-                        ),
-                        width: 18,
-                        height: 18,
-                        borderRadius: 4,
-                        fit: BoxFit.contain,
-                        placeholderIcon: Icons.emoji_events_outlined,
-                      ),
-                      const SizedBox(width: 6),
-                    ],
+                    LeagueResolver.resolveId(match.leagueTitle) ??
+                    match.leagueTitle;
+                final logo = UrlHelper.resolveChampionshipLogo(
+                  lId,
+                  currentLogo: match.leagueLogo,
+                  isDark: isDark,
+                );
+                return InkWell(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                  onTap: () {
+                    final targetId = match.leagueId ??
+                        LeagueResolver.resolveId(match.leagueTitle);
+                    if (targetId != null && targetId.isNotEmpty) {
+                      context.push(
+                        '/league/$targetId',
+                        extra: {'title': match.leagueTitle, 'logo': logo},
+                      );
+                    }
+                  },
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (logo != null && logo.isNotEmpty) ...[
+                          Container(
+                            width: 22,
+                            height: 22,
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.darkCardElevated
+                                  : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFF2A3447)
+                                    : const Color(0xFFE2E8F0),
+                                width: 1,
+                              ),
+                            ),
+                            child: AppImage(
+                              imageUrl: logo,
+                              fit: BoxFit.contain,
+                              placeholderIcon: Icons.emoji_events_outlined,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
                     Flexible(
                       child: Text(
                         match.leagueTitle ?? 'Match Center',
@@ -183,9 +198,11 @@ class MatchHeaderBanner extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-            SizedBox(height: isSmall ? 8 : 14),
-          ],
+            );
+          },
+        ),
+        SizedBox(height: isSmall ? 8 : 14),
+      ],
 
           // Teams and Score Lineup
           Row(

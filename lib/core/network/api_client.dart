@@ -11,6 +11,7 @@ import '../errors/exceptions.dart';
 import '../security/security_signer.dart';
 import '../storage/local_storage_service.dart';
 import 'debug_console.dart';
+import '../../features/internet_connection/presentation/cubit/internet_connection_cubit.dart';
 
 class ApiClient {
   final Dio _dio;
@@ -186,12 +187,14 @@ class ApiClient {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+        _notifyInternetMonitoring();
         return NetworkException(
           'Connection timed out. Please check your internet connection.',
           requestId: requestId,
         );
 
       case DioExceptionType.connectionError:
+        _notifyInternetMonitoring();
         return NetworkException(
           'Could not connect to 154Score server. Please check your internet connection.',
           requestId: requestId,
@@ -271,6 +274,7 @@ class ApiClient {
 
       case DioExceptionType.unknown:
         if (error.error is SocketException) {
+          _notifyInternetMonitoring();
           return NetworkException(
             'No internet connection. Please verify your network.',
             requestId: requestId,
@@ -320,6 +324,14 @@ class ApiClient {
     return headers.value('x-request-id') ??
         headers.value('X-Request-ID') ??
         headers.value('x-request-id');
+  }
+
+  static void _notifyInternetMonitoring() {
+    try {
+      if (GetIt.instance.isRegistered<InternetConnectionCubit>()) {
+        GetIt.instance<InternetConnectionCubit>().checkConnection(silent: true);
+      }
+    } catch (_) {}
   }
 
   static Duration? _parseRetryAfter(Headers? headers) {

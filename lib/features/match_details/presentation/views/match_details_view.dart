@@ -26,6 +26,7 @@ import '../../../../core/utils/text_direction_helper.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../settings/presentation/cubit/settings_cubits.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../standings/presentation/bloc/standings_bloc.dart';
 import '../../../standings/presentation/widgets/standings_table.dart';
@@ -466,6 +467,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     required MatchEntity fallbackMatch,
     MatchEntity? liveFromMatches,
     required MatchDetailsState state,
+    bool isDark = true,
   }) {
     // 1. Resolve Team 1 (Home)
     String effectiveTeam1 = fallbackMatch.team1;
@@ -576,9 +578,16 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         fallbackMatch.leagueId ??
         LeagueResolver.resolveId(effectiveLeagueTitle ?? '');
 
-    final effectiveLeagueLogo = fallbackMatch.leagueLogo ??
-        state.overview?.championshipLogo ??
-        UrlHelper.resolveChampionshipLogo(effectiveLeagueId);
+    final rawLeagueLogo = (fallbackMatch.leagueLogo != null &&
+            fallbackMatch.leagueLogo!.isNotEmpty)
+        ? fallbackMatch.leagueLogo
+        : state.overview?.championshipLogo;
+
+    final effectiveLeagueLogo = UrlHelper.resolveChampionshipLogo(
+      effectiveLeagueId ?? effectiveLeagueTitle,
+      currentLogo: rawLeagueLogo,
+      isDark: isDark,
+    );
 
     // 7. Status & Time & Date
     final bool isLiveFromFeed = (liveFromMatches != null &&
@@ -821,11 +830,19 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         : (isArabic ? 'مركز المباراة' : 'Match Center');
 
     final effectiveLeagueId = state.championshipId ??
+        state.overview?.championshipId ??
         match.leagueId ??
         LeagueResolver.resolveId(effectiveTitle);
 
-    final effectiveLogo = match.leagueLogo ??
-        UrlHelper.resolveChampionshipLogo(effectiveLeagueId);
+    final rawLogo = (match.leagueLogo != null && match.leagueLogo!.isNotEmpty)
+        ? match.leagueLogo
+        : state.overview?.championshipLogo;
+
+    final effectiveLogo = UrlHelper.resolveChampionshipLogo(
+      effectiveLeagueId ?? displayTitle,
+      currentLogo: rawLogo,
+      isDark: isDark,
+    );
 
     return InkWell(
       borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
@@ -845,15 +862,29 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (effectiveLogo != null && effectiveLogo.isNotEmpty) ...[
-              AppImage(
-                imageUrl: effectiveLogo,
-                width: 20,
-                height: 20,
-                borderRadius: 4,
-                fit: BoxFit.contain,
-                placeholderIcon: Icons.emoji_events_outlined,
+              Container(
+                width: 26,
+                height: 26,
+                padding: const EdgeInsets.all(2.5),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkCardElevated
+                      : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF2A3447)
+                        : const Color(0xFFE2E8F0),
+                    width: 1,
+                  ),
+                ),
+                child: AppImage(
+                  imageUrl: effectiveLogo,
+                  fit: BoxFit.contain,
+                  placeholderIcon: Icons.emoji_events_outlined,
+                ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
             ],
             Flexible(
               child: Text(
@@ -957,6 +988,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
               fallbackMatch: fallbackMatch,
               liveFromMatches: liveFromMatches,
               state: state,
+              isDark: isDark,
             );
             return _buildAppBarLeagueBadge(
               context,
@@ -976,6 +1008,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                     fallbackMatch: fallbackMatch,
                     liveFromMatches: liveFromMatches,
                     state: state,
+                    isDark: isDark,
                   );
                   final isNotifActive =
                       _isMatchNotificationActive(activeMatch, favState);
@@ -1009,6 +1042,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                   fallbackMatch: fallbackMatch,
                   liveFromMatches: liveFromMatches,
                   state: state,
+                  isDark: isDark,
                 );
                 return LiveActivityToggleButton(
                   match: activeMatch,
@@ -1046,6 +1080,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                       fallbackMatch: fallbackMatch,
                       liveFromMatches: liveFromMatches,
                       state: state,
+                      isDark: isDark,
                     );
                     return IconButton(
                       icon: const Icon(Icons.share_rounded),
@@ -1067,6 +1102,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                 fallbackMatch: fallbackMatch,
                 liveFromMatches: liveFromMatches,
                 state: state,
+                isDark: isDark,
               );
               if (sl.isRegistered<LocalStorageService>() &&
                   sl<LocalStorageService>().isLiveActivityFeatureEnabled()) {
@@ -1093,6 +1129,7 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                 fallbackMatch: fallbackMatch,
                 liveFromMatches: liveFromMatches,
                 state: state,
+                isDark: isDark,
               );
 
               final isCancelledOrPostponed = _computeIsCancelledOrPostponed(
@@ -3555,11 +3592,20 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       );
     }
 
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: _handleRefresh,
-      child: ListView.separated(
-        key: const PageStorageKey('news_tab_list'),
+    return BlocBuilder<FontSizeCubit, FontSizeState>(
+      builder: (context, fontState) {
+        final mq = MediaQuery.of(context);
+        final newsScaler = fontState.isAuto
+            ? mq.textScaler
+            : TextScaler.linear(fontState.newsFontSizeScale);
+
+        return MediaQuery(
+          data: mq.copyWith(textScaler: newsScaler),
+          child: RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: _handleRefresh,
+            child: ListView.separated(
+              key: const PageStorageKey('news_tab_list'),
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.all(hMargin),
         itemCount: state.news.length,
@@ -3698,6 +3744,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           );
         },
       ),
+    ),
+        );
+      },
     );
   }
 }

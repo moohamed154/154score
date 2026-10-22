@@ -1,11 +1,17 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_client.dart';
 import '../network/network_info.dart';
 import '../storage/local_storage_service.dart';
 import '../websocket/websocket_service.dart';
+
+import '../../features/internet_connection/data/datasources/internet_connection_remote_datasource.dart';
+import '../../features/internet_connection/data/repositories/internet_connection_repository_impl.dart';
+import '../../features/internet_connection/domain/repositories/internet_connection_repository.dart';
+import '../../features/internet_connection/presentation/cubit/internet_connection_cubit.dart';
 
 import '../../features/matches/data/datasources/matches_remote_datasource.dart';
 import '../../features/matches/data/repositories/matches_repository_impl.dart';
@@ -92,7 +98,28 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
 
   sl.registerLazySingleton<Connectivity>(() => Connectivity());
-  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
+  sl.registerLazySingleton<InternetConnection>(() => InternetConnection());
+  sl.registerLazySingleton<InternetConnectionRemoteDataSource>(
+    () => InternetConnectionRemoteDataSourceImpl(
+      internetConnection: sl<InternetConnection>(),
+    ),
+  );
+  sl.registerLazySingleton<InternetConnectionRepository>(
+    () => InternetConnectionRepositoryImpl(
+      remoteDataSource: sl<InternetConnectionRemoteDataSource>(),
+    ),
+  );
+  sl.registerLazySingleton<NetworkInfo>(
+    () => NetworkInfoImpl(
+      sl(),
+      internetConnectionRepository: sl<InternetConnectionRepository>(),
+    ),
+  );
+  sl.registerLazySingleton<InternetConnectionCubit>(
+    () => InternetConnectionCubit(
+      repository: sl<InternetConnectionRepository>(),
+    ),
+  );
   sl.registerLazySingleton<LocalStorageService>(
     () => LocalStorageServiceImpl(sl()),
   );

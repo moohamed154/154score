@@ -319,8 +319,10 @@ class FontSizeSettingsView extends StatelessWidget {
                       ),
                       child: Text(
                         l10n.translate('font_size_preview_text'),
+                        textScaler:
+                            TextScaler.linear(state.newsFontSizeScale),
                         style: TextStyle(
-                          fontSize: 15 * state.newsFontSizeScale,
+                          fontSize: 15,
                           color: isDark
                               ? const Color(0xFFCBD5E1)
                               : const Color(0xFF334155),

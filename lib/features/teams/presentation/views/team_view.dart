@@ -25,6 +25,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../settings/presentation/cubit/settings_cubits.dart';
 import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../widgets/team_header_card.dart';
 
@@ -528,8 +529,17 @@ class _TeamViewState extends State<TeamView>
     final hMargin = AppDimensions.getHorizontalMargin(context);
     final timeFormat = sl<LocalStorageService>().getTimeFormat();
 
-    return ListView.separated(
-      padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 12),
+    return BlocBuilder<FontSizeCubit, FontSizeState>(
+      builder: (context, fontState) {
+        final mq = MediaQuery.of(context);
+        final newsScaler = fontState.isAuto
+            ? mq.textScaler
+            : TextScaler.linear(fontState.newsFontSizeScale);
+
+        return MediaQuery(
+          data: mq.copyWith(textScaler: newsScaler),
+          child: ListView.separated(
+            padding: EdgeInsets.symmetric(horizontal: hMargin, vertical: 12),
       itemCount: news.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
@@ -651,6 +661,9 @@ class _TeamViewState extends State<TeamView>
               ],
             ),
           ),
+        );
+      },
+    ),
         );
       },
     );

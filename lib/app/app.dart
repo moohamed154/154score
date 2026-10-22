@@ -22,6 +22,8 @@ import '../features/transfers/presentation/bloc/transfers_bloc.dart';
 import '../features/videos/presentation/bloc/videos_bloc.dart';
 import '../features/app_update/presentation/viewmodels/app_update_cubit.dart';
 import '../features/live_activity/presentation/cubit/live_activity_cubit.dart';
+import '../features/internet_connection/presentation/cubit/internet_connection_cubit.dart';
+import '../features/internet_connection/presentation/widgets/global_internet_connection_listener.dart';
 import 'package:flutter/services.dart';
 import 'router/app_router.dart';
 
@@ -130,6 +132,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         BlocProvider<FontSizeCubit>(create: (_) => sl<FontSizeCubit>()),
         BlocProvider<AppUpdateCubit>(create: (_) => sl<AppUpdateCubit>()),
         BlocProvider<LiveActivityCubit>(create: (_) => sl<LiveActivityCubit>()),
+        BlocProvider<InternetConnectionCubit>(
+          create: (_) => sl<InternetConnectionCubit>(),
+        ),
       ],
       child: ForegroundNotificationListener(
         child: BlocBuilder<ThemeCubit, ThemeMode>(
@@ -180,7 +185,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                               : TextScaler.linear(fontState.appFontSizeScale);
                           return MediaQuery(
                             data: mq.copyWith(textScaler: textScaler),
-                            child: child ?? const SizedBox.shrink(),
+                            child: GlobalInternetConnectionListener(
+                              child: child ?? const SizedBox.shrink(),
+                            ),
                           );
                         },
                       );

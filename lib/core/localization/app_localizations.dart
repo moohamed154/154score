@@ -415,6 +415,14 @@ class AppLocalizations {
       'substitute': 'Substitute',
       'captain': 'Captain',
       'rating': 'Rating',
+
+      // Internet Connection Monitoring
+      'no_internet_title': 'No Internet Connection',
+      'no_internet_desc':
+          'Please check your internet connection and try again.',
+      'retry': 'Try Again',
+      'checking_connection': 'Checking connection...',
+      'connection_restored': 'Internet connection restored',
     },
     'ar': {
       'app_name': '154 SCORE',
@@ -605,8 +613,7 @@ class AppLocalizations {
       'font_size_app': 'حجم خط التطبيق',
       'font_size_news': 'حجم خط الأخبار',
       'font_size_preview_text': 'هذا نص تجريبي للمعاينة',
-      'font_size_applied_notice':
-          'يتم تطبيق حجم الخط بسلاسة عبر جميع الشاشات',
+      'font_size_applied_notice': 'يتم تطبيق حجم الخط بسلاسة عبر جميع الشاشات',
       'theme_dark': 'الوضع الداكن (Dark)',
       'theme_light': 'الوضع الفاتح (Light)',
       'theme_system': 'تلقائي (حسب النظام)',
@@ -810,6 +817,13 @@ class AppLocalizations {
       'substitute': 'بديل',
       'captain': 'قائد الفريق',
       'rating': 'التقييم',
+
+      // Internet Connection Monitoring
+      'no_internet_title': 'لا يوجد اتصال بالإنترنت',
+      'no_internet_desc': 'تأكد من اتصالك بالإنترنت وحاول مرة أخرى.',
+      'retry': 'إعادة المحاولة',
+      'checking_connection': 'جارٍ التحقق من الاتصال...',
+      'connection_restored': 'تم استعادة الاتصال بالإنترنت',
     },
   };
 
@@ -818,6 +832,13 @@ class AppLocalizations {
         _localizedValues['en']?[key] ??
         key;
   }
+
+  // Convenience Internet Connection Getters
+  String get noInternetTitle => translate('no_internet_title');
+  String get noInternetDesc => translate('no_internet_desc');
+  String get retry => translate('retry');
+  String get checkingConnection => translate('checking_connection');
+  String get connectionRestored => translate('connection_restored');
 
   // Convenience Lineup Getters
   String get tabLineup => translate('tab_lineup');

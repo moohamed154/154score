@@ -227,6 +227,9 @@ class UrlHelper {
 
     // 1. If currentLogo matches one of the known theme pairs, ensure the right variant is used for the active theme
     if (currentLogo != null) {
+      if (currentLogo.contains('17883477127566')) {
+        return 'https://imgs.ysscores.com/championship/128/6171690288722.png';
+      }
       if (currentLogo.contains('17882926672499') ||
           currentLogo.contains('17882925978755')) {
         return isDark
@@ -379,7 +382,20 @@ class UrlHelper {
       'دوري أورا' ||
       'دوري اورا' ||
       'الدوري المصري' ||
-      'الدوري المصري الممتاز' =>
+      'الدوري المصري الممتاز' ||
+      'دوري المؤتمر الأوروبي' ||
+      'دوري المؤتمر' ||
+      'uefa conference league' ||
+      'conference league' ||
+      'الدوري الأوروبي' ||
+      'اليوروباليج' ||
+      'uefa europa league' ||
+      'europa league' ||
+      'دوري أبطال أوروبا' ||
+      'دوري ابطال اوروبا' ||
+      'uefa champions league' ||
+      'champions league' ||
+      'ucl' =>
         true,
       _ => false,
     };
@@ -393,7 +409,12 @@ class UrlHelper {
         '12048' ||
         '943230' ||
         '288' ||
-        '904988' =>
+        '904988' ||
+        'دوري أبطال أوروبا' ||
+        'دوري ابطال اوروبا' ||
+        'uefa champions league' ||
+        'champions league' ||
+        'ucl' =>
           'https://imgs.ysscores.com/championship/128/3141696514284.png', // UCL White on Dark
         '6811' ||
         '937599' ||
@@ -409,8 +430,12 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
         '2606' ||
         '938769' ||
-        '286' =>
-          'https://imgs.ysscores.com/championship/128/17883477127566.png', // Bundesliga (Shield requested by user)
+        '286' ||
+        'الدوري الألماني' ||
+        'الدوري الالماني' ||
+        'البوندسليجا' ||
+        'bundesliga' =>
+          'https://imgs.ysscores.com/championship/128/6171690288722.png', // German Bundesliga (Official red logo)
         '1985' ||
         '937873' ||
         '2847' =>
@@ -444,11 +469,19 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/17638081914419.png', // CAF Champions League (Light/Gold)
         '89249' ||
         '943229' ||
-        '937603' =>
+        '937603' ||
+        'الدوري الأوروبي' ||
+        'اليوروباليج' ||
+        'uefa europa league' ||
+        'europa league' =>
           'https://imgs.ysscores.com/championship/128/8221723403400.png', // Europa League
         '31250' ||
         '943231' ||
-        '937604' =>
+        '937604' ||
+        'دوري المؤتمر الأوروبي' ||
+        'دوري المؤتمر' ||
+        'uefa conference league' ||
+        'conference league' =>
           'https://imgs.ysscores.com/championship/128/1861696546605.png', // Conference League
         '894789' ||
         '900001' =>
@@ -511,7 +544,12 @@ class UrlHelper {
         '12048' ||
         '943230' ||
         '288' ||
-        '904988' =>
+        '904988' ||
+        'دوري أبطال أوروبا' ||
+        'دوري ابطال اوروبا' ||
+        'uefa champions league' ||
+        'champions league' ||
+        'ucl' =>
           'https://imgs.ysscores.com/championship/128/5171696546919.png', // UCL Dark Navy on Light
         '6811' ||
         '937599' ||
@@ -527,8 +565,12 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/6281692568873.png', // Serie A
         '2606' ||
         '938769' ||
-        '286' =>
-          'https://imgs.ysscores.com/championship/128/17883477127566.png', // Bundesliga (Shield requested by user)
+        '286' ||
+        'الدوري الألماني' ||
+        'الدوري الالماني' ||
+        'البوندسليجا' ||
+        'bundesliga' =>
+          'https://imgs.ysscores.com/championship/128/6171690288722.png', // German Bundesliga (Official red logo)
         '1985' ||
         '937873' ||
         '2847' =>
@@ -562,11 +604,19 @@ class UrlHelper {
           'https://imgs.ysscores.com/championship/128/17638081961987.png', // CAF Champions League (Dark)
         '89249' ||
         '943229' ||
-        '937603' =>
+        '937603' ||
+        'الدوري الأوروبي' ||
+        'اليوروباليج' ||
+        'uefa europa league' ||
+        'europa league' =>
           'https://imgs.ysscores.com/championship/128/8221723403400.png', // Europa League
         '31250' ||
         '943231' ||
-        '937604' =>
+        '937604' ||
+        'دوري المؤتمر الأوروبي' ||
+        'دوري المؤتمر' ||
+        'uefa conference league' ||
+        'conference league' =>
           'https://imgs.ysscores.com/championship/128/1861696546605.png', // Conference League
         '894789' ||
         '900001' =>
