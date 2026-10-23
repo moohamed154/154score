@@ -141,10 +141,8 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
     }
     buffer.writeln('📲 تابع آخر الأخبار عبر تطبيق 154 SCORE');
     buffer.writeln('📲 Follow the latest news on 154 SCORE');
-    if (detail.url != null && detail.url!.trim().isNotEmpty) {
-      buffer.writeln();
-      buffer.writeln(detail.url!.trim());
-    }
+    buffer.writeln();
+    buffer.writeln('https://154score-api.medohs770.workers.dev/');
     return buffer.toString().trim();
   }
 
@@ -280,35 +278,55 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary.withValues(
-                                  alpha: 0.15,
+                                  alpha: isDark ? 0.15 : 0.10,
                                 ),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: AppColors.primary.withValues(
-                                    alpha: 0.35,
+                                    alpha: isDark ? 0.35 : 0.25,
                                   ),
                                   width: 1,
                                 ),
                               ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.sports_soccer_rounded,
-                                    size: 12,
-                                    color: AppColors.primary,
-                                  ),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    '154 SCORE',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.primary,
-                                      letterSpacing: 0.5,
+                              child: Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Image.asset(
+                                      'assets/images/app_logo.png',
+                                      width: 14,
+                                      height: 14,
+                                      fit: BoxFit.contain,
+                                      filterQuality: FilterQuality.medium,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Image.asset(
+                                        'assets/icons/app_icon.png',
+                                        width: 14,
+                                        height: 14,
+                                        fit: BoxFit.contain,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                          Icons.sports_soccer_rounded,
+                                          size: 12,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 5),
+                                    const Text(
+                                      '154 SCORE',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.primary,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -402,30 +420,30 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
               ),
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.all(AppDimensions.lg),
+          const SliverPadding(
+            padding: EdgeInsets.all(AppDimensions.lg),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Bone.multiText(
+                  Bone.multiText(
                     lines: 2,
                     fontSize: 20,
                   ),
-                  const SizedBox(height: AppDimensions.md),
+                  SizedBox(height: AppDimensions.md),
                   Row(
-                    children: const [
+                    children: [
                       Bone.icon(size: 16),
                       SizedBox(width: 8),
                       Bone.text(words: 2, fontSize: 12),
                     ],
                   ),
-                  const SizedBox(height: AppDimensions.xl),
-                  const Bone.multiText(lines: 5, fontSize: 15),
-                  const SizedBox(height: AppDimensions.lg),
-                  const Bone.multiText(lines: 5, fontSize: 15),
-                  const SizedBox(height: AppDimensions.lg),
-                  const Bone.multiText(lines: 3, fontSize: 15),
+                  SizedBox(height: AppDimensions.xl),
+                  Bone.multiText(lines: 5, fontSize: 15),
+                  SizedBox(height: AppDimensions.lg),
+                  Bone.multiText(lines: 5, fontSize: 15),
+                  SizedBox(height: AppDimensions.lg),
+                  Bone.multiText(lines: 3, fontSize: 15),
                 ],
               ),
             ),

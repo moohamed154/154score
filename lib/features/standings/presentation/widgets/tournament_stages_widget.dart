@@ -1,16 +1,26 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../domain/entities/standings_entity.dart';
 
 class TournamentStagesWidget extends StatefulWidget {
   final List<TournamentStageEntity> stages;
+  final String? timeFormat;
 
-  const TournamentStagesWidget({super.key, required this.stages});
+  const TournamentStagesWidget({
+    super.key,
+    required this.stages,
+    this.timeFormat,
+  });
 
   @override
   State<TournamentStagesWidget> createState() => _TournamentStagesWidgetState();
@@ -45,6 +55,20 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
     final hMargin = AppDimensions.getHorizontalMargin(context);
+
+    String timeFormat = widget.timeFormat ?? '24h';
+    if (widget.timeFormat == null) {
+      try {
+        timeFormat =
+            context.select<MatchesBloc, String>((b) => b.state.timeFormat);
+      } catch (_) {
+        try {
+          if (sl.isRegistered<LocalStorageService>()) {
+            timeFormat = sl<LocalStorageService>().getTimeFormat();
+          }
+        } catch (_) {}
+      }
+    }
 
     // Ensure selected index is in bounds
     if (_selectedStageIndex >= widget.stages.length) {
@@ -156,11 +180,63 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, matchIdx) {
               final match = currentStage.matches[matchIdx];
-              return _buildStageMatchCard(context, match, isDark, isArabic);
+              return _buildStageMatchCard(
+                context,
+                match,
+                isDark,
+                isArabic,
+                timeFormat,
+              );
             },
           ),
       ],
     );
+  }
+
+  (String? date, String? time) _resolveMatchDateTime(
+    String? rawDate,
+    String? rawTime, {
+    required String timeFormat,
+    required bool isArabic,
+  }) {
+    String? datePart = rawDate?.trim();
+    String? timePart = rawTime?.trim();
+
+    // If date contains both date and time (e.g. "2027-02-06 22:00:00")
+    if (datePart != null && datePart.isNotEmpty) {
+      if (datePart.contains(' ')) {
+        final parts = datePart.split(RegExp(r'\s+'));
+        datePart = parts.first;
+        if (timePart == null || timePart.isEmpty) {
+          timePart = parts.sublist(1).join(' ');
+        }
+      } else if (datePart.contains('T')) {
+        final parts = datePart.split('T');
+        datePart = parts.first;
+        if (timePart == null || timePart.isEmpty) {
+          timePart = parts.sublist(1).join(' ');
+        }
+      }
+    }
+
+    String? formattedTime;
+    if (timePart != null && timePart.isNotEmpty && timePart != '-') {
+      formattedTime = DateFormatter.formatDisplayTime(
+        timePart,
+        timeFormat: timeFormat,
+        isArabic: isArabic,
+      );
+      if (formattedTime == '-') {
+        formattedTime = null;
+      }
+    }
+
+    final finalDate =
+        (datePart != null && datePart.isNotEmpty && datePart != '-')
+            ? datePart
+            : null;
+
+    return (finalDate, formattedTime);
   }
 
   Widget _buildStageMatchCard(
@@ -168,11 +244,18 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
     StageMatchEntity match,
     bool isDark,
     bool isArabic,
+    String timeFormat,
   ) {
     final hasScore = match.teamA.score != null || match.teamB.score != null;
-    final hasDateInfo =
-        (match.matchDate != null && match.matchDate!.isNotEmpty) ||
-            (match.position != null && match.position!.isNotEmpty);
+    final (dateDisplay, timeDisplay) = _resolveMatchDateTime(
+      match.matchDate,
+      match.matchTime,
+      timeFormat: timeFormat,
+      isArabic: isArabic,
+    );
+    final hasDateInfo = dateDisplay != null ||
+        timeDisplay != null ||
+        (match.position != null && match.position!.isNotEmpty);
 
     return Container(
       decoration: BoxDecoration(
@@ -210,8 +293,7 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                         )
                       else
                         const SizedBox.shrink(),
-                      if (match.matchDate != null &&
-                          match.matchDate!.isNotEmpty)
+                      if (dateDisplay != null || timeDisplay != null)
                         Row(
                           children: [
                             Icon(
@@ -221,23 +303,25 @@ class _TournamentStagesWidgetState extends State<TournamentStagesWidget> {
                                   ? AppColors.darkTextSecondary
                                   : AppColors.lightTextSecondary,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              match.matchDate!,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
-                              ),
-                            ),
-                            if (match.matchTime != null &&
-                                match.matchTime!.isNotEmpty) ...[
-                              const SizedBox(width: 6),
+                            if (dateDisplay != null) ...[
+                              const SizedBox(width: 4),
                               Text(
-                                match.matchTime!,
+                                dateDisplay,
                                 style: TextStyle(
                                   fontSize: 11,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                ),
+                              ),
+                            ],
+                            if (timeDisplay != null) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                timeDisplay,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
                                   color: isDark
                                       ? AppColors.darkTextSecondary
                                       : AppColors.lightTextSecondary,

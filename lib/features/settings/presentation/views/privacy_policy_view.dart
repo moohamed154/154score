@@ -48,7 +48,11 @@ class PrivacyPolicyView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(

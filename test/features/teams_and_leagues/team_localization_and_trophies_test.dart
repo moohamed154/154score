@@ -79,6 +79,12 @@ class _MockLocalStorageService implements LocalStorageService {
   @override
   Map<String, String> getFavoriteCompetitionTitles() => {};
   @override
+  Map<String, String> getFavoriteTeamLogos() => {};
+  @override
+  Map<String, String> getFavoriteCompetitionLogos() => {};
+  @override
+  bool getHideFavorites() => false;
+  @override
   Future<bool> registerCompetitionTitles(Map<String, String> titles) async =>
       true;
   @override

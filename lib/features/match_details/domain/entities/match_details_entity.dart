@@ -934,6 +934,10 @@ class MatchFormItemEntity extends Equatable {
   final String score;
   final String winType; // 'win', 'lose', 'equal'
   final bool isHome;
+  final String? homeTeamName;
+  final String? awayTeamName;
+  final String? homeTeamLogo;
+  final String? awayTeamLogo;
 
   const MatchFormItemEntity({
     required this.matchId,
@@ -942,6 +946,10 @@ class MatchFormItemEntity extends Equatable {
     required this.score,
     required this.winType,
     this.isHome = true,
+    this.homeTeamName,
+    this.awayTeamName,
+    this.homeTeamLogo,
+    this.awayTeamLogo,
   });
 
   bool get isWin => winType.toLowerCase() == 'win';
@@ -958,6 +966,10 @@ class MatchFormItemEntity extends Equatable {
         score,
         winType,
         isHome,
+        homeTeamName,
+        awayTeamName,
+        homeTeamLogo,
+        awayTeamLogo,
       ];
 }
 

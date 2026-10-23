@@ -281,6 +281,10 @@ class MatchInfoTab extends StatelessWidget {
           if (overview?.recentForm case final recentForm?)
             MatchFormCard(
               recentForm: recentForm,
+              homeTeamFallback: homeTeamName,
+              awayTeamFallback: awayTeamName,
+              homeLogoFallback: m.team1Logo ?? overview?.homeTeamLogo,
+              awayLogoFallback: m.team2Logo ?? overview?.awayTeamLogo,
               isDark: isDark,
               isArabic: isArabic,
             ),

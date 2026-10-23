@@ -220,6 +220,7 @@ class LocalStorageServiceImpl implements LocalStorageService {
     '7167': 'الدوري السعودي للمحترفين',
     '941825': 'الدوري السعودي للمحترفين',
     '894789': 'كأس العالم',
+    '77059': 'كأس العالم',
     '943487': 'دوري أبطال أفريقيا',
     '911131': 'دوري أبطال أفريقيا',
     '937603': 'الدوري الأوروبي',
@@ -228,11 +229,15 @@ class LocalStorageServiceImpl implements LocalStorageService {
     '943231': 'دوري المؤتمر الأوروبي',
     '937604': 'دوري المؤتمر الأوروبي',
     '937351': 'دوري المؤتمر الأوروبي',
-    '77059': 'كأس القارات للأندية',
-    '26995682': 'كأس القارات للأندية',
+    '842143': 'كأس الإنتركونتيننتال للأندية',
+    '26995682': 'كأس الإنتركونتيننتال للأندية',
     '943009': 'الدوري المصري الممتاز',
     '58553': 'الدوري المصري الممتاز',
     '3894': 'الدوري المصري الممتاز',
+    '560100': 'كأس الرابطة المصرية',
+    '1254598': 'كأس الرابطة المصرية',
+    '58881': 'كأس مصر',
+    '3746233': 'كأس مصر',
   };
 
   static const Map<String, String> defaultNameToId = {
@@ -256,11 +261,15 @@ class LocalStorageServiceImpl implements LocalStorageService {
     'دوري المؤتمر الأوروبي': '31250',
     'دوري المؤتمر الاوروبي': '31250',
     'دوري المؤتمر': '31250',
-    'كأس القارات للأندية': '77059',
+    'كأس الإنتركونتيننتال للأندية': '842143',
+    'كأس القارات للأندية': '842143',
     'الدوري المصري الممتاز': '943009',
     'الدوري المصري': '943009',
     'دوري ora': '943009',
     'ora': '943009',
+    'كأس الرابطة المصرية': '560100',
+    'كأس عاصمة مصر': '560100',
+    'كأس مصر': '58881',
     // English names
     'uefa champions league': '12048',
     'champions league': '12048',
@@ -282,8 +291,11 @@ class LocalStorageServiceImpl implements LocalStorageService {
     'uefa europa conference league': '31250',
     'conference league': '31250',
     'europa conference league': '31250',
-    'fifa intercontinental cup': '77059',
-    'intercontinental cup': '77059',
+    'fifa intercontinental cup': '842143',
+    'intercontinental cup': '842143',
+    'egyptian premier league': '943009',
+    'egyptian league cup': '560100',
+    'egypt cup': '58881',
   };
 
   @override

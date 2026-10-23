@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/commentator_resolver.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/match_status_helper.dart';
 import '../../../../core/utils/url_helper.dart';
@@ -475,6 +478,29 @@ class MatchInfoCard extends StatelessWidget {
     if (isStatusItem) {
       return MatchStatusHelper.localizeStatus(rawContent, isArabic: isArabic);
     }
+
+    final isTimeItem = titleLower == 'وقت المباراة' ||
+        titleLower == 'match time' ||
+        titleLower == 'الوقت' ||
+        titleLower == 'time';
+
+    if (isTimeItem && rawContent.trim().isNotEmpty && rawContent != '-') {
+      String timeFormat = '24h';
+      try {
+        if (sl.isRegistered<LocalStorageService>()) {
+          timeFormat = sl<LocalStorageService>().getTimeFormat();
+        }
+      } catch (_) {}
+      final formatted = DateFormatter.formatDisplayTime(
+        rawContent,
+        timeFormat: timeFormat,
+        isArabic: isArabic,
+      );
+      if (formatted != '-') {
+        return formatted;
+      }
+    }
+
     return rawContent;
   }
 }

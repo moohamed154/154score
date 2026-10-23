@@ -57,6 +57,7 @@ void main() {
     ).thenReturn(false);
     when(() => mockStorage.getMatchesFilter()).thenReturn(null);
     when(() => mockStorage.getMatchesSortOrder()).thenReturn(null);
+    when(() => mockStorage.getHideFavorites()).thenReturn(false);
     when(() => mockWebSocketService.switchLanguageChannel(any()))
         .thenReturn(null);
     when(() => mockWebSocketService.updatesStream)

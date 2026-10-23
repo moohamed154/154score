@@ -233,8 +233,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
       await file.writeAsBytes(pngBytes);
 
       final shareText = l10n.isArabic
-          ? '⚽ تابع مباراة ${match.team1} ضد ${match.team2} وتغطية المباريات والتشكيلات لحظة بلحظة عبر تطبيق 154Score!\n\n📲 حمّل التطبيق الآن واستمتع بتغطية المباريات المباشرة:\nhttps://154score.com'
-          : '⚽ Follow ${match.team1} vs ${match.team2} live scores, events, and lineups with 154Score app!\n\n📲 Download the app now:\nhttps://154score.com';
+          ? '⚽ تابع مباراة ${match.team1} ضد ${match.team2} وتغطية المباريات والتشكيلات لحظة بلحظة عبر تطبيق 154Score!\n\n📲 حمّل التطبيق الآن واستمتع بتغطية المباريات المباشرة:\nhttps://154score-api.medohs770.workers.dev/'
+          : '⚽ Follow ${match.team1} vs ${match.team2} live scores, events, and lineups with 154Score app!\n\n📲 Download the app now:\nhttps://154score-api.medohs770.workers.dev/';
 
       try {
         await SharePlus.instance.share(
@@ -258,8 +258,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     } catch (e) {
       debugPrint('[Share] Error sharing match screenshot: $e');
       final shareText = l10n.isArabic
-          ? '⚽ تابع مباراة ${match.team1} ضد ${match.team2} عبر تطبيق 154Score!\nhttps://154score.com'
-          : '⚽ Follow ${match.team1} vs ${match.team2} on 154Score!\nhttps://154score.com';
+          ? '⚽ تابع مباراة ${match.team1} ضد ${match.team2} عبر تطبيق 154Score!\nhttps://154score-api.medohs770.workers.dev/'
+          : '⚽ Follow ${match.team1} vs ${match.team2} on 154Score!\nhttps://154score-api.medohs770.workers.dev/';
       try {
         await Clipboard.setData(ClipboardData(text: shareText));
       } catch (_) {}
@@ -451,11 +451,17 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     required MatchDetailsState state,
     bool isDark = true,
   }) {
+    final bool hasDuplicateFallbackNames =
+        fallbackMatch.team1.trim().isNotEmpty &&
+            fallbackMatch.team1.trim().toLowerCase() ==
+                fallbackMatch.team2.trim().toLowerCase();
+
     // 1. Resolve Team 1 (Home)
     String effectiveTeam1 = fallbackMatch.team1;
     if (effectiveTeam1 == 'Home Team' ||
         effectiveTeam1.isEmpty ||
-        effectiveTeam1 == 'الفريق الأول') {
+        effectiveTeam1 == 'الفريق الأول' ||
+        hasDuplicateFallbackNames) {
       final fromOverview = state.overview?.homeTeamName?.trim();
       final fromLineup = state.lineup?.home?.displayName.trim();
       final fromSections = MatchInfoTab.extractTeamNameFromDetails(
@@ -475,7 +481,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
     String effectiveTeam2 = fallbackMatch.team2;
     if (effectiveTeam2 == 'Away Team' ||
         effectiveTeam2.isEmpty ||
-        effectiveTeam2 == 'الفريق الثاني') {
+        effectiveTeam2 == 'الفريق الثاني' ||
+        hasDuplicateFallbackNames) {
       final fromOverview = state.overview?.awayTeamName?.trim();
       final fromLineup = state.lineup?.away?.displayName.trim();
       final fromSections = MatchInfoTab.extractTeamNameFromDetails(

@@ -50,7 +50,7 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
     (
       '1933',
       'LaLiga',
-      'الدوري الإسباني - لا ليغا',
+      'الدوري الإسباني',
       'https://imgs.ysscores.com/championship/128/8641690196626.png',
     ),
     (
@@ -66,7 +66,7 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
       'https://imgs.ysscores.com/championship/128/6171690288722.png',
     ),
     (
-      '2847',
+      '1985',
       'Ligue 1',
       'الدوري الفرنسي',
       'https://imgs.ysscores.com/championship/128/9551719862665.png',
@@ -75,18 +75,18 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
       '12048',
       'UEFA Champions League',
       'دوري أبطال أوروبا',
-      'https://imgs.ysscores.com/championship/128/5171696546919.png',
+      'https://imgs.ysscores.com/championship/128/3141696514284.png',
     ),
     (
-      '3894',
-      'Egyptian League',
+      '943009',
+      'Egyptian Premier League',
       'الدوري المصري الممتاز',
-      'https://imgs.ysscores.com/championship/128/451723403406.png',
+      'https://imgs.ysscores.com/championship/128/17882926672499.png',
     ),
     (
-      '4750',
+      '7167',
       'Saudi Pro League',
-      'دوري روشن السعودي للمحترفين',
+      'دوري روشن السعودي',
       'https://imgs.ysscores.com/championship/128/5111703719091.png',
     ),
   ];
@@ -186,7 +186,12 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
           }
 
           if (state.status == SearchStatus.loading) {
-            return _buildLoadingSkeleton(isDark);
+            return Column(
+              children: [
+                _buildCategoryChipsSkeleton(context, isDark),
+                Expanded(child: _buildLoadingSkeleton(isDark)),
+              ],
+            );
           }
 
           if (state.status == SearchStatus.error) {
@@ -646,9 +651,16 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
 
     switch (item.type) {
       case 'championship':
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final resolvedLogo = UrlHelper.resolveChampionshipLogo(
+              item.id,
+              currentLogo: item.logo,
+              isDark: isDark,
+            ) ??
+            item.logo;
         context.push(
           '/league/${item.id}',
-          extra: {'title': item.title, 'logo': item.logo},
+          extra: {'title': item.title, 'logo': resolvedLogo},
         );
         break;
       case 'team':
@@ -686,7 +698,12 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
         const SizedBox(height: 12),
         ..._popularCompetitions.map((comp) {
           final title = isArabic ? comp.$3 : comp.$2;
-          final logoUrl = comp.$4;
+          final logoUrl = UrlHelper.resolveChampionshipLogo(
+                comp.$1,
+                currentLogo: comp.$4,
+                isDark: isDark,
+              ) ??
+              comp.$4;
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Material(
@@ -752,25 +769,106 @@ class _GlobalSearchContentState extends State<_GlobalSearchContent> {
     );
   }
 
+  Widget _buildCategoryChipsSkeleton(BuildContext context, bool isDark) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Skeletonizer(
+        enabled: true,
+        child: Row(
+          children: [
+            for (final width in [64.0, 110.0, 76.0, 84.0]) ...[
+              Container(
+                height: 32,
+                width: width,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildLoadingSkeleton(bool isDark) {
     return Skeletonizer(
       enabled: true,
       child: ListView.builder(
-        padding: const EdgeInsets.all(AppDimensions.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.md,
+          vertical: AppDimensions.sm,
+        ),
         itemCount: 8,
         itemBuilder: (context, index) {
+          final isCircle = index % 3 == 2;
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Card(
+            child: Material(
               color: isDark ? AppColors.darkCard : AppColors.lightCard,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                side: BorderSide(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
               ),
-              child: const ListTile(
-                leading: CircleAvatar(radius: 20),
-                title: Bone.text(words: 2),
-                subtitle: Bone.text(words: 1),
-                trailing: Icon(Icons.chevron_right_rounded),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
+                    if (isCircle)
+                      const Bone.circle(size: 44)
+                    else
+                      Bone.square(
+                        size: 44,
+                        borderRadius:
+                            BorderRadius.circular(AppDimensions.radiusSm),
+                      ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Bone(
+                            width: (index % 2 == 0) ? 140 : 170,
+                            height: 15,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(4),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Bone(
+                            width: (index % 2 == 0) ? 80 : 110,
+                            height: 12,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Bone.icon(size: 20),
+                  ],
+                ),
               ),
             ),
           );

@@ -256,5 +256,80 @@ void main() {
 
       expect(find.text('المغرب'), findsOneWidget);
     });
+
+    testWidgets('TournamentStagesWidget formats time according to 12h setting (10:00 PM)', (
+      tester,
+    ) async {
+      final stages = [
+        const TournamentStageEntity(
+          stageName: 'Final',
+          matches: [
+            StageMatchEntity(
+              matchId: 'm_super_cup',
+              teamA: StageTeamEntity(name: 'Barcelona/Atlético', score: 0),
+              teamB: StageTeamEntity(name: 'Sociedad/Real Madrid', score: 0),
+              matchDate: '2027-02-06',
+              matchTime: '22:00:00',
+            ),
+          ],
+        ),
+      ];
+
+      // Test 12h in English
+      await tester.pumpWidget(
+        createTestApp(
+          TournamentStagesWidget(stages: stages, timeFormat: '12h'),
+          locale: const Locale('en'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2027-02-06'), findsOneWidget);
+      expect(find.text('10:00 PM'), findsOneWidget);
+      expect(find.text('22:00:00'), findsNothing);
+
+      // Test 12h in Arabic
+      await tester.pumpWidget(
+        createTestApp(
+          TournamentStagesWidget(stages: stages, timeFormat: '12h'),
+          locale: const Locale('ar'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2027-02-06'), findsOneWidget);
+      expect(find.text('10:00 م'), findsOneWidget);
+    });
+
+    testWidgets('TournamentStagesWidget formats time according to 24h setting (22:00)', (
+      tester,
+    ) async {
+      final stages = [
+        const TournamentStageEntity(
+          stageName: 'Final',
+          matches: [
+            StageMatchEntity(
+              matchId: 'm_super_cup',
+              teamA: StageTeamEntity(name: 'Barcelona/Atlético', score: 0),
+              teamB: StageTeamEntity(name: 'Sociedad/Real Madrid', score: 0),
+              matchDate: '2027-02-06',
+              matchTime: '22:00:00',
+            ),
+          ],
+        ),
+      ];
+
+      await tester.pumpWidget(
+        createTestApp(
+          TournamentStagesWidget(stages: stages, timeFormat: '24h'),
+          locale: const Locale('en'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2027-02-06'), findsOneWidget);
+      expect(find.text('22:00'), findsOneWidget);
+      expect(find.text('22:00:00'), findsNothing);
+    });
   });
 }

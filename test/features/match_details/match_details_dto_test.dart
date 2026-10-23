@@ -594,6 +594,90 @@ void main() {
       expect(merged.h2hSummary!.homeWins, 1);
       expect(merged.recentForm, isNotNull);
     });
+
+    test(
+      'played_result resolves opponent name and home/away sides accurately when team played away or home',
+      () async {
+        when(
+          () => mockApiClient.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => {
+            'overview': {
+              'home_team': {'id': '1', 'name': 'Barcelona'},
+              'away_team': {'id': '2', 'name': 'Real Madrid'},
+              'played_result': {
+                'home': {
+                  'team_name': 'Barcelona',
+                  'matches': [
+                    {
+                      'id': '201',
+                      'home_team': 'Sevilla',
+                      'away_team': 'Barcelona',
+                      'home_logo': 'sevilla.png',
+                      'away_logo': 'barca.png',
+                      'home_scores': 1,
+                      'away_scores': 3,
+                      'result': 'win',
+                    },
+                    {
+                      'id': '202',
+                      'home_team': 'Barcelona',
+                      'away_team': 'Getafe',
+                      'home_logo': 'barca.png',
+                      'away_logo': 'getafe.png',
+                      'home_scores': 3,
+                      'away_scores': 0,
+                      'result': 'win',
+                    },
+                  ],
+                },
+                'away': {
+                  'team_name': 'Real Madrid',
+                  'matches': [
+                    {
+                      'id': '301',
+                      'home_team': 'Real Madrid',
+                      'away_team': 'Espanyol',
+                      'home_logo': 'real.png',
+                      'away_logo': 'espanyol.png',
+                      'home_scores': 4,
+                      'away_scores': 1,
+                      'result': 'win',
+                    },
+                  ],
+                },
+              },
+            },
+            'data': const [],
+          },
+        );
+
+        final payload = await dataSource.getDetailsPayload('999', lang: 'en');
+        final form = payload.overview!.recentForm!;
+
+        expect(form.homeMatches.length, 2);
+        // Match 201: Sevilla 1 - 3 Barcelona -> Barcelona played AWAY against Sevilla
+        expect(form.homeMatches[0].opponentName, 'Sevilla');
+        expect(form.homeMatches[0].isHome, isFalse);
+        expect(form.homeMatches[0].homeTeamName, 'Sevilla');
+        expect(form.homeMatches[0].awayTeamName, 'Barcelona');
+
+        // Match 202: Barcelona 3 - 0 Getafe -> Barcelona played HOME against Getafe
+        expect(form.homeMatches[1].opponentName, 'Getafe');
+        expect(form.homeMatches[1].isHome, isTrue);
+        expect(form.homeMatches[1].homeTeamName, 'Barcelona');
+        expect(form.homeMatches[1].awayTeamName, 'Getafe');
+
+        // Match 301: Real Madrid 4 - 1 Espanyol -> Real Madrid played HOME against Espanyol
+        expect(form.awayMatches[0].opponentName, 'Espanyol');
+        expect(form.awayMatches[0].isHome, isTrue);
+        expect(form.awayMatches[0].homeTeamName, 'Real Madrid');
+        expect(form.awayMatches[0].awayTeamName, 'Espanyol');
+      },
+    );
   });
 }
 

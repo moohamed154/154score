@@ -146,6 +146,12 @@ lib/
    - Prefer wrapping the real presentation widget (`MatchCard`, `StandingsTable`, `TopScorersTable`, `TransferCard`, `VideoCard`) with dummy `Entity` data inside `Skeletonizer(enabled: true, child: ...)`.
    - For custom detail layouts, use `Bone.text`, `Bone.multiText`, `Bone.circle`, `Bone.square`, `Bone.icon`, and `Skeleton.leaf` inside themed card containers.
    - Never wrap `Container(color: Colors.grey)` blocks inside `Skeletonizer`, never build static un-animated placeholder boxes, and never use a bare `CircularProgressIndicator` for full-screen or tab loading.
+4. **Unified AppBar Back Button Icon (`Icons.arrow_back_ios_new_rounded`)**:
+   - All screens and sub-pages must strictly use the rounded chevron back icon `Icons.arrow_back_ios_new_rounded` (configured globally in `AppTheme.actionIconTheme.backButtonIconBuilder`, or explicitly with `Icons.arrow_back_ios_new_rounded, size: 20`).
+   - **Never override `AppBar.leading` with `Icons.arrow_back_rounded` (`←`)**. `Icons.arrow_back_ios_new_rounded` automatically mirrors across LTR (`<`) and RTL (`>`) layouts via `matchTextDirection: true`.
+5. **Static Share URLs & News Share Card Branding**:
+   - Match and news share messages must strictly use the static URL `https://154score-api.medohs770.workers.dev/`.
+   - The generated news share card must include the official app brand logo (`assets/images/app_logo.png` / fallback `assets/icons/app_icon.png`) and the `154 SCORE` branding text in the footer capsule badge.
 
 ---
 

@@ -263,7 +263,11 @@ class UrlHelper {
 
     // 1. If currentLogo matches one of the known theme pairs, ensure the right variant is used for the active theme
     if (normalizedCurrent != null) {
-      if (normalizedCurrent.contains('17883477127566')) {
+      if (normalizedCurrent.contains('17883477127566') &&
+          cleanId != '544491' &&
+          cleanId != '938366' &&
+          effectiveId != '544491' &&
+          effectiveId != '938366') {
         return 'https://imgs.ysscores.com/championship/128/6171690288722.png';
       }
       if (normalizedCurrent.contains('17882926672499') ||
@@ -419,6 +423,9 @@ class UrlHelper {
       '936417' ||
       '938770' ||
       '58881' ||
+      '560100' ||
+      '1254598' ||
+      '943011' ||
       '544491' ||
       '938366' ||
       '3746233' ||
@@ -528,15 +535,16 @@ class UrlHelper {
         'uefa conference league' ||
         'conference league' =>
           'https://imgs.ysscores.com/championship/128/1861696546605.png', // Conference League
+        '77059' ||
         '894789' ||
         '900001' =>
-          'https://imgs.ysscores.com/championship/128/1231702394244.png', // World Cup
+          'https://imgs.ysscores.com/championship/128/17813924887417.png', // World Cup
         '9609' ||
         '938426' =>
           'https://imgs.ysscores.com/championship/128/5141711141225.png', // King Cup
         '842143' ||
         '26995682' ||
-        '77059' ||
+        'كأس الإنتركونتيننتال للأندية' ||
         'كأس القارات للأندية' ||
         'كأس القارات' ||
         'intercontinental cup' ||
@@ -590,6 +598,13 @@ class UrlHelper {
         '58881' ||
         '3746233' =>
           'https://imgs.ysscores.com/championship/128/1931696032876.png', // Egypt Cup
+        '560100' ||
+        '1254598' ||
+        '943011' =>
+          'https://imgs.ysscores.com/championship/128/2751704301232.png', // Egyptian League Cup
+        '544491' ||
+        '938366' =>
+          'https://imgs.ysscores.com/championship/128/17883477127566.png', // Austrian Bundesliga
         _ => null,
       };
     } else {
@@ -672,15 +687,16 @@ class UrlHelper {
         'uefa conference league' ||
         'conference league' =>
           'https://imgs.ysscores.com/championship/128/1861696546605.png', // Conference League
+        '77059' ||
         '894789' ||
         '900001' =>
-          'https://imgs.ysscores.com/championship/128/1231702394244.png', // World Cup
+          'https://imgs.ysscores.com/championship/128/17813924887417.png', // World Cup
         '9609' ||
         '938426' =>
           'https://imgs.ysscores.com/championship/128/5141711141225.png', // King Cup
         '842143' ||
         '26995682' ||
-        '77059' ||
+        'كأس الإنتركونتيننتال للأندية' ||
         'كأس القارات للأندية' ||
         'كأس القارات' ||
         'intercontinental cup' ||
@@ -734,6 +750,13 @@ class UrlHelper {
         '58881' ||
         '3746233' =>
           'https://imgs.ysscores.com/championship/128/1931696032876.png', // Egypt Cup
+        '560100' ||
+        '1254598' ||
+        '943011' =>
+          'https://imgs.ysscores.com/championship/128/2751704301232.png', // Egyptian League Cup
+        '544491' ||
+        '938366' =>
+          'https://imgs.ysscores.com/championship/128/17883477127566.png', // Austrian Bundesliga
         _ => null,
       };
     }

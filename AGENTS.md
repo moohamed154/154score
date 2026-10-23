@@ -142,6 +142,8 @@ For low-level architectural blueprints and diagrams, see:
   * Special notices and cancellation alerts must strictly adhere to the app's primary theme: `AppColors.primary` (`#00C853`) for the `Icons.info_outline_rounded` icon and border accents, with standard themed card background (`AppColors.darkCard` / light green tint `0xFFF0FDF4`). Arbitrary colors (like blue `#3B82F6`) are strictly forbidden.
 * **Standings Group Prioritization**:
   * In competitions with multi-group structures (e.g. World Cup, Club World Cup), the specific group containing the two playing teams is prioritized to appear first at the top of the Standings tab with a `مجموعة المباراة` badge.
+* **Match Share Link**:
+  * When sharing a match from `MatchDetailsView`, the download/share link in both Arabic and English text templates is strictly `https://154score-api.medohs770.workers.dev/`.
 * **WebSocket Room**: Auto-subscribes to `match:{id}` on init and un-subscribes on dispose.
 
 ### 3. Leagues & Competitions (`features/leagues`)
@@ -166,6 +168,7 @@ For low-level architectural blueprints and diagrams, see:
   * Orange bar: UEFA Conference League (`AppColors.ueclOrange`).
   * Red bar: Relegation zone (`AppColors.relegationRed`).
 * **Multi-Stage & Groups**: Dropdown selector for tournament stages (Group Stage, Round of 16, Quarter-finals, Semi-finals, Final).
+* **Tournament Stages Time Format (12h/24h)**: Match cards in tournament knockout stages (`TournamentStagesWidget`) and match info tables must strictly respect the user's active time format setting (`'12h'` or `'24h'`) via `DateFormatter.formatDisplayTime`, eliminating raw unformatted strings (`22:00:00` ➔ `10:00 PM` in 12h or `22:00` in 24h).
 * **Favorites Partitioning**: Pin user's starred competitions to the top with drag-to-reorder support.
 
 ### 5. Teams (`features/teams`)
@@ -188,7 +191,10 @@ For low-level architectural blueprints and diagrams, see:
 * **Filters**: Filter by league, transfer type (Permanent, Loan, Free), or date.
 
 ### 8. News & Videos (`features/news`, `features/videos`)
-* **News Feed**: Breaking news banner carousel, categorized sports articles, publish time, and thumbnail.
+* **News Feed & Article Share Standards**:
+  * Breaking news banner carousel, categorized sports articles, publish time, and thumbnail.
+  * **Static News Share URL**: The share message text must strictly append the static URL `https://154score-api.medohs770.workers.dev/` (never raw or unbranded external endpoints).
+  * **Branded News Share Photo**: The generated share card (`_buildShareCard`) must prominently display the official app brand logo (`assets/images/app_logo.png` / fallback `assets/icons/app_icon.png`) alongside the `154 SCORE` branding text in the footer capsule badge.
 * **Videos Feed & Placeholder Standard**:
   * Goal clips and match highlights with embedded responsive video player.
   * **Branded Video Placeholders**: Always use branded pitch thumbnail placeholders (`assets/images/video_placeholder.png` or themed gradient container); never display external/unbranded default placeholders.
@@ -215,6 +221,8 @@ For low-level architectural blueprints and diagrams, see:
 * **Font Size Adjustments**: Dedicated font size settings view with dynamic UI scaling.
 * **Notification Preferences**: Toggles per alert type (goals, kick-off, news).
 * **Unified Settings Icon Containers**: All settings option tiles share a unified container token (`AppColors.darkCardElevated` / light background) with standard border radius and padding.
+* **Unified AppBar Back Button Icon (`Icons.arrow_back_ios_new_rounded`)**: All screens and sub-pages (including `PrivacyPolicyView`, `FontSizeSettingsView`, `ThemeSettingsView`, etc.) must strictly use the rounded chevron back icon `Icons.arrow_back_ios_new_rounded` (configured globally in `AppTheme.actionIconTheme.backButtonIconBuilder`, or explicitly with `Icons.arrow_back_ios_new_rounded, size: 20`). **Never override AppBar `leading` with `Icons.arrow_back_rounded` (`←`)**. `Icons.arrow_back_ios_new_rounded` automatically mirrors across LTR (`<`) and RTL (`>`) layouts via `matchTextDirection: true`.
+* **Privacy Policy Web URL**: The official external privacy policy URL in `PrivacyPolicyView` is strictly `https://154score-api.medohs770.workers.dev/privacy`.
 * **Developer Tools & Diagnostics Security**: Developer mode is protected and hidden by default. Unlocking it requires tapping the app brand logo 10 times in Settings, followed by entering the master developer password (`MOhamed_2002`). Unlocking displays the developer and diagnostics suite; locking hides it until re-authenticated. The password prompt must be encapsulated in a dedicated `StatefulWidget` so `TextEditingController` is disposed cleanly within `State.dispose()` after pop animations conclude, avoiding `used after being disposed` crashes.
 
 ### 13. Onboarding & First-Launch Setup (`features/onboarding`)

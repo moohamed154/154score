@@ -11,12 +11,20 @@ import '../../domain/entities/match_details_entity.dart';
 
 class MatchFormCard extends StatefulWidget {
   final MatchRecentFormEntity recentForm;
+  final String? homeTeamFallback;
+  final String? awayTeamFallback;
+  final String? homeLogoFallback;
+  final String? awayLogoFallback;
   final bool? isDark;
   final bool? isArabic;
 
   const MatchFormCard({
     super.key,
     required this.recentForm,
+    this.homeTeamFallback,
+    this.awayTeamFallback,
+    this.homeLogoFallback,
+    this.awayLogoFallback,
     this.isDark,
     this.isArabic,
   });
@@ -42,6 +50,19 @@ class _MatchFormCardState extends State<MatchFormCard> {
     if (homeMatches.isEmpty && awayMatches.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    final resolvedHomeTeamName =
+        (widget.recentForm.homeTeamName?.trim().isNotEmpty == true)
+            ? widget.recentForm.homeTeamName!.trim()
+            : (widget.homeTeamFallback?.trim().isNotEmpty == true
+                ? widget.homeTeamFallback!.trim()
+                : (arabic ? 'صاحب الأرض' : 'Home Team'));
+    final resolvedAwayTeamName =
+        (widget.recentForm.awayTeamName?.trim().isNotEmpty == true)
+            ? widget.recentForm.awayTeamName!.trim()
+            : (widget.awayTeamFallback?.trim().isNotEmpty == true
+                ? widget.awayTeamFallback!.trim()
+                : (arabic ? 'الضيف' : 'Away Team'));
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
@@ -101,8 +122,7 @@ class _MatchFormCardState extends State<MatchFormCard> {
             // Home Team Form Row
             if (homeMatches.isNotEmpty) ...[
               _buildTeamFormRow(
-                teamName: widget.recentForm.homeTeamName ??
-                    (arabic ? 'صاحب الأرض' : 'Home Team'),
+                teamName: resolvedHomeTeamName,
                 matches: homeMatches,
                 isDark: dark,
                 isArabic: arabic,
@@ -121,8 +141,7 @@ class _MatchFormCardState extends State<MatchFormCard> {
             // Away Team Form Row
             if (awayMatches.isNotEmpty) ...[
               _buildTeamFormRow(
-                teamName: widget.recentForm.awayTeamName ??
-                    (arabic ? 'الضيف' : 'Away Team'),
+                teamName: resolvedAwayTeamName,
                 matches: awayMatches,
                 isDark: dark,
                 isArabic: arabic,
@@ -139,8 +158,7 @@ class _MatchFormCardState extends State<MatchFormCard> {
               const SizedBox(height: 10),
               if (homeMatches.isNotEmpty) ...[
                 Text(
-                  widget.recentForm.homeTeamName ??
-                      (arabic ? 'مباريات المضيف' : 'Home Matches'),
+                  resolvedHomeTeamName,
                   style: AppTypography.getBodySmall(
                     isDark: dark,
                     isArabic: arabic,
@@ -153,8 +171,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 ...homeMatches.map(
                   (m) => _buildDetailedMatchTile(
                     m,
-                    currentTeamName: widget.recentForm.homeTeamName ??
-                        (arabic ? 'المضيف' : 'Home Team'),
+                    currentTeamName: resolvedHomeTeamName,
+                    currentTeamLogo: widget.homeLogoFallback,
                     isDark: dark,
                     isArabic: arabic,
                   ),
@@ -163,8 +181,7 @@ class _MatchFormCardState extends State<MatchFormCard> {
               if (awayMatches.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
-                  widget.recentForm.awayTeamName ??
-                      (arabic ? 'مباريات الضيف' : 'Away Matches'),
+                  resolvedAwayTeamName,
                   style: AppTypography.getBodySmall(
                     isDark: dark,
                     isArabic: arabic,
@@ -177,8 +194,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 ...awayMatches.map(
                   (m) => _buildDetailedMatchTile(
                     m,
-                    currentTeamName: widget.recentForm.awayTeamName ??
-                        (arabic ? 'الضيف' : 'Away Team'),
+                    currentTeamName: resolvedAwayTeamName,
+                    currentTeamLogo: widget.awayLogoFallback,
                     isDark: dark,
                     isArabic: arabic,
                   ),
@@ -254,18 +271,51 @@ class _MatchFormCardState extends State<MatchFormCard> {
   Widget _buildDetailedMatchTile(
     MatchFormItemEntity match, {
     required String currentTeamName,
+    String? currentTeamLogo,
     required bool isDark,
     required bool isArabic,
   }) {
     final canNav = match.matchId.trim().isNotEmpty && match.matchId != '0';
 
+    final normCurrent = currentTeamName.trim().toLowerCase();
+    String displayOpponentName = match.opponentName;
+    String? displayOpponentLogo = match.opponentLogo;
+
+    if (displayOpponentName.trim().toLowerCase() == normCurrent) {
+      if (match.homeTeamName != null &&
+          match.homeTeamName!.trim().isNotEmpty &&
+          match.homeTeamName!.trim().toLowerCase() != normCurrent) {
+        displayOpponentName = match.homeTeamName!;
+        displayOpponentLogo = match.homeTeamLogo ?? displayOpponentLogo;
+      } else if (match.awayTeamName != null &&
+          match.awayTeamName!.trim().isNotEmpty &&
+          match.awayTeamName!.trim().toLowerCase() != normCurrent) {
+        displayOpponentName = match.awayTeamName!;
+        displayOpponentLogo = match.awayTeamLogo ?? displayOpponentLogo;
+      }
+    }
+
     MatchEntity? initialMatch;
     if (canNav) {
       final isHome = match.isHome;
-      final homeName = isHome ? currentTeamName : match.opponentName;
-      final awayName = isHome ? match.opponentName : currentTeamName;
-      final homeLogo = isHome ? null : match.opponentLogo;
-      final awayLogo = isHome ? match.opponentLogo : null;
+      String homeName = (match.homeTeamName != null &&
+              match.homeTeamName!.trim().isNotEmpty)
+          ? match.homeTeamName!
+          : (isHome ? currentTeamName : displayOpponentName);
+      String awayName = (match.awayTeamName != null &&
+              match.awayTeamName!.trim().isNotEmpty)
+          ? match.awayTeamName!
+          : (isHome ? displayOpponentName : currentTeamName);
+
+      if (homeName.trim().toLowerCase() == awayName.trim().toLowerCase()) {
+        homeName = isHome ? currentTeamName : displayOpponentName;
+        awayName = isHome ? displayOpponentName : currentTeamName;
+      }
+
+      final homeLogo = match.homeTeamLogo ??
+          (isHome ? currentTeamLogo : displayOpponentLogo);
+      final awayLogo = match.awayTeamLogo ??
+          (isHome ? displayOpponentLogo : currentTeamLogo);
 
       String? s1;
       String? s2;
@@ -303,14 +353,18 @@ class _MatchFormCardState extends State<MatchFormCard> {
             children: [
               _buildBadge(match, isArabic),
               const SizedBox(width: 8),
-              if (match.opponentLogo != null &&
-                  match.opponentLogo!.isNotEmpty) ...[
-                AppImage(imageUrl: match.opponentLogo!, width: 18, height: 18),
+              if (displayOpponentLogo != null &&
+                  displayOpponentLogo.isNotEmpty) ...[
+                AppImage(
+                  imageUrl: displayOpponentLogo,
+                  width: 18,
+                  height: 18,
+                ),
                 const SizedBox(width: 6),
               ],
               Expanded(
                 child: Text(
-                  match.opponentName,
+                  displayOpponentName,
                   style: AppTypography.getBodySmall(
                     isDark: isDark,
                     isArabic: isArabic,

@@ -447,15 +447,19 @@ class _StandingsViewState extends State<StandingsView> {
         _leagueById[l.seasonId!] = l;
       }
       final cleanName = l.name.trim().toLowerCase();
-      _leagueByName[cleanName] = l;
+      _leagueByName.putIfAbsent(cleanName, () => l);
       _leagueLowerName[l] = cleanName;
       _leagueLowerSlug[l] = l.slug?.trim().toLowerCase() ?? '';
 
-      final rId = LeagueResolver.resolveId(l.name) ??
-          (l.id.isNotEmpty ? LeagueResolver.resolveId(l.id) : null);
-      if (rId != null && rId.isNotEmpty) _leagueByCanonical[rId] = l;
+      final rId = (l.id.isNotEmpty ? LeagueResolver.resolveId(l.id) : null) ??
+          LeagueResolver.resolveId(l.name);
+      if (rId != null && rId.isNotEmpty) {
+        _leagueByCanonical.putIfAbsent(rId, () => l);
+      }
       final norm = LeagueResolver.normalize(l.name);
-      if (norm.isNotEmpty) _leagueByCanonical[norm] = l;
+      if (norm.isNotEmpty) {
+        _leagueByCanonical.putIfAbsent(norm, () => l);
+      }
     }
 
     for (final l in _featuredLeagues) {
@@ -770,7 +774,10 @@ class _StandingsViewState extends State<StandingsView> {
             for (final l in [...fetchedFeatured, ...fetchedAll]) {
               if (l.name.isNotEmpty) {
                 titlesMap[l.id] = l.name;
-                titlesMap[l.name.trim().toLowerCase()] = l.id;
+                titlesMap.putIfAbsent(
+                  l.name.trim().toLowerCase(),
+                  () => l.id,
+                );
                 if (l.seasonId != null && l.seasonId!.isNotEmpty) {
                   titlesMap[l.seasonId!] = l.name;
                 }
@@ -1432,13 +1439,18 @@ class _StandingsViewState extends State<StandingsView> {
     final title = LeagueResolver.resolveTitle(
       item.name,
       isArabic: isArabic,
-      id: targetLeagueId,
+      id: item.id.isNotEmpty ? item.id : targetLeagueId,
     );
     final effectiveLogo =
         (!isDark && item.logoLight != null && item.logoLight!.isNotEmpty)
             ? item.logoLight!
             : item.logo;
-    final normalizedLogo = UrlHelper.normalizeImageUrl(effectiveLogo);
+    final normalizedLogo = UrlHelper.resolveChampionshipLogo(
+          item.id.isNotEmpty ? item.id : targetLeagueId,
+          currentLogo: effectiveLogo,
+          isDark: isDark,
+        ) ??
+        UrlHelper.normalizeChampionshipImageUrl(effectiveLogo);
 
     return RepaintBoundary(
       key: key,
@@ -1461,7 +1473,8 @@ class _StandingsViewState extends State<StandingsView> {
                   '/league/$targetLeagueId?tab=$targetTab',
                   extra: {
                     'title': title,
-                    'logo': effectiveLogo.isNotEmpty ? effectiveLogo : null,
+                    'logo': normalizedLogo ??
+                        (effectiveLogo.isNotEmpty ? effectiveLogo : null),
                     'tab': targetTab,
                     'season_id': item.seasonId,
                     'champ_id': item.id,
@@ -1476,8 +1489,8 @@ class _StandingsViewState extends State<StandingsView> {
                         param1: targetLeagueId,
                         param2: {
                           'title': title,
-                          'logo':
-                              effectiveLogo.isNotEmpty ? effectiveLogo : null,
+                          'logo': normalizedLogo ??
+                              (effectiveLogo.isNotEmpty ? effectiveLogo : null),
                           'season_id': item.seasonId,
                           'champ_id': item.id,
                         },
@@ -1485,8 +1498,8 @@ class _StandingsViewState extends State<StandingsView> {
                       child: LeagueView(
                         leagueId: targetLeagueId,
                         initialTitle: title,
-                        initialLogo:
-                            effectiveLogo.isNotEmpty ? effectiveLogo : null,
+                        initialLogo: normalizedLogo ??
+                            (effectiveLogo.isNotEmpty ? effectiveLogo : null),
                         initialTabIndex: targetTab,
                       ),
                     ),

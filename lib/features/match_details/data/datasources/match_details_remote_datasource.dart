@@ -1078,76 +1078,65 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       MatchRecentFormEntity? recentForm;
       if (map['played_result'] is Map) {
         final pr = map['played_result'] as Map;
-        final homeList = <MatchFormItemEntity>[];
-        final awayList = <MatchFormItemEntity>[];
 
         final rawHome = pr['home'];
         final homeMatches = rawHome is Map
             ? (rawHome['matches'] as List? ?? [])
             : (rawHome is List ? rawHome : []);
-        final homeTeamName =
-            (rawHome is Map ? rawHome['team_name']?.toString() : null) ??
-                map['home_team']?['name']?.toString();
+        final homeTeamName = (rawHome is Map
+                ? (rawHome['team_name'] ??
+                        rawHome['name'] ??
+                        rawHome['title'])
+                    ?.toString()
+                : null) ??
+            map['home_team']?['name']?.toString() ??
+            map['home_team']?['title']?.toString() ??
+            map['home_team']?['full_name']?.toString() ??
+            h2hSummary?.homeTeamName ??
+            secHome ??
+            _inferCommonTeamName(homeMatches);
 
         final rawAway = pr['away'];
         final awayMatches = rawAway is Map
             ? (rawAway['matches'] as List? ?? [])
             : (rawAway is List ? rawAway : []);
-        final awayTeamName =
-            (rawAway is Map ? rawAway['team_name']?.toString() : null) ??
-                map['away_team']?['name']?.toString();
+        final awayTeamName = (rawAway is Map
+                ? (rawAway['team_name'] ??
+                        rawAway['name'] ??
+                        rawAway['title'])
+                    ?.toString()
+                : null) ??
+            map['away_team']?['name']?.toString() ??
+            map['away_team']?['title']?.toString() ??
+            map['away_team']?['full_name']?.toString() ??
+            h2hSummary?.awayTeamName ??
+            secAway ??
+            _inferCommonTeamName(awayMatches);
 
-        for (final item in homeMatches) {
-          if (item is Map) {
-            final res = item['result']?.toString() ??
-                item['win_type']?.toString() ??
-                'equal';
-            homeList.add(
-              MatchFormItemEntity(
-                matchId: item['match_id']?.toString() ??
-                    item['id']?.toString() ??
-                    '',
-                opponentName: item['opponent_name']?.toString() ??
-                    item['away_team']?.toString() ??
-                    item['home_team']?.toString() ??
-                    '',
-                opponentLogo: item['opponent_logo']?.toString() ??
-                    item['away_logo']?.toString() ??
-                    item['home_logo']?.toString(),
-                score: item['score']?.toString() ??
-                    '${item['home_scores'] ?? 0} - ${item['away_scores'] ?? 0}',
-                winType: res,
-                isHome: true,
-              ),
-            );
-          }
-        }
+        final mainHomeLogo = UrlHelper.normalizeImageUrl(
+          map['home_team']?['logo']?.toString() ??
+              map['home_team']?['image']?.toString(),
+        );
+        final mainAwayLogo = UrlHelper.normalizeImageUrl(
+          map['away_team']?['logo']?.toString() ??
+              map['away_team']?['image']?.toString(),
+        );
 
-        for (final item in awayMatches) {
-          if (item is Map) {
-            final res = item['result']?.toString() ??
-                item['win_type']?.toString() ??
-                'equal';
-            awayList.add(
-              MatchFormItemEntity(
-                matchId: item['match_id']?.toString() ??
-                    item['id']?.toString() ??
-                    '',
-                opponentName: item['opponent_name']?.toString() ??
-                    item['home_team']?.toString() ??
-                    item['away_team']?.toString() ??
-                    '',
-                opponentLogo: item['opponent_logo']?.toString() ??
-                    item['home_logo']?.toString() ??
-                    item['away_logo']?.toString(),
-                score: item['score']?.toString() ??
-                    '${item['home_scores'] ?? 0} - ${item['away_scores'] ?? 0}',
-                winType: res,
-                isHome: false,
-              ),
-            );
-          }
-        }
+        final homeList = _parseFormMatchList(
+          homeMatches,
+          currentTeamName: homeTeamName,
+          currentTeamId: homeId,
+          currentTeamLogo: mainHomeLogo,
+          defaultIsHome: true,
+        );
+
+        final awayList = _parseFormMatchList(
+          awayMatches,
+          currentTeamName: awayTeamName,
+          currentTeamId: awayId,
+          currentTeamLogo: mainAwayLogo,
+          defaultIsHome: false,
+        );
 
         if (homeList.isNotEmpty || awayList.isNotEmpty) {
           recentForm = MatchRecentFormEntity(
@@ -1360,6 +1349,273 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       }
     }
     return (home, away);
+  }
+
+  static String _normalizeTeamNameForCompare(String? name) {
+    if (name == null) return '';
+    return name
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'^(نادي|فريق|fc|cf|sc|ac)\s+'), '')
+        .replaceAll(RegExp(r'\s+(fc|cf|sc|ac)$'), '')
+        .replaceAll(RegExp(r'[أإآ]'), 'ا')
+        .replaceAll('ة', 'ه')
+        .replaceAll('ى', 'ي')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  static bool _isSameTeamName(String? a, String? b) {
+    final normA = _normalizeTeamNameForCompare(a);
+    final normB = _normalizeTeamNameForCompare(b);
+    if (normA.isEmpty || normB.isEmpty) return false;
+    if (normA == normB) return true;
+    if (normA.length >= 4 && normB.length >= 4) {
+      if (normA.contains(normB) || normB.contains(normA)) return true;
+    }
+    return false;
+  }
+
+  static String? _inferCommonTeamName(List rawMatches) {
+    if (rawMatches.length < 2) return null;
+    final counts = <String, int>{};
+    final originalNames = <String, String>{};
+
+    for (final item in rawMatches) {
+      if (item is! Map) continue;
+      final rawH = item['home_team'] ?? item['team_1'] ?? item['home_team_name'];
+      final rawA = item['away_team'] ?? item['team_2'] ?? item['away_team_name'];
+      final hName = (rawH is Map
+              ? (rawH['name'] ?? rawH['title'])?.toString()
+              : rawH?.toString())
+          ?.trim();
+      final aName = (rawA is Map
+              ? (rawA['name'] ?? rawA['title'])?.toString()
+              : rawA?.toString())
+          ?.trim();
+
+      final seenInMatch = <String>{};
+      for (final candidate in [hName, aName]) {
+        if (candidate != null && candidate.isNotEmpty) {
+          final norm = _normalizeTeamNameForCompare(candidate);
+          if (norm.isNotEmpty && seenInMatch.add(norm)) {
+            counts[norm] = (counts[norm] ?? 0) + 1;
+            originalNames.putIfAbsent(norm, () => candidate);
+          }
+        }
+      }
+    }
+
+    String? bestNorm;
+    int bestCount = 0;
+    counts.forEach((norm, count) {
+      if (count > bestCount && count >= 2) {
+        bestCount = count;
+        bestNorm = norm;
+      }
+    });
+
+    return bestNorm != null ? originalNames[bestNorm] : null;
+  }
+
+  static List<MatchFormItemEntity> _parseFormMatchList(
+    List rawMatches, {
+    required String? currentTeamName,
+    required String? currentTeamId,
+    required String? currentTeamLogo,
+    required bool defaultIsHome,
+  }) {
+    final list = <MatchFormItemEntity>[];
+
+    for (final item in rawMatches) {
+      if (item is! Map) continue;
+
+      final res = item['result']?.toString() ??
+          item['win_type']?.toString() ??
+          'equal';
+
+      final rawH = item['home_team'] ?? item['team_1'] ?? item['home_team_name'];
+      final rawA = item['away_team'] ?? item['team_2'] ?? item['away_team_name'];
+
+      final hName = (rawH is Map
+              ? (rawH['name'] ?? rawH['title'])?.toString()
+              : rawH?.toString())
+          ?.trim();
+      final aName = (rawA is Map
+              ? (rawA['name'] ?? rawA['title'])?.toString()
+              : rawA?.toString())
+          ?.trim();
+
+      final hId = item['home_id']?.toString() ??
+          item['home_team_id']?.toString() ??
+          item['team_1_id']?.toString() ??
+          (rawH is Map ? (rawH['id'] ?? rawH['row_id'])?.toString() : null);
+      final aId = item['away_id']?.toString() ??
+          item['away_team_id']?.toString() ??
+          item['team_2_id']?.toString() ??
+          (rawA is Map ? (rawA['id'] ?? rawA['row_id'])?.toString() : null);
+
+      final hLogo = UrlHelper.normalizeImageUrl(
+        item['home_logo']?.toString() ??
+            item['team_1_logo']?.toString() ??
+            (rawH is Map
+                ? (rawH['logo'] ?? rawH['image'])?.toString()
+                : null),
+      );
+      final aLogo = UrlHelper.normalizeImageUrl(
+        item['away_logo']?.toString() ??
+            item['team_2_logo']?.toString() ??
+            (rawA is Map
+                ? (rawA['logo'] ?? rawA['image'])?.toString()
+                : null),
+      );
+
+      final explicitOppName = item['opponent_name']?.toString().trim();
+      final explicitOppLogo = UrlHelper.normalizeImageUrl(
+        item['opponent_logo']?.toString(),
+      );
+
+      final scoreStr = item['score']?.toString() ??
+          '${item['home_scores'] ?? 0} - ${item['away_scores'] ?? 0}';
+
+      int? hScore = int.tryParse(item['home_scores']?.toString() ?? '');
+      int? aScore = int.tryParse(item['away_scores']?.toString() ?? '');
+      if ((hScore == null || aScore == null) && scoreStr.contains('-')) {
+        final parts = scoreStr.split('-');
+        if (parts.length == 2) {
+          hScore ??= int.tryParse(parts[0].trim());
+          aScore ??= int.tryParse(parts[1].trim());
+        }
+      }
+
+      // Determine whether currentTeam played at HOME or AWAY in this match
+      bool? isHome;
+      final rawIsHome = item['is_home'];
+      if (rawIsHome is bool) {
+        isHome = rawIsHome;
+      } else if (rawIsHome?.toString() == '1' ||
+          rawIsHome?.toString().toLowerCase() == 'true') {
+        isHome = true;
+      } else if (rawIsHome?.toString() == '0' ||
+          rawIsHome?.toString().toLowerCase() == 'false') {
+        isHome = false;
+      }
+
+      if (isHome == null &&
+          currentTeamId != null &&
+          currentTeamId.isNotEmpty) {
+        if (hId == currentTeamId && aId != currentTeamId) {
+          isHome = true;
+        } else if (aId == currentTeamId && hId != currentTeamId) {
+          isHome = false;
+        }
+      }
+
+      if (isHome == null &&
+          currentTeamName != null &&
+          currentTeamName.isNotEmpty &&
+          (hName != null || aName != null)) {
+        final matchH = _isSameTeamName(currentTeamName, hName);
+        final matchA = _isSameTeamName(currentTeamName, aName);
+        if (matchH && !matchA) {
+          isHome = true;
+        } else if (matchA && !matchH) {
+          isHome = false;
+        }
+      }
+
+      if (isHome == null &&
+          currentTeamLogo != null &&
+          currentTeamLogo.isNotEmpty) {
+        if (hLogo == currentTeamLogo && aLogo != currentTeamLogo) {
+          isHome = true;
+        } else if (aLogo == currentTeamLogo && hLogo != currentTeamLogo) {
+          isHome = false;
+        }
+      }
+
+      if (isHome == null &&
+          hScore != null &&
+          aScore != null &&
+          hScore != aScore) {
+        final lowerRes = res.toLowerCase();
+        if (lowerRes == 'win') {
+          isHome = hScore > aScore;
+        } else if (lowerRes == 'lose' || lowerRes == 'loss') {
+          isHome = hScore < aScore;
+        }
+      }
+
+      final resolvedIsHome = isHome ?? defaultIsHome;
+
+      String opponentName;
+      if (explicitOppName != null &&
+          explicitOppName.isNotEmpty &&
+          !_isSameTeamName(explicitOppName, currentTeamName)) {
+        opponentName = explicitOppName;
+      } else if (resolvedIsHome) {
+        opponentName = (aName != null && aName.isNotEmpty)
+            ? aName
+            : (hName ?? explicitOppName ?? '');
+      } else {
+        opponentName = (hName != null && hName.isNotEmpty)
+            ? hName
+            : (aName ?? explicitOppName ?? '');
+      }
+
+      // Final safeguard: never return currentTeamName as opponentName if the other team name is present
+      if (_isSameTeamName(opponentName, currentTeamName)) {
+        if (hName != null &&
+            hName.isNotEmpty &&
+            !_isSameTeamName(hName, currentTeamName)) {
+          opponentName = hName;
+        } else if (aName != null &&
+            aName.isNotEmpty &&
+            !_isSameTeamName(aName, currentTeamName)) {
+          opponentName = aName;
+        }
+      }
+
+      String? opponentLogo;
+      if (explicitOppLogo != null &&
+          explicitOppLogo.isNotEmpty &&
+          explicitOppLogo != currentTeamLogo) {
+        opponentLogo = explicitOppLogo;
+      } else if (resolvedIsHome) {
+        opponentLogo = aLogo ?? explicitOppLogo ?? hLogo;
+      } else {
+        opponentLogo = hLogo ?? explicitOppLogo ?? aLogo;
+      }
+
+      final resolvedHomeName = (hName != null && hName.isNotEmpty)
+          ? hName
+          : (resolvedIsHome ? currentTeamName : opponentName);
+      final resolvedAwayName = (aName != null && aName.isNotEmpty)
+          ? aName
+          : (resolvedIsHome ? opponentName : currentTeamName);
+      final resolvedHomeLogo =
+          hLogo ?? (resolvedIsHome ? currentTeamLogo : opponentLogo);
+      final resolvedAwayLogo =
+          aLogo ?? (resolvedIsHome ? opponentLogo : currentTeamLogo);
+
+      list.add(
+        MatchFormItemEntity(
+          matchId:
+              item['match_id']?.toString() ?? item['id']?.toString() ?? '',
+          opponentName: opponentName,
+          opponentLogo: opponentLogo,
+          score: scoreStr,
+          winType: res,
+          isHome: resolvedIsHome,
+          homeTeamName: resolvedHomeName,
+          awayTeamName: resolvedAwayName,
+          homeTeamLogo: resolvedHomeLogo,
+          awayTeamLogo: resolvedAwayLogo,
+        ),
+      );
+    }
+
+    return list;
   }
 
   MatchOverviewDataEntity? _extractOverviewFromSections(
