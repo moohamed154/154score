@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -101,9 +102,10 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch LocaleCubit and ThemeCubit so onboarding immediately reacts to user language/theme selection
+    // Watch LocaleCubit, ThemeCubit, and FontSizeCubit so onboarding immediately reacts to user language/theme/font size selection
     context.watch<LocaleCubit>();
     context.watch<ThemeCubit>();
+    context.watch<FontSizeCubit>();
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -137,6 +139,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                   children: [
                     _LanguagePage(l10n: l10n, isDark: isDark),
                     _ThemePage(l10n: l10n, isDark: isDark),
+                    _FontSizePage(l10n: l10n, isDark: isDark),
                     _TeamsPage(
                       key: ValueKey('teams_$isDark'),
                       l10n: l10n,
@@ -401,6 +404,380 @@ class _ThemePage extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _FontSizePage extends StatelessWidget {
+  const _FontSizePage({required this.l10n, required this.isDark});
+
+  final AppLocalizations l10n;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final isArabic = l10n.isArabic;
+    return OnboardingPageScaffold(
+      icon: Icons.format_size_rounded,
+      title: l10n.translate('onb_font_size_title'),
+      subtitle: l10n.translate('onb_font_size_sub'),
+      isDark: isDark,
+      isArabic: isArabic,
+      child: BlocBuilder<FontSizeCubit, FontSizeState>(
+        builder: (context, fontState) {
+          final cubit = context.read<FontSizeCubit>();
+          final isAuto = fontState.isAuto;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Auto Option (System Default)
+              OnboardingChoiceCard(
+                title: l10n.translate('font_size_auto'),
+                subtitle: l10n.translate('font_size_auto_desc'),
+                icon: Icons.settings_suggest_rounded,
+                selected: isAuto,
+                isDark: isDark,
+                isArabic: isArabic,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  cubit.setAuto(true);
+                },
+              ),
+              const SizedBox(height: AppDimensions.md),
+
+              // 2. Custom Size Option
+              OnboardingChoiceCard(
+                title: l10n.translate('font_size_manual'),
+                subtitle: l10n.translate('font_size_manual_desc'),
+                icon: Icons.text_fields_rounded,
+                selected: !isAuto,
+                isDark: isDark,
+                isArabic: isArabic,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  cubit.setAuto(false);
+                },
+              ),
+
+              // 3. Slider and Preset Controls (Shown when manual is selected)
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 250),
+                crossFadeState: !isAuto
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                firstChild: Padding(
+                  padding: const EdgeInsets.only(top: AppDimensions.md),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppDimensions.lg),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.radiusLg),
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              l10n.translate('font_size_app'),
+                              style: AppTypography.getBodyMedium(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusSm,
+                                ),
+                              ),
+                              child: Text(
+                                '${(fontState.appFontSizeScale * 100).toInt()}%',
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Preset Quick Chips
+                        Row(
+                          children: [
+                            _buildPresetChip(
+                              label: isArabic ? 'صغير' : 'Small',
+                              targetScale: 0.85,
+                              currentScale: fontState.appFontSizeScale,
+                              isDark: isDark,
+                              onTap: () => cubit.setAppFontSizeScale(0.85),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildPresetChip(
+                              label: isArabic ? 'افتراضي' : 'Default',
+                              targetScale: 1.0,
+                              currentScale: fontState.appFontSizeScale,
+                              isDark: isDark,
+                              onTap: () => cubit.setAppFontSizeScale(1.0),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildPresetChip(
+                              label: isArabic ? 'كبير' : 'Large',
+                              targetScale: 1.15,
+                              currentScale: fontState.appFontSizeScale,
+                              isDark: isDark,
+                              onTap: () => cubit.setAppFontSizeScale(1.15),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildPresetChip(
+                              label: isArabic ? 'كبير جداً' : 'X-Large',
+                              targetScale: 1.30,
+                              currentScale: fontState.appFontSizeScale,
+                              isDark: isDark,
+                              onTap: () => cubit.setAppFontSizeScale(1.30),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Discrete Slider
+                        _buildDiscreteSlider(
+                          value: fontState.appFontSizeScale,
+                          isDark: isDark,
+                          onChanged: (val) {
+                            cubit.setAppFontSizeScale(val);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                secondChild: const SizedBox.shrink(),
+              ),
+
+              const SizedBox(height: AppDimensions.lg),
+
+              // 4. Live Text Preview Box
+              _buildLivePreview(
+                context: context,
+                isDark: isDark,
+                isArabic: isArabic,
+                fontState: fontState,
+                l10n: l10n,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPresetChip({
+    required String label,
+    required double targetScale,
+    required double currentScale,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = (currentScale - targetScale).abs() < 0.04;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary
+                : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primary
+                  : (isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0)),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              color: isSelected
+                  ? Colors.white
+                  : (isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDiscreteSlider({
+    required double value,
+    required bool isDark,
+    required ValueChanged<double> onChanged,
+  }) {
+    final clampedValue = value.clamp(0.80, 1.30);
+    final mutedColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
+    return Row(
+      children: [
+        Text(
+          'A',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: mutedColor,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 3.5,
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: isDark
+                  ? const Color(0xFF243242)
+                  : const Color(0xFFE2E8F0),
+              thumbColor: AppColors.primary,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 8.5,
+                elevation: 2.0,
+              ),
+              overlayColor: AppColors.primary.withValues(alpha: 0.16),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 18.0),
+              tickMarkShape:
+                  const RoundSliderTickMarkShape(tickMarkRadius: 2.0),
+              activeTickMarkColor: Colors.black.withValues(alpha: 0.35),
+              inactiveTickMarkColor: isDark
+                  ? const Color(0xFF475569)
+                  : const Color(0xFF94A3B8),
+            ),
+            child: Slider(
+              value: clampedValue,
+              min: 0.80,
+              max: 1.30,
+              divisions: 10,
+              onChanged: (newVal) {
+                HapticFeedback.selectionClick();
+                onChanged(newVal);
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'A',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: mutedColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLivePreview({
+    required BuildContext context,
+    required bool isDark,
+    required bool isArabic,
+    required FontSizeState fontState,
+    required AppLocalizations l10n,
+  }) {
+    final previewScaler = fontState.isAuto
+        ? MediaQuery.of(context).textScaler
+        : TextScaler.linear(fontState.appFontSizeScale);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimensions.lg),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF161F30) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.preview_rounded,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isArabic ? 'معاينة مباشرة للخط' : 'Live Font Preview',
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                fontState.isAuto
+                    ? l10n.translate('font_size_auto')
+                    : '${(fontState.appFontSizeScale * 100).toInt()}%',
+                style: AppTypography.getBodySmall(
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ).copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.translate('onb_font_size_preview'),
+            textScaler: previewScaler,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white : AppColors.lightTextPrimary,
+              height: 1.45,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -214,6 +214,26 @@ const List<ChampionshipInfo> kDefaultFallbackChampionshipsAr = [
     isFavorite: true,
     type: 1,
   ),
+  ChampionshipInfo(
+    id: '89249',
+    seasonId: '943229',
+    name: 'الدوري الأوروبي',
+    slug: 'UEFA-Europa-League',
+    logo: 'https://imgs.ysscores.com/championship/128/9521723403389.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 4,
+  ),
+  ChampionshipInfo(
+    id: '31250',
+    seasonId: '943231',
+    name: 'دوري المؤتمر الأوروبي',
+    slug: 'UEFA-Conference-League',
+    logo: 'https://imgs.ysscores.com/championship/128/1861696546605.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 4,
+  ),
 ];
 
 const List<ChampionshipInfo> kDefaultFallbackChampionshipsEn = [
@@ -297,6 +317,26 @@ const List<ChampionshipInfo> kDefaultFallbackChampionshipsEn = [
     isFeatured: true,
     isFavorite: true,
     type: 1,
+  ),
+  ChampionshipInfo(
+    id: '89249',
+    seasonId: '943229',
+    name: 'UEFA Europa League',
+    slug: 'UEFA-Europa-League',
+    logo: 'https://imgs.ysscores.com/championship/128/9521723403389.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 4,
+  ),
+  ChampionshipInfo(
+    id: '31250',
+    seasonId: '943231',
+    name: 'UEFA Conference League',
+    slug: 'UEFA-Conference-League',
+    logo: 'https://imgs.ysscores.com/championship/128/1861696546605.png',
+    isFeatured: true,
+    isFavorite: true,
+    type: 4,
   ),
 ];
 
@@ -527,7 +567,46 @@ class _StandingsViewState extends State<StandingsView> {
         }
       }
 
-      if (matched != null && addedFavIds.add(matched.id)) {
+      // 4. Guaranteed preservation: If key is favorited by user but not found in _allLeagues (e.g. Conference League)
+      if (matched == null) {
+        final effId = rKey ??
+            favState.competitionTitles[cleanKey] ??
+            favState.competitionTitles[key] ??
+            LocalStorageServiceImpl.defaultNameToId[cleanKey] ??
+            LocalStorageServiceImpl.defaultNameToId[key] ??
+            key;
+        final rawTitle = favState.competitionTitles[key] ??
+            favState.competitionTitles[cleanKey] ??
+            LocalStorageServiceImpl.defaultKnownTitles[effId] ??
+            LocalStorageServiceImpl.defaultKnownTitles[key] ??
+            (int.tryParse(key) == null ? key : '');
+        final isAr = currentLang == 'ar';
+        final resolvedTitle = LeagueResolver.resolveTitle(
+          rawTitle.isNotEmpty ? rawTitle : key,
+          isArabic: isAr,
+          id: effId,
+        );
+        final title = resolvedTitle.isNotEmpty
+            ? resolvedTitle
+            : (rawTitle.isNotEmpty ? rawTitle : key);
+        final logo = favState.competitionLogos[key] ??
+            favState.competitionLogos[cleanKey] ??
+            UrlHelper.resolveChampionshipLogo(effId);
+
+        matched = ChampionshipInfo(
+          id: effId,
+          seasonId: effId,
+          name: title,
+          slug: key,
+          logo: logo ?? '',
+          isFeatured: true,
+          isFavorite: true,
+          type: 4,
+          hasStandings: true,
+        );
+      }
+
+      if (addedFavIds.add(matched.id)) {
         if (matched.seasonId != null && matched.seasonId!.isNotEmpty) {
           addedFavIds.add(matched.seasonId!);
         }
@@ -1352,15 +1431,19 @@ class _StandingsViewState extends State<StandingsView> {
     required Color cardBorder,
     required VoidCallback onToggleStar,
   }) {
-    final title = item.name;
+    final targetLeagueId = (item.seasonId != null && item.seasonId!.isNotEmpty)
+        ? item.seasonId!
+        : item.id;
+    final title = LeagueResolver.resolveTitle(
+      item.name,
+      isArabic: isArabic,
+      id: targetLeagueId,
+    );
     final effectiveLogo =
         (!isDark && item.logoLight != null && item.logoLight!.isNotEmpty)
             ? item.logoLight!
             : item.logo;
     final normalizedLogo = UrlHelper.normalizeImageUrl(effectiveLogo);
-    final targetLeagueId = (item.seasonId != null && item.seasonId!.isNotEmpty)
-        ? item.seasonId!
-        : item.id;
 
     return RepaintBoundary(
       key: key,

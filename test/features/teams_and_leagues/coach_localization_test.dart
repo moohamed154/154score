@@ -5,12 +5,10 @@ import 'package:score154/core/localization/app_localizations.dart';
 void main() {
   group('Coach / Manager Role Localization', () {
     test('renders localized coach role for Arabic and English', () {
-      const isArabic = true;
-      final roleAr = isArabic ? 'المدير الفني' : 'Head Coach';
+      const roleAr = 'المدير الفني';
       expect(roleAr, 'المدير الفني');
 
-      const isEnglish = false;
-      final roleEn = isEnglish ? 'المدير الفني' : 'Head Coach';
+      const roleEn = 'Head Coach';
       expect(roleEn, 'Head Coach');
     });
 

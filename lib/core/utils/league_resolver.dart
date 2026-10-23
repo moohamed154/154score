@@ -65,8 +65,15 @@ class LeagueResolver {
     'uefa europa league': '937603',
     'europa league': '937603',
     'دوري المؤتمر الأوروبي': '937604',
+    'دوري المؤتمر الاوروبي': '937604',
+    'دوري المؤتمر': '937604',
     'uefa conference league': '937604',
+    'uefa europa conference league': '937604',
     'conference league': '937604',
+    'europa conference league': '937604',
+    '31250': '937604',
+    '943231': '937604',
+    '937351': '937604',
     'كأس السوبر الأوروبي': '937605',
     'uefa super cup': '937605',
 
@@ -98,7 +105,16 @@ class LeagueResolver {
     'كأس الكونفيدرالية': '943602',
     'كأس الكونفيدرالية الإفريقية': '943602',
     'كأس الكونفدرالية': '943602',
+    'كأس الكونفدرالية الإفريقية': '943602',
     'caf confederation cup': '943602',
+    'caf confederation cup | qualification': '943602',
+    'caf confederation': '943602',
+    'تصفيات كأس الكونفيدرالية': '943602',
+    'تصفيات كأس الكونفدرالية': '943602',
+    'الكونفيدرالية': '943602',
+    '73510208': '943602',
+    '44444': '943602',
+    '41791876': '943602',
 
     // South American Competitions
     'الدوري البرازيلي': '916145',
@@ -348,6 +364,7 @@ class LeagueResolver {
     '937604': (ar: 'دوري المؤتمر الأوروبي', en: 'UEFA Conference League'),
     '943231': (ar: 'دوري المؤتمر الأوروبي', en: 'UEFA Conference League'),
     '31250': (ar: 'دوري المؤتمر الأوروبي', en: 'UEFA Conference League'),
+    '937351': (ar: 'دوري المؤتمر الأوروبي', en: 'UEFA Conference League'),
     '941825': (ar: 'دوري روشن السعودي', en: 'Saudi Pro League'),
     '7167': (ar: 'دوري روشن السعودي', en: 'Saudi Pro League'),
     '943009': (ar: 'الدوري المصري الممتاز', en: 'Egyptian Premier League'),
@@ -368,6 +385,14 @@ class LeagueResolver {
       en: 'CAF Confederation Cup'
     ),
     '943602': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
+    '73510208': (
+      ar: 'كأس الكونفيدرالية الإفريقية',
+      en: 'CAF Confederation Cup',
+    ),
+    '44444': (
+      ar: 'كأس الكونفيدرالية الإفريقية',
+      en: 'CAF Confederation Cup',
+    ),
     '911121': (ar: 'كأس الكونفيدرالية الإفريقية', en: 'CAF Confederation Cup'),
     '76684': (
       ar: 'تصفيات كأس الكونفيدرالية',
@@ -409,6 +434,10 @@ class LeagueResolver {
     'دوري أبطال أوروبا': 'UEFA Champions League',
     'الدوري الأوروبي': 'UEFA Europa League',
     'دوري المؤتمر الأوروبي': 'UEFA Conference League',
+    'دوري المؤتمر الاوروبي': 'UEFA Conference League',
+    'دوري المؤتمر': 'UEFA Conference League',
+    'دوري المؤتمر الأوروبي | الأدوار الإقصائية': 'UEFA Conference League | Knockout Stage',
+    'دوري المؤتمر الاوروبي | الأدوار الإقصائية': 'UEFA Conference League | Knockout Stage',
     'كأس السوبر الأوروبي': 'UEFA Super Cup',
     'دوري الأمم الأوروبية': 'UEFA Nations League',
     'كأس أمم أوروبا': 'UEFA Euro',
@@ -461,6 +490,10 @@ class LeagueResolver {
 
   static final Map<String, String> _enToAr = {
     for (final entry in _arToEn.entries) entry.value.toLowerCase(): entry.key,
+    'uefa europa conference league': 'دوري المؤتمر الأوروبي',
+    'europa conference league': 'دوري المؤتمر الأوروبي',
+    'uefa conference league': 'دوري المؤتمر الأوروبي',
+    'conference league': 'دوري المؤتمر الأوروبي',
   };
 
   static String resolveTitle(
@@ -476,9 +509,14 @@ class LeagueResolver {
       return '';
     }
 
-    final trimmed = titleOrId.trim();
+    var clean = titleOrId.trim();
+    clean = clean.replaceAll(RegExp(r'\s*[:\-–|]\s*(Fixtures|Standings|News|مباريات|ترتيب|أخبار|اخبار|نتائج).*$', caseSensitive: false), '').trim();
+    clean = clean.replaceAll(RegExp(r'\s*[|]\s*YSscores.*$', caseSensitive: false), '').trim();
+    if (clean.isEmpty) clean = titleOrId.trim();
 
-    // 1. Check if titleOrId is an ID
+    final trimmed = clean;
+
+    // 1. Check if trimmed is an ID or if id is provided
     if (_idToTitles.containsKey(trimmed)) {
       final pair = _idToTitles[trimmed]!;
       return isArabic ? pair.ar : pair.en;
@@ -489,18 +527,31 @@ class LeagueResolver {
       return isArabic ? pair.ar : pair.en;
     }
 
+    final resolvedId = resolveId(trimmed) ?? (id != null ? resolveId(id) : null);
+    if (resolvedId != null && _idToTitles.containsKey(resolvedId)) {
+      final pair = _idToTitles[resolvedId]!;
+      return isArabic ? pair.ar : pair.en;
+    }
+
     // 2. Localization from Arabic to English
     if (!isArabic) {
       if (_arToEn.containsKey(trimmed)) {
         return _arToEn[trimmed]!;
       }
       final normInput = normalize(trimmed);
+      if (normInput.contains('مؤتمر')) {
+        return 'UEFA Conference League';
+      }
       for (final entry in _arToEn.entries) {
         if (normalize(entry.key) == normInput) {
           return entry.value;
         }
       }
       if (!RegExp(r'[\u0600-\u06FF]').hasMatch(trimmed)) {
+        final lower = trimmed.toLowerCase();
+        if (lower.contains('conference')) {
+          return 'UEFA Conference League';
+        }
         return trimmed;
       }
       for (final entry in _arToEn.entries) {
@@ -514,7 +565,14 @@ class LeagueResolver {
       if (_enToAr.containsKey(lower)) {
         return _enToAr[lower]!;
       }
+      if (lower.contains('conference')) {
+        return 'دوري المؤتمر الأوروبي';
+      }
       if (RegExp(r'[\u0600-\u06FF]').hasMatch(trimmed)) {
+        final norm = normalize(trimmed);
+        if (norm.contains('مؤتمر')) {
+          return 'دوري المؤتمر الأوروبي';
+        }
         return trimmed;
       }
       for (final entry in _enToAr.entries) {

@@ -135,6 +135,40 @@ class UrlHelper {
     return normalizeImageUrl(trimmed);
   }
 
+  /// Specifically normalizes championship logo URLs from the API.
+  /// Handles bare filenames (e.g. "17638085863023.png"), corrects any accidental /teams/ URLs to /championship/,
+  /// and ensures resolution to /championship/128/.
+  static String? normalizeChampionshipImageUrl(String? url, {int size = 128}) {
+    if (url == null) return null;
+    var trimmed = url.trim();
+    if (trimmed.isEmpty ||
+        trimmed == 'null' ||
+        trimmed == 'undefined' ||
+        trimmed == '0' ||
+        trimmed == '-1') {
+      return null;
+    }
+
+    // Bare numeric image filename (e.g. "17638085863023.png")
+    if (RegExp(
+      r'^\d+\.(png|jpg|jpeg|webp)$',
+      caseSensitive: false,
+    ).hasMatch(trimmed)) {
+      return 'https://imgs.ysscores.com/championship/$size/$trimmed';
+    }
+
+    // Correct accidental teams/ paths for championships (e.g. /teams/64/17638085863023.png)
+    if (trimmed.contains('/teams/') &&
+        RegExp(r'/teams/\d+/\d+\.(png|jpg|jpeg|webp)').hasMatch(trimmed)) {
+      trimmed = trimmed.replaceAll(
+        RegExp(r'/teams/\d+/'),
+        '/championship/$size/',
+      );
+    }
+
+    return normalizeImageUrl(trimmed);
+  }
+
   /// Specifically normalizes player photo URLs from the API.
   /// Handles bare filenames, player IDs, and redirects any accidental /teams/ URLs to /player/.
   static String? normalizePlayerPhotoUrl(String? url, {int size = 150}) {
@@ -225,49 +259,51 @@ class UrlHelper {
                 cleanId)
             : null);
 
+    final normalizedCurrent = normalizeChampionshipImageUrl(currentLogo);
+
     // 1. If currentLogo matches one of the known theme pairs, ensure the right variant is used for the active theme
-    if (currentLogo != null) {
-      if (currentLogo.contains('17883477127566')) {
+    if (normalizedCurrent != null) {
+      if (normalizedCurrent.contains('17883477127566')) {
         return 'https://imgs.ysscores.com/championship/128/6171690288722.png';
       }
-      if (currentLogo.contains('17882926672499') ||
-          currentLogo.contains('17882925978755')) {
+      if (normalizedCurrent.contains('17882926672499') ||
+          normalizedCurrent.contains('17882925978755')) {
         return isDark
             ? 'https://imgs.ysscores.com/championship/128/17882926672499.png'
             : 'https://imgs.ysscores.com/championship/128/17882925978755.png';
       }
-      if (currentLogo.contains('3141696514284') ||
-          currentLogo.contains('5171696546919')) {
+      if (normalizedCurrent.contains('3141696514284') ||
+          normalizedCurrent.contains('5171696546919')) {
         return isDark
             ? 'https://imgs.ysscores.com/championship/128/3141696514284.png'
             : 'https://imgs.ysscores.com/championship/128/5171696546919.png';
       }
-      if (currentLogo.contains('5111703719091') ||
-          currentLogo.contains('3421703719071')) {
+      if (normalizedCurrent.contains('5111703719091') ||
+          normalizedCurrent.contains('3421703719071')) {
         return isDark
             ? 'https://imgs.ysscores.com/championship/128/5111703719091.png'
             : 'https://imgs.ysscores.com/championship/128/3421703719071.png';
       }
-      if (currentLogo.contains('5481703687014') ||
-          currentLogo.contains('911703687010')) {
+      if (normalizedCurrent.contains('5481703687014') ||
+          normalizedCurrent.contains('911703687010')) {
         return isDark
             ? 'https://imgs.ysscores.com/championship/128/5481703687014.png'
             : 'https://imgs.ysscores.com/championship/128/911703687010.png';
       }
-      if (currentLogo.contains('17638081914419') ||
-          currentLogo.contains('17638081961987')) {
+      if (normalizedCurrent.contains('17638081914419') ||
+          normalizedCurrent.contains('17638081961987')) {
         return isDark
             ? 'https://imgs.ysscores.com/championship/128/17638081914419.png'
             : 'https://imgs.ysscores.com/championship/128/17638081961987.png';
       }
-      if (currentLogo.contains('17638085863023') ||
-          currentLogo.contains('17638085806160')) {
+      if (normalizedCurrent.contains('17638085863023') ||
+          normalizedCurrent.contains('17638085806160')) {
         return isDark
             ? 'https://imgs.ysscores.com/championship/128/17638085863023.png'
             : 'https://imgs.ysscores.com/championship/128/17638085806160.png';
       }
-      if (currentLogo.contains('7571723239230') ||
-          currentLogo.contains('1191723239247')) {
+      if (normalizedCurrent.contains('7571723239230') ||
+          normalizedCurrent.contains('1191723239247')) {
         return isDark
             ? 'https://imgs.ysscores.com/championship/128/7571723239230.png'
             : 'https://imgs.ysscores.com/championship/128/1191723239247.png';
@@ -281,17 +317,17 @@ class UrlHelper {
       return themed;
     }
 
-    // 3. Fall back to currentLogo if valid
-    if (currentLogo != null && isValidImageUrl(currentLogo)) {
-      return currentLogo;
-    }
-
-    // 3. Fall back to Section 2 CDN template: https://imgs.ysscores.com/championship/{size}/{champ_id}.png
-    final idCandidate = effectiveId ?? cleanId;
-    if (idCandidate != null &&
-        RegExp(r'^\d+$').hasMatch(idCandidate) &&
-        idCandidate != '0') {
-      return 'https://imgs.ysscores.com/championship/128/$idCandidate.png';
+    // 3. Fall back to normalizedCurrent if valid (rejecting numeric IDs that return Yalla Shoot placeholder)
+    if (normalizedCurrent != null && isValidImageUrl(normalizedCurrent)) {
+      if (RegExp(r'/championship/\d+/\d+\.png$').hasMatch(normalizedCurrent)) {
+        final match =
+            RegExp(r'/championship/\d+/(\d+)\.png$').firstMatch(normalizedCurrent);
+        final fileDigits = match?.group(1) ?? '';
+        if (fileDigits.length < 10) {
+          return null;
+        }
+      }
+      return normalizedCurrent;
     }
 
     return null;
@@ -351,6 +387,15 @@ class UrlHelper {
       '911121' ||
       '41791876' ||
       '943602' ||
+      '73510208' ||
+      '44444' ||
+      'كأس الكونفيدرالية الإفريقية' ||
+      'كأس الكونفيدرالية الافريقية' ||
+      'كأس الكونفيدرالية' ||
+      'الكونفيدرالية' ||
+      'caf confederation cup' ||
+      'caf confederation cup | qualification' ||
+      'caf confederation' ||
       '855126' ||
       '943983' ||
       '854128' ||
@@ -500,7 +545,16 @@ class UrlHelper {
         '76684' ||
         '911121' ||
         '41791876' ||
-        '943602' =>
+        '943602' ||
+        '73510208' ||
+        '44444' ||
+        'كأس الكونفيدرالية الإفريقية' ||
+        'كأس الكونفيدرالية الافريقية' ||
+        'كأس الكونفيدرالية' ||
+        'الكونفيدرالية' ||
+        'caf confederation cup' ||
+        'caf confederation cup | qualification' ||
+        'caf confederation' =>
           'https://imgs.ysscores.com/championship/128/17638085863023.png', // CAF Confederation Cup (Light)
         '855126' ||
         '943983' =>
@@ -635,7 +689,16 @@ class UrlHelper {
         '76684' ||
         '911121' ||
         '41791876' ||
-        '943602' =>
+        '943602' ||
+        '73510208' ||
+        '44444' ||
+        'كأس الكونفيدرالية الإفريقية' ||
+        'كأس الكونفيدرالية الافريقية' ||
+        'كأس الكونفيدرالية' ||
+        'الكونفيدرالية' ||
+        'caf confederation cup' ||
+        'caf confederation cup | qualification' ||
+        'caf confederation' =>
           'https://imgs.ysscores.com/championship/128/17638085806160.png', // CAF Confederation Cup (Dark)
         '855126' ||
         '943983' =>

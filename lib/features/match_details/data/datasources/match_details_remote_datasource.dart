@@ -452,6 +452,31 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         hasExtraTime: MatchEventHelper.hasExtraTimeInHalfScores(halfScores),
       );
 
+      MatchOverviewDataEntity? overview;
+      final rawOverview = (parsed is Map && parsed['overview'] is Map)
+          ? parsed['overview']
+          : null;
+      if (rawOverview != null) {
+        overview = _parseOverview(rawOverview, cleanId, const []);
+      } else if (rootItems is Map) {
+        final items = (rootItems['items'] is Map)
+            ? rootItems['items'] as Map
+            : rootItems;
+        final homeMap = items['home_team'] is Map ? items['home_team'] as Map : null;
+        final awayMap = items['away_team'] is Map ? items['away_team'] as Map : null;
+        final champMap = items['championship'] is Map ? items['championship'] as Map : null;
+
+        if (homeMap != null || awayMap != null || champMap != null) {
+          final syntheticOverview = <String, dynamic>{
+            if (homeMap != null) 'home_team': homeMap,
+            if (awayMap != null) 'away_team': awayMap,
+            if (champMap != null) 'championship': champMap,
+            if (championshipId != null) 'championship_id': championshipId,
+          };
+          overview = _parseOverview(syntheticOverview, cleanId, const []);
+        }
+      }
+
       return MatchEventsPayload(
         events: normalizedEvents,
         videos: videos,
@@ -459,6 +484,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         halfScores: halfScores,
         penaltiesDetail: penaltiesDetail,
         alert: alert,
+        overview: overview,
       );
     } catch (_) {
       return const MatchEventsPayload();

@@ -13,7 +13,7 @@ class OnboardingState extends Equatable {
     this.status = OnboardingStatus.inProgress,
   });
 
-  static const int pageCount = 4;
+  static const int pageCount = 5;
 
   final int page;
 

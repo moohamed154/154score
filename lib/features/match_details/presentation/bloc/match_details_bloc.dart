@@ -244,11 +244,16 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         }
       }
 
+      final eventsOverview = eventsPayloadRes.overview;
+      final initialOverview = state.overview ?? eventsOverview;
+      resolvedChampionshipId ??= eventsOverview?.championshipId;
+
       // Show screen, score hero banner, and Events tab immediately!
       emit(
         state.copyWith(
           status: MatchDetailsStatus.success,
           matchId: cleanTarget,
+          overview: initialOverview,
           events: resolvedEvents,
           videos: resolvedVideos,
           championshipId: resolvedChampionshipId,
@@ -256,8 +261,8 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
           penaltiesDetail:
               eventsPayloadRes.penaltiesDetail ?? state.penaltiesDetail,
           alert: eventsPayloadRes.alert ?? state.alert,
-          liveScore1: state.liveScore1,
-          liveScore2: state.liveScore2,
+          liveScore1: state.liveScore1 ?? eventsOverview?.score1,
+          liveScore2: state.liveScore2 ?? eventsOverview?.score2,
           liveStatus: resolvedStatus,
           liveStatusCode: resolvedStatusCode,
           errorMessage: null,
@@ -273,7 +278,7 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final overviewRes = detailsPayload.overview;
       final resolvedDetails =
           detailsRes.isNotEmpty ? detailsRes : state.details;
-      final resolvedOverview = overviewRes ?? state.overview;
+      final resolvedOverview = overviewRes ?? state.overview ?? eventsOverview;
       resolvedChampionshipId = resolvedChampionshipId ??
           resolvedOverview?.championshipId ??
           state.championshipId;

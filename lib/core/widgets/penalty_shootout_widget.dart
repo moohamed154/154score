@@ -93,7 +93,7 @@ class PenaltyShootoutWidget extends StatelessWidget {
     }
 
     final title = isCompact
-        ? (isArabic ? 'ر.ت' : 'PEN')
+        ? (isArabic ? 'ترجيح' : 'PEN')
         : (isArabic ? 'ركلات الترجيح' : 'Penalty Shootout');
 
     // ── 2. Full Shootout Pill with Dots ──────────────────────────────────
@@ -173,12 +173,12 @@ class PenaltyShootoutWidget extends StatelessWidget {
     // ── 3. Compact Pill ──────────────────────────────────────────────────
     if (isCompact) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
         decoration: BoxDecoration(
-          color: AppColors.accent.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+          color: isDark ? const Color(0xFF1E2838) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
           border: Border.all(
-            color: AppColors.accent.withValues(alpha: 0.4),
+            color: isDark ? const Color(0xFF2E3D52) : const Color(0xFFCBD5E1),
             width: 0.8,
           ),
         ),
@@ -187,33 +187,32 @@ class PenaltyShootoutWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w700,
-                color: isDark ? AppColors.accent : const Color(0xFF0070BA),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.primary.withValues(alpha: 0.18)
+                    : AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                  letterSpacing: isArabic ? 0 : 0.4,
+                ),
               ),
             ),
             const SizedBox(width: 5),
             Text(
               '$penaltyScore1 - $penaltyScore2',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w800,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(width: 5),
-            // Symmetry spacer with identical width so the score itself is in the exact center
-            Opacity(
-              opacity: 0.0,
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                ),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                letterSpacing: 0.5,
               ),
             ),
           ],

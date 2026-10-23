@@ -55,6 +55,12 @@ class LeagueHeaderCard extends StatelessWidget {
       isDark: isDark,
     );
 
+    final displayTitle = LeagueResolver.resolveTitle(
+      title,
+      isArabic: isArabic,
+      id: leagueId,
+    );
+
     return Container(
       margin: EdgeInsets.all(hMargin),
       padding: EdgeInsets.all(isSmall ? 12 : 16),
@@ -104,7 +110,7 @@ class LeagueHeaderCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  title,
+                  displayTitle.isNotEmpty ? displayTitle : title,
                   style: AppTypography.getHeadingMedium(
                     isDark: isDark,
                     isArabic: isArabic,

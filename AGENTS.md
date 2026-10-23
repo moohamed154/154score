@@ -88,6 +88,12 @@ For low-level architectural blueprints and diagrams, see:
   * `"Upcoming"` ➔ `"لم تبدأ"`
   * `"Postponed"` ➔ `"تأجلت"`
   * `"Cancelled"` ➔ `"ألغيت"`
+  * `"Half Time"` / `"HT"` ➔ `"استراحة"`
+  * `"Penalties"` / `"Penalty Shootout"` ➔ `"ترجيح"`
+  * `"Penalty Scored"` ➔ `"ركلة جزاء مسجلة"`
+  * `"Penalty Missed"` ➔ `"ركلة جزاء ضائعة"`
+  * `"Yellow Card"` ➔ `"بطاقة صفراء"`
+  * `"Red Card"` ➔ `"بطاقة حمراء"`
   * Competition name: `"دوري ORA"` / `"الدوري المصري الممتاز"`.
 
 ---
@@ -98,7 +104,9 @@ For low-level architectural blueprints and diagrams, see:
 * **Horizontal Date Selector**: Allows navigating days forward and backward; highlights the current day; RTL scroll-friendly.
 * **Calendar Date Picker**: Bottom sheet / dialog to jump directly to any date.
 * **League Grouping**: Matches are partitioned by championship with expand/collapse toggle.
-* **Live Score Card**: Live pulse badge for active matches (`AppColors.liveRed`), score display, penalty shootouts, red cards, and match minute.
+* **Live Score Card & Live Clock Standard**:
+  * Live pulse badge for active matches (`AppColors.liveRed`), score display, penalty shootouts, red cards, and match minute.
+  * Live clock format is strictly `MM:SS` (e.g. `65:30`) during active play, displaying `"استراحة"` during half-time intermission and `"ترجيح"` during penalty shootouts.
 * **Starred Toggle**: Quick star icon on championship headers and match cards.
 * **Horizontal Swiping & Date Navigation Isolation (60/120 FPS Standard)**:
   * **Zero Mid-Swipe Bloc Emissions**: Never dispatch `LoadMatchesEvent` or trigger BLoC state updates inside `PageView.onPageChanged`. `onPageChanged` fires at 50% scroll offset mid-gesture, causing heavy rebuild passes, frame drops, and scroll lock collisions.
@@ -112,24 +120,31 @@ For low-level architectural blueprints and diagrams, see:
 
 ### 2. Match Details (`features/match_details`)
 * **Match Header Banner**: Dynamic team crests, live minute timer, score, aggregate score, venue, and referee.
-* **Match Status Integrity (Cancelled & Postponed Standard)**:
-  * **Strict Tab Filtering**: If a match is cancelled (`ألغيت` / `cancelled`) or postponed (`تأجلت` / `postponed`), **NEVER show Events (`الأحداث`) or Statistics (`الإحصائيات`) tabs**. The active tabs must strictly be `[التفاصيل, التشكيلة, الترتيب, الهدافون, الصناع, الأخبار]`.
+* **Match Status Integrity & Tab Filtering Standards**:
+  * **Upcoming Matches Tab Filtering**: For matches that have not started (`لم تبدأ` / `upcoming`), **NEVER show Events (`الأحداث`) or Statistics (`الإحصائيات`) tabs**. The active tabs must strictly be `[التفاصيل, التشكيلة, الترتيب, الهدافون, الصناع, الأخبار]`.
+  * **Cancelled & Postponed Matches Tab Filtering**: If a match is cancelled (`ألغيت` / `cancelled`) or postponed (`تأجلت` / `postponed`), **NEVER show Events (`الأحداث`) or Statistics (`الإحصائيات`) tabs**.
   * **Center Header Pill**: For cancelled/postponed matches, display the kickoff time and status badge (`ألغيت` in high-contrast red or `تأجلت`), and **NEVER display dummy `0 - 0` scores or overwrite status to `انتهت`**.
   * **Protection from Overwrites**: `MatchDetailsBloc` and `MatchDetailsView` must strictly safeguard `ألغيت` and `تأجلت` from being overwritten by timeline placeholder events (`بداية الشوط الأول`) or elapsed calendar dates.
+* **Timeline Events & Vector Icons Catalog**:
+  * High-fidelity vector icons matching Yalla Shoot visual language (`match_event_visual_icon.dart`):
+    * **Penalty Scored**: Treated and rendered visually as a **Goal** with a green circle background (`AppColors.primary`), white soccer ball icon, minute badge, and Arabic label `"ركلة جزاء مسجلة"`.
+    * **Penalty Missed**: Red badge with cross/miss indicator (`AppColors.relegationRed`) and label `"ركلة جزاء ضائعة"`.
+    * **Missed Chance & Woodwork**: Distinct vector icons for missed opportunities and crossbar/post hits.
+    * **Cards**: Rectangular yellow (`AppColors.yellowCard`) and red (`AppColors.redCard`) badges.
+    * **Substitutions**: Cyan twin directional arrows (`AppColors.substitution`).
+    * **VAR**: High-contrast orange screen icon (`AppColors.varEvent`).
+    * **Stoppage Time**: Dedicated badge displaying exact stoppage time addition (e.g. `+4`).
+  * **Symmetrical Event Alignment**: Timeline event slots are symmetrically balanced across home (team 1) and away (team 2) sides across both RTL and LTR viewports.
 * **Details Tab (`التفاصيل`) Theme & Brand Integration**:
   * Special notices and cancellation alerts must strictly adhere to the app's primary theme: `AppColors.primary` (`#00C853`) for the `Icons.info_outline_rounded` icon and border accents, with standard themed card background (`AppColors.darkCard` / light green tint `0xFFF0FDF4`). Arbitrary colors (like blue `#3B82F6`) are strictly forbidden.
 * **Standings Group Prioritization**:
   * In competitions with multi-group structures (e.g. World Cup, Club World Cup), the specific group containing the two playing teams is prioritized to appear first at the top of the Standings tab with a `مجموعة المباراة` badge.
-* **Tabs**:
-  1. **Events / Timeline**: Chronological match events (goals, VAR, substitutions, yellow/red cards) — hidden when match is cancelled or postponed.
-  2. **Lineups**: Interactive tactical pitch preview (formations like 4-3-3, 4-2-3-1), starter ratings, substitutes list, and coach info.
-  3. **Statistics**: Comparative progress bars (Possession %, Shots on target, Fouls, Corners, Offsides, Passes) — hidden when match is cancelled or postponed.
-  4. **Head-to-Head (H2H)**: Historical encounters between the two clubs.
-  5. **Standings**: Group/league standings table with current match's group prioritized.
 * **WebSocket Room**: Auto-subscribes to `match:{id}` on init and un-subscribes on dispose.
 
 ### 3. Leagues & Competitions (`features/leagues`)
 * **League Header Card**: Dynamic theme-aware logo, country badge, `"الموسم الحالي"` badge, and favorite toggle star.
+* **Aliases & Resolution (`league_resolver.dart` / `url_helper.dart`)**:
+  * Seamless normalization and resolution across English and Arabic aliases for major competitions: UCL (`دوري أبطال أوروبا`), UEL (`الدوري الأوروبي`), UECL (`دوري المؤتمر الأوروبي` / `UEFA Conference League`), Premier League, La Liga, Serie A, Egyptian Premier League (`دوري ORA`), Saudi Pro League, etc.
 * **Tabs**:
   1. **Matches**: Full schedule partitioned by date / game week.
   2. **Standings**: Full league table or tournament stage selector.
@@ -137,6 +152,10 @@ For low-level architectural blueprints and diagrams, see:
   4. **Assists**: Top playmakers list with assists count and team badge.
 
 ### 4. Standings (`features/standings`)
+* **Two-Tier Cache Standard (0ms First Paint)**:
+  * In-memory cache (`_cachedStandings`) for immediate instant re-renders.
+  * Persistent storage via `LocalStorageService` to retain standings offline across app restarts.
+  * **Startup Pre-Warming**: Call `prewarmStandingsCache()` on app initialization to hydrate top championships before the user navigates to the Standings tab.
 * **Tables**: Position, Club badge & name, Played, Won, Drawn, Lost, Goals difference, Points.
 * **Qualification Indicators**:
   * Green bar: UEFA Champions League (`AppColors.uclGreen`).
@@ -153,17 +172,24 @@ For low-level architectural blueprints and diagrams, see:
 
 ### 6. Players & Profiles (`features/players`, `features/profiles`)
 * **Header**: Player photo, nationality flag, club badge, jersey number, and position.
-* **Metrics**: Age, height, preferred foot, market value, contract expiry.
+* **Metrics**: Age, height, preferred foot, market value pill, contract expiry.
+* **Injury Status & Details**:
+  * Active injury badge (`inj_active`) displayed prominently on player cards and squad lists.
+  * Tapping the injury badge opens the **Injury Details Bottom Sheet** detailing injury type, expected return date, and missing matches.
 * **Career History & Transfers**: Chronological club transfer fees and dates.
 * **Trophies & Honors**: Career achievements.
 
 ### 7. Transfers (`features/transfers`)
+* **Architecture**: State managed by `TransfersBloc` with clean pagination support via `transfer_more` endpoint and real-time updates.
 * **Feed**: Real-time market transfer cards showing player photo, source club crest, destination club crest, transfer fee, and contract duration.
 * **Filters**: Filter by league, transfer type (Permanent, Loan, Free), or date.
 
 ### 8. News & Videos (`features/news`, `features/videos`)
 * **News Feed**: Breaking news banner carousel, categorized sports articles, publish time, and thumbnail.
-* **Videos Feed**: Goal clips and match highlights with embedded responsive video player.
+* **Videos Feed & Placeholder Standard**:
+  * Goal clips and match highlights with embedded responsive video player.
+  * **Branded Video Placeholders**: Always use branded pitch thumbnail placeholders (`assets/images/video_placeholder.png` or themed gradient container); never display external/unbranded default placeholders.
+  * **Graceful 404 Handling**: Video detail lookups returning 404 must display an inline notice without crashing the video feed.
 
 ### 9. Universal Search (`features/search`)
 * **Debounced Search**: Queries matches, leagues, teams, and players simultaneously with debouncing (300ms).
@@ -183,12 +209,44 @@ For low-level architectural blueprints and diagrams, see:
 ### 12. Settings & System (`features/settings`)
 * **Theme Mode**: Dark, Light, System default.
 * **Language**: Arabic (primary), English.
+* **Font Size Adjustments**: Dedicated font size settings view with dynamic UI scaling.
 * **Notification Preferences**: Toggles per alert type (goals, kick-off, news).
+* **Unified Settings Icon Containers**: All settings option tiles share a unified container token (`AppColors.darkCardElevated` / light background) with standard border radius and padding.
 * **Developer Tools & Diagnostics Security**: Developer mode is protected and hidden by default. Unlocking it requires tapping the app brand logo 10 times in Settings, followed by entering the master developer password (`MOhamed_2002`). Unlocking displays the developer and diagnostics suite; locking hides it until re-authenticated. The password prompt must be encapsulated in a dedicated `StatefulWidget` so `TextEditingController` is disposed cleanly within `State.dispose()` after pop animations conclude, avoiding `used after being disposed` crashes.
 
 ### 13. Onboarding & First-Launch Setup (`features/onboarding`)
 * **Branded Chips**: All team and league selection chips in the onboarding flow must display crisp logos alongside their titles (`UrlHelper.resolveTeamLogo` for clubs and `UrlHelper.resolveChampionshipLogo` with `isDark` adaptation for leagues/tournaments).
 * **RTL Arrow Direction**: The navigation back button must strictly respect RTL layout semantics, pointing to the right (`→`) in Arabic to reflect navigating backward to the previous screen. In Flutter, `Icons.arrow_back_rounded` has `matchTextDirection: true` and automatically mirrors to point right (`→`) in RTL environments; never manually swap it with `Icons.arrow_forward_rounded` as that causes an unintentional double-flip.
+
+### 14. Tactical Pitch Lineups & Match Player Statistics (`features/match_details/presentation/widgets/lineup/`)
+* **Tactical Pitch View (`match_pitch_widget.dart`)**:
+  * Realistic pitch painter with penalty areas, center circle, and goal boxes.
+  * Formations rendered dynamically (4-3-3, 4-2-3-1, 3-5-2, etc.) with responsive coordinate mapping.
+  * Player nodes (`pitch_player_node.dart`) show player photo, jersey number, rating pill, captain badge, yellow/red card badges, and goal indicators.
+  * Full RTL/LTR layout mirroring for pitch board orientation and team bench order.
+* **Player Match Statistics Sheet (`player_match_stats_sheet.dart`)**:
+  * Tapping any starting or substitute player opens the high-detail match statistics modal bottom sheet.
+  * Displays: Overall match rating, minutes played, goals, assists, total passes, pass accuracy, shots on target, tackles, duels won, fouls committed, and substitution timestamps.
+
+### 15. Live Activity & Lock Screen Widgets (`features/live_activity/`)
+* **Cross-Platform Live Score Tracking**:
+  * Android: Live Notification with RemoteViews layout using `FrameLayout` for layout stability (eliminating RemoteViews inflation errors).
+  * iOS: Dynamic Island & Lock Screen Live Activity via ActivityKit.
+* **Live Clock Synchronization**:
+  * Matches the in-app `MatchCard` clock formatting (`MM:SS`, e.g. `65:30`).
+  * Chronometer base timestamp is fixed and stabilized to prevent live clock freezing or resetting at 55 minutes, with interval widened to 180m.
+* **Embedded App Assets**:
+  * iOS lock screen uses base64 embedded app brand logo to guarantee zero image load failures.
+  * Club crests are pre-cached and normalized before dispatching Live Activity updates.
+* **Feature Toggle**:
+  * Disabled by default to conserve background battery; toggleable via Settings and Developer Tools.
+
+### 16. Connectivity Monitoring & Offline Dialog (`features/internet_connection/`)
+* **Global Network Listener (`global_internet_connection_listener.dart`)**:
+  * Continuously monitors network connection states via `InternetConnectionCubit`.
+  * Detects network drops and automatically restores socket rooms and REST polling upon reconnection.
+* **Offline Dialog (`no_internet_dialog.dart`)**:
+  * Clean themed modal displaying connection loss notice with retry button and fallback to cached local data.
 
 ---
 

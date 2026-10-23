@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/websocket/websocket_event.dart';
 import '../../../../core/websocket/websocket_service.dart';
 import '../../domain/repositories/leagues_repository.dart';
@@ -62,13 +63,19 @@ class LeagueBloc extends Bloc<LeagueEvent, LeagueState> {
 
       result.fold(
         onSuccess: (details) {
-          final effectiveTitle =
+          final isAr = lang == 'ar';
+          final candidateTitle =
               details.name.isNotEmpty && details.name != 'League'
                   ? details.name
                   : (details.standings?.leagueTitle.isNotEmpty == true &&
                           details.standings?.leagueTitle != 'League Standings'
                       ? details.standings!.leagueTitle
                       : (state.leagueTitle ?? 'League'));
+          final effectiveTitle = LeagueResolver.resolveTitle(
+            candidateTitle,
+            isArabic: isAr,
+            id: event.leagueId,
+          );
 
           emit(
             state.copyWith(

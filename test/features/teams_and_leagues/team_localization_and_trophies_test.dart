@@ -158,6 +158,41 @@ void main() {
       expect(enResult, equals('Africa Cup of Nations Qualification'));
       expect(arResult, equals('تصفيات كأس أمم أفريقيا'));
     });
+
+    test('Translates UEFA Conference League bidirectionally and cleans noise', () {
+      expect(
+        LeagueResolver.resolveTitle('دوري المؤتمر الأوروبي', isArabic: false),
+        equals('UEFA Conference League'),
+      );
+      expect(
+        LeagueResolver.resolveTitle('دوري المؤتمر الاوروبي', isArabic: false),
+        equals('UEFA Conference League'),
+      );
+      expect(
+        LeagueResolver.resolveTitle('UEFA Europa Conference League: Fixtures, Standings & News | YSscores', isArabic: false),
+        equals('UEFA Conference League'),
+      );
+      expect(
+        LeagueResolver.resolveTitle('UEFA Conference League', isArabic: true),
+        equals('دوري المؤتمر الأوروبي'),
+      );
+      expect(
+        LeagueResolver.resolveTitle('UEFA Europa Conference League', isArabic: true),
+        equals('دوري المؤتمر الأوروبي'),
+      );
+      expect(
+        LeagueResolver.resolveTitle(null, isArabic: false, id: '31250'),
+        equals('UEFA Conference League'),
+      );
+      expect(
+        LeagueResolver.resolveTitle(null, isArabic: true, id: '31250'),
+        equals('دوري المؤتمر الأوروبي'),
+      );
+      expect(
+        LeagueResolver.resolveTitle(null, isArabic: false, id: '943231'),
+        equals('UEFA Conference League'),
+      );
+    });
   });
 
   group('TeamHeaderCard Localization', () {

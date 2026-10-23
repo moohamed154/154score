@@ -6,6 +6,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_image.dart';
+import '../../../matches/domain/entities/match_entity.dart';
 import '../../domain/entities/match_details_entity.dart';
 
 class MatchFormCard extends StatefulWidget {
@@ -152,6 +153,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 ...homeMatches.map(
                   (m) => _buildDetailedMatchTile(
                     m,
+                    currentTeamName: widget.recentForm.homeTeamName ??
+                        (arabic ? 'المضيف' : 'Home Team'),
                     isDark: dark,
                     isArabic: arabic,
                   ),
@@ -174,6 +177,8 @@ class _MatchFormCardState extends State<MatchFormCard> {
                 ...awayMatches.map(
                   (m) => _buildDetailedMatchTile(
                     m,
+                    currentTeamName: widget.recentForm.awayTeamName ??
+                        (arabic ? 'الضيف' : 'Away Team'),
                     isDark: dark,
                     isArabic: arabic,
                   ),
@@ -248,15 +253,49 @@ class _MatchFormCardState extends State<MatchFormCard> {
 
   Widget _buildDetailedMatchTile(
     MatchFormItemEntity match, {
+    required String currentTeamName,
     required bool isDark,
     required bool isArabic,
   }) {
     final canNav = match.matchId.trim().isNotEmpty && match.matchId != '0';
 
+    MatchEntity? initialMatch;
+    if (canNav) {
+      final isHome = match.isHome;
+      final homeName = isHome ? currentTeamName : match.opponentName;
+      final awayName = isHome ? match.opponentName : currentTeamName;
+      final homeLogo = isHome ? null : match.opponentLogo;
+      final awayLogo = isHome ? match.opponentLogo : null;
+
+      String? s1;
+      String? s2;
+      if (match.score.contains('-')) {
+        final parts = match.score.split('-');
+        if (parts.length == 2) {
+          s1 = parts[0].trim();
+          s2 = parts[1].trim();
+        }
+      }
+
+      initialMatch = MatchEntity(
+        id: match.matchId,
+        team1: homeName,
+        team2: awayName,
+        team1Logo: homeLogo,
+        team2Logo: awayLogo,
+        score1: s1,
+        score2: s2,
+        status: 'انتهت',
+        statusCode: 'FINISHED',
+      );
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: canNav ? () => context.push('/match/${match.matchId}') : null,
+        onTap: canNav
+            ? () => context.push('/match/${match.matchId}', extra: initialMatch)
+            : null,
         borderRadius: BorderRadius.circular(6),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),

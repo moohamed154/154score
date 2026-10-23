@@ -223,6 +223,10 @@ class AppLocalizations {
       'onb_lang_sub': 'You can change it later from Settings',
       'onb_theme_title': 'Choose your theme',
       'onb_theme_sub': 'Light, dark, or follow your device',
+      'onb_font_size_title': 'App Font Size',
+      'onb_font_size_sub': 'Customize text size for optimal reading',
+      'onb_font_size_preview':
+          'Follow today\'s matches, live scores, and tournament standings.',
       'onb_teams_title': 'Your favorite teams',
       'onb_teams_sub': 'Get notified about their matches and goals',
       'onb_leagues_title': 'Your favorite leagues',
@@ -625,6 +629,10 @@ class AppLocalizations {
       'onb_lang_sub': 'يمكنك تغييرها لاحقًا من الإعدادات',
       'onb_theme_title': 'اختر المظهر',
       'onb_theme_sub': 'فاتح أو داكن أو حسب إعدادات جهازك',
+      'onb_font_size_title': 'حجم خط التطبيق',
+      'onb_font_size_sub': 'تخصيص حجم الخط لقراءة مريحة تناسبك',
+      'onb_font_size_preview':
+          'تابع مباريات اليوم والنتائج المباشرة وجداول الترتيب لحظة بلحظة.',
       'onb_teams_title': 'فرقك المفضلة',
       'onb_teams_sub': 'ستصلك إشعارات مبارياتها وأهدافها',
       'onb_leagues_title': 'دورياتك المفضلة',

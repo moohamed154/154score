@@ -340,7 +340,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
 
         expect(find.text('4 - 3'), findsOneWidget);
-        expect(find.text('ر.ت '), findsOneWidget);
+        expect(find.text('ترجيح'), findsOneWidget);
       },
     );
 

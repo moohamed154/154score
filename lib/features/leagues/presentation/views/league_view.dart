@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -70,9 +71,14 @@ class _LeagueViewState extends State<LeagueView>
 
     return BlocBuilder<LeagueBloc, LeagueState>(
       builder: (context, state) {
-        final title = state.leagueTitle ??
+        final rawTitle = state.leagueTitle ??
             widget.initialTitle ??
             l10n.translate('standings_title');
+        final title = LeagueResolver.resolveTitle(
+          rawTitle,
+          isArabic: isArabic,
+          id: widget.leagueId,
+        );
 
         return Scaffold(
           appBar: AppBar(

@@ -584,7 +584,7 @@ class MatchHeaderBanner extends StatelessWidget {
           ),
         ],
         if (hasPenalties && p1 != null && p2 != null) ...[
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           PenaltyShootoutWidget(
             penaltyScore1: p1,
             penaltyScore2: p2,

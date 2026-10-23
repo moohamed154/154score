@@ -190,8 +190,12 @@ lib/
 5. **Gesture & Page Transition Isolation (60/120 FPS Standard)**:
    - Never dispatch asynchronous BLoC events or state updates inside continuous touch gesture callbacks (`onPageChanged`, `onPanUpdate`).
    - Defer state mutations until gestures settle completely (e.g. `ScrollEndNotification`) to guarantee buttery smooth transitions without frame drops or scroll locking collisions.
-6. **Controller & Subscription Disposal**:
+6. **Two-Tier In-Memory + Persistent Cache Standard**:
+   - High-read surfaces (Standings, Matches per date, Championships directory) must utilize an in-memory cache map for synchronous 0ms builds, backed by asynchronous persistence in `LocalStorageService`.
+   - Pre-warm critical cache datasets (`prewarmStandingsCache()`) during app bootstrap in `main.dart` or splash screen.
+7. **Controller & Subscription Disposal & Sheet Lifecycle**:
    - Always call `.dispose()` on `TextEditingController`, `AnimationController`, `ScrollController`, `PageController`, and cancel `StreamSubscription` in `dispose()`.
+   - In modals and bottom sheets that take user text input (such as developer password prompts or search bars), encapsulate them in dedicated `StatefulWidget` instances so controllers are cleanly disposed within `State.dispose()` after pop dismiss animations conclude, avoiding `used after being disposed` crashes.
 
 ---
 
@@ -215,8 +219,11 @@ lib/
    ```
 2. **Temporal Resource 404 Disambiguation**:
    - When querying temporal collections (e.g., date-based schedules like `/matches?date=...`), HTTP 404 or backend messages like `"لا توجد مباريات"` / `"no matches"` MUST be interpreted as an empty dataset success (`Success([])`), NOT as a service failure.
-3. **Centralized Dio Interceptors**:
-   - Add Logging, JWT Bearer Token Injection, and Auto-Refresh interceptors in `core/network/`.
+3. **Connectivity & Offline Resilience**:
+   - Listen to network connectivity globally via `InternetConnectionCubit` / `GlobalInternetConnectionListener`.
+   - On connectivity drop, never crash active views; serve cached data seamlessly and notify via non-intrusive status pills or `NoInternetDialog` with manual retry.
+4. **Centralized Dio Interceptors**:
+   - Add Logging, HMAC Security Headers (`X-Timestamp`, `X-Nonce`, `X-Signature`), and Auto-Refresh interceptors in `core/network/`.
 
 ---
 
