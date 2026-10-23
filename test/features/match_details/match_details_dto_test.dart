@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:score154/core/network/api_client.dart';
 import 'package:score154/features/match_details/data/datasources/match_details_remote_datasource.dart';
+import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 
@@ -518,5 +519,81 @@ void main() {
       expect(overview.referees.first.name, 'أنتوني تايلور');
       expect(overview.referees.first.id, '501');
     });
+
+    test('getDetailsPayload formats map agg_result and stringified agg_result into clean score', () async {
+      when(() => mockApiClient.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          )).thenAnswer(
+        (_) async => {
+          'overview': {
+            'home_team': {'id': '101745', 'name': 'الأهلي'},
+            'away_team': {'id': '3513993', 'name': 'كيتارا'},
+            'return_match': {
+              'match_id': '95812774',
+              'home_team': 'كيتارا',
+              'away_team': 'الأهلي',
+              'home_scores': 1,
+              'away_scores': 2,
+              'agg_result': {'101745': 2, '3513993': 1, 'win_team': 101745},
+            },
+          },
+          'data': [
+            {
+              'section': 'معلومات اللقاء',
+              'items': [
+                {'title': 'الملعب', 'content': 'ستاد القاهرة'},
+              ],
+            },
+          ],
+        },
+      );
+
+      final payload = await dataSource.getDetailsPayload('65152122', lang: 'ar');
+      expect(payload.overview, isNotNull);
+      expect(payload.overview!.returnLeg, isNotNull);
+      expect(payload.overview!.returnLeg!.aggResult, '2 - 1');
+    });
+
+    test('MatchOverviewDataEntity mergeWith retains existing h2h, returnLeg, and recentForm when incoming is partial or null', () {
+      const existing = MatchOverviewDataEntity(
+        matchId: '65152122',
+        homeTeamName: 'الأهلي',
+        awayTeamName: 'كيتارا',
+        returnLeg: MatchReturnLegEntity(
+          matchId: '95812774',
+          homeTeam: 'كيتارا',
+          awayTeam: 'الأهلي',
+          homeScores: 1,
+          awayScores: 2,
+          aggResult: '2 - 1',
+        ),
+        h2hSummary: MatchH2HSummaryEntity(homeWins: 1, awayWins: 0, draws: 0),
+        recentForm: MatchRecentFormEntity(
+          homeMatches: [],
+          awayMatches: [],
+          homeTeamName: 'الأهلي',
+          awayTeamName: 'كيتارا',
+        ),
+      );
+
+      // Incoming overview with updated score or status, but null returnLeg and h2h (e.g. from cached or partial response)
+      const incoming = MatchOverviewDataEntity(
+        matchId: '65152122',
+        score1: '1',
+        score2: '0',
+        status: 'مباشر',
+      );
+
+      final merged = existing.mergeWith(incoming);
+      expect(merged.score1, '1');
+      expect(merged.status, 'مباشر');
+      expect(merged.returnLeg, isNotNull);
+      expect(merged.returnLeg!.aggResult, '2 - 1');
+      expect(merged.h2hSummary, isNotNull);
+      expect(merged.h2hSummary!.homeWins, 1);
+      expect(merged.recentForm, isNotNull);
+    });
   });
 }
+

@@ -90,7 +90,9 @@ class MatchReturnLegCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     if (returnLeg.aggResult != null &&
-                        returnLeg.aggResult!.isNotEmpty) ...[
+                        returnLeg.aggResult!.isNotEmpty &&
+                        !returnLeg.aggResult!.contains('[object') &&
+                        !returnLeg.aggResult!.startsWith('{')) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,

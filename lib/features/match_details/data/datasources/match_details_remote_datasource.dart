@@ -891,48 +891,161 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     }
   }
 
+  static String? _formatAggResult(
+    dynamic rawAgg, {
+    String? homeId,
+    String? awayId,
+  }) {
+    if (rawAgg == null) return null;
+    if (rawAgg is String) {
+      final s = rawAgg.trim();
+      if (s.isEmpty || s == '[object Object]') return null;
+      if (!s.startsWith('{')) return s;
+      final matches = RegExp(r'''["']?(\d+)["']?\s*:\s*(\d+)''').allMatches(s);
+      final map = <String, String>{};
+      for (final m in matches) {
+        map[m.group(1)!] = m.group(2)!;
+      }
+      if (homeId != null &&
+          awayId != null &&
+          map.containsKey(homeId) &&
+          map.containsKey(awayId)) {
+        return '${map[homeId]} - ${map[awayId]}';
+      }
+      final scores = map.entries
+          .where((e) => e.key != 'win_team')
+          .map((e) => e.value)
+          .toList();
+      if (scores.length == 2) {
+        return '${scores[0]} - ${scores[1]}';
+      }
+      return null;
+    }
+    if (rawAgg is Map) {
+      final hId = homeId?.toString();
+      final aId = awayId?.toString();
+      if (hId != null &&
+          aId != null &&
+          rawAgg.containsKey(hId) &&
+          rawAgg.containsKey(aId)) {
+        return '${rawAgg[hId]} - ${rawAgg[aId]}';
+      }
+      if (rawAgg['home'] != null && rawAgg['away'] != null) {
+        return '${rawAgg['home']} - ${rawAgg['away']}';
+      }
+      if (rawAgg['home_scores'] != null && rawAgg['away_scores'] != null) {
+        return '${rawAgg['home_scores']} - ${rawAgg['away_scores']}';
+      }
+      final scores = rawAgg.entries
+          .where((e) =>
+              e.key != 'win_team' && e.key != 'winner' && e.key != 'qualified')
+          .map((e) => e.value)
+          .toList();
+      if (scores.length == 2) {
+        return '${scores[0]} - ${scores[1]}';
+      }
+    }
+    return null;
+  }
+
+  static String? _formatPenalties(
+    dynamic rawPen, {
+    String? homeId,
+    String? awayId,
+  }) {
+    if (rawPen == null) return null;
+    if (rawPen is String) {
+      final s = rawPen.trim();
+      if (s.isEmpty || s == '[object Object]') return null;
+      if (!s.startsWith('{')) return s;
+      final matches = RegExp(r'''["']?(\d+)["']?\s*:\s*(\d+)''').allMatches(s);
+      final map = <String, String>{};
+      for (final m in matches) {
+        map[m.group(1)!] = m.group(2)!;
+      }
+      if (homeId != null &&
+          awayId != null &&
+          map.containsKey(homeId) &&
+          map.containsKey(awayId)) {
+        return '${map[homeId]} - ${map[awayId]}';
+      }
+      final scores = map.values.toList();
+      if (scores.length == 2) {
+        return '${scores[0]} - ${scores[1]}';
+      }
+      return null;
+    }
+    if (rawPen is Map) {
+      final hId = homeId?.toString();
+      final aId = awayId?.toString();
+      if (hId != null &&
+          aId != null &&
+          rawPen.containsKey(hId) &&
+          rawPen.containsKey(aId)) {
+        return '${rawPen[hId]} - ${rawPen[aId]}';
+      }
+      if (rawPen['home'] != null && rawPen['away'] != null) {
+        return '${rawPen['home']} - ${rawPen['away']}';
+      }
+      final scores = rawPen.values.toList();
+      if (scores.length == 2) {
+        return '${scores[0]} - ${scores[1]}';
+      }
+    }
+    return null;
+  }
+
   MatchOverviewDataEntity? _parseOverview(
     dynamic rawOverview,
     String matchId,
     List<MatchInfoSectionEntity> sections,
   ) {
-    if (rawOverview is Map || sections.isNotEmpty) {
-      final map = rawOverview is Map
-          ? Map<String, dynamic>.from(rawOverview)
-          : <String, dynamic>{};
-      final (secHome, secAway) = _extractTeamNamesFromSections(sections);
+    if (rawOverview is! Map) {
+      return _extractOverviewFromSections(sections, matchId);
+    }
+    final map = Map<String, dynamic>.from(rawOverview);
+    final (secHome, secAway) = _extractTeamNamesFromSections(sections);
 
-      MatchReturnLegEntity? returnLeg;
-      if (map['return_match'] is Map) {
-        final r = map['return_match'] as Map;
-        final scoreParts = (r['result']?.toString() ?? '').split('-');
-        final hScore = int.tryParse(r['home_scores']?.toString() ?? '') ??
-            (scoreParts.length == 2
-                ? int.tryParse(scoreParts[0].trim()) ?? 0
-                : 0);
-        final aScore = int.tryParse(r['away_scores']?.toString() ?? '') ??
-            (scoreParts.length == 2
-                ? int.tryParse(scoreParts[1].trim()) ?? 0
-                : 0);
-        final rHome = (r['home_team']?.toString().trim().isNotEmpty == true)
-            ? r['home_team']!.toString()
-            : (secAway ?? '');
-        final rAway = (r['away_team']?.toString().trim().isNotEmpty == true)
-            ? r['away_team']!.toString()
-            : (secHome ?? '');
-        returnLeg = MatchReturnLegEntity(
-          matchId: r['match_id']?.toString() ?? r['id']?.toString() ?? '',
-          homeTeam: rHome,
-          awayTeam: rAway,
-          homeScores: hScore,
-          awayScores: aScore,
-          aggResult:
-              r['agg_result']?.toString() ?? map['agg_result']?.toString(),
-          penalties: r['penalties']?.toString() ?? map['penalties']?.toString(),
-        );
-      }
+    final homeId = map['home_team']?['id']?.toString() ??
+        map['home_team']?['row_id']?.toString();
+    final awayId = map['away_team']?['id']?.toString() ??
+        map['away_team']?['row_id']?.toString();
 
-      MatchH2HSummaryEntity? h2hSummary;
+    MatchReturnLegEntity? returnLeg;
+    final returnRaw = map['return_match'] is Map
+        ? map['return_match'] as Map
+        : (map['return'] is Map ? map['return'] as Map : null);
+    if (returnRaw != null) {
+      final r = returnRaw;
+      final scoreParts = (r['result']?.toString() ?? '').split('-');
+      final hScore = int.tryParse(r['home_scores']?.toString() ?? '') ??
+          (scoreParts.length == 2
+              ? int.tryParse(scoreParts[0].trim()) ?? 0
+              : 0);
+      final aScore = int.tryParse(r['away_scores']?.toString() ?? '') ??
+          (scoreParts.length == 2
+              ? int.tryParse(scoreParts[1].trim()) ?? 0
+              : 0);
+      final rHome = (r['home_team']?.toString().trim().isNotEmpty == true)
+          ? r['home_team']!.toString()
+          : (secAway ?? '');
+      final rAway = (r['away_team']?.toString().trim().isNotEmpty == true)
+          ? r['away_team']!.toString()
+          : (secHome ?? '');
+      final rawAgg = r['agg_result'] ?? map['agg_result'];
+      final rawPen = r['penalties'] ?? map['penalties'];
+      returnLeg = MatchReturnLegEntity(
+        matchId: r['match_id']?.toString() ?? r['id']?.toString() ?? '',
+        homeTeam: rHome,
+        awayTeam: rAway,
+        homeScores: hScore,
+        awayScores: aScore,
+        aggResult: _formatAggResult(rawAgg, homeId: homeId, awayId: awayId),
+        penalties: _formatPenalties(rawPen, homeId: homeId, awayId: awayId),
+      );
+    }
+
+    MatchH2HSummaryEntity? h2hSummary;
       if (map['team_wins'] is Map) {
         final tw = map['team_wins'] as Map;
         h2hSummary = MatchH2HSummaryEntity(
@@ -1116,11 +1229,6 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         map['away_team']?['logo']?.toString() ??
             map['away_team']?['image']?.toString(),
       );
-      final homeId = map['home_team']?['id']?.toString() ??
-          map['home_team']?['row_id']?.toString();
-      final awayId = map['away_team']?['id']?.toString() ??
-          map['away_team']?['row_id']?.toString();
-
       final champId = map['championship']?['id']?.toString() ??
           map['championship']?['url_id']?.toString();
       final champTitle = map['championship']?['title']?.toString() ??
@@ -1227,10 +1335,6 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
         quickStats: quickStats,
         referees: referees,
       );
-    }
-
-    // Fallback: extract from enriched sections
-    return _extractOverviewFromSections(sections, matchId);
   }
 
   static (String? home, String? away) _extractTeamNamesFromSections(

@@ -245,7 +245,9 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       }
 
       final eventsOverview = eventsPayloadRes.overview;
-      final initialOverview = state.overview ?? eventsOverview;
+      final initialOverview = state.overview != null
+          ? state.overview!.mergeWith(eventsOverview)
+          : (eventsOverview ?? state.overview);
       resolvedChampionshipId ??= eventsOverview?.championshipId;
 
       // Show screen, score hero banner, and Events tab immediately!
@@ -278,7 +280,11 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final overviewRes = detailsPayload.overview;
       final resolvedDetails =
           detailsRes.isNotEmpty ? detailsRes : state.details;
-      final resolvedOverview = overviewRes ?? state.overview ?? eventsOverview;
+      final resolvedOverview = overviewRes != null
+          ? (state.overview != null
+              ? state.overview!.mergeWith(overviewRes)
+              : overviewRes)
+          : (state.overview ?? eventsOverview);
       resolvedChampionshipId = resolvedChampionshipId ??
           resolvedOverview?.championshipId ??
           state.championshipId;
