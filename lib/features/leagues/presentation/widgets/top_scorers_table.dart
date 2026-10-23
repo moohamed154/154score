@@ -175,21 +175,22 @@ class TopScorersTable extends StatelessWidget {
           const Divider(height: 1),
 
           // Table Rows
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: displayRows.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final scorer = displayRows[index];
-              return _buildScorerRow(
-                context,
-                scorer,
-                isDark,
-                isArabic,
-                isSmall,
-              );
-            },
+          RepaintBoundary(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var index = 0; index < displayRows.length; index++) ...[
+                  if (index > 0) const Divider(height: 1),
+                  _buildScorerRow(
+                    context,
+                    displayRows[index],
+                    isDark,
+                    isArabic,
+                    isSmall,
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),

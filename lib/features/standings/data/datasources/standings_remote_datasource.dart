@@ -13,6 +13,12 @@ abstract class StandingsRemoteDataSource {
     required String lang,
   });
 
+  Future<dynamic> getRankings({
+    required String lang,
+    String search = '',
+  }) async =>
+      null;
+
   LeagueStandingsEntity parseStandings(
     dynamic response, {
     String? defaultLeagueId,
@@ -25,6 +31,21 @@ class StandingsRemoteDataSourceImpl implements StandingsRemoteDataSource {
   final LocalStorageService? _localStorageService;
 
   StandingsRemoteDataSourceImpl(this._client, [this._localStorageService]);
+
+  @override
+  Future<dynamic> getRankings({
+    required String lang,
+    String search = '',
+  }) async {
+    final queryParams = <String, dynamic>{'lang': lang};
+    if (search.isNotEmpty) {
+      queryParams['search'] = search;
+    }
+    return _client.get(
+      ApiEndpoints.rank,
+      queryParameters: queryParams,
+    );
+  }
 
   @override
   Future<LeagueStandingsEntity> getStandings(

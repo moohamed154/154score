@@ -236,19 +236,12 @@ class _MatchesViewState extends State<MatchesView> {
   }
 
   Widget _buildBody(BuildContext context, MatchesState state) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = AppLocalizations.of(context).isArabic;
 
     if (state.status == MatchesStatus.loading &&
         state.filteredLeagues.isEmpty) {
       return Skeletonizer(
         enabled: true,
-        effect: ShimmerEffect(
-          baseColor: isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
-          highlightColor:
-              isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
-          duration: const Duration(milliseconds: 1500),
-        ),
         child: ListView(
           padding: const EdgeInsets.only(top: AppDimensions.sm),
           children: [

@@ -12,5 +12,7 @@ abstract class VideosRepository {
   Future<ApiResult<VideoDetailEntity>> getVideoDetail(
     String id, {
     required String lang,
+    String? url,
+    String? title,
   });
 }

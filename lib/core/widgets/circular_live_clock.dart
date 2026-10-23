@@ -63,6 +63,10 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
   int _totalExtraMinutes = 0;
   String _displayMinute = '';
   String? _displayExtra;
+  late final ValueNotifier<String> _displayMinuteNotifier =
+      ValueNotifier<String>('');
+  late final ValueNotifier<String?> _displayExtraNotifier =
+      ValueNotifier<String?>(null);
   MatchPhase _phase = MatchPhase.unknown;
 
   bool get _isInTest =>
@@ -98,6 +102,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
   @override
   void dispose() {
     _timer?.cancel();
+    _displayMinuteNotifier.dispose();
+    _displayExtraNotifier.dispose();
     super.dispose();
   }
 
@@ -408,6 +414,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
       final ss = (sec % 60).toString().padLeft(2, '0');
       _displayMinute = '$mm:$ss';
     }
+    _displayMinuteNotifier.value = _displayMinute;
+    _displayExtraNotifier.value = _displayExtra;
   }
 
   void _startTimerIfNeeded() {
@@ -418,38 +426,44 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         _currentMinute < 130) {
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
-        setState(() {
-          if (_displayExtra != null) {
-            // Cap stoppage time ticking to at most (totalExtraMinutes + 3) * 60 seconds
-            // to prevent runaway counter if network drops whistle event
-            final maxExtraSec =
-                _totalExtraMinutes > 0 ? (_totalExtraMinutes + 3) * 60 : 600;
-            if (_elapsedExtraSeconds < maxExtraSec) {
-              _elapsedExtraSeconds++;
-            }
-            final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
-            final ss = (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
-            if (_totalExtraMinutes > 0) {
-              _displayExtra = '+$mm:$ss / $_totalExtraMinutes';
-            } else {
-              _displayExtra = '+$mm:$ss';
-            }
-          } else {
-            _currentSecond++;
-            if (_currentSecond >= 60) {
-              _currentSecond = 0;
-              _currentMinute++;
-            }
+        final prevMinute = _currentMinute;
+        final hadExtra = _displayExtra != null && _displayExtra!.isNotEmpty;
+
+        if (_displayExtra != null) {
+          // Cap stoppage time ticking to at most (totalExtraMinutes + 3) * 60 seconds
+          // to prevent runaway counter if network drops whistle event
+          final maxExtraSec =
+              _totalExtraMinutes > 0 ? (_totalExtraMinutes + 3) * 60 : 600;
+          if (_elapsedExtraSeconds < maxExtraSec) {
+            _elapsedExtraSeconds++;
           }
-          LiveClockSync.recordClock(
-            matchId: widget.matchId,
-            minute: _currentMinute,
-            second: _currentSecond,
-            elapsedExtraSeconds: _elapsedExtraSeconds,
-            totalExtraMinutes: _totalExtraMinutes,
-          );
-          _updateDisplayMinute();
-        });
+          final mm = (_elapsedExtraSeconds ~/ 60).toString().padLeft(2, '0');
+          final ss = (_elapsedExtraSeconds % 60).toString().padLeft(2, '0');
+          if (_totalExtraMinutes > 0) {
+            _displayExtra = '+$mm:$ss / $_totalExtraMinutes';
+          } else {
+            _displayExtra = '+$mm:$ss';
+          }
+        } else {
+          _currentSecond++;
+          if (_currentSecond >= 60) {
+            _currentSecond = 0;
+            _currentMinute++;
+          }
+        }
+        LiveClockSync.recordClock(
+          matchId: widget.matchId,
+          minute: _currentMinute,
+          second: _currentSecond,
+          elapsedExtraSeconds: _elapsedExtraSeconds,
+          totalExtraMinutes: _totalExtraMinutes,
+        );
+        _updateDisplayMinute();
+
+        final hasExtraNow = _displayExtra != null && _displayExtra!.isNotEmpty;
+        if (_currentMinute != prevMinute || hadExtra != hasExtraNow) {
+          setState(() {});
+        }
       });
     }
   }
@@ -477,16 +491,8 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
     final s2 = int.tryParse(widget.score2 ?? '');
     final totalGoals = (s1 != null && s2 != null) ? (s1 + s2) : 0;
 
-    String displayText;
     final isSpecialStatus =
         _phase == MatchPhase.halfTime || _phase == MatchPhase.penalties;
-    if (_phase == MatchPhase.halfTime) {
-      displayText = isArabic ? 'استراحة' : 'HT';
-    } else if (_phase == MatchPhase.penalties) {
-      displayText = isArabic ? 'ترجيح' : 'PEN';
-    } else {
-      displayText = _displayMinute;
-    }
 
     final clockWidget = RepaintBoundary(
       child: SizedBox(
@@ -513,16 +519,32 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
               ),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(
-                  displayText,
-                  style: TextStyle(
-                    color: effectiveTextColor,
-                    fontSize: isSpecialStatus
-                        ? (isArabic ? widget.size * 0.20 : widget.size * 0.24)
-                        : widget.size * 0.24,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: isSpecialStatus && isArabic ? 0.0 : -0.5,
-                  ),
+                child: ValueListenableBuilder<String>(
+                  valueListenable: _displayMinuteNotifier,
+                  builder: (context, minuteText, _) {
+                    final String displayText;
+                    if (_phase == MatchPhase.halfTime) {
+                      displayText = isArabic ? 'استراحة' : 'HT';
+                    } else if (_phase == MatchPhase.penalties) {
+                      displayText = isArabic ? 'ترجيح' : 'PEN';
+                    } else {
+                      displayText = minuteText;
+                    }
+                    return Text(
+                      displayText,
+                      style: TextStyle(
+                        color: effectiveTextColor,
+                        fontSize: isSpecialStatus
+                            ? (isArabic
+                                ? widget.size * 0.20
+                                : widget.size * 0.24)
+                            : widget.size * 0.24,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing:
+                            isSpecialStatus && isArabic ? 0.0 : -0.5,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -538,15 +560,23 @@ class _CircularLiveClockState extends State<CircularLiveClock> {
         children: [
           clockWidget,
           const SizedBox(height: 2),
-          Text(
-            _displayExtra!,
-            style: TextStyle(
-              color: const Color(0xFFFF4B4B),
-              fontSize: (widget.size * 0.18).clamp(9.5, 11.5),
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
-            ),
-            textDirection: TextDirection.ltr,
+          ValueListenableBuilder<String?>(
+            valueListenable: _displayExtraNotifier,
+            builder: (context, extraText, _) {
+              if (extraText == null || extraText.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Text(
+                extraText,
+                style: TextStyle(
+                  color: const Color(0xFFFF4B4B),
+                  fontSize: (widget.size * 0.18).clamp(9.5, 11.5),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+                textDirection: TextDirection.ltr,
+              );
+            },
           ),
         ],
       );

@@ -8,12 +8,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/league_resolver.dart';
 import '../../../../core/utils/scroll_to_top_notifier.dart';
@@ -25,6 +23,7 @@ import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../leagues/presentation/bloc/league_bloc.dart';
 import '../../../leagues/presentation/views/league_view.dart';
 import '../../../settings/presentation/cubit/settings_cubits.dart';
+import '../bloc/standings_bloc.dart';
 
 enum StandingsTab { favorites, hidden }
 
@@ -728,16 +727,12 @@ class _StandingsViewState extends State<StandingsView> {
   Future<void> _fetchRankings({String search = '', String? lang}) async {
     final effectiveLang = lang ?? sl<LocalStorageService>().getLanguage();
     try {
-      final queryParams = <String, dynamic>{'lang': effectiveLang};
-      if (search.isNotEmpty) {
-        queryParams['search'] = search;
-      }
-
-      final apiClient = sl<ApiClient>();
-      final dynamic response = await apiClient.get(
-        ApiEndpoints.rank,
-        queryParameters: queryParams,
+      final standingsBloc = sl<StandingsBloc>();
+      final dynamic response = await standingsBloc.fetchRankings(
+        lang: effectiveLang,
+        search: search,
       );
+      unawaited(standingsBloc.close());
 
       // Race condition check: make sure user didn't switch language while request was in-flight
       final currentLang = sl<LocalStorageService>().getLanguage();
@@ -1708,29 +1703,16 @@ class _StandingsViewState extends State<StandingsView> {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(
               children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurface
-                        : AppColors.lightCardElevated,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                Bone.square(
+                  size: 34,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 const SizedBox(width: 14),
-                Expanded(
-                  child: Container(
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkSurface
-                          : AppColors.lightCardElevated,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
+                const Expanded(
+                  child: Bone.text(words: 3, fontSize: 14),
                 ),
-                const SizedBox(width: 40),
+                const SizedBox(width: 12),
+                const Bone.icon(size: 18),
               ],
             ),
           ),

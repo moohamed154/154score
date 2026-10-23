@@ -1,3 +1,4 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -6,100 +7,46 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/error_view.dart';
-import '../../data/datasources/videos_remote_datasource.dart';
 import '../../domain/entities/video_entity.dart';
+import '../bloc/videos_bloc.dart';
 import '../widgets/video_card.dart';
 import '../widgets/video_thumbnail_placeholder.dart';
 
-class VideoDetailsView extends StatefulWidget {
+class VideoDetailsView extends StatelessWidget {
   final String videoId;
   final VideoItemEntity? initialVideo;
 
   const VideoDetailsView({super.key, required this.videoId, this.initialVideo});
 
   @override
-  State<VideoDetailsView> createState() => _VideoDetailsViewState();
+  Widget build(BuildContext context) {
+    return BlocProvider<VideoDetailCubit>(
+      create: (_) => sl<VideoDetailCubit>()
+        ..loadDetail(videoId: videoId, initialVideo: initialVideo),
+      child: _VideoDetailsBody(videoId: videoId, initialVideo: initialVideo),
+    );
+  }
 }
 
-class _VideoDetailsViewState extends State<VideoDetailsView> {
-  bool _isLoading = true;
-  String? _errorMessage;
-  VideoDetailEntity? _detail;
+class _VideoDetailsBody extends StatelessWidget {
+  final String videoId;
+  final VideoItemEntity? initialVideo;
 
-  @override
-  void initState() {
-    super.initState();
-    if (widget.initialVideo != null) {
-      _detail = VideoDetailEntity(
-        id: widget.videoId,
-        title: widget.initialVideo!.title,
-        image: widget.initialVideo!.image,
-        videoUrl: widget.initialVideo!.link,
-        matchInfo:
-            widget.initialVideo!.championship ?? widget.initialVideo!.date,
-      );
-      _isLoading = false;
-    }
-    _loadDetail();
-  }
+  const _VideoDetailsBody({required this.videoId, this.initialVideo});
 
-  Future<void> _loadDetail() async {
-    if (_detail == null) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-    }
-
-    final lang = sl<LocalStorageService>().getLanguage();
-
-    try {
-      final dataSource = sl<VideosRemoteDataSource>();
-      final detail = await dataSource.getVideoDetail(
-        widget.videoId,
-        lang: lang,
-        url: widget.initialVideo?.link,
-        title: widget.initialVideo?.title,
-      );
-      if (!mounted) return;
-      setState(() {
-        _detail = detail;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      if (_detail != null || widget.initialVideo != null) {
-        setState(() {
-          _detail ??= VideoDetailEntity(
-            id: widget.videoId,
-            title: widget.initialVideo!.title,
-            image: widget.initialVideo!.image,
-            videoUrl: widget.initialVideo!.link,
-            matchInfo:
-                widget.initialVideo!.championship ?? widget.initialVideo!.date,
-          );
-          _isLoading = false;
-        });
-        return;
-      }
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _onWatchVideo() async {
+  Future<void> _onWatchVideo(
+    BuildContext context,
+    VideoDetailEntity? detail,
+  ) async {
     final l10n = AppLocalizations.of(context);
-    final targetUrl = _detail?.videoUrl ??
-        _detail?.embedUrl ??
-        widget.initialVideo?.link ??
-        _detail?.id;
-    final thumb = _detail?.image ?? widget.initialVideo?.image;
+    final targetUrl = detail?.videoUrl ??
+        detail?.embedUrl ??
+        initialVideo?.link ??
+        detail?.id;
+    final thumb = detail?.image ?? initialVideo?.image;
 
     await UrlHelper.launchVideoUrl(
       targetUrl,
@@ -119,293 +66,350 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
     final hPadding = AppDimensions.getHorizontalMargin(context);
     final isSmall = AppDimensions.isSmallScreen(context);
 
-    final title = _detail?.title ??
-        widget.initialVideo?.title ??
-        (isArabic ? 'ملخص المباراة' : 'Video Highlight');
-    final imageUrl = _detail?.image ?? widget.initialVideo?.image;
+    return BlocBuilder<VideoDetailCubit, VideoDetailState>(
+      builder: (context, state) {
+        final detail = state.detail;
+        final isLoading = state.isLoading;
+        final errorMessage = state.errorMessage;
 
-    final hasValidImage =
-        imageUrl != null && UrlHelper.isValidImageUrl(imageUrl);
+        final title = detail?.title ??
+            initialVideo?.title ??
+            (isArabic ? 'ملخص المباراة' : 'Video Highlight');
+        final imageUrl = detail?.image ?? initialVideo?.image;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          title,
-          style: AppTypography.getBodyLarge(
-            isDark: isDark,
-            isArabic: isArabic,
-          ).copyWith(fontWeight: FontWeight.w700),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-      body: _isLoading
-          ? Skeletonizer(
-              enabled: true,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  child: ListView(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: hPadding,
-                      vertical: AppDimensions.md,
-                    ),
-                    children: [
-                      AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey,
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusLg,
-                            ),
-                          ),
+        final hasValidImage =
+            imageUrl != null && UrlHelper.isValidImageUrl(imageUrl);
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              title,
+              style: AppTypography.getBodyLarge(
+                isDark: isDark,
+                isArabic: isArabic,
+              ).copyWith(fontWeight: FontWeight.w700),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          body: isLoading
+              ? Skeletonizer(
+                  enabled: true,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 800),
+                      child: ListView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: hPadding,
+                          vertical: AppDimensions.md,
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        height: 24,
-                        width: 250,
-                        decoration: BoxDecoration(
-                          color: Colors.grey,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        height: 16,
-                        width: 180,
-                        decoration: BoxDecoration(
-                          color: Colors.grey,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: List.generate(
-                          3,
-                          (_) => Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Container(
-                              width: 70,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: Colors.grey,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-          : _errorMessage != null
-              ? ErrorView(message: _errorMessage, onRetry: _loadDetail)
-              : Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 800),
-                    child: ListView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: hPadding,
-                        vertical: AppDimensions.md,
-                      ),
-                      children: [
-                        // Video Thumbnail / Player Preview with Play Action
-                        Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusLg,
-                          ),
-                          child: InkWell(
-                            onTap: _onWatchVideo,
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusLg,
-                            ),
-                            child: AspectRatio(
-                              aspectRatio: 16 / 9,
-                              child: Stack(
-                                children: [
-                                  if (hasValidImage)
-                                    AppImage(
-                                      imageUrl: imageUrl,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      borderRadius: AppDimensions.radiusLg,
-                                      placeholderIcon:
-                                          Icons.play_circle_outline_rounded,
-                                    )
-                                  else
-                                    VideoThumbnailPlaceholder(
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      borderRadius: AppDimensions.radiusLg,
-                                      isDark: isDark,
-                                    ),
-                                  Positioned.fill(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          AppDimensions.radiusLg,
-                                        ),
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Colors.transparent,
-                                            Color(0x88000000),
-                                          ],
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: Container(
-                                          padding: EdgeInsets.all(
-                                            isSmall ? 12 : 16,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary.withValues(
-                                              alpha: 0.9,
-                                            ),
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: AppColors.primary
-                                                    .withValues(
-                                                  alpha: 0.4,
-                                                ),
-                                                blurRadius: 16,
-                                                spreadRadius: 2,
-                                              ),
-                                            ],
-                                          ),
-                                          child: Icon(
-                                            Icons.play_arrow_rounded,
-                                            color: Colors.white,
-                                            size: isSmall ? 36 : 44,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: AppDimensions.md),
-
-                        // Primary Action Button: "Watch Video" / "مشاهدة الفيديو"
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton.icon(
-                            onPressed: _onWatchVideo,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                              ),
-                              elevation: 2,
-                            ),
-                            icon: const Icon(
-                              Icons.play_circle_fill_rounded,
-                              size: 22,
-                            ),
-                            label: Text(
-                              l10n.translate('watch_video'),
-                              style: AppTypography.getBodyLarge(
-                                isDark: false,
-                                isArabic: isArabic,
-                              ).copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: AppDimensions.lg),
-
-                        // Title
-                        Text(
-                          title,
-                          style: AppTypography.getHeadingMedium(
-                            isDark: isDark,
-                            isArabic: isArabic,
-                          ).copyWith(fontSize: isSmall ? 16 : 18, height: 1.4),
-                        ),
-
-                        // Match info badge
-                        if (_detail?.matchInfo != null &&
-                            _detail!.matchInfo!.isNotEmpty) ...[
-                          const SizedBox(height: AppDimensions.sm),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.darkCardElevated
-                                  : AppColors.lightCardElevated,
-                              borderRadius: BorderRadius.circular(
-                                AppDimensions.radiusMd,
-                              ),
-                              border: Border.all(
-                                color: isDark
-                                    ? AppColors.darkBorder
-                                    : AppColors.lightBorder,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.sports_soccer_rounded,
-                                  size: 16,
-                                  color: AppColors.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _detail!.matchInfo!,
-                                    style: AppTypography.getBodySmall(
-                                      isDark: isDark,
-                                      isArabic: isArabic,
-                                    ).copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        // Tags
-                        if (_detail?.tags.isNotEmpty == true) ...[
-                          const SizedBox(height: AppDimensions.sm),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _detail!.tags.map((tag) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
+                        children: [
+                          AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: Skeleton.leaf(
+                              child: Container(
                                 decoration: BoxDecoration(
                                   color: isDark
                                       ? AppColors.darkCard
                                       : AppColors.lightCard,
                                   borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm,
+                                    AppDimensions.radiusLg,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Skeleton.leaf(
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkCard
+                                    : AppColors.lightCard,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Bone.multiText(lines: 2, fontSize: 18),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: const [
+                              Bone.icon(size: 16),
+                              SizedBox(width: 6),
+                              Bone.text(words: 2, fontSize: 12),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: List.generate(
+                              3,
+                              (_) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? AppColors.darkCard
+                                      : AppColors.lightCard,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Bone.text(words: 2, fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              : errorMessage != null
+                  ? ErrorView(
+                      message: errorMessage,
+                      onRetry: () => context
+                          .read<VideoDetailCubit>()
+                          .loadDetail(
+                            videoId: videoId,
+                            initialVideo: initialVideo,
+                          ),
+                    )
+                  : Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 800),
+                        child: ListView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: hPadding,
+                            vertical: AppDimensions.md,
+                          ),
+                          children: [
+                            // Video Thumbnail / Player Preview with Play Action
+                            Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusLg,
+                              ),
+                              child: InkWell(
+                                onTap: () => _onWatchVideo(context, detail),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusLg,
+                                ),
+                                child: AspectRatio(
+                                  aspectRatio: 16 / 9,
+                                  child: Stack(
+                                    children: [
+                                      if (hasValidImage)
+                                        AppImage(
+                                          imageUrl: imageUrl,
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          borderRadius: AppDimensions.radiusLg,
+                                          placeholderIcon:
+                                              Icons.play_circle_outline_rounded,
+                                        )
+                                      else
+                                        VideoThumbnailPlaceholder(
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          borderRadius: AppDimensions.radiusLg,
+                                          isDark: isDark,
+                                        ),
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              AppDimensions.radiusLg,
+                                            ),
+                                            gradient: const LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.transparent,
+                                                Color(0x88000000),
+                                              ],
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Container(
+                                              padding: EdgeInsets.all(
+                                                isSmall ? 12 : 16,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.9),
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: AppColors.primary
+                                                        .withValues(alpha: 0.4),
+                                                    blurRadius: 16,
+                                                    spreadRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Icon(
+                                                Icons.play_arrow_rounded,
+                                                color: Colors.white,
+                                                size: isSmall ? 36 : 44,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: AppDimensions.md),
+
+                            // Primary Action Button: "Watch Video" / "مشاهدة الفيديو"
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _onWatchVideo(context, detail),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimensions.radiusMd,
+                                    ),
+                                  ),
+                                  elevation: 2,
+                                ),
+                                icon: const Icon(
+                                  Icons.play_circle_fill_rounded,
+                                  size: 22,
+                                ),
+                                label: Text(
+                                  l10n.translate('watch_video'),
+                                  style: AppTypography.getBodyLarge(
+                                    isDark: false,
+                                    isArabic: isArabic,
+                                  ).copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: AppDimensions.lg),
+
+                            // Title
+                            Text(
+                              title,
+                              style: AppTypography.getHeadingMedium(
+                                isDark: isDark,
+                                isArabic: isArabic,
+                              ).copyWith(
+                                fontSize: isSmall ? 16 : 18,
+                                height: 1.4,
+                              ),
+                            ),
+
+                            // Match info badge
+                            if (detail?.matchInfo != null &&
+                                detail!.matchInfo!.isNotEmpty) ...[
+                              const SizedBox(height: AppDimensions.sm),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? AppColors.darkCardElevated
+                                      : AppColors.lightCardElevated,
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimensions.radiusMd,
+                                  ),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.sports_soccer_rounded,
+                                      size: 16,
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        detail.matchInfo!,
+                                        style: AppTypography.getBodySmall(
+                                          isDark: isDark,
+                                          isArabic: isArabic,
+                                        ).copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            // Tags
+                            if (detail?.tags.isNotEmpty == true) ...[
+                              const SizedBox(height: AppDimensions.sm),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: detail!.tags.map((tag) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? AppColors.darkCard
+                                          : AppColors.lightCard,
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusSm,
+                                      ),
+                                      border: Border.all(
+                                        color: isDark
+                                            ? AppColors.darkBorder
+                                            : AppColors.lightBorder,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      tag,
+                                      style: AppTypography.getBodySmall(
+                                        isDark: isDark,
+                                        isArabic: isArabic,
+                                      ).copyWith(fontSize: 11),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+
+                            // Description
+                            if (detail?.description != null &&
+                                detail!.description!.isNotEmpty) ...[
+                              const SizedBox(height: AppDimensions.md),
+                              Container(
+                                padding: const EdgeInsets.all(AppDimensions.md),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? AppColors.darkCard
+                                      : AppColors.lightCard,
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimensions.radiusMd,
                                   ),
                                   border: Border.all(
                                     color: isDark
@@ -414,67 +418,38 @@ class _VideoDetailsViewState extends State<VideoDetailsView> {
                                   ),
                                 ),
                                 child: Text(
-                                  tag,
-                                  style: AppTypography.getBodySmall(
+                                  detail.description!,
+                                  style: AppTypography.getBodyMedium(
                                     isDark: isDark,
                                     isArabic: isArabic,
-                                  ).copyWith(fontSize: 11),
+                                  ).copyWith(height: 1.6),
                                 ),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-
-                        // Description
-                        if (_detail?.description != null &&
-                            _detail!.description!.isNotEmpty) ...[
-                          const SizedBox(height: AppDimensions.md),
-                          Container(
-                            padding: const EdgeInsets.all(AppDimensions.md),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.darkCard
-                                  : AppColors.lightCard,
-                              borderRadius: BorderRadius.circular(
-                                AppDimensions.radiusMd,
                               ),
-                              border: Border.all(
-                                color: isDark
-                                    ? AppColors.darkBorder
-                                    : AppColors.lightBorder,
-                              ),
-                            ),
-                            child: Text(
-                              _detail!.description!,
-                              style: AppTypography.getBodyMedium(
-                                isDark: isDark,
-                                isArabic: isArabic,
-                              ).copyWith(height: 1.6),
-                            ),
-                          ),
-                        ],
+                            ],
 
-                        // Related Highlights
-                        if (_detail?.relatedVideos.isNotEmpty == true) ...[
-                          const SizedBox(height: AppDimensions.xl),
-                          Text(
-                            isArabic
-                                ? 'فيديوهات ذات صلة'
-                                : 'Related Highlights',
-                            style: AppTypography.getHeadingMedium(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                            ).copyWith(fontSize: 16),
-                          ),
-                          const SizedBox(height: AppDimensions.sm),
-                          ..._detail!.relatedVideos.map(
-                            (rv) => VideoCard(video: rv),
-                          ),
-                        ],
-                      ],
+                            // Related Highlights
+                            if (detail?.relatedVideos.isNotEmpty == true) ...[
+                              const SizedBox(height: AppDimensions.xl),
+                              Text(
+                                isArabic
+                                    ? 'فيديوهات ذات صلة'
+                                    : 'Related Highlights',
+                                style: AppTypography.getHeadingMedium(
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                ).copyWith(fontSize: 16),
+                              ),
+                              const SizedBox(height: AppDimensions.sm),
+                              ...detail!.relatedVideos.map(
+                                (rv) => VideoCard(video: rv),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+        );
+      },
     );
   }
 }

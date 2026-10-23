@@ -203,27 +203,29 @@ class StandingsTable extends StatelessWidget {
               }
             }
 
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: rows.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final row = rows[index];
-                final displayPos = hasDuplicatePositions
-                    ? (index + 1)
-                    : (row.position > 0 ? row.position : (index + 1));
-                return _buildRow(
-                  context,
-                  row,
-                  isDark,
-                  isArabic,
-                  cellWidth: cellWidth,
-                  isSmall: isSmall,
-                  showFullStats: showFullStats,
-                  displayPosition: displayPos,
-                );
-              },
+            return RepaintBoundary(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var index = 0; index < rows.length; index++) ...[
+                    if (index > 0) const Divider(height: 1),
+                    _buildRow(
+                      context,
+                      rows[index],
+                      isDark,
+                      isArabic,
+                      cellWidth: cellWidth,
+                      isSmall: isSmall,
+                      showFullStats: showFullStats,
+                      displayPosition: hasDuplicatePositions
+                          ? (index + 1)
+                          : (rows[index].position > 0
+                              ? rows[index].position
+                              : (index + 1)),
+                    ),
+                  ],
+                ],
+              ),
             );
           }(),
         ],

@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_result.dart';
@@ -24,5 +26,20 @@ class AppUpdateRepositoryImpl implements AppUpdateRepository {
     } catch (e) {
       return ApiFailure(ServerFailure('Failed to load update info: $e'));
     }
+  }
+
+  @override
+  Future<void> downloadApk({
+    required String url,
+    required String savePath,
+    CancelToken? cancelToken,
+    ProgressCallback? onReceiveProgress,
+  }) {
+    return _remoteDataSource.downloadApk(
+      url: url,
+      savePath: savePath,
+      cancelToken: cancelToken,
+      onReceiveProgress: onReceiveProgress,
+    );
   }
 }

@@ -12,14 +12,11 @@ import 'app_update_state.dart';
 
 class AppUpdateCubit extends Cubit<AppUpdateState> {
   final AppUpdateRepository _appUpdateRepository;
-  final Dio _dio;
   CancelToken? _cancelToken;
 
   AppUpdateCubit({
     required AppUpdateRepository appUpdateRepository,
-    required Dio dio,
   })  : _appUpdateRepository = appUpdateRepository,
-        _dio = dio,
         super(const AppUpdateState());
 
   /// Checks server for app update without any BuildContext dependency
@@ -142,25 +139,26 @@ class AppUpdateCubit extends Cubit<AppUpdateState> {
 
       int expectedTotal = info.fileSizeBytes;
 
-      await _dio.download(
-        downloadUrl,
-        savePath,
-        cancelToken: _cancelToken,
-        deleteOnError: true,
-        onReceiveProgress: (received, total) {
-          if (total > 0) expectedTotal = total;
-          final currentTotal = expectedTotal > 0 ? expectedTotal : total;
-          final progress = currentTotal > 0
-              ? (received / currentTotal).clamp(0.0, 1.0)
-              : 0.0;
+      void handleProgress(int received, int total) {
+        if (total > 0) expectedTotal = total;
+        final currentTotal = expectedTotal > 0 ? expectedTotal : total;
+        final progress = currentTotal > 0
+            ? (received / currentTotal).clamp(0.0, 1.0)
+            : 0.0;
 
-          emit(state.copyWith(
-            status: AppUpdateStatus.downloading,
-            progress: progress,
-            receivedBytes: received,
-            totalBytes: currentTotal,
-          ));
-        },
+        emit(state.copyWith(
+          status: AppUpdateStatus.downloading,
+          progress: progress,
+          receivedBytes: received,
+          totalBytes: currentTotal,
+        ));
+      }
+
+      await _appUpdateRepository.downloadApk(
+        url: downloadUrl,
+        savePath: savePath,
+        cancelToken: _cancelToken,
+        onReceiveProgress: handleProgress,
       );
 
       // Validate integrity of downloaded file

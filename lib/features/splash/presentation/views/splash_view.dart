@@ -18,8 +18,8 @@ import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../matches/presentation/bloc/matches_state.dart';
 import '../../../settings/presentation/cubit/settings_cubits.dart';
-import '../../../onboarding/domain/repositories/onboarding_repository.dart';
-import '../../../maintenance/domain/repositories/maintenance_repository.dart';
+import '../../../onboarding/presentation/viewmodels/onboarding_cubit.dart';
+import '../../../maintenance/presentation/viewmodels/maintenance_cubit.dart';
 
 /// A custom, high-performance animated splash screen for 154 SCORE.
 /// Features:
@@ -185,10 +185,15 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
     // 2. Check App Maintenance Status
     try {
-      if (sl.isRegistered<MaintenanceRepository>()) {
-        final maintenanceRepo = sl<MaintenanceRepository>();
-        final maintenanceInfo = await maintenanceRepo.checkMaintenanceStatus();
-        if (maintenanceInfo.isMaintenanceMode && mounted) {
+      if (sl.isRegistered<MaintenanceCubit>()) {
+        final maintenanceCubit = sl<MaintenanceCubit>();
+        final isNormal = await maintenanceCubit.checkStatus();
+        final maintenanceInfo = maintenanceCubit.state.info;
+        unawaited(maintenanceCubit.close());
+        if (!isNormal &&
+            maintenanceInfo != null &&
+            maintenanceInfo.isMaintenanceMode &&
+            mounted) {
           _timeoutTimer?.cancel();
           unawaited(_connectivitySubscription?.cancel());
           unawaited(_matchesSubscription?.cancel());
@@ -323,8 +328,10 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
     try {
       if (GoRouter.maybeOf(context) != null) {
         final router = GoRouter.of(context);
-        final onboardingRepo = sl<OnboardingRepository>();
-        if (!onboardingRepo.isCompleted()) {
+        final onboardingCubit = sl<OnboardingCubit>();
+        final completed = onboardingCubit.isCompleted();
+        unawaited(onboardingCubit.close());
+        if (!completed) {
           router.go('/onboarding');
           return;
         }

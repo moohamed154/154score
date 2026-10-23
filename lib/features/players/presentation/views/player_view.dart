@@ -378,24 +378,56 @@ class _PlayerViewState extends State<PlayerView>
   }
 
   Widget _buildSkeleton(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+
     return Skeletonizer(
       enabled: true,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Container(
-            height: 180,
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.grey,
+              color: cardColor,
               borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            ),
+            child: Column(
+              children: [
+                const Bone.circle(size: 76),
+                const SizedBox(height: 12),
+                const Bone.text(words: 2, fontSize: 18),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Bone.circle(size: 20),
+                    SizedBox(width: 8),
+                    Bone.text(words: 2, fontSize: 13),
+                  ],
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
           Container(
-            height: 120,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey,
+              color: cardColor,
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(
+                4,
+                (_) => Column(
+                  children: const [
+                    Bone.text(words: 1, fontSize: 11),
+                    SizedBox(height: 6),
+                    Bone.text(words: 1, fontSize: 15),
+                  ],
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -403,10 +435,27 @@ class _PlayerViewState extends State<PlayerView>
             3,
             (_) => Container(
               margin: const EdgeInsets.only(bottom: 12),
-              height: 100,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              ),
+              child: Row(
+                children: [
+                  const Bone.circle(size: 40),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Bone.text(words: 2, fontSize: 14),
+                        SizedBox(height: 6),
+                        Bone.text(words: 3, fontSize: 12),
+                      ],
+                    ),
+                  ),
+                  const Bone.text(words: 1, fontSize: 13),
+                ],
               ),
             ),
           ),

@@ -250,7 +250,17 @@ shorebird patch android
 
 ## 🔑 Core Engineering Rules
 
-1. **Zero UI Imports in ViewModels**: ViewModels never import `material.dart` or consume `BuildContext`. Dialogs and navigation belong exclusively in Views via `BlocListener`.
-2. **Gesture & Swipe Isolation (60/120 FPS)**: Never dispatch asynchronous state changes inside active swipe callbacks (like `onPageChanged`). Defer to `ScrollEndNotification`.
-3. **Repaint Boundaries**: Wrap all animating widgets, match day pages, and custom canvas boards in `RepaintBoundary` for GPU hardware acceleration.
+1. **Strict Unidirectional MVVM Layering**:
+   - **Zero UI Imports in ViewModels**: ViewModels (`Bloc` / `Cubit`) never import `material.dart` or consume `BuildContext`. Dialogs, snackbars, and navigation belong exclusively in Views via `BlocListener`.
+   - **No Direct Data/Network Calls in Views or ViewModels**: Views never call `sl<...Repository>()` or `ApiClient` in `initState()` with `setState()`, and ViewModels never depend directly on `Dio` or `RemoteDataSource`. Every data flow strictly follows `View ➔ Bloc/Cubit ➔ Domain Repository Contract ➔ Repository Impl ➔ DataSource`.
+   - **No Native Binaries in `lib/`**: Never place compiled native artifacts (`.so`, `.dll`, `.dylib`) inside `lib/`.
+2. **60/120 FPS Rendering & Rebuild Isolation**:
+   - **Scoped Selection**: Never use `context.watch<Bloc>()` at the root of complex screens (`MatchDetailsView`, `TeamView`); always use `context.select(...)` or `BlocBuilder(buildWhen: ...)` to isolate 1Hz WebSocket updates.
+   - **Leaf-Only Live Clocks**: Live `MM:SS` timers (`CircularLiveClock`) use `ValueNotifier<String>` + `ValueListenableBuilder` rather than `setState()` so 1Hz ticks only update the `Text` leaf.
+   - **No Nested `shrinkWrap` Lists**: Bounded tables (`StandingsTable`, `TopScorersTable`) inside scrollable views use `RepaintBoundary` + `Column` instead of `ListView.separated(shrinkWrap: true)`.
+   - **Gesture & Swipe Isolation**: Never dispatch asynchronous state changes inside active swipe callbacks (like `onPageChanged`). Defer to `ScrollEndNotification`.
+3. **Idiomatic `Skeletonizer` Loading Standard**:
+   - All loading states inherit the centralized theme-aware `SkeletonizerConfig` in `lib/app/app.dart` without redundant per-screen `ShimmerEffect` overrides.
+   - **Real Widgets + Dummy Entities**: List and table skeletons wrap actual presentation widgets (`LeagueSectionWidget`, `MatchCard`, `StandingsTable`, `TopScorersTable`, `TransferCard`, `VideoCard`, `TimelineEventItem`) with dummy entities inside `Skeletonizer`.
+   - **`Bone.*` Primitives for Custom Layouts**: Detail views and sheets use `Bone.text`, `Bone.multiText`, `Bone.circle`, `Bone.square`, `Bone.icon`, and `Skeleton.leaf` inside themed cards — never raw `Container(color: Colors.grey)` boxes, static un-animated containers, or bare full-screen `CircularProgressIndicator`s.
 4. **404 Empty State Disambiguation**: Temporal schedules returning 404 or `"لا توجد مباريات"` represent scheduled empty days (`ApiSuccess([])`), never server errors.

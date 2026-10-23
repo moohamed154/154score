@@ -14,7 +14,7 @@ import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../../core/widgets/app_brand_logo.dart';
 import '../../../../core/websocket/websocket_service.dart';
-import '../../../onboarding/domain/repositories/onboarding_repository.dart';
+import '../../../onboarding/presentation/viewmodels/onboarding_cubit.dart';
 import '../../../app_update/presentation/viewmodels/app_update_cubit.dart';
 import '../../../app_update/presentation/viewmodels/app_update_state.dart';
 import '../../../app_update/presentation/views/app_update_dialog.dart';
@@ -881,7 +881,9 @@ class _SettingsViewState extends State<SettingsView> {
                     trailing: OutlinedButton(
                       onPressed: () async {
                         await HapticFeedback.mediumImpact();
-                        await sl<OnboardingRepository>().resetOnboarding();
+                        final onboardingCubit = sl<OnboardingCubit>();
+                        await onboardingCubit.resetOnboarding();
+                        unawaited(onboardingCubit.close());
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1177,6 +1179,86 @@ class _SettingsViewState extends State<SettingsView> {
                       ),
                     );
                   },
+                ),
+                const SizedBox(height: 10),
+                Divider(
+                  height: 1,
+                  thickness: 0.8,
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+                const SizedBox(height: 10),
+                InkWell(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    context.push('/settings/privacy-policy');
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 2,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.privacy_tip_rounded,
+                              size: 20,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isArabic
+                                    ? 'سياسة الخصوصية وشروط الاستخدام'
+                                    : 'Privacy Policy & Terms of Use',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : const Color(0xFF0F172A),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isArabic
+                                    ? 'حماية البيانات، الأذونات، وحقوق المستخدم'
+                                    : 'Data protection, permissions & user rights',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : const Color(0xFF64748B),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          isArabic
+                              ? Icons.chevron_left_rounded
+                              : Icons.chevron_right_rounded,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : const Color(0xFF64748B),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

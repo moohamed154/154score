@@ -339,6 +339,7 @@ class _LineupTabViewState extends State<LineupTabView> {
 
   Widget _buildSkeletonLoader(BuildContext context, bool isDark) {
     final hMargin = AppDimensions.getHorizontalMargin(context);
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
 
     return Skeletonizer(
       enabled: true,
@@ -351,20 +352,26 @@ class _LineupTabViewState extends State<LineupTabView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: 110,
-                  height: 26,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.grey,
+                    color: cardColor,
                     borderRadius: BorderRadius.circular(14),
                   ),
+                  child: const Bone.text(words: 2, fontSize: 13),
                 ),
                 Container(
-                  width: 120,
-                  height: 26,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.grey,
+                    color: cardColor,
                     borderRadius: BorderRadius.circular(14),
                   ),
+                  child: const Bone.text(words: 2, fontSize: 13),
                 ),
               ],
             ),
@@ -375,11 +382,13 @@ class _LineupTabViewState extends State<LineupTabView> {
                 constraints: const BoxConstraints(maxWidth: 560),
                 child: AspectRatio(
                   aspectRatio: 1 / 1.40,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusLg,
+                  child: Skeleton.leaf(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusLg,
+                        ),
                       ),
                     ),
                   ),
@@ -387,18 +396,26 @@ class _LineupTabViewState extends State<LineupTabView> {
               ),
             ),
             const SizedBox(height: 16),
-            // List Skeletons
+            // Bench / Substitute Row Skeletons
             ...List.generate(
               4,
-              (i) => Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Container(
-                  width: 400,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                  ),
+              (i) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                ),
+                child: Row(
+                  children: const [
+                    Bone.circle(size: 32),
+                    SizedBox(width: 12),
+                    Expanded(child: Bone.text(words: 2, fontSize: 13)),
+                    Bone.text(words: 1, fontSize: 12),
+                  ],
                 ),
               ),
             ),

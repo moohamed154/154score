@@ -22,6 +22,7 @@ import '../../features/match_details/data/datasources/match_details_remote_datas
 import '../../features/match_details/data/repositories/match_details_repository_impl.dart';
 import '../../features/match_details/domain/repositories/match_details_repository.dart';
 import '../../features/match_details/presentation/bloc/match_details_bloc.dart';
+import '../../features/match_details/presentation/bloc/player_match_stats_cubit.dart';
 
 import '../../features/standings/data/datasources/standings_remote_datasource.dart';
 import '../../features/standings/data/repositories/standings_repository_impl.dart';
@@ -51,6 +52,7 @@ import '../../features/videos/presentation/bloc/videos_bloc.dart';
 import '../../features/profiles/data/datasources/profiles_remote_datasource.dart';
 import '../../features/profiles/data/repositories/profiles_repository_impl.dart';
 import '../../features/profiles/domain/repositories/profiles_repository.dart';
+import '../../features/profiles/presentation/cubit/profile_cubit.dart';
 
 import '../../features/players/data/datasources/player_remote_datasource.dart';
 import '../../features/players/data/repositories/player_repository_impl.dart';
@@ -59,11 +61,16 @@ import '../../features/players/presentation/bloc/player_bloc.dart';
 
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/favorites/presentation/cubit/favorites_cubit.dart';
+import '../../features/settings/data/repositories/diagnostics_repository_impl.dart';
+import '../../features/settings/domain/repositories/diagnostics_repository.dart';
+import '../../features/settings/presentation/cubit/diagnostics_cubit.dart';
 import '../../features/settings/presentation/cubit/settings_cubits.dart';
 import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
 import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
 import '../../features/onboarding/presentation/viewmodels/onboarding_cubit.dart';
-import '../../features/search/data/repositories/search_repository.dart';
+import '../../features/search/data/datasources/search_remote_datasource.dart';
+import '../../features/search/data/repositories/search_repository_impl.dart';
+import '../../features/search/domain/repositories/search_repository.dart';
 import '../../features/search/presentation/cubit/search_cubit.dart';
 
 import '../../features/news/data/datasources/news_remote_datasource.dart';
@@ -164,6 +171,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<PlayerRemoteDataSource>(
     () => PlayerRemoteDataSourceImpl(sl()),
   );
+  sl.registerLazySingleton<SearchRemoteDataSource>(
+    () => SearchRemoteDataSourceImpl(sl()),
+  );
   sl.registerLazySingleton<AppUpdateRemoteDataSource>(
     () => AppUpdateRemoteDataSourceImpl(apiClient: sl()),
   );
@@ -191,7 +201,7 @@ Future<void> initDependencies() async {
     () => ProfilesRepositoryImpl(sl()),
   );
   sl.registerLazySingleton<PlayerRepository>(() => PlayerRepositoryImpl(sl()));
-  sl.registerLazySingleton<SearchRepository>(() => SearchRepository(sl()));
+  sl.registerLazySingleton<SearchRepository>(() => SearchRepositoryImpl(sl()));
   sl.registerLazySingleton<NotificationsRepository>(
     () => NotificationsRepositoryImpl(apiClient: sl(), localStorage: sl()),
   );
@@ -264,9 +274,22 @@ Future<void> initDependencies() async {
   sl.registerFactory<VideosBloc>(
     () => VideosBloc(repository: sl(), localStorageService: sl()),
   );
+  sl.registerFactory<VideoDetailCubit>(
+    () => VideoDetailCubit(repository: sl(), localStorageService: sl()),
+  );
 
   sl.registerFactory<NewsBloc>(
     () => NewsBloc(repository: sl(), localStorageService: sl()),
+  );
+  sl.registerFactory<NewsDetailCubit>(
+    () => NewsDetailCubit(repository: sl(), localStorageService: sl()),
+  );
+
+  sl.registerFactory<ProfileCubit>(
+    () => ProfileCubit(repository: sl(), localStorageService: sl()),
+  );
+  sl.registerFactory<PlayerMatchStatsCubit>(
+    () => PlayerMatchStatsCubit(repository: sl()),
   );
 
   sl.registerFactory<NotificationsBloc>(
@@ -297,6 +320,15 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<NewsLanguageCubit>(() => NewsLanguageCubit(sl()));
   sl.registerLazySingleton<FontSizeCubit>(() => FontSizeCubit(sl()));
+  sl.registerLazySingleton<DiagnosticsRepository>(
+    () => DiagnosticsRepositoryImpl(apiClient: sl()),
+  );
+  sl.registerFactory<DiagnosticsCubit>(
+    () => DiagnosticsCubit(
+      diagnosticsRepository: sl(),
+      onboardingRepository: sl(),
+    ),
+  );
 
   sl.registerLazySingleton<MaintenanceRepository>(
     () => MaintenanceRepositoryImpl(sl()),
@@ -306,7 +338,6 @@ Future<void> initDependencies() async {
   sl.registerFactory<AppUpdateCubit>(
     () => AppUpdateCubit(
       appUpdateRepository: sl(),
-      dio: sl<ApiClient>().dio,
     ),
   );
 

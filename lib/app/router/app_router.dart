@@ -26,6 +26,7 @@ import '../../features/search/presentation/views/search_view.dart';
 import '../../features/settings/presentation/views/font_size_settings_view.dart';
 import '../../features/settings/presentation/views/language_settings_view.dart';
 import '../../features/settings/presentation/views/notification_settings_view.dart';
+import '../../features/settings/presentation/views/privacy_policy_view.dart';
 import '../../features/settings/presentation/views/settings_view.dart';
 import '../../features/settings/presentation/views/theme_settings_view.dart';
 import '../../features/settings/presentation/views/time_format_settings_view.dart';
@@ -437,6 +438,14 @@ class AppRouter {
                     pageBuilder: (context, state) => _buildCupertinoPage(
                       state: state,
                       child: const FontSizeSettingsView(),
+                    ),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: 'privacy-policy',
+                    pageBuilder: (context, state) => _buildCupertinoPage(
+                      state: state,
+                      child: const PrivacyPolicyView(),
                     ),
                   ),
                 ],

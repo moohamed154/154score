@@ -84,9 +84,16 @@ class VideosRepositoryImpl implements VideosRepository {
   Future<ApiResult<VideoDetailEntity>> getVideoDetail(
     String id, {
     required String lang,
+    String? url,
+    String? title,
   }) async {
     try {
-      final detail = await _remoteDataSource.getVideoDetail(id, lang: lang);
+      final detail = await _remoteDataSource.getVideoDetail(
+        id,
+        lang: lang,
+        url: url,
+        title: title,
+      );
       return ApiSuccess(detail);
     } on NetworkException catch (e) {
       return ApiFailure(NetworkFailure(e.message));

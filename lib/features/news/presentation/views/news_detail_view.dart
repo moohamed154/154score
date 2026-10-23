@@ -6,18 +6,17 @@ import 'package:material_ui/material_ui.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/text_direction_helper.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/news_entity.dart';
-import '../../domain/repositories/news_repository.dart';
 import '../../../settings/presentation/cubit/settings_cubits.dart';
 import '../bloc/news_bloc.dart';
 
@@ -29,11 +28,8 @@ class NewsDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => NewsBloc(
-        repository: sl<NewsRepository>(),
-        localStorageService: sl<LocalStorageService>(),
-      ),
+    return BlocProvider<NewsDetailCubit>(
+      create: (_) => sl<NewsDetailCubit>()..loadDetail(articleId, slug: slug),
       child: _NewsDetailBody(articleId: articleId, slug: slug),
     );
   }
@@ -51,46 +47,7 @@ class _NewsDetailBody extends StatefulWidget {
 
 class _NewsDetailBodyState extends State<_NewsDetailBody> {
   final ScreenshotController _screenshotController = ScreenshotController();
-  _DetailState _state = _DetailState.loading;
-  NewsDetailEntity? _detail;
-  String? _error;
   bool _isSharing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _state = _DetailState.loading);
-    final lang = sl<LocalStorageService>().getEffectiveNewsLanguage();
-    final repo = sl<NewsRepository>();
-    final result = await repo.getNewsDetail(
-      widget.articleId,
-      slug: widget.slug,
-      lang: lang,
-    );
-
-    result.fold(
-      onSuccess: (detail) {
-        if (mounted) {
-          setState(() {
-            _state = _DetailState.success;
-            _detail = detail;
-          });
-        }
-      },
-      onFailure: (failure) {
-        if (mounted) {
-          setState(() {
-            _state = _DetailState.error;
-            _error = failure.message;
-          });
-        }
-      },
-    );
-  }
 
   Future<void> _shareNews(
     NewsDetailEntity detail,
@@ -383,24 +340,41 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
 
         return MediaQuery(
           data: mq.copyWith(textScaler: newsScaler),
-          child: Scaffold(
-            body: switch (_state) {
-              _DetailState.loading => _buildLoading(isDark),
-              _DetailState.error => CustomScrollView(
-                  slivers: [
-                    SliverAppBar(
-                      floating: true,
-                      backgroundColor: isDark
-                          ? AppColors.darkBackground
-                          : AppColors.lightBackground,
+          child: BlocBuilder<NewsDetailCubit, NewsDetailState>(
+            builder: (context, detailState) {
+              return Scaffold(
+                body: switch (detailState.status) {
+                  NewsDetailStatus.loading => _buildLoading(isDark),
+                  NewsDetailStatus.error => CustomScrollView(
+                      slivers: [
+                        SliverAppBar(
+                          floating: true,
+                          backgroundColor: isDark
+                              ? AppColors.darkBackground
+                              : AppColors.lightBackground,
+                        ),
+                        SliverFillRemaining(
+                          child: ErrorView(
+                            message: detailState.errorMessage,
+                            onRetry: () => context
+                                .read<NewsDetailCubit>()
+                                .loadDetail(
+                                  widget.articleId,
+                                  slug: widget.slug,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
-                    SliverFillRemaining(
-                      child: ErrorView(message: _error, onRetry: _load),
+                  NewsDetailStatus.success => _buildSuccess(
+                      context,
+                      detailState.detail!,
+                      isDark,
+                      isArabic,
+                      l10n,
                     ),
-                  ],
-                ),
-              _DetailState.success =>
-                _buildSuccess(context, isDark, isArabic, l10n),
+                },
+              );
             },
           ),
         );
@@ -409,50 +383,65 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
   }
 
   Widget _buildLoading(bool isDark) {
-    return CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          floating: true,
-          backgroundColor:
-              isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        ),
-        SliverToBoxAdapter(
-          child: Container(
-            height: 240,
-            color: isDark
-                ? AppColors.darkCardElevated
-                : AppColors.lightCardElevated,
+    return Skeletonizer(
+      enabled: true,
+      child: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            floating: true,
+            backgroundColor:
+                isDark ? AppColors.darkBackground : AppColors.lightBackground,
           ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.all(AppDimensions.lg),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => Container(
-                height: 14,
-                margin: const EdgeInsets.only(bottom: AppDimensions.sm),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkCardElevated
-                      : AppColors.lightCardElevated,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                ),
+          SliverToBoxAdapter(
+            child: Skeleton.leaf(
+              child: Container(
+                height: 240,
+                color: isDark
+                    ? AppColors.darkCardElevated
+                    : AppColors.lightCardElevated,
               ),
-              childCount: 12,
             ),
           ),
-        ),
-      ],
+          SliverPadding(
+            padding: const EdgeInsets.all(AppDimensions.lg),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Bone.multiText(
+                    lines: 2,
+                    fontSize: 20,
+                  ),
+                  const SizedBox(height: AppDimensions.md),
+                  Row(
+                    children: const [
+                      Bone.icon(size: 16),
+                      SizedBox(width: 8),
+                      Bone.text(words: 2, fontSize: 12),
+                    ],
+                  ),
+                  const SizedBox(height: AppDimensions.xl),
+                  const Bone.multiText(lines: 5, fontSize: 15),
+                  const SizedBox(height: AppDimensions.lg),
+                  const Bone.multiText(lines: 5, fontSize: 15),
+                  const SizedBox(height: AppDimensions.lg),
+                  const Bone.multiText(lines: 3, fontSize: 15),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildSuccess(
     BuildContext context,
+    NewsDetailEntity detail,
     bool isDark,
     bool isArabic,
     AppLocalizations l10n,
   ) {
-    final detail = _detail!;
     final isContentArabic = TextDirectionHelper.isArabic(detail.title) ||
         (detail.paragraphs.isNotEmpty &&
             TextDirectionHelper.isArabic(detail.paragraphs.first));
@@ -648,5 +637,3 @@ class _NewsDetailBodyState extends State<_NewsDetailBody> {
     );
   }
 }
-
-enum _DetailState { loading, error, success }

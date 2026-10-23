@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import 'package:score154/core/constants/app_colors.dart';
 import 'package:score154/core/constants/app_dimensions.dart';
@@ -9,9 +11,9 @@ import 'package:score154/core/di/injection_container.dart';
 import 'package:score154/core/utils/url_helper.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 import 'package:score154/features/match_details/domain/entities/player_match_rating_entity.dart';
-import 'package:score154/features/match_details/domain/repositories/match_details_repository.dart';
+import 'package:score154/features/match_details/presentation/bloc/player_match_stats_cubit.dart';
 
-class PlayerMatchStatsSheet extends StatefulWidget {
+class PlayerMatchStatsSheet extends StatelessWidget {
   final LineupPlayerEntity player;
   final String matchId;
   final bool isArabic;
@@ -47,73 +49,46 @@ class PlayerMatchStatsSheet extends StatefulWidget {
   }
 
   @override
-  State<PlayerMatchStatsSheet> createState() => _PlayerMatchStatsSheetState();
-}
-
-class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
-  PlayerMatchRatingEntity? _ratingData;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchPlayerRating();
-  }
-
-  Future<void> _fetchPlayerRating() async {
-    final playerId = widget.player.playerId?.trim();
-    if (playerId == null || playerId.isEmpty || playerId == '0') {
-      if (mounted) setState(() => _isLoading = false);
-      return;
-    }
-
-    try {
-      final repo = sl<MatchDetailsRepository>();
-      final res = await repo.getPlayerMatchRating(
-        widget.matchId,
-        playerId,
-        lang: widget.isArabic ? 'ar' : 'en',
-      );
-      if (mounted) {
-        setState(() {
-          _ratingData = res.dataOrNull;
-          _isLoading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = widget.isArabic;
-    final p = widget.player;
-    final r = _ratingData;
+    return BlocProvider<PlayerMatchStatsCubit>(
+      create: (_) => sl<PlayerMatchStatsCubit>()
+        ..loadPlayerRating(
+          matchId: matchId,
+          playerId: player.playerId,
+          isArabic: isArabic,
+        ),
+      child: BlocBuilder<PlayerMatchStatsCubit, PlayerMatchStatsState>(
+        builder: (context, state) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final p = player;
+          final r = state.ratingData;
+          final isLoading = state.isLoading;
 
-    final sheetBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final cardBorder =
-        isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final primaryTextColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final mutedTextColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+          final sheetBg =
+              isDark ? AppColors.darkSurface : AppColors.lightSurface;
+          final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+          final cardBorder =
+              isDark ? AppColors.darkBorder : AppColors.lightBorder;
+          final primaryTextColor = isDark
+              ? AppColors.darkTextPrimary
+              : AppColors.lightTextPrimary;
+          final mutedTextColor = isDark
+              ? AppColors.darkTextSecondary
+              : AppColors.lightTextSecondary;
 
-    final ratingString = r?.player.rating ?? p.rating;
-    final playerName =
-        r?.player.name.isNotEmpty == true ? r!.player.name : p.name;
-    final positionTitle = r?.player.positionTitle ??
-        p.detailedPosition ??
-        p.position ??
-        (p.isGoalkeeper ? (isArabic ? 'حارس المرمى' : 'Goalkeeper') : '');
-    final playerPhoto = r?.player.photo ?? p.photo;
-    final playerNumber = r?.player.number ?? p.number;
+          final ratingString = r?.player.rating ?? p.rating;
+          final playerName =
+              r?.player.name.isNotEmpty == true ? r!.player.name : p.name;
+          final positionTitle = r?.player.positionTitle ??
+              p.detailedPosition ??
+              p.position ??
+              (p.isGoalkeeper
+                  ? (isArabic ? 'حارس المرمى' : 'Goalkeeper')
+                  : '');
+          final playerPhoto = r?.player.photo ?? p.photo;
+          final playerNumber = r?.player.number ?? p.number;
 
-    return Directionality(
+          return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Container(
         constraints: BoxConstraints(
@@ -222,7 +197,7 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
                       ],
                       const SizedBox(height: 16),
 
-                      if (_isLoading)
+                      if (isLoading)
                         _buildLoadingSkeleton(isDark: isDark)
                       else if (r != null) ...[
                         // Goals & Assists Highlight Box
@@ -403,6 +378,9 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
             ],
           ),
         ),
+      ),
+    );
+        },
       ),
     );
   }
@@ -1561,15 +1539,40 @@ class _PlayerMatchStatsSheetState extends State<PlayerMatchStatsSheet> {
   }
 
   Widget _buildLoadingSkeleton({required bool isDark}) {
-    return Column(
-      children: List.generate(
-        4,
-        (i) => Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          height: 60,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF131D2E) : const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(12),
+    return Skeletonizer(
+      enabled: true,
+      child: Column(
+        children: List.generate(
+          4,
+          (i) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF131D2E) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Bone.text(words: 2, fontSize: 13),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Bone.text(words: 2, fontSize: 12),
+                    Bone.text(words: 1, fontSize: 12),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Bone.text(words: 3, fontSize: 12),
+                    Bone.text(words: 1, fontSize: 12),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

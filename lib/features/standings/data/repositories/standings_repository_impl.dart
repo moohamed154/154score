@@ -77,6 +77,26 @@ class StandingsRepositoryImpl implements StandingsRepository {
     }
   }
 
+  @override
+  Future<ApiResult<dynamic>> getRankings({
+    required String lang,
+    String search = '',
+  }) async {
+    try {
+      final response = await _remoteDataSource.getRankings(
+        lang: lang,
+        search: search,
+      );
+      return ApiSuccess(response);
+    } on NetworkException catch (e) {
+      return ApiFailure(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return ApiFailure(ServerFailure(e.message, statusCode: e.statusCode));
+    } catch (e) {
+      return ApiFailure(ServerFailure('Failed to load rankings: $e'));
+    }
+  }
+
   LeagueStandingsEntity? _tryGetLocalStandings(String leagueId,
       {required String lang}) {
     if (_localStorageService == null) return null;

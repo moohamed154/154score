@@ -192,3 +192,113 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
     add(LoadVideosEvent(champId: event.categoryId));
   }
 }
+
+class VideoDetailState extends Equatable {
+  final bool isLoading;
+  final VideoDetailEntity? detail;
+  final String? errorMessage;
+
+  const VideoDetailState({
+    this.isLoading = true,
+    this.detail,
+    this.errorMessage,
+  });
+
+  VideoDetailState copyWith({
+    bool? isLoading,
+    VideoDetailEntity? detail,
+    String? errorMessage,
+  }) {
+    return VideoDetailState(
+      isLoading: isLoading ?? this.isLoading,
+      detail: detail ?? this.detail,
+      errorMessage: errorMessage,
+    );
+  }
+
+  @override
+  List<Object?> get props => [isLoading, detail, errorMessage];
+}
+
+class VideoDetailCubit extends Cubit<VideoDetailState> {
+  final VideosRepository _repository;
+  final LocalStorageService _localStorageService;
+
+  VideoDetailCubit({
+    required VideosRepository repository,
+    required LocalStorageService localStorageService,
+    String? videoId,
+    VideoItemEntity? initialVideo,
+  })  : _repository = repository,
+        _localStorageService = localStorageService,
+        super(
+          initialVideo != null && videoId != null
+              ? VideoDetailState(
+                  isLoading: false,
+                  detail: VideoDetailEntity(
+                    id: videoId,
+                    title: initialVideo.title,
+                    image: initialVideo.image,
+                    videoUrl: initialVideo.link,
+                    matchInfo: initialVideo.championship ?? initialVideo.date,
+                  ),
+                )
+              : const VideoDetailState(),
+        );
+
+  Future<void> loadDetail({
+    required String videoId,
+    VideoItemEntity? initialVideo,
+  }) async {
+    if (state.detail == null) {
+      emit(state.copyWith(isLoading: true, errorMessage: null));
+    }
+
+    final lang = _localStorageService.getLanguage();
+    final result = await _repository.getVideoDetail(
+      videoId,
+      lang: lang,
+      url: initialVideo?.link,
+      title: initialVideo?.title,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      onSuccess: (detail) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            detail: detail,
+            errorMessage: null,
+          ),
+        );
+      },
+      onFailure: (failure) {
+        if (state.detail != null || initialVideo != null) {
+          emit(
+            state.copyWith(
+              isLoading: false,
+              detail: state.detail ??
+                  VideoDetailEntity(
+                    id: videoId,
+                    title: initialVideo!.title,
+                    image: initialVideo.image,
+                    videoUrl: initialVideo.link,
+                    matchInfo: initialVideo.championship ?? initialVideo.date,
+                  ),
+              errorMessage: null,
+            ),
+          );
+          return;
+        }
+        emit(
+          state.copyWith(
+            isLoading: false,
+            errorMessage: failure.message,
+          ),
+        );
+      },
+    );
+  }
+}

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/repositories/search_repository.dart';
+import '../../domain/repositories/search_repository.dart';
 import 'search_state.dart';
 
 class SearchCubit extends Cubit<SearchState> {
@@ -11,7 +11,7 @@ class SearchCubit extends Cubit<SearchState> {
 
   SearchCubit(this._repository) : super(const SearchState());
 
-  /// Called on every keystroke. Debounces 400ms before hitting the API.
+  /// Called on every keystroke. Debounces 300ms before hitting the API.
   void onQueryChanged(String query, {String lang = 'ar'}) {
     final trimmed = query.trim();
 
@@ -24,7 +24,7 @@ class SearchCubit extends Cubit<SearchState> {
     emit(state.copyWith(status: SearchStatus.loading, query: trimmed));
 
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
+    _debounce = Timer(const Duration(milliseconds: 300), () {
       _fetchResults(trimmed, lang);
     });
   }

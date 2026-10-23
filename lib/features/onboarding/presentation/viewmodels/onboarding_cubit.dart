@@ -83,4 +83,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     await _repository.markCompleted();
     emit(state.copyWith(status: OnboardingStatus.completed));
   }
+
+  /// Checks whether onboarding has already been completed.
+  bool isCompleted() => _repository.isCompleted();
+
+  /// Resets the onboarding completion flag.
+  Future<void> resetOnboarding() async {
+    await _repository.resetOnboarding();
+    emit(state.copyWith(status: OnboardingStatus.inProgress, page: 0));
+  }
 }

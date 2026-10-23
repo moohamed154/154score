@@ -12,18 +12,21 @@ For low-level architectural blueprints and diagrams, see:
 
 * **Model Layer (Data & Domain)**:
   * **Repositories**: Abstract contracts in `domain/repositories/` and concrete implementations in `data/repositories/`. The repository is the single source of truth for all data access.
-  * **Data Sources**: Remote APIs (centralized `Dio` / `Http` client with authentication interceptors) and local persistence (`SharedPreferences`, `LocalStorageService`, `Hive`).
+  * **Data Sources**: Remote APIs (centralized `Dio` / `ApiClient` with authentication interceptors in `data/datasources/`) and local persistence (`SharedPreferences`, `LocalStorageService`, `Hive`).
   * **Models & DTOs**: Immutable entities using `Equatable` with clean `fromJson` / `toJson` serialization.
   * **Raw Data Integrity**: Always prioritize raw API image fields (`team_1_logo`, `team_2_logo`, `logo`) over resolver fallbacks. Never overwrite valid backend strings.
+  * **No Native Binaries in `lib/`**: Never commit or place compiled native binaries (`.so`, `.dll`, `.dylib`) inside `lib/`.
 
 * **ViewModel Layer (State & Business Logic)**:
   * Pure state management using **`Bloc` / `Cubit`**.
   * UI state classes are immutable, holding `status`, `data`, `errorMessage`, and implementing `copyWith`.
-  * **STRICT RULE**: **Zero `BuildContext` or Flutter UI widget imports in ViewModels**. All navigation, dialogs, snackbars, and theme inspections belong exclusively in the View layer.
+  * **STRICT RULE — Zero UI Imports**: **Zero `BuildContext` or Flutter UI widget imports in ViewModels**. All navigation, dialogs, snackbars, and theme inspections belong exclusively in the View layer.
+  * **STRICT RULE — No Direct `Dio` / `ApiClient` in ViewModels**: ViewModels must depend exclusively on abstract `domain/repositories/` contracts injected via constructor, never directly on `Dio`, `ApiClient`, or `RemoteDataSource`.
 
 * **View Layer (Pure UI)**:
-  * Pure `StatelessWidget` UI components (use `StatefulWidget` only when managing local animation controllers or scroll controllers).
-  * Consumes state via targeted `BlocBuilder` / `BlocConsumer` with specific `buildWhen` conditions.
+  * Pure `StatelessWidget` UI components (use `StatefulWidget` only when managing local animation controllers, text controllers, or scroll controllers).
+  * **STRICT RULE — No Direct Repository or Network Calls in Views**: Views must **never** call `sl<...Repository>()` or `ApiClient` inside `initState()` to manage local `isLoading` / `error` / `data` fields via `setState()`. Every screen or detail view (`NewsDetailView`, `VideoDetailsView`, `GenericProfileView`, etc.) must use a dedicated `Bloc` or `Cubit` (`NewsDetailCubit`, `VideoDetailCubit`, `ProfileCubit`) registered in `core/di/injection_container.dart`.
+  * Consumes state via targeted `BlocBuilder` / `BlocConsumer` with specific `buildWhen` conditions or `context.select(...)`.
   * Handles one-off side effects (navigation, snackbars, toast messages) strictly inside `BlocListener`.
   * Dynamically queries theme brightness (`Theme.of(context).brightness == Brightness.dark`) to resolve theme-tailored assets.
 
@@ -273,13 +276,37 @@ For low-level architectural blueprints and diagrams, see:
 ## 8. Performance & 60/120 FPS Rendering Standards
 
 * **Mandatory `const` Constructors**: Mark every immutable widget with `const` to eliminate redundant rebuilds.
-* **Scoped Rebuilds**: Wrap only the specific child subtree that depends on state changes (`buildWhen` / `Selector`), never the whole screen.
-* **Optimized Scrolling**: Use `ListView.builder` / `CustomScrollView` with `itemExtent` or `prototypeItem`.
+* **Scoped Rebuilds (`context.select` & `buildWhen`)**:
+  * **NEVER use `context.watch<Bloc>()` at the top of a screen's `build()` method** (e.g., `MatchDetailsView`, `TeamView`) when only a sub-property is needed. Always use `context.select((Bloc b) => ...)` or a targeted `BlocBuilder(buildWhen: ...)` so 1Hz live WebSocket ticks do not rebuild the entire screen and its tab subtrees.
+* **1Hz Live Timer Isolation (`ValueNotifier`)**:
+  * In 1Hz ticking clock widgets (such as `CircularLiveClock`), **never call `setState()` every second**. Use `ValueNotifier<String>` + `ValueListenableBuilder<String>` so only the leaf `Text` widget updates without dirtying parent layout elements.
+* **Optimized Scrolling & No Nested `shrinkWrap` Lists**:
+  * Use `ListView.builder` / `CustomScrollView` with `itemExtent` or `prototypeItem` for primary scrollables.
+  * **NEVER nest `ListView.builder(shrinkWrap: true, physics: NeverScrollableScrollPhysics())` inside another scrollable** for bounded tables (`StandingsTable`, `TopScorersTable`, profile info lists), as `shrinkWrap: true` forces $O(N)$ intrinsic layout passes on every scroll frame. Instead, use a `Column` wrapped in `RepaintBoundary` or `SliverList`.
 * **Memory & Image Caching**: Always use `cached_network_image` via `AppImage` with explicit `memCacheWidth` and `memCacheHeight` to prevent bitmap memory bloat.
-* **Repaint Boundaries & Layer Isolation**: Wrap animations, loaders, custom painters, and multi-page items (`_HomeDayPage` inside `PageView`) with `RepaintBoundary` so GPU compositing translates rasterized layers without per-frame subtree repainting.
+* **Repaint Boundaries & Layer Isolation**: Wrap animations, loaders, custom painters, bounded tables, and multi-page items (`_HomeDayPage` inside `PageView`) with `RepaintBoundary` so GPU compositing translates rasterized layers without per-frame subtree repainting.
 * **Gesture & Transition Isolation**: Never dispatch asynchronous state changes or trigger BLoC state emissions within active user touch gestures (e.g. `onPageChanged`, `onPanUpdate`). Always defer state emissions until gestures settle (`ScrollEndNotification` or physics idle) to preserve native 60/120 FPS transitions without frame drops.
-* **Resource Disposal**: Always call `.dispose()` on `TextEditingController`, `AnimationController`, `ScrollController`, `PageController`, and cancel all `StreamSubscription` instances.
+* **Resource Disposal**: Always call `.dispose()` on `TextEditingController`, `AnimationController`, `ScrollController`, `PageController`, `ValueNotifier`, and cancel all `StreamSubscription` instances.
 * **Floating SnackBar Standard**: All notifications and feedback SnackBars must use floating behavior (`SnackBarBehavior.floating`), high-contrast dark card background (`Color(0xFF1E293B)`), pure white text (`Colors.white`, font weight 600), rounded border radius (`12px`), and an accent border to ensure perfect readability in both Dark and Light modes.
+
+---
+
+## 8.1 Idiomatic `Skeletonizer` Loading Standard (Mandatory)
+
+All screen, tab, and modal loading states across the application must use the `skeletonizer` package in its idiomatic form:
+
+* **Inherit Global `SkeletonizerConfig`**:
+  * `SkeletonizerConfig` is configured globally at the root in `lib/app/app.dart` with theme-aware `ShimmerEffect` colors.
+  * **NEVER hardcode redundant `effect: ShimmerEffect(...)` overrides** on individual `Skeletonizer` widgets unless a surface has a unique non-standard background.
+* **Pattern 1 — Real Widget + Dummy Entities (Preferred)**:
+  * Wrap the real presentation widget (`LeagueSectionWidget`, `MatchCard`, `StandingsTable`, `TopScorersTable`, `TransferCard`, `VideoCard`, `NewsListItem`, `TimelineEventItem`) inside `Skeletonizer(enabled: true, child: ...)` populated with realistic dummy `Entity` items (`MatchEntity`, `StandingRowEntity`, `TopScorerEntity`, etc.).
+  * `Skeletonizer` automatically converts child `Text`, `Icon`, and image leaf nodes into matching shimmer bones that stay 100% in sync with UI layout changes.
+* **Pattern 2 — `Bone.*` Primitives (For Custom Detail Layouts)**:
+  * When a dummy entity is not applicable (e.g. `NewsDetailView`, `VideoDetailsView`, `PlayerView`, `GenericProfileView`, `NotificationsView`, `PlayerMatchStatsSheet`), construct themed card containers (`isDark ? AppColors.darkCard : AppColors.lightCard`) and populate them with `Bone.text(words: ...)`, `Bone.multiText(lines: ...)`, `Bone.circle(size: ...)`, `Bone.square(size: ..., borderRadius: ...)`, `Bone.icon()`, and `Skeleton.leaf(child: ...)`.
+* **Strictly Forbidden Loading Anti-Patterns**:
+  * **NEVER** wrap raw `Container(color: Colors.grey)` blocks inside `Skeletonizer` or use `ignoreContainers: false` to fake bones.
+  * **NEVER** build static, un-animated grey `Container` boxes without wrapping them in `Skeletonizer`.
+  * **NEVER** use a bare `CircularProgressIndicator` for initial full-screen, tab, or bottom-sheet content loading (reserve `CircularProgressIndicator` strictly for inline button action spinners or pagination footers).
 
 ---
 
@@ -314,21 +341,28 @@ For low-level architectural blueprints and diagrams, see:
 
 ```text
 lib/
+├── app/                    # App root, SkeletonizerConfig, GoRouter setup
 ├── core/                   # Shared tokens, DI, network, routes, theme, utils, localization
 │   ├── constants/          # Colors, typography, dimensions, api_endpoints
-│   ├── network/            # Dio client, HMAC interceptors, WebSocket manager
+│   ├── di/                 # Centralized GetIt service locator (injection_container.dart)
+│   ├── network/            # Dio client, HMAC interceptors, ApiResult<T>
 │   ├── security/           # Signature generation, nonce, timestamp
 │   ├── storage/            # LocalStorageService, cache keys
 │   ├── theme/              # AppTheme, theme cubit, mode persistence
 │   ├── utils/              # url_helper, league_resolver, team_resolver, realtime_merge_engine
-│   └── widgets/            # AppImage, error_view, empty_view, starred_button
+│   └── widgets/            # AppImage, error_view, empty_view, circular_live_clock
 ├── features/               # Feature-first modules
 │   └── [feature_name]/
-│       ├── data/           # Repositories (impl), DataSources, DTOs
-│       ├── domain/         # Repositories (contracts), Entities
+│       ├── data/
+│       │   ├── datasources/# RemoteDataSource (ApiClient) & LocalDataSource
+│       │   ├── models/     # DTOs with fromJson / toJson
+│       │   └── repositories/# Concrete Repository implementations (*RepositoryImpl)
+│       ├── domain/
+│       │   ├── entities/   # Immutable Equatable domain entities
+│       │   └── repositories/# Abstract Repository contracts (*Repository)
 │       └── presentation/
-│           ├── viewmodels/ # Cubits, Blocs, States
-│           ├── views/      # Screens, Pages
-│           └── widgets/    # Reusable feature-specific UI
+│           ├── bloc/ | cubit/ | viewmodels/ # Pure state management (Zero UI/Dio imports)
+│           ├── views/      # Pure UI screens & detail views (Zero direct Repository/ApiClient calls)
+│           └── widgets/    # Reusable feature-specific UI components
 └── main.dart               # Entry point, DI setup & runApp
 ```

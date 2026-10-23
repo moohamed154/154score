@@ -708,87 +708,72 @@ class _HomeDayPageState extends State<_HomeDayPage>
         ),
         Skeletonizer(
           enabled: true,
-          ignoreContainers: false,
-          effect: ShimmerEffect(
-            baseColor:
-                isDark ? const Color(0xFF222F3E) : const Color(0xFFE2E8F0),
-            highlightColor:
-                isDark ? const Color(0xFF384B66) : const Color(0xFFF1F5F9),
-            duration: const Duration(milliseconds: 1500),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: List.generate(6, (index) {
-                return Container(
-                  height: 72,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCardElevated
-                              : Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        width: 70,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCardElevated
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        width: 48,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCardElevated
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        width: 70,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCardElevated
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCardElevated
-                              : Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ),
+          child: Column(
+            children: [
+              LeagueSectionWidget(
+                league: LeagueGroupEntity(
+                  leagueTitle: isArabic
+                      ? 'دوري أبطال أوروبا - ربع النهائي'
+                      : 'UEFA Champions League - Quarter Finals',
+                  matches: const [
+                    MatchEntity(
+                      id: 'skel_1',
+                      team1: 'ريال مدريد',
+                      team2: 'مانشستر سيتي',
+                      score1: '2',
+                      score2: '1',
+                      status: 'Finished',
+                      time: '22:00',
+                    ),
+                    MatchEntity(
+                      id: 'skel_2',
+                      team1: 'أرسنال',
+                      team2: 'بايرن ميونخ',
+                      score1: '1',
+                      score2: '1',
+                      status: 'Finished',
+                      time: '22:00',
+                    ),
+                  ],
+                ),
+              ),
+              LeagueSectionWidget(
+                league: LeagueGroupEntity(
+                  leagueTitle: isArabic
+                      ? 'الدوري الإنجليزي الممتاز'
+                      : 'Premier League',
+                  matches: const [
+                    MatchEntity(
+                      id: 'skel_3',
+                      team1: 'ليفربول',
+                      team2: 'تشيلسي',
+                      score1: '0',
+                      score2: '0',
+                      status: 'Upcoming',
+                      time: '19:30',
+                    ),
+                    MatchEntity(
+                      id: 'skel_4',
+                      team1: 'توتنهام',
+                      team2: 'نيوكاسل يونايتد',
+                      score1: '0',
+                      score2: '0',
+                      status: 'Upcoming',
+                      time: '17:00',
+                    ),
+                    MatchEntity(
+                      id: 'skel_5',
+                      team1: 'مانشستر يونايتد',
+                      team2: 'أستون فيلا',
+                      score1: '0',
+                      score2: '0',
+                      status: 'Upcoming',
+                      time: '21:00',
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],

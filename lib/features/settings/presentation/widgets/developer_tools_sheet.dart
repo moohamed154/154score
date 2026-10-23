@@ -13,7 +13,6 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/notifications/notification_sync_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
@@ -23,7 +22,7 @@ import '../../../favorites/presentation/cubit/favorites_cubit.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/bloc/matches_event.dart';
 import '../../../live_activity/presentation/cubit/live_activity_cubit.dart';
-import '../../../onboarding/domain/repositories/onboarding_repository.dart';
+import '../cubit/diagnostics_cubit.dart';
 import 'debug_console_sheet.dart';
 import 'diagnostics_sheet.dart';
 
@@ -54,6 +53,7 @@ class DeveloperToolsSheet extends StatefulWidget {
 }
 
 class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
+  late final DiagnosticsCubit _diagnosticsCubit;
   bool _isTestingPing = false;
   String? _pingLatency;
   bool _onboardingStatus = false;
@@ -62,21 +62,27 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
   @override
   void initState() {
     super.initState();
-    _refreshOnboardingStatus();
+    _diagnosticsCubit = sl<DiagnosticsCubit>();
+    _onboardingStatus = _diagnosticsCubit.state.onboardingCompleted;
     _isLiveActivityEnabled =
         sl<LocalStorageService>().isLiveActivityFeatureEnabled();
   }
 
+  @override
+  void dispose() {
+    unawaited(_diagnosticsCubit.close());
+    super.dispose();
+  }
+
   void _refreshOnboardingStatus() {
-    final repo = sl<OnboardingRepository>();
+    _diagnosticsCubit.refreshOnboardingStatus();
     setState(() {
-      _onboardingStatus = repo.isCompleted();
+      _onboardingStatus = _diagnosticsCubit.state.onboardingCompleted;
     });
   }
 
   Future<void> _resetOnboarding() async {
-    final repo = sl<OnboardingRepository>();
-    await repo.resetOnboarding();
+    await _diagnosticsCubit.resetOnboarding();
     _refreshOnboardingStatus();
     await HapticFeedback.mediumImpact();
     if (!mounted) return;
@@ -106,22 +112,12 @@ class _DeveloperToolsSheetState extends State<DeveloperToolsSheet> {
       _pingLatency = null;
     });
 
-    final stopwatch = Stopwatch()..start();
-    try {
-      final client = ApiClient();
-      await client.get(ApiEndpoints.ping);
-      stopwatch.stop();
-      setState(() {
-        _isTestingPing = false;
-        _pingLatency = '${stopwatch.elapsedMilliseconds} ms (OK)';
-      });
-    } catch (e) {
-      stopwatch.stop();
-      setState(() {
-        _isTestingPing = false;
-        _pingLatency = 'Failed (${stopwatch.elapsedMilliseconds} ms)';
-      });
-    }
+    await _diagnosticsCubit.testPingLatency();
+    if (!mounted) return;
+    setState(() {
+      _isTestingPing = _diagnosticsCubit.state.isTestingPing;
+      _pingLatency = _diagnosticsCubit.state.pingLatency;
+    });
   }
 
   Future<void> _sendTestNotification() async {

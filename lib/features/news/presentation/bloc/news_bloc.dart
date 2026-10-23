@@ -308,3 +308,76 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
     return articles;
   }
 }
+
+enum NewsDetailStatus { loading, success, error }
+
+class NewsDetailState extends Equatable {
+  final NewsDetailStatus status;
+  final NewsDetailEntity? detail;
+  final String? errorMessage;
+
+  const NewsDetailState({
+    this.status = NewsDetailStatus.loading,
+    this.detail,
+    this.errorMessage,
+  });
+
+  NewsDetailState copyWith({
+    NewsDetailStatus? status,
+    NewsDetailEntity? detail,
+    String? errorMessage,
+  }) {
+    return NewsDetailState(
+      status: status ?? this.status,
+      detail: detail ?? this.detail,
+      errorMessage: errorMessage,
+    );
+  }
+
+  @override
+  List<Object?> get props => [status, detail, errorMessage];
+}
+
+class NewsDetailCubit extends Cubit<NewsDetailState> {
+  final NewsRepository _repository;
+  final LocalStorageService _localStorageService;
+
+  NewsDetailCubit({
+    required NewsRepository repository,
+    required LocalStorageService localStorageService,
+  })  : _repository = repository,
+        _localStorageService = localStorageService,
+        super(const NewsDetailState());
+
+  Future<void> loadDetail(String articleId, {String? slug}) async {
+    emit(state.copyWith(status: NewsDetailStatus.loading, errorMessage: null));
+    final lang = _localStorageService.getEffectiveNewsLanguage();
+    final result = await _repository.getNewsDetail(
+      articleId,
+      slug: slug,
+      lang: lang,
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      onSuccess: (detail) {
+        emit(
+          state.copyWith(
+            status: NewsDetailStatus.success,
+            detail: detail,
+            errorMessage: null,
+          ),
+        );
+      },
+      onFailure: (failure) {
+        emit(
+          state.copyWith(
+            status: NewsDetailStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
+      },
+    );
+  }
+}

@@ -1,76 +1,19 @@
-import 'package:dio/dio.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../../core/websocket/websocket_event.dart';
 import '../../../../core/websocket/websocket_service.dart';
+import '../cubit/diagnostics_cubit.dart';
 
-class DiagnosticsSheet extends StatefulWidget {
+class DiagnosticsSheet extends StatelessWidget {
   final WebSocketService webSocketService;
 
   const DiagnosticsSheet({super.key, required this.webSocketService});
-
-  @override
-  State<DiagnosticsSheet> createState() => _DiagnosticsSheetState();
-}
-
-class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
-  bool _isLoading = false;
-  String? _pingResult;
-  String? _healthResult;
-  String? _metricsResult;
-
-  @override
-  void initState() {
-    super.initState();
-    _runDiagnostics();
-  }
-
-  Future<void> _runDiagnostics() async {
-    setState(() => _isLoading = true);
-    final client = ApiClient();
-
-    try {
-      final ping = await client.get(ApiEndpoints.ping);
-      _pingResult = ping.toString();
-    } catch (e) {
-      _pingResult = 'Error: $e';
-    }
-
-    try {
-      final health = await client.get(ApiEndpoints.serverHealth);
-      _healthResult = health.toString();
-    } catch (e) {
-      _healthResult = 'Error: $e';
-    }
-
-    try {
-      final metrics = await client.get(
-        ApiEndpoints.metrics,
-        options: Options(headers: {'X-Developer-Token': 'MOhamed_2002'}),
-      );
-      if (metrics is Map) {
-        final data = metrics['data'] as Map? ?? metrics;
-        final count = data.length;
-        _metricsResult = 'Metrics Online ($count metrics)';
-      } else {
-        _metricsResult = 'Metrics Online';
-      }
-    } catch (e) {
-      if (e.toString().contains('ADMIN_AUTH_REQUIRED')) {
-        _metricsResult = 'محمي إدارياً (السيرفر يعمل بنجاح)';
-      } else {
-        _metricsResult = 'Error: $e';
-      }
-    }
-
-    setState(() => _isLoading = false);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,117 +21,128 @@ class _DiagnosticsSheetState extends State<DiagnosticsSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isArabic = l10n.isArabic;
 
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.xxl),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusLg),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.translate('diag_title'),
-                style: AppTypography.getHeadingMedium(
+    return BlocProvider<DiagnosticsCubit>(
+      create: (_) => sl<DiagnosticsCubit>()..runDiagnostics(),
+      child: BlocBuilder<DiagnosticsCubit, DiagnosticsState>(
+        builder: (context, state) {
+          return Container(
+            padding: const EdgeInsets.all(AppDimensions.xxl),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppDimensions.radiusLg),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.translate('diag_title'),
+                      style: AppTypography.getHeadingMedium(
+                        isDark: isDark,
+                        isArabic: isArabic,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StreamBuilder<WebSocketConnectionHealth>(
+                  stream: webSocketService.healthStream,
+                  initialData: webSocketService.currentHealth,
+                  builder: (context, snapshot) {
+                    final health =
+                        snapshot.data ?? webSocketService.currentHealth;
+                    final wsStatus = health.state.name;
+                    final rooms = health.activeSubscriptions.isNotEmpty
+                        ? health.activeSubscriptions.join(', ')
+                        : webSocketService.activeChannel;
+
+                    return Column(
+                      children: [
+                        _buildDiagTile(
+                          title: l10n.translate('diag_ws_status'),
+                          value:
+                              '$wsStatus (Transport: ${health.currentTransport}${health.latencyMs != null ? ', ${health.latencyMs}ms' : ''})',
+                          isSuccess:
+                              health.state == SocketConnectionState.connected,
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ),
+                        const SizedBox(height: 10),
+                        _buildDiagTile(
+                          title: 'Active Rooms & Events',
+                          value:
+                              'Rooms: [$rooms]\nEvents: ${health.totalEventsReceived} (Dupes: ${health.duplicateEventsSuppressed}, Stale: ${health.staleEventsSuppressed})',
+                          isSuccess: true,
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ),
+                        const SizedBox(height: 10),
+                        _buildDiagTile(
+                          title: 'REST Fallback Status',
+                          value: health.restFallbackActive
+                              ? 'ACTIVE (Polling Enabled)'
+                              : 'INACTIVE (Realtime Healthy)',
+                          isSuccess: !health.restFallbackActive,
+                          isDark: isDark,
+                          isArabic: isArabic,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                _buildDiagTile(
+                  title: l10n.translate('diag_ping'),
+                  value: state.pingResult ?? 'Checking...',
+                  isSuccess: state.pingResult?.contains('Error') == false,
                   isDark: isDark,
                   isArabic: isArabic,
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close_rounded),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          StreamBuilder<WebSocketConnectionHealth>(
-            stream: widget.webSocketService.healthStream,
-            initialData: widget.webSocketService.currentHealth,
-            builder: (context, snapshot) {
-              final health =
-                  snapshot.data ?? widget.webSocketService.currentHealth;
-              final wsStatus = health.state.name;
-              final rooms = health.activeSubscriptions.isNotEmpty
-                  ? health.activeSubscriptions.join(', ')
-                  : widget.webSocketService.activeChannel;
-
-              return Column(
-                children: [
-                  _buildDiagTile(
-                    title: l10n.translate('diag_ws_status'),
-                    value:
-                        '$wsStatus (Transport: ${health.currentTransport}${health.latencyMs != null ? ', ${health.latencyMs}ms' : ''})',
-                    isSuccess: health.state == SocketConnectionState.connected,
-                    isDark: isDark,
-                    isArabic: isArabic,
+                const SizedBox(height: 10),
+                _buildDiagTile(
+                  title: l10n.translate('diag_api_health'),
+                  value: state.healthResult ?? 'Checking...',
+                  isSuccess: state.healthResult?.contains('Error') == false,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
+                const SizedBox(height: 10),
+                _buildDiagTile(
+                  title: l10n.translate('diag_metrics'),
+                  value: state.metricsResult ?? 'Checking...',
+                  isSuccess: state.metricsResult?.contains('Error') == false,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: state.isLoading
+                        ? null
+                        : () =>
+                            context.read<DiagnosticsCubit>().runDiagnostics(),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(l10n.translate('check_now')),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.black,
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  _buildDiagTile(
-                    title: 'Active Rooms & Events',
-                    value:
-                        'Rooms: [$rooms]\nEvents: ${health.totalEventsReceived} (Dupes: ${health.duplicateEventsSuppressed}, Stale: ${health.staleEventsSuppressed})',
-                    isSuccess: true,
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ),
-                  const SizedBox(height: 10),
-                  _buildDiagTile(
-                    title: 'REST Fallback Status',
-                    value: health.restFallbackActive
-                        ? 'ACTIVE (Polling Enabled)'
-                        : 'INACTIVE (Realtime Healthy)',
-                    isSuccess: !health.restFallbackActive,
-                    isDark: isDark,
-                    isArabic: isArabic,
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildDiagTile(
-            title: l10n.translate('diag_ping'),
-            value: _pingResult ?? 'Checking...',
-            isSuccess: _pingResult?.contains('Error') == false,
-            isDark: isDark,
-            isArabic: isArabic,
-          ),
-          const SizedBox(height: 10),
-          _buildDiagTile(
-            title: l10n.translate('diag_api_health'),
-            value: _healthResult ?? 'Checking...',
-            isSuccess: _healthResult?.contains('Error') == false,
-            isDark: isDark,
-            isArabic: isArabic,
-          ),
-          const SizedBox(height: 10),
-          _buildDiagTile(
-            title: l10n.translate('diag_metrics'),
-            value: _metricsResult ?? 'Checking...',
-            isSuccess: _metricsResult?.contains('Error') == false,
-            isDark: isDark,
-            isArabic: isArabic,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _isLoading ? null : _runDiagnostics,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(l10n.translate('check_now')),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.black,
-              ),
+                ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

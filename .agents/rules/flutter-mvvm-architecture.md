@@ -96,6 +96,7 @@ lib/
 ### 3.2 ViewModel Layer (State & Logic)
 1. **Strict Decoupling**:
    - **NEVER import `package:flutter/material.dart` or pass `BuildContext` into a ViewModel.**
+   - **NEVER import or call `Dio`, `ApiClient`, or `RemoteDataSource` directly inside a ViewModel.** ViewModels must only depend on domain `Repository` interfaces.
    - All navigation, dialogs, and snackbars must be triggered in the View using state listeners or a navigation service.
 2. **Immutable UI State**:
    - Define a single sealed state class or an immutable state object:
@@ -133,12 +134,18 @@ lib/
    - ViewModels only interact with Repositories and update state.
 
 ### 3.3 View Layer (Pure UI)
-1. **Stateless Views**:
+1. **Stateless Views & Zero Direct Data Access**:
    - Views should be `StatelessWidget` whenever possible.
    - Use `StatefulWidget` ONLY for local animation controllers, text editing controllers, or scroll controller lifecycles.
+   - **NEVER call `sl<...Repository>()` or `ApiClient` inside a View's `initState()`** to manage local `isLoading` / `error` / `data` fields with `setState()`. Always provide a dedicated `Cubit` or `Bloc` via `BlocProvider`.
 2. **Scoped Rebuilds**:
-   - Use targeted listeners (`BlocBuilder(buildWhen: ...)`, `Selector`, or `Consumer`) so only the required subtree rebuilds.
+   - Use targeted listeners (`BlocBuilder(buildWhen: ...)`, `context.select(...)`, or `Consumer`) so only the required subtree rebuilds. Never call `context.watch<Bloc>()` at the root of a complex screen when only a single field is needed.
    - Separate UI presentation (`BlocBuilder`) from one-off side effects like navigation/snackbars (`BlocListener`).
+3. **Idiomatic `Skeletonizer` Loading States**:
+   - Inherit the global `SkeletonizerConfig` from `app.dart` (do not hardcode custom `ShimmerEffect` overrides on individual screens).
+   - Prefer wrapping the real presentation widget (`MatchCard`, `StandingsTable`, `TopScorersTable`, `TransferCard`, `VideoCard`) with dummy `Entity` data inside `Skeletonizer(enabled: true, child: ...)`.
+   - For custom detail layouts, use `Bone.text`, `Bone.multiText`, `Bone.circle`, `Bone.square`, `Bone.icon`, and `Skeleton.leaf` inside themed card containers.
+   - Never wrap `Container(color: Colors.grey)` blocks inside `Skeletonizer`, never build static un-animated placeholder boxes, and never use a bare `CircularProgressIndicator` for full-screen or tab loading.
 
 ---
 
@@ -179,9 +186,12 @@ lib/
    - Mark every immutable widget with `const`.
    - Use lint rule `prefer_const_constructors: true` in `analysis_options.yaml`.
 2. **List & Scrolling Performance**:
-   - Always use `ListView.builder` or `CustomScrollView` with `SliverList.builder`.
+   - Always use `ListView.builder` or `CustomScrollView` with `SliverList.builder` for primary scrollables.
+   - **NEVER nest `ListView.builder(shrinkWrap: true, physics: NeverScrollableScrollPhysics())` inside another scrollable** for bounded tables (`StandingsTable`, `TopScorersTable`); use a `Column` wrapped in `RepaintBoundary` to avoid $O(N)$ intrinsic layout passes during scrolling.
    - Provide `itemExtent` or `prototypeItem` when item dimensions are fixed.
    - Use `addAutomaticKeepAlives: false` and `addRepaintBoundaries: true` for long lists.
+3. **1Hz Live Clock Optimization**:
+   - Never call `setState()` every second in ticking timers (`CircularLiveClock`). Use `ValueNotifier<String>` + `ValueListenableBuilder<String>` so only the leaf `Text` node repaints.
 3. **Image Optimization**:
    - Use `cached_network_image` with explicit `memCacheWidth` and `memCacheHeight` to prevent high-res bitmap memory bloat.
    - Pre-cache critical assets in `didChangeDependencies`: `precacheImage(...)`.
