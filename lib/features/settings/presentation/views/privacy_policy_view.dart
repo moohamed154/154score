@@ -12,12 +12,11 @@ class PrivacyPolicyView extends StatelessWidget {
   const PrivacyPolicyView({super.key});
 
   static const String privacyPolicyUrl =
-      'https://154score-api.vercel.app/privacy';
+      'https://154score-api.medohs770.workers.dev/privacy';
 
   Future<void> _openExternalPolicy(BuildContext context, bool isArabic) async {
     await HapticFeedback.selectionClick();
-    final langParam = isArabic ? 'ar' : 'en';
-    final uri = Uri.parse('$privacyPolicyUrl?lang=$langParam');
+    final uri = Uri.parse(privacyPolicyUrl);
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
