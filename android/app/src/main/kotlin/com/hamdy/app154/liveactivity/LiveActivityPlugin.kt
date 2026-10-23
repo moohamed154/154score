@@ -1,4 +1,4 @@
-package com.hamdy.app154score.liveactivity
+package com.hamdy.app154.liveactivity
 
 import android.content.Context
 import androidx.core.app.NotificationManagerCompat
@@ -8,7 +8,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class LiveActivityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     companion object {
-        const val CHANNEL_NAME = "com.hamdy.app154score/live_activity"
+        const val CHANNEL_NAME = "com.hamdy.app154/live_activity"
         private var instance: LiveActivityPlugin? = null
 
         fun notifyTrackingStopped(matchId: String) {

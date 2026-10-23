@@ -14,7 +14,7 @@ abstract class LiveActivityPlatformDataSource {
 class LiveActivityPlatformDataSourceImpl
     implements LiveActivityPlatformDataSource {
   static const MethodChannel _channel =
-      MethodChannel('com.hamdy.app154score/live_activity');
+      MethodChannel('com.hamdy.app154/live_activity');
 
   final StreamController<Map<String, dynamic>> _pushTokenRotatedController =
       StreamController<Map<String, dynamic>>.broadcast();

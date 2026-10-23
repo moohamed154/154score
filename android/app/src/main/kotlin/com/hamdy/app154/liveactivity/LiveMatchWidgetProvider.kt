@@ -1,4 +1,4 @@
-package com.hamdy.app154score.liveactivity
+package com.hamdy.app154.liveactivity
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -8,8 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.widget.RemoteViews
-import com.hamdy.app154score.MainActivity
-import com.hamdy.app154score.R
+import com.hamdy.app154.MainActivity
+import com.hamdy.app154.R
 
 class LiveMatchWidgetProvider : AppWidgetProvider() {
 

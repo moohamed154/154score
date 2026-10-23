@@ -22,7 +22,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('[FCM] Background push received: ${message.messageId}');
   if (message.data['type'] == 'live_activity_update') {
     try {
-      await const MethodChannel('com.hamdy.app154score/live_activity')
+      await const MethodChannel('com.hamdy.app154/live_activity')
           .invokeMethod('updateLiveActivity', message.data);
     } catch (_) {}
   }
@@ -187,7 +187,7 @@ class PushNotificationService {
         'app_version': appVersion,
         'language': lang,
         'lang': lang,
-        'bundle_id': 'com.hamdy.app154score',
+        'bundle_id': 'com.hamdy.app154',
         if (oldToken != null && oldToken != cleanToken) 'old_token': oldToken,
       };
 
@@ -266,7 +266,7 @@ class PushNotificationService {
   Future<void> handleForegroundPayload(Map<String, dynamic> data) async {
     if (data['type'] == 'live_activity_update') {
       try {
-        await const MethodChannel('com.hamdy.app154score/live_activity')
+        await const MethodChannel('com.hamdy.app154/live_activity')
             .invokeMethod('updateLiveActivity', data);
       } catch (_) {}
       return;

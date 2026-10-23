@@ -1,10 +1,10 @@
-package com.hamdy.app154score
+package com.hamdy.app154
 
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import com.hamdy.app154score.liveactivity.LiveActivityPlugin
+import com.hamdy.app154.liveactivity.LiveActivityPlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -27,7 +27,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         flutterEngine.plugins.add(LiveActivityPlugin())
-        navigationChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.hamdy.app154score/navigation")
+        navigationChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.hamdy.app154/navigation")
     }
 
     override fun onNewIntent(intent: Intent) {

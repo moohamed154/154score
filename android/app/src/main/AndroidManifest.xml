@@ -67,7 +67,7 @@
             android:name=".liveactivity.StopTrackingReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.hamdy.app154score.ACTION_STOP_TRACKING" />
+                <action android:name="com.hamdy.app154.ACTION_STOP_TRACKING" />
             </intent-filter>
         </receiver>
 

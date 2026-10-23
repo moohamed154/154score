@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.hamdy.app154score</string>
+	<string>com.hamdy.app154</string>
 	<key>PROJECT_ID</key>
 	<string>score-45ce7</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:621440916293:ios:255ead2963250008a17c2c</string>
+	<string>1:621440916293:ios:c8f79a3fb14768c4a17c2c</string>
 </dict>
 </plist>

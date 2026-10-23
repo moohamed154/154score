@@ -49,7 +49,7 @@ import flutter_local_notifications
 
   private func setupApnsChannel(binaryMessenger: FlutterBinaryMessenger) {
     guard apnsChannel == nil else { return }
-    apnsChannel = FlutterMethodChannel(name: "com.hamdy.app154score/apns", binaryMessenger: binaryMessenger)
+    apnsChannel = FlutterMethodChannel(name: "com.hamdy.app154/apns", binaryMessenger: binaryMessenger)
     apnsChannel?.setMethodCallHandler { [weak self] (call, result) in
       switch call.method {
       case "getApnsToken":
@@ -66,7 +66,7 @@ import flutter_local_notifications
   }
 
   private func setupLiveActivityChannel(binaryMessenger: FlutterBinaryMessenger) {
-    let liveActivityChannel = FlutterMethodChannel(name: "com.hamdy.app154score/live_activity", binaryMessenger: binaryMessenger)
+    let liveActivityChannel = FlutterMethodChannel(name: "com.hamdy.app154/live_activity", binaryMessenger: binaryMessenger)
     #if canImport(ActivityKit)
     if #available(iOS 16.1, *) {
       LiveActivityManager.shared.setMethodChannel(liveActivityChannel)

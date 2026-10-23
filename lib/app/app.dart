@@ -43,7 +43,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     // Listen to native lock screen notification/widget tap navigation
-    const MethodChannel('com.hamdy.app154score/navigation')
+    const MethodChannel('com.hamdy.app154/navigation')
         .setMethodCallHandler((call) async {
       if (call.method == 'navigateToMatch' && call.arguments != null) {
         AppRouter.navigateToMatch(call.arguments.toString());

@@ -15,7 +15,7 @@ import 'push_notification_service.dart';
 /// Architecture Overview:
 /// 1. iOS App requests remote notification authorization via UserNotifications framework.
 /// 2. iOS OS contacts Apple APNs servers and receives a unique 64-character APNs device token.
-/// 3. AppDelegate passes token to Flutter via the 'com.hamdy.app154score/apns' MethodChannel.
+/// 3. AppDelegate passes token to Flutter via the 'com.hamdy.app154/apns' MethodChannel.
 /// 4. This service registers the token with POST /notifications/push_notifications_providers
 ///    and syncs subscriptions with POST /notifications/notification_post_service.
 /// 5. Your backend pushes directly to Apple APNs HTTP/2 API (https://api.push.apple.com)
@@ -24,7 +24,7 @@ import 'push_notification_service.dart';
 /// Local notifications work directly via UserNotifications and do not require Firebase.
 class ApnsNotificationService {
   static const MethodChannel _channel = MethodChannel(
-    'com.hamdy.app154score/apns',
+    'com.hamdy.app154/apns',
   );
   static const String _prefApnsTokenKey = 'apns_device_token';
 
@@ -138,7 +138,7 @@ class ApnsNotificationService {
         'matches': matches,
         'language': lang,
         'lang': lang,
-        'bundle_id': 'com.hamdy.app154score',
+        'bundle_id': 'com.hamdy.app154',
       };
 
       final dio = dioClient ??

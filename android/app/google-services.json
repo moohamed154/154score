@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:621440916293:android:ff1877f968b61d4ba17c2c",
+        "android_client_info": {
+          "package_name": "com.hamdy.app154"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChIR56jBGOgEAP0IfuMYED_hTTap0UvWI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:621440916293:android:cf6836ee1d832f0ca17c2c",
         "android_client_info": {
           "package_name": "com.hamdy.app154score"

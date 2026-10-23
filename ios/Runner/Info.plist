@@ -56,7 +56,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.hamdy.app154score</string>
+			<string>com.hamdy.app154</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>score154</string>

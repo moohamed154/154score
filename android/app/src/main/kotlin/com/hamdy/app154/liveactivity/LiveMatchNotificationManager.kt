@@ -1,4 +1,4 @@
-package com.hamdy.app154score.liveactivity
+package com.hamdy.app154.liveactivity
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -17,8 +17,8 @@ import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import com.hamdy.app154score.MainActivity
-import com.hamdy.app154score.R
+import com.hamdy.app154.MainActivity
+import com.hamdy.app154.R
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
