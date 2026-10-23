@@ -181,19 +181,39 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
       final resolvedHalfScores =
           eventsPayloadRes.halfScores ?? state.halfScores;
       final rawEvents = eventsRes.isNotEmpty ? eventsRes : state.events;
-      final resolvedEvents = MatchEventHelper.normalizeEvents(
-        rawEvents,
-        hasExtraTime: MatchEventHelper.hasExtraTimeInHalfScores(
-          resolvedHalfScores,
-        ),
-      );
-      final resolvedVideos = videosRes.isNotEmpty ? videosRes : state.videos;
+      final eventsOverview = eventsPayloadRes.overview;
       String? resolvedChampionshipId =
           eventsPayloadRes.championshipId ?? state.championshipId;
 
       String? resolvedStatus = event.initialStatus ?? state.liveStatus;
       String? resolvedStatusCode =
           event.initialStatusCode ?? state.liveStatusCode;
+
+      final lowerStatus =
+          '${resolvedStatus ?? ''} ${resolvedStatusCode ?? ''}'.toLowerCase();
+      final isShootoutMatch =
+          (eventsPayloadRes.penaltiesDetail != null &&
+                  eventsPayloadRes.penaltiesDetail!.hasKicks) ||
+              (state.penaltiesDetail != null &&
+                  state.penaltiesDetail!.hasKicks) ||
+              lowerStatus.contains('ترجيح') ||
+              lowerStatus.contains('penal');
+      final currentOverview = eventsOverview;
+      final String? fullTimeScore = (currentOverview != null &&
+              currentOverview.score1 != null &&
+              currentOverview.score2 != null)
+          ? '${currentOverview.score1} - ${currentOverview.score2}'
+          : null;
+      final resolvedEvents = MatchEventHelper.normalizeEvents(
+        rawEvents,
+        hasExtraTime: MatchEventHelper.hasExtraTimeInHalfScores(
+          resolvedHalfScores,
+        ),
+        halfScores: resolvedHalfScores,
+        hasShootout: isShootoutMatch,
+        fullTimeScore: fullTimeScore,
+      );
+      final resolvedVideos = videosRes.isNotEmpty ? videosRes : state.videos;
 
       final hasFinishedEvent = resolvedEvents.any((e) {
         if (!e.isPeriodMarker) return false;
@@ -244,7 +264,6 @@ class MatchDetailsBloc extends Bloc<MatchDetailsEvent, MatchDetailsState> {
         }
       }
 
-      final eventsOverview = eventsPayloadRes.overview;
       final initialOverview = state.overview != null
           ? state.overview!.mergeWith(eventsOverview)
           : (eventsOverview ?? state.overview);

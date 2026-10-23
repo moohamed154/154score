@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/match_event_helper.dart';
 import '../../../../core/utils/match_minute_parser.dart';
 import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/app_image.dart';
@@ -58,6 +59,11 @@ class TimelineEventItem extends StatelessWidget {
           ? event.score!.trim()
           : null;
       final label = _getPeriodLabel(event, l10n, isArabic);
+      final showMinute = event.minute.isNotEmpty &&
+          !event.minute.contains('-') &&
+          event.minute != '0' &&
+          event.minute != '0\'' &&
+          !_isFirstHalfStart(event);
 
       final periodWidget = Padding(
         padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
@@ -85,18 +91,39 @@ class TimelineEventItem extends StatelessWidget {
               ),
               const SizedBox(height: 4),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11.0,
-                fontWeight: FontWeight.w600,
-                color: isDark
-                    ? const Color(0xFF94A3B8)
-                    : const Color(0xFF64748B),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                if (showMinute) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    '(${MatchEventHelper.sanitizeMinute(event.minute)}\')',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ],
             ),
             if (event.hasVideo) ...[
               const SizedBox(height: 4),
@@ -226,31 +253,34 @@ class TimelineEventItem extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: hasExtra
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '+${parsed.extraMinute}',
-                    style: TextStyle(
-                      fontSize: isSmall ? 8.0 : 8.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.redCard,
-                      height: 1.0,
+            ? FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '+${parsed.extraMinute}',
+                      style: TextStyle(
+                        fontSize: isSmall ? 8.0 : 8.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.redCard,
+                        height: 1.0,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    '${parsed.mainMinute}\'',
-                    style: TextStyle(
-                      fontFamily: isArabic ? 'Cairo' : 'Inter',
-                      fontWeight: FontWeight.w700,
-                      fontSize: isSmall ? 9.5 : 10.5,
-                      color: isDark ? Colors.white : ringColor,
-                      height: 1.0,
+                    const SizedBox(height: 1),
+                    Text(
+                      '${parsed.mainMinute}\'',
+                      style: TextStyle(
+                        fontFamily: isArabic ? 'Cairo' : 'Inter',
+                        fontWeight: FontWeight.w700,
+                        fontSize: isSmall ? 9.5 : 10.5,
+                        color: isDark ? Colors.white : ringColor,
+                        height: 1.0,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               )
             : Text(
                 mainMinStr,
@@ -270,32 +300,35 @@ class TimelineEventItem extends StatelessWidget {
         height: size,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         alignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '+${parsed.extraMinute}',
-              style: TextStyle(
-                fontSize: isSmall ? 8.5 : 9.5,
-                fontWeight: FontWeight.w800,
-                color: AppColors.redCard,
-                height: 1.0,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '+${parsed.extraMinute}',
+                style: TextStyle(
+                  fontSize: isSmall ? 8.5 : 9.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.redCard,
+                  height: 1.0,
+                ),
               ),
-            ),
-            const SizedBox(height: 1),
-            Text(
-              '${parsed.mainMinute}\'',
-              style: TextStyle(
-                fontFamily: isArabic ? 'Cairo' : 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: isSmall ? 9.5 : 10.5,
-                color:
-                    isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                height: 1.0,
+              const SizedBox(height: 1),
+              Text(
+                '${parsed.mainMinute}\'',
+                style: TextStyle(
+                  fontFamily: isArabic ? 'Cairo' : 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: isSmall ? 9.5 : 10.5,
+                  color:
+                      isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  height: 1.0,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -800,7 +833,12 @@ class TimelineEventItem extends StatelessWidget {
         lower.contains('انتهت المباراة') ||
         lower.contains('بداية الشوط') ||
         lower.contains('نهاية الشوط') ||
+        lower.contains('نهاية الوقت الأصلي') ||
         lower.contains('نهاية المباراة') ||
+        lower.contains('بداية ركلات الترجيح') ||
+        lower.contains('ركلات الترجيح') ||
+        lower.contains('shootout') ||
+        lower.contains('استراحة') ||
         lower == 'ht' ||
         lower == 'ft';
   }
@@ -811,6 +849,16 @@ class TimelineEventItem extends StatelessWidget {
     bool isArabic,
   ) {
     final name = event.playerName;
+    if (name.contains('بداية ركلات الترجيح') ||
+        name.toLowerCase().contains('starting penalties') ||
+        name.toLowerCase().contains('penalties start')) {
+      return isArabic ? 'بداية ركلات الترجيح' : 'Starting Penalties';
+    }
+    if (name.contains('ركلات الترجيح') ||
+        name.toLowerCase().contains('penalty shootout') ||
+        name.toLowerCase().contains('penalties')) {
+      return isArabic ? 'ركلات الترجيح' : 'Penalty Shootout';
+    }
     if (name.contains('بداية الشوط الأول') ||
         name.toLowerCase().contains('first half start')) {
       return isArabic ? 'بداية الشوط الأول' : 'First Half Start';
@@ -819,13 +867,31 @@ class TimelineEventItem extends StatelessWidget {
         name.toLowerCase().contains('first half end')) {
       return isArabic ? 'نهاية الشوط الأول' : 'First Half End';
     }
+    if (name.contains('منتصف المباراة')) {
+      return isArabic ? 'منتصف المباراة' : 'Half Time';
+    }
+    if (name.contains('استراحة') ||
+        name.toLowerCase().contains('half time') ||
+        name.toLowerCase() == 'ht') {
+      return isArabic ? 'استراحة' : 'Half Time';
+    }
     if (name.contains('بداية الشوط الثاني') ||
         name.toLowerCase().contains('second half start')) {
       return isArabic ? 'بداية الشوط الثاني' : 'Second Half Start';
     }
+    if (name.contains('نهاية الوقت الأصلي') ||
+        name.toLowerCase().contains('regular time end') ||
+        name.toLowerCase().contains('end of regular time')) {
+      return isArabic ? 'نهاية الوقت الأصلي' : 'End of Regular Time';
+    }
+    if (name.contains('نهاية الشوط الثاني') ||
+        name.toLowerCase().contains('second half end')) {
+      return isArabic ? 'نهاية الشوط الثاني' : 'Second Half End';
+    }
     if (name.contains('نهاية المباراة') ||
         name.toLowerCase().contains('full time') ||
-        name.contains('انتهت المباراة')) {
+        name.contains('انتهت المباراة') ||
+        name.toLowerCase() == 'ft') {
       return isArabic ? 'نهاية المباراة' : 'Full Time';
     }
     if (name.contains('بداية الشوط الإضافي الأول')) {
@@ -846,9 +912,6 @@ class TimelineEventItem extends StatelessWidget {
           ? 'نهاية الشوط الإضافي الثاني'
           : 'Extra Time 2nd Half End';
     }
-    if (name.contains('ركلات الترجيح')) {
-      return isArabic ? 'ركلات الترجيح' : 'Penalty Shootout';
-    }
     if (name.isNotEmpty) return name;
     return _localizeEventType(event.type, l10n);
   }
@@ -862,6 +925,14 @@ class TimelineEventItem extends StatelessWidget {
       return l10n.translate('status_ended');
     }
     return type;
+  }
+
+  bool _isFirstHalfStart(MatchEventEntity event) {
+    final name = event.playerName.toLowerCase();
+    return event.minute == '0' ||
+        event.minute == '0\'' ||
+        event.playerName.contains('بداية الشوط الأول') ||
+        name.contains('first half start');
   }
 
   (MatchVisualEventType, Color, String?) _getVisualEventConfig(

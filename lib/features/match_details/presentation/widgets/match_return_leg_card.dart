@@ -90,9 +90,11 @@ class MatchReturnLegCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     if (returnLeg.aggResult != null &&
-                        returnLeg.aggResult!.isNotEmpty &&
+                        returnLeg.aggResult!.trim().isNotEmpty &&
                         !returnLeg.aggResult!.contains('[object') &&
-                        !returnLeg.aggResult!.startsWith('{')) ...[
+                        !returnLeg.aggResult!.contains('Object]') &&
+                        !returnLeg.aggResult!.startsWith('{') &&
+                        RegExp(r'\d+\s*[-–:]\s*\d+').hasMatch(returnLeg.aggResult!)) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -197,7 +199,11 @@ class MatchReturnLegCard extends StatelessWidget {
                 ),
 
                 if (returnLeg.penalties != null &&
-                    returnLeg.penalties!.isNotEmpty) ...[
+                    returnLeg.penalties!.trim().isNotEmpty &&
+                    !returnLeg.penalties!.contains('[object') &&
+                    !returnLeg.penalties!.contains('Object]') &&
+                    !returnLeg.penalties!.startsWith('{') &&
+                    RegExp(r'\d+\s*[-–:]\s*\d+').hasMatch(returnLeg.penalties!)) ...[
                   const SizedBox(height: 6),
                   Center(
                     child: Text(

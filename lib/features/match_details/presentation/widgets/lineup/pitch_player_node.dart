@@ -614,16 +614,17 @@ void showLineupPlayerModal(
     } catch (_) {}
   }
 
-  PlayerMatchStatsSheet.show(
-    context: context,
-    player: p,
-    matchId: resolvedMatchId,
-    isArabic: isArabic,
-    playerEvents: playerEvents,
-  );
-  return;
+  if (resolvedMatchId.isNotEmpty) {
+    PlayerMatchStatsSheet.show(
+      context: context,
+      player: p,
+      matchId: resolvedMatchId,
+      isArabic: isArabic,
+      playerEvents: playerEvents,
+    );
+    return;
+  }
 
-  // ignore: dead_code
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,

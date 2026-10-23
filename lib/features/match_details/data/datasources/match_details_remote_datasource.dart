@@ -349,18 +349,23 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           } else if (statusVal == 3) {
             playerName = 'بداية الشوط الثاني';
           } else if (statusVal == 4 ||
-              (minuteVal >= 90 && playerName == 'نهاية الشوط')) {
+              (minuteVal >= 90 &&
+                  (playerName == 'نهاية الشوط' || playerName.isEmpty))) {
             playerName = 'نهاية المباراة';
           } else if (statusVal == 5) {
-            playerName = 'بداية الشوط الإضافي الأول';
+            playerName = (minuteVal > 90)
+                ? 'بداية الشوط الإضافي الأول'
+                : 'نهاية الوقت الأصلي';
           } else if (statusVal == 6) {
-            playerName = 'نهاية الشوط الإضافي الأول';
+            playerName = (minuteVal >= 105)
+                ? 'نهاية الشوط الإضافي الأول'
+                : 'نهاية الوقت الأصلي';
           } else if (statusVal == 7) {
             playerName = 'بداية الشوط الإضافي الثاني';
           } else if (statusVal == 8) {
             playerName = 'نهاية الشوط الإضافي الثاني';
           } else if (statusVal == 9) {
-            playerName = 'ركلات الترجيح';
+            playerName = 'بداية ركلات الترجيح';
           }
         }
 
@@ -450,6 +455,8 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
       final normalizedEvents = MatchEventHelper.normalizeEvents(
         events,
         hasExtraTime: MatchEventHelper.hasExtraTimeInHalfScores(halfScores),
+        halfScores: halfScores,
+        hasShootout: (penaltiesDetail != null && penaltiesDetail.hasKicks),
       );
 
       MatchOverviewDataEntity? overview;
@@ -891,6 +898,37 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     }
   }
 
+  static int? _extractPenaltyCount(dynamic val) {
+    if (val == null) return null;
+    if (val is num) return val.toInt();
+    if (val is String) {
+      final s = val.trim();
+      if (s.isEmpty ||
+          s.contains('[object') ||
+          s.contains('Object]') ||
+          s.contains('Instance of')) {
+        return null;
+      }
+      return int.tryParse(s);
+    }
+    if (val is List) {
+      int scored = 0;
+      bool hasKicks = false;
+      for (final item in val) {
+        if (item is Map) {
+          hasKicks = true;
+          if (item['is_goal'] == true ||
+              item['score'] == 1 ||
+              item['score'] == '1') {
+            scored++;
+          }
+        }
+      }
+      return hasKicks ? scored : null;
+    }
+    return null;
+  }
+
   static String? _formatAggResult(
     dynamic rawAgg, {
     String? homeId,
@@ -899,8 +937,19 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     if (rawAgg == null) return null;
     if (rawAgg is String) {
       final s = rawAgg.trim();
-      if (s.isEmpty || s == '[object Object]') return null;
-      if (!s.startsWith('{')) return s;
+      if (s.isEmpty ||
+          s.contains('[object') ||
+          s.contains('Object]') ||
+          s.contains('Instance of')) {
+        return null;
+      }
+      if (!s.startsWith('{')) {
+        final match = RegExp(r'(\d+)\s*[-–:]\s*(\d+)').firstMatch(s);
+        if (match != null) {
+          return '${match.group(1)} - ${match.group(2)}';
+        }
+        return null;
+      }
       final matches = RegExp(r'''["']?(\d+)["']?\s*:\s*(\d+)''').allMatches(s);
       final map = <String, String>{};
       for (final m in matches) {
@@ -924,22 +973,33 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     if (rawAgg is Map) {
       final hId = homeId?.toString();
       final aId = awayId?.toString();
+      int? h;
+      int? a;
       if (hId != null &&
           aId != null &&
           rawAgg.containsKey(hId) &&
           rawAgg.containsKey(aId)) {
-        return '${rawAgg[hId]} - ${rawAgg[aId]}';
+        h = int.tryParse(rawAgg[hId]?.toString() ?? '');
+        a = int.tryParse(rawAgg[aId]?.toString() ?? '');
       }
-      if (rawAgg['home'] != null && rawAgg['away'] != null) {
-        return '${rawAgg['home']} - ${rawAgg['away']}';
+      if (h == null || a == null) {
+        if (rawAgg['home'] != null && rawAgg['away'] != null) {
+          h = int.tryParse(rawAgg['home']?.toString() ?? '');
+          a = int.tryParse(rawAgg['away']?.toString() ?? '');
+        } else if (rawAgg['home_scores'] != null &&
+            rawAgg['away_scores'] != null) {
+          h = int.tryParse(rawAgg['home_scores']?.toString() ?? '');
+          a = int.tryParse(rawAgg['away_scores']?.toString() ?? '');
+        }
       }
-      if (rawAgg['home_scores'] != null && rawAgg['away_scores'] != null) {
-        return '${rawAgg['home_scores']} - ${rawAgg['away_scores']}';
+      if (h != null && a != null) {
+        return '$h - $a';
       }
       final scores = rawAgg.entries
           .where((e) =>
               e.key != 'win_team' && e.key != 'winner' && e.key != 'qualified')
-          .map((e) => e.value)
+          .map((e) => int.tryParse(e.value?.toString() ?? ''))
+          .whereType<int>()
           .toList();
       if (scores.length == 2) {
         return '${scores[0]} - ${scores[1]}';
@@ -956,8 +1016,19 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     if (rawPen == null) return null;
     if (rawPen is String) {
       final s = rawPen.trim();
-      if (s.isEmpty || s == '[object Object]') return null;
-      if (!s.startsWith('{')) return s;
+      if (s.isEmpty ||
+          s.contains('[object') ||
+          s.contains('Object]') ||
+          s.contains('Instance of')) {
+        return null;
+      }
+      if (!s.startsWith('{')) {
+        final match = RegExp(r'(\d+)\s*[-–:]\s*(\d+)').firstMatch(s);
+        if (match != null) {
+          return '${match.group(1)} - ${match.group(2)}';
+        }
+        return null;
+      }
       final matches = RegExp(r'''["']?(\d+)["']?\s*:\s*(\d+)''').allMatches(s);
       final map = <String, String>{};
       for (final m in matches) {
@@ -978,16 +1049,41 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
     if (rawPen is Map) {
       final hId = homeId?.toString();
       final aId = awayId?.toString();
+      int? h;
+      int? a;
+
       if (hId != null &&
           aId != null &&
           rawPen.containsKey(hId) &&
           rawPen.containsKey(aId)) {
-        return '${rawPen[hId]} - ${rawPen[aId]}';
+        h = _extractPenaltyCount(rawPen[hId]);
+        a = _extractPenaltyCount(rawPen[aId]);
       }
-      if (rawPen['home'] != null && rawPen['away'] != null) {
-        return '${rawPen['home']} - ${rawPen['away']}';
+
+      if (h == null || a == null) {
+        if (rawPen['home_score'] != null && rawPen['away_score'] != null) {
+          h = _extractPenaltyCount(rawPen['home_score']);
+          a = _extractPenaltyCount(rawPen['away_score']);
+        } else if (rawPen['penalties_1'] != null &&
+            rawPen['penalties_2'] != null) {
+          h = _extractPenaltyCount(rawPen['penalties_1']);
+          a = _extractPenaltyCount(rawPen['penalties_2']);
+        } else if (rawPen['home'] != null && rawPen['away'] != null) {
+          h = _extractPenaltyCount(rawPen['home']);
+          a = _extractPenaltyCount(rawPen['away']);
+        }
       }
-      final scores = rawPen.values.toList();
+
+      if (h != null && a != null) {
+        return '$h - $a';
+      }
+
+      final scores = rawPen.entries
+          .where((e) =>
+              e.key != 'win_team' && e.key != 'winner' && e.key != 'qualified')
+          .map((e) => _extractPenaltyCount(e.value))
+          .whereType<int>()
+          .toList();
       if (scores.length == 2) {
         return '${scores[0]} - ${scores[1]}';
       }
@@ -1033,7 +1129,7 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
           ? r['away_team']!.toString()
           : (secHome ?? '');
       final rawAgg = r['agg_result'] ?? map['agg_result'];
-      final rawPen = r['penalties'] ?? map['penalties'];
+      final rawPen = r['penalties'] ?? r['penalty'] ?? r['pen'];
       returnLeg = MatchReturnLegEntity(
         matchId: r['match_id']?.toString() ?? r['id']?.toString() ?? '',
         homeTeam: rHome,

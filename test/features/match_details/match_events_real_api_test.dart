@@ -9,11 +9,14 @@ import 'package:score154/core/storage/local_storage_service.dart';
 import 'package:score154/core/theme/app_theme.dart';
 import 'package:score154/core/utils/match_minute_parser.dart';
 import 'package:score154/core/websocket/websocket_service.dart';
+import 'package:bloc_test/bloc_test.dart';
+import 'package:score154/features/favorites/presentation/cubit/favorites_cubit.dart';
 import 'package:score154/features/match_details/domain/entities/match_details_entity.dart';
 import 'package:score154/features/match_details/domain/repositories/match_details_repository.dart';
 import 'package:score154/features/match_details/presentation/bloc/match_details_bloc.dart';
 import 'package:score154/features/match_details/presentation/bloc/match_details_event.dart';
 import 'package:score154/features/match_details/presentation/views/match_details_view.dart';
+import 'package:score154/features/match_details/presentation/widgets/match_event_visual_icon.dart';
 import 'package:score154/features/match_details/presentation/widgets/timeline_event_item.dart';
 import 'package:score154/core/widgets/status_pill.dart';
 import 'package:score154/features/matches/domain/entities/match_entity.dart';
@@ -25,18 +28,27 @@ class MockWebSocketService extends Mock implements WebSocketService {}
 
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
+class MockFavoritesCubit extends MockCubit<FavoritesState>
+    implements FavoritesCubit {}
+
+late MockLocalStorageService storage;
+late MockFavoritesCubit favoritesCubit;
+
 Widget buildTestApp(Widget child, {double width = 390, double height = 844}) {
-  return MaterialApp(
-    locale: const Locale('ar'),
-    supportedLocales: AppLocalizations.supportedLocales,
-    localizationsDelegates: const [
-      AppLocalizations.delegate,
-      ...GlobalMaterialLocalizations.delegates,
-    ],
-    theme: AppTheme.darkTheme,
-    home: MediaQuery(
-      data: MediaQueryData(size: Size(width, height)),
-      child: Scaffold(body: child),
+  return BlocProvider<FavoritesCubit>.value(
+    value: favoritesCubit,
+    child: MaterialApp(
+      locale: const Locale('ar'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        ...GlobalMaterialLocalizations.delegates,
+      ],
+      theme: AppTheme.darkTheme,
+      home: MediaQuery(
+        data: MediaQueryData(size: Size(width, height)),
+        child: Scaffold(body: child),
+      ),
     ),
   );
 }
@@ -44,7 +56,6 @@ Widget buildTestApp(Widget child, {double width = 390, double height = 844}) {
 void main() {
   late MockMatchDetailsRepository repo;
   late MockWebSocketService ws;
-  late MockLocalStorageService storage;
 
   const sampleMatch = MatchEntity(
     id: '5868018',
@@ -129,6 +140,16 @@ void main() {
     repo = MockMatchDetailsRepository();
     ws = MockWebSocketService();
     storage = MockLocalStorageService();
+    favoritesCubit = MockFavoritesCubit();
+
+    when(() => favoritesCubit.state).thenReturn(const FavoritesState());
+    when(() => favoritesCubit.isCompetitionFavorite(
+      id: any(named: 'id'),
+      name: any(named: 'name'),
+      slug: any(named: 'slug'),
+    )).thenReturn(false);
+    when(() => favoritesCubit.isMatchFavorite(any())).thenReturn(false);
+    when(() => favoritesCubit.loadFavorites()).thenReturn(null);
 
     when(() => storage.getLanguage()).thenReturn('ar');
     when(() => storage.getTimezoneOffset()).thenReturn(3);
@@ -203,7 +224,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('منتصف المباراة'), findsOneWidget);
-      expect(find.byIcon(Icons.sports_rounded), findsOneWidget);
+      expect(find.byType(MatchEventVisualIcon), findsOneWidget);
     });
 
     // ── 4. Empty response variants do not crash ─────────────────────────────
@@ -338,7 +359,7 @@ void main() {
       expect(find.text('الأحداث'), findsWidgets);
       expect(find.text('التفاصيل'), findsOneWidget);
       expect(find.text('التشكيلة'), findsOneWidget);
-      expect(find.byType(Tab), findsNWidgets(6));
+      expect(find.byType(Tab), findsNWidgets(8));
     });
 
     // ── 13. Event filter pills: الأبرز and كل الأحداث ───────────────────────

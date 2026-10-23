@@ -409,8 +409,8 @@ class _LineupTabViewState extends State<LineupTabView> {
                   color: cardColor,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                 ),
-                child: Row(
-                  children: const [
+                child: const Row(
+                  children: [
                     Bone.circle(size: 32),
                     SizedBox(width: 12),
                     Expanded(child: Bone.text(words: 2, fontSize: 13)),

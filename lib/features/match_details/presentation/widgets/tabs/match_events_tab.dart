@@ -116,18 +116,6 @@ class _MatchEventsTabState extends State<MatchEventsTab> {
       }
 
       if (_eventFilter == _EventFilter.all) {
-        // If the dedicated Shootout Box is rendered at top, don't duplicate full time / penalty shootout markers in timeline
-        if (hasShootout && e.isPeriodMarker) {
-          final name = e.playerName.trim().toLowerCase();
-          if (name.contains('ترجيح') ||
-              name.contains('shootout') ||
-              name.contains('نهاية المباراة') ||
-              name.contains('نهاية اللقاء') ||
-              name.contains('full time') ||
-              name == 'ft') {
-            return false;
-          }
-        }
         return true;
       }
 

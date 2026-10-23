@@ -32,10 +32,10 @@ class PlayerMatchStatsState extends Equatable {
 }
 
 class PlayerMatchStatsCubit extends Cubit<PlayerMatchStatsState> {
-  final MatchDetailsRepository _repository;
+  final MatchDetailsRepository? _repository;
 
   PlayerMatchStatsCubit({
-    required MatchDetailsRepository repository,
+    MatchDetailsRepository? repository,
   })  : _repository = repository,
         super(const PlayerMatchStatsState());
 
@@ -44,6 +44,11 @@ class PlayerMatchStatsCubit extends Cubit<PlayerMatchStatsState> {
     required String? playerId,
     required bool isArabic,
   }) async {
+    final repo = _repository;
+    if (repo == null) {
+      emit(const PlayerMatchStatsState(isLoading: false));
+      return;
+    }
     final trimmedId = playerId?.trim();
     if (trimmedId == null || trimmedId.isEmpty || trimmedId == '0') {
       emit(const PlayerMatchStatsState(isLoading: false));
@@ -52,7 +57,7 @@ class PlayerMatchStatsCubit extends Cubit<PlayerMatchStatsState> {
 
     emit(state.copyWith(isLoading: true));
     try {
-      final res = await _repository.getPlayerMatchRating(
+      final res = await repo.getPlayerMatchRating(
         matchId,
         trimmedId,
         lang: isArabic ? 'ar' : 'en',

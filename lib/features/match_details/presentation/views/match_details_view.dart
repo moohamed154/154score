@@ -990,35 +990,54 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
           },
         ),
         actions: [
-          BlocBuilder<FavoritesCubit, FavoritesState>(
-            builder: (context, favState) {
-              return BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
-                builder: (context, state) {
-                  final activeMatch = _resolveActiveMatch(
-                    fallbackMatch: fallbackMatch,
-                    liveFromMatches: liveFromMatches,
-                    state: state,
-                    isDark: isDark,
-                  );
-                  final isNotifActive =
-                      _isMatchNotificationActive(activeMatch, favState);
-                  return IconButton(
-                    icon: Icon(
-                      isNotifActive
-                          ? Icons.notifications_active_rounded
-                          : Icons.notifications_none_rounded,
-                      color: isNotifActive ? AppColors.primary : null,
-                      size: 24,
-                    ),
-                    tooltip: isArabic
-                        ? (isNotifActive
-                            ? 'إيقاف إشعارات المباراة'
-                            : 'تفعيل إشعارات المباراة')
-                        : (isNotifActive
-                            ? 'Mute match notifications'
-                            : 'Enable match notifications'),
-                    onPressed: () =>
-                        _toggleMatchNotification(activeMatch, l10n),
+          Builder(
+            builder: (ctx) {
+              final favCubit = () {
+                try {
+                  return ctx.read<FavoritesCubit>();
+                } catch (_) {
+                  return sl.isRegistered<FavoritesCubit>()
+                      ? sl<FavoritesCubit>()
+                      : null;
+                }
+              }();
+
+              if (favCubit == null) {
+                return const SizedBox.shrink();
+              }
+
+              return BlocBuilder<FavoritesCubit, FavoritesState>(
+                bloc: favCubit,
+                builder: (context, favState) {
+                  return BlocBuilder<MatchDetailsBloc, MatchDetailsState>(
+                    builder: (context, state) {
+                      final activeMatch = _resolveActiveMatch(
+                        fallbackMatch: fallbackMatch,
+                        liveFromMatches: liveFromMatches,
+                        state: state,
+                        isDark: isDark,
+                      );
+                      final isNotifActive =
+                          _isMatchNotificationActive(activeMatch, favState);
+                      return IconButton(
+                        icon: Icon(
+                          isNotifActive
+                              ? Icons.notifications_active_rounded
+                              : Icons.notifications_none_rounded,
+                          color: isNotifActive ? AppColors.primary : null,
+                          size: 24,
+                        ),
+                        tooltip: isArabic
+                            ? (isNotifActive
+                                ? 'إيقاف إشعارات المباراة'
+                                : 'تفعيل إشعارات المباراة')
+                            : (isNotifActive
+                                ? 'Mute match notifications'
+                                : 'Enable match notifications'),
+                        onPressed: () =>
+                            _toggleMatchNotification(activeMatch, l10n),
+                      );
+                    },
                   );
                 },
               );

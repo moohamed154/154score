@@ -555,6 +555,73 @@ void main() {
       expect(payload.overview!.returnLeg!.aggResult, '2 - 1');
     });
 
+    test(
+        'getDetailsPayload filters out [object Object] and does not leak current match penalties to return leg',
+        () async {
+      when(() => mockApiClient.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          )).thenAnswer(
+        (_) async => {
+          'overview': {
+            'home_team': {'id': '1001', 'name': 'Kaizer Chiefs'},
+            'away_team': {'id': '1002', 'name': 'Red Arrows'},
+            // Current match had penalties in the overview
+            'penalties':
+                '[object Object],[object Object],[object Object],[object Object],[object Object] - [object Object],[object Object],[object Object],[object Object],[object Object]',
+            'agg_result': '1 - 1',
+            'return_match': {
+              'match_id': '8888',
+              'home_team': 'Red Arrows',
+              'away_team': 'Kaizer Chiefs',
+              'home_scores': 1,
+              'away_scores': 0,
+              // First leg did not have penalties!
+            },
+          },
+          'data': [],
+        },
+      );
+
+      final payload =
+          await dataSource.getDetailsPayload('999999', lang: 'en');
+      expect(payload.overview, isNotNull);
+      expect(payload.overview!.returnLeg, isNotNull);
+      expect(payload.overview!.returnLeg!.aggResult, '1 - 1');
+      // Return leg should NOT inherit current match penalties
+      expect(payload.overview!.returnLeg!.penalties, isNull);
+    });
+
+    test('getDetailsPayload rejects [object Object] in return_match penalties if present',
+        () async {
+      when(() => mockApiClient.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          )).thenAnswer(
+        (_) async => {
+          'overview': {
+            'home_team': {'id': '1001', 'name': 'Kaizer Chiefs'},
+            'away_team': {'id': '1002', 'name': 'Red Arrows'},
+            'return_match': {
+              'match_id': '8888',
+              'home_team': 'Red Arrows',
+              'away_team': 'Kaizer Chiefs',
+              'home_scores': 1,
+              'away_scores': 0,
+              'penalties': '[object Object],[object Object] - [object Object]',
+            },
+          },
+          'data': [],
+        },
+      );
+
+      final payload =
+          await dataSource.getDetailsPayload('999999', lang: 'en');
+      expect(payload.overview, isNotNull);
+      expect(payload.overview!.returnLeg, isNotNull);
+      expect(payload.overview!.returnLeg!.penalties, isNull);
+    });
+
     test('MatchOverviewDataEntity mergeWith retains existing h2h, returnLeg, and recentForm when incoming is partial or null', () {
       const existing = MatchOverviewDataEntity(
         matchId: '65152122',

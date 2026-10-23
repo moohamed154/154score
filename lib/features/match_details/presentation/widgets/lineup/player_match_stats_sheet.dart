@@ -51,7 +51,9 @@ class PlayerMatchStatsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PlayerMatchStatsCubit>(
-      create: (_) => sl<PlayerMatchStatsCubit>()
+      create: (_) => (sl.isRegistered<PlayerMatchStatsCubit>()
+              ? sl<PlayerMatchStatsCubit>()
+              : PlayerMatchStatsCubit())
         ..loadPlayerRating(
           matchId: matchId,
           playerId: player.playerId,
@@ -1171,7 +1173,10 @@ class PlayerMatchStatsSheet extends StatelessWidget {
           if (p.goals > 0 ||
               p.assists > 0 ||
               p.yellowCards > 0 ||
-              p.redCards > 0) ...[
+              p.redCards > 0 ||
+              p.ownGoals > 0 ||
+              (p.substituteOut && (!p.isSubstitute || p.substituteIn)) ||
+              (p.substituteIn && !p.isStarter)) ...[
             const SizedBox(height: 14),
             const Divider(height: 1),
             const SizedBox(height: 12),
@@ -1206,6 +1211,31 @@ class PlayerMatchStatsSheet extends StatelessWidget {
                     icon: Icons.style_rounded,
                     label: '${p.redCards} ${isArabic ? "بطاقة حمراء" : "Red"}',
                     color: const Color(0xFFEF4444),
+                    isArabic: isArabic,
+                  ),
+                if (p.ownGoals > 0)
+                  _buildTag(
+                    icon: Icons.sports_soccer_rounded,
+                    label: isArabic ? 'هدف في مرماه' : 'Own Goal',
+                    color: const Color(0xFFEF4444),
+                    isArabic: isArabic,
+                  ),
+                if (p.substituteOut && (!p.isSubstitute || p.substituteIn))
+                  _buildTag(
+                    icon: Icons.swap_horiz_rounded,
+                    label: isArabic
+                        ? 'تم استبداله${p.substituteTime != null ? " (د ${p.substituteTime}')" : ""}${p.subbedForName != null && p.subbedForName!.isNotEmpty ? " ➔ ${p.subbedForName}" : ""}'
+                        : 'Subbed Out${p.substituteTime != null ? " (${p.substituteTime}')" : ""}${p.subbedForName != null && p.subbedForName!.isNotEmpty ? " ➔ ${p.subbedForName}" : ""}',
+                    color: const Color(0xFFF97316),
+                    isArabic: isArabic,
+                  ),
+                if (p.substituteIn && !p.isStarter)
+                  _buildTag(
+                    icon: Icons.swap_horiz_rounded,
+                    label: isArabic
+                        ? 'شارك كبديل${p.substituteTime != null ? " (د ${p.substituteTime}')" : ""}${p.subbedForName != null && p.subbedForName!.isNotEmpty ? " ➔ ${p.subbedForName}" : ""}'
+                        : 'Subbed In${p.substituteTime != null ? " (${p.substituteTime}')" : ""}${p.subbedForName != null && p.subbedForName!.isNotEmpty ? " ➔ ${p.subbedForName}" : ""}',
+                    color: const Color(0xFF10B981),
                     isArabic: isArabic,
                   ),
               ],
@@ -1551,22 +1581,22 @@ class PlayerMatchStatsSheet extends StatelessWidget {
               color: isDark ? const Color(0xFF131D2E) : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Bone.text(words: 2, fontSize: 13),
-                const SizedBox(height: 12),
+                Bone.text(words: 2, fontSize: 13),
+                SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Bone.text(words: 2, fontSize: 12),
                     Bone.text(words: 1, fontSize: 12),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Bone.text(words: 3, fontSize: 12),
                     Bone.text(words: 1, fontSize: 12),
                   ],
