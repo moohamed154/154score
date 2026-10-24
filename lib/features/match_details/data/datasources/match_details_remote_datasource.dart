@@ -812,10 +812,18 @@ class MatchDetailsRemoteDataSourceImpl implements MatchDetailsRemoteDataSource {
                 .map((it) {
                   if (it is Map) {
                     final title = it['title']?.toString() ?? '';
-                    final content = it['content']?.toString() ??
+                    final rawContent = it['content']?.toString() ??
                         it['value']?.toString() ??
                         it['name']?.toString() ??
                         '';
+                    String content = rawContent.trim();
+                    if (content.contains('[object') ||
+                        content.contains('Object]') ||
+                        content.contains('Instance of') ||
+                        content.toLowerCase() == 'null' ||
+                        content.toLowerCase() == 'undefined') {
+                      content = '';
+                    }
 
                     String? id = it['id']?.toString() ??
                         it['entity_id']?.toString() ??

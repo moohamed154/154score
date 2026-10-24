@@ -86,6 +86,35 @@ class MatchInfoTab extends StatelessWidget {
         ? match
         : (initialMatch ?? match);
 
+    // Compute clean penalty shootout score if available
+    String? cleanPenScore;
+    final penHome = state.penaltiesDetail?.homeScore ??
+        state.livePenaltyScore1 ??
+        m.penaltyScore1;
+    final penAway = state.penaltiesDetail?.awayScore ??
+        state.livePenaltyScore2 ??
+        m.penaltyScore2;
+
+    if (penHome != null &&
+        penAway != null &&
+        penHome.trim().isNotEmpty &&
+        penAway.trim().isNotEmpty &&
+        !penHome.contains('[object') &&
+        !penAway.contains('[object')) {
+      cleanPenScore = '${penHome.trim()} - ${penAway.trim()}';
+    } else if (state.penaltiesDetail != null && state.penaltiesDetail!.hasKicks) {
+      final hGoals =
+          state.penaltiesDetail!.homeKicks.where((k) => k.isGoal).length;
+      final aGoals =
+          state.penaltiesDetail!.awayKicks.where((k) => k.isGoal).length;
+      cleanPenScore = '$hGoals - $aGoals';
+    } else if (overview?.returnLeg?.penalties != null &&
+        overview!.returnLeg!.penalties!.trim().isNotEmpty &&
+        !overview.returnLeg!.penalties!.contains('[object') &&
+        !overview.returnLeg!.penalties!.contains('Object]')) {
+      cleanPenScore = overview.returnLeg!.penalties!.trim();
+    }
+
     if (m.team1 != 'Home Team' || initialMatch != null) {
       final fallbackItems = <MatchInfoItemEntity>[];
       if (m.leagueTitle != null && m.leagueTitle!.isNotEmpty) {
@@ -159,6 +188,14 @@ class MatchInfoTab extends StatelessWidget {
           ),
         );
       }
+      if (cleanPenScore != null) {
+        fallbackItems.add(
+          MatchInfoItemEntity(
+            title: isArabic ? 'ركلات الترجيح' : 'Penalty Shootout',
+            content: cleanPenScore,
+          ),
+        );
+      }
 
       final existingInfoIndex = detailsList.indexWhere(
         (s) =>
@@ -168,14 +205,86 @@ class MatchInfoTab extends StatelessWidget {
 
       if (existingInfoIndex >= 0) {
         final existingSection = detailsList[existingInfoIndex];
-        final mergedItems = List<MatchInfoItemEntity>.from(
-          existingSection.items,
-        );
+        final mergedItems = <MatchInfoItemEntity>[];
+        bool hasPenaltiesInMerged = false;
+
+        for (final it in existingSection.items) {
+          final titleLower = it.title.trim().toLowerCase();
+          final isPenItem = it.title.contains('ترجيح') ||
+              titleLower.contains('penalty') ||
+              titleLower.contains('shootout');
+
+          if (isPenItem) {
+            final content = it.content.trim();
+            final isCorrupted = content.isEmpty ||
+                content.contains('[object') ||
+                content.contains('Object]') ||
+                content.contains('Instance of') ||
+                content == 'null' ||
+                content == '-';
+
+            if (isCorrupted) {
+              if (cleanPenScore != null) {
+                mergedItems.add(
+                  MatchInfoItemEntity(
+                    title: isArabic ? 'ركلات الترجيح' : 'Penalty Shootout',
+                    content: cleanPenScore,
+                    entityType: it.entityType,
+                    entityId: it.entityId,
+                    slug: it.slug,
+                    link: it.link,
+                  ),
+                );
+                hasPenaltiesInMerged = true;
+              }
+              // If corrupted and cleanPenScore is null, omit the item completely
+            } else {
+              mergedItems.add(it);
+              hasPenaltiesInMerged = true;
+            }
+          } else {
+            final content = it.content.trim();
+            final isCorrupted = content.contains('[object') ||
+                content.contains('Object]') ||
+                content.contains('Instance of');
+            if (!isCorrupted) {
+              mergedItems.add(it);
+            }
+          }
+        }
+
+        // If penalties were not in merged items but cleanPenScore is available:
+        if (!hasPenaltiesInMerged && cleanPenScore != null) {
+          final penItem = MatchInfoItemEntity(
+            title: isArabic ? 'ركلات الترجيح' : 'Penalty Shootout',
+            content: cleanPenScore,
+          );
+          final insertIdx = mergedItems.indexWhere(
+            (it) =>
+                it.title.contains('إجمالية') ||
+                it.title.toLowerCase().contains('aggregate') ||
+                it.title.contains('الشوط الأول') ||
+                it.title.toLowerCase().contains('half-time') ||
+                it.title.contains('الحالية') ||
+                it.title.toLowerCase().contains('score'),
+          );
+          if (insertIdx >= 0 && insertIdx + 1 <= mergedItems.length) {
+            mergedItems.insert(insertIdx + 1, penItem);
+          } else {
+            mergedItems.add(penItem);
+          }
+        }
+
         for (final item in fallbackItems) {
+          final isPen = item.title.contains('ترجيح') ||
+              item.title.toLowerCase().contains('penalty');
+          if (isPen) continue;
+
           if (!mergedItems.any((it) => it.title == item.title)) {
             mergedItems.add(item);
           }
         }
+
         detailsList[existingInfoIndex] = MatchInfoSectionEntity(
           section: existingSection.section,
           items: mergedItems,
@@ -189,6 +298,28 @@ class MatchInfoTab extends StatelessWidget {
           ),
         );
       }
+    }
+
+    // Sanitize any remaining sections across detailsList
+    for (int i = 0; i < detailsList.length; i++) {
+      final sec = detailsList[i];
+      final sanitizedItems = sec.items.where((it) {
+        final c = it.content.trim();
+        final t = it.title.trim();
+        if (t.isEmpty) return false;
+        if (c.contains('[object') ||
+            c.contains('Object]') ||
+            c.contains('Instance of') ||
+            c == 'null' ||
+            c == 'undefined') {
+          return false;
+        }
+        return true;
+      }).toList();
+      detailsList[i] = MatchInfoSectionEntity(
+        section: sec.section,
+        items: sanitizedItems,
+      );
     }
 
     if (detailsList.isEmpty) {

@@ -34,7 +34,23 @@ class MatchInfoCard extends StatelessWidget {
     final hMargin = AppDimensions.getHorizontalMargin(context);
     final isSmall = AppDimensions.isSmallScreen(context);
 
-    if (section.items.isEmpty) return const SizedBox.shrink();
+    final validItems = section.items.where((item) {
+      final title = item.title.trim();
+      final content = item.content.trim();
+      if (title.isEmpty) return false;
+      if (content.isEmpty ||
+          content == '-' ||
+          content.toLowerCase() == 'null' ||
+          content.toLowerCase() == 'undefined' ||
+          content.contains('[object') ||
+          content.contains('Object]') ||
+          content.contains('Instance of')) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    if (validItems.isEmpty) return const SizedBox.shrink();
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: 6),
@@ -83,13 +99,13 @@ class MatchInfoCard extends StatelessWidget {
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: section.items.length,
+            itemCount: validItems.length,
             separatorBuilder: (_, __) => Divider(
               height: 1,
               color: dark ? AppColors.darkBorder : AppColors.lightBorder,
             ),
             itemBuilder: (context, index) {
-              final item = section.items[index];
+              final item = validItems[index];
               final isClickable = _canNavigate(item);
               final displayTitle = _resolveItemTitle(item.title, arabic);
               final displayContent =
@@ -102,7 +118,7 @@ class MatchInfoCard extends StatelessWidget {
                   onTap: isClickable
                       ? () => _handleNavigation(context, item)
                       : null,
-                  borderRadius: index == section.items.length - 1
+                  borderRadius: index == validItems.length - 1
                       ? const BorderRadius.vertical(
                           bottom: Radius.circular(AppDimensions.radiusMd),
                         )
@@ -461,6 +477,12 @@ class MatchInfoCard extends StatelessWidget {
     if (lower == 'الجولة' || lower == 'round') {
       return isArabic ? 'الجولة' : 'Round';
     }
+    if (lower == 'ركلات الترجيح' ||
+        lower == 'ترجيح' ||
+        lower == 'penalty shootout' ||
+        lower == 'penalties') {
+      return isArabic ? 'ركلات الترجيح' : 'Penalty Shootout';
+    }
     return rawTitle;
   }
 
@@ -469,6 +491,14 @@ class MatchInfoCard extends StatelessWidget {
     String rawContent,
     bool isArabic,
   ) {
+    if (rawContent.contains('[object') ||
+        rawContent.contains('Object]') ||
+        rawContent.contains('Instance of') ||
+        rawContent.toLowerCase() == 'null' ||
+        rawContent.toLowerCase() == 'undefined') {
+      return '';
+    }
+
     final titleLower = rawTitle.toLowerCase().trim();
     final isStatusItem = titleLower == 'حالة المباراة' ||
         titleLower == 'match status' ||
