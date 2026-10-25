@@ -137,5 +137,92 @@ void main() {
       expect(find.text('زيزو'), findsOneWidget);
       expect(find.byType(MatchEventVisualIcon), findsOneWidget);
     });
+
+    testWidgets('6. Missed chance in Arabic renders "فرصة ضائعة" and NOT penalty missed', (
+      tester,
+    ) async {
+      const missedChanceEvent = MatchEventEntity(
+        minute: '9',
+        playerName: 'طاهر محمد طاهر',
+        secondaryPlayerName: 'فرصة ضائعة',
+        type: 'miss_chance',
+        isHomeTeam: true,
+      );
+
+      await tester.pumpWidget(buildTestWidget(const TimelineEventItem(event: missedChanceEvent)));
+      await tester.pumpAndSettle();
+
+      expect(find.text("9'"), findsOneWidget);
+      expect(find.text('طاهر محمد طاهر'), findsOneWidget);
+      expect(find.text('فرصة ضائعة'), findsOneWidget);
+      expect(find.text('ضربة جزاء ضائعة'), findsNothing);
+      expect(find.text('ركلة جزاء ضائعة'), findsNothing);
+
+      final iconFinder = find.byType(MatchEventVisualIcon);
+      expect(iconFinder, findsOneWidget);
+      final iconWidget = tester.widget<MatchEventVisualIcon>(iconFinder);
+      expect(iconWidget.type, MatchVisualEventType.missChance);
+    });
+
+    testWidgets('7. Missed chance in English renders "Missed Chance"', (
+      tester,
+    ) async {
+      const missedChanceEventEn = MatchEventEntity(
+        minute: '21',
+        playerName: 'Hussein El Shahat',
+        secondaryPlayerName: 'Missed Chance',
+        type: 'miss_chance',
+        isHomeTeam: true,
+      );
+
+      final widget = MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
+        theme: AppTheme.darkTheme,
+        home: const Scaffold(
+          body: SingleChildScrollView(
+            child: SizedBox(
+              width: 400,
+              child: TimelineEventItem(event: missedChanceEventEn),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+
+      expect(find.text("21'"), findsOneWidget);
+      expect(find.text('Hussein El Shahat'), findsOneWidget);
+      expect(find.text('Missed Chance'), findsOneWidget);
+    });
+
+    testWidgets('8. Actual missed penalty in Arabic renders "ركلة جزاء ضائعة"', (
+      tester,
+    ) async {
+      const missedPenEvent = MatchEventEntity(
+        minute: '35',
+        playerName: 'علي معلول',
+        secondaryPlayerName: 'ركلة جزاء ضائعة',
+        type: 'missed_penalty',
+        isHomeTeam: true,
+      );
+
+      await tester.pumpWidget(buildTestWidget(const TimelineEventItem(event: missedPenEvent)));
+      await tester.pumpAndSettle();
+
+      expect(find.text("35'"), findsOneWidget);
+      expect(find.text('علي معلول'), findsOneWidget);
+      expect(find.text('ركلة جزاء ضائعة'), findsOneWidget);
+
+      final iconFinder = find.byType(MatchEventVisualIcon);
+      expect(iconFinder, findsOneWidget);
+      final iconWidget = tester.widget<MatchEventVisualIcon>(iconFinder);
+      expect(iconWidget.type, MatchVisualEventType.missedPenalty);
+    });
   });
 }

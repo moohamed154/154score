@@ -924,6 +924,18 @@ class TimelineEventItem extends StatelessWidget {
     if (lower.contains('full-time') || lower == 'ft') {
       return l10n.translate('status_ended');
     }
+    if (lower.contains('miss_chance') ||
+        lower.contains('missed_chance') ||
+        lower.contains('فرصة ضائعة') ||
+        lower.contains('فرصة مهدرة')) {
+      return l10n.isArabic ? 'فرصة ضائعة' : 'Missed Chance';
+    }
+    if (lower.contains('missed_penalty') ||
+        lower.contains('penalty_miss') ||
+        lower.contains('ركلة جزاء ضائعة') ||
+        lower.contains('ضربة جزاء ضائعة')) {
+      return l10n.isArabic ? 'ركلة جزاء ضائعة' : 'Missed Penalty';
+    }
     return type;
   }
 
@@ -963,18 +975,40 @@ class TimelineEventItem extends StatelessWidget {
         redColor,
         l10n.isArabic ? 'هدف ملغى' : 'Disallowed Goal',
       );
+    } else if (lower.contains('miss_chance') ||
+        lower.contains('missed_chance') ||
+        lower.contains('miss chance') ||
+        lower.contains('missed chance') ||
+        lower.contains('chance missed') ||
+        lower.contains('فرصة ضائعة') ||
+        lower.contains('فرصة مهدرة') ||
+        (lower.contains('فرصة') && !lower.contains('جزاء'))) {
+      return (
+        MatchVisualEventType.missChance,
+        isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706),
+        l10n.isArabic ? 'فرصة ضائعة' : 'Missed Chance',
+      );
     } else if (lower.contains('missed_penalty') ||
         lower.contains('missed-penalty') ||
         lower.contains('penalty_miss') ||
         lower.contains('penalty-miss') ||
+        lower.contains('penalty missed') ||
+        lower.contains('penalty_missed') ||
+        lower.contains('missed penalty') ||
         lower.contains('ركلة جزاء ضائعة') ||
         lower.contains('ضربة جزاء ضائعة') ||
-        lower.contains('ضائعة') ||
-        lower.contains('مهدرة')) {
+        lower.contains('ركلة جزاء مهدرة') ||
+        lower.contains('ضربة جزاء مهدرة') ||
+        ((lower.contains('جزاء') || lower.contains('penalty')) &&
+            (lower.contains('ضائع') ||
+                lower.contains('ضائعة') ||
+                lower.contains('مهدر') ||
+                lower.contains('مهدرة') ||
+                lower.contains('miss')))) {
       return (
         MatchVisualEventType.missedPenalty,
         redColor,
-        l10n.isArabic ? 'ضربة جزاء ضائعة' : 'Missed Penalty',
+        l10n.isArabic ? 'ركلة جزاء ضائعة' : 'Missed Penalty',
       );
     } else if (lower.contains('penalty_goal') ||
         lower.contains('penalty-goal') ||
@@ -983,6 +1017,7 @@ class TimelineEventItem extends StatelessWidget {
         lower.contains('ركلة جزاء ناجحة') ||
         lower.contains('ضربة جزاء ناجحة') ||
         lower.contains('ركلة جزاء مسجلة') ||
+        lower.contains('ضربة جزاء مسجلة') ||
         lower.contains('success_penalty') ||
         lower.contains('ضربة جزاء') ||
         lower.contains('ركلة جزاء') ||
@@ -990,7 +1025,7 @@ class TimelineEventItem extends StatelessWidget {
       return (
         MatchVisualEventType.successPenalty,
         primaryColor,
-        l10n.isArabic ? 'ضربة جزاء' : 'Penalty Scored',
+        l10n.isArabic ? 'ركلة جزاء مسجلة' : 'Penalty Scored',
       );
     } else if (lower.contains('crossbar') ||
         lower.contains('shoot_crossbar') ||
@@ -1001,14 +1036,6 @@ class TimelineEventItem extends StatelessWidget {
         MatchVisualEventType.shootCrossbar,
         isDark ? const Color(0xFFF97316) : const Color(0xFFEA580C),
         l10n.isArabic ? 'في القائم / العارضة' : 'Crossbar / Post',
-      );
-    } else if (lower.contains('miss_chance') ||
-        lower.contains('missed_chance') ||
-        lower.contains('فرصة ضائعة')) {
-      return (
-        MatchVisualEventType.missChance,
-        isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706),
-        l10n.isArabic ? 'فرصة ضائعة' : 'Missed Chance',
       );
     } else if (lower.contains('second_yellow') ||
         lower.contains('second-yellow') ||
