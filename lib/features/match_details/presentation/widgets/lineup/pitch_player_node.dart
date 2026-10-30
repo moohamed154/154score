@@ -1217,7 +1217,9 @@ Widget _buildModalTimelineRow({
       title = isArabic ? 'تبديل' : 'Substitution';
       if (event.secondaryPlayerName != null &&
           event.secondaryPlayerName!.isNotEmpty) {
-        title += ' (${event.playerName} ➔ ${event.secondaryPlayerName})';
+        title += isArabic
+            ? ' (دخول: ${event.secondaryPlayerName} • خروج: ${event.playerName})'
+            : ' (In: ${event.secondaryPlayerName} • Out: ${event.playerName})';
       }
       break;
     default:

@@ -152,6 +152,7 @@ class TimelineEventItem extends StatelessWidget {
       event.secondaryPlayerName,
       l10n,
       isDark,
+      secondaryPlayerId: event.secondaryPlayerId,
     );
 
     final eventRow = Padding(
@@ -431,6 +432,20 @@ class TimelineEventItem extends StatelessWidget {
           .replaceAll('إصابة', '')
           .trim();
 
+      final inPlayerPhoto =
+          hasSecondary ? event.secondaryPlayerPhoto : event.playerPhoto;
+      final inPlayerNumber =
+          hasSecondary ? event.secondaryPlayerNumber : event.playerNumber;
+      final inPlayerId =
+          hasSecondary ? event.secondaryPlayerId : event.playerId;
+
+      final outPlayerPhoto =
+          hasSecondary ? event.playerPhoto : event.secondaryPlayerPhoto;
+      final outPlayerNumber =
+          hasSecondary ? event.playerNumber : event.secondaryPlayerNumber;
+      final outPlayerId =
+          hasSecondary ? event.playerId : event.secondaryPlayerId;
+
       final content = Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,8 +470,8 @@ class TimelineEventItem extends StatelessWidget {
                 width: 20,
                 alignment: Alignment.center,
                 child: _buildPlayerAvatar(
-                  event.playerPhoto,
-                  event.playerNumber,
+                  inPlayerPhoto,
+                  inPlayerNumber,
                   isDark,
                   size: 16,
                 ),
@@ -468,8 +483,8 @@ class TimelineEventItem extends StatelessWidget {
                   onTap: () => _navigateToPlayer(
                     context,
                     mainPlayerName,
-                    id: event.playerId,
-                    photo: event.playerPhoto,
+                    id: inPlayerId,
+                    photo: inPlayerPhoto,
                   ),
                   child: Text(
                     mainPlayerName,
@@ -514,8 +529,8 @@ class TimelineEventItem extends StatelessWidget {
                 width: 20,
                 alignment: Alignment.center,
                 child: _buildPlayerAvatar(
-                  event.secondaryPlayerPhoto,
-                  event.secondaryPlayerNumber,
+                  outPlayerPhoto,
+                  outPlayerNumber,
                   isDark,
                   size: 16,
                 ),
@@ -527,8 +542,8 @@ class TimelineEventItem extends StatelessWidget {
                   onTap: () => _navigateToPlayer(
                     context,
                     cleanOutName,
-                    id: event.secondaryPlayerId,
-                    photo: event.secondaryPlayerPhoto,
+                    id: outPlayerId,
+                    photo: outPlayerPhoto,
                   ),
                   child: Text(
                     cleanOutName,
@@ -951,12 +966,29 @@ class TimelineEventItem extends StatelessWidget {
     String type,
     String? subtitle,
     AppLocalizations l10n,
-    bool isDark,
-  ) {
-    final lower = '$type ${subtitle ?? ''}'.toLowerCase();
+    bool isDark, {
+    String? secondaryPlayerId,
+  }) {
+    final typeLower = type.trim().toLowerCase();
     final redColor = isDark ? AppColors.redCard : const Color(0xFFDC2626);
     final primaryColor = isDark ? AppColors.primary : const Color(0xFF16A34A);
     final yellowColor = isDark ? AppColors.yellowCard : const Color(0xFFCA8A04);
+
+    // Check explicit substitution type first so player names in subtitle
+    // (e.g. "Adem Redjem", "Reda", "Varane", "Postiga") never misclassify it.
+    if (typeLower.contains('sub') || typeLower.contains('تبديل')) {
+      return (
+        MatchVisualEventType.substitution,
+        isDark ? AppColors.substitution : const Color(0xFF0891B2),
+        null,
+      );
+    }
+
+    final isSecondaryAPlayer = secondaryPlayerId != null &&
+        secondaryPlayerId.trim().isNotEmpty &&
+        secondaryPlayerId.trim() != '0';
+    final effectiveSubtitle = isSecondaryAPlayer ? '' : (subtitle ?? '');
+    final lower = '$typeLower $effectiveSubtitle'.toLowerCase();
 
     if (lower.contains('own_goal') ||
         lower.contains('own-goal') ||
@@ -1029,7 +1061,9 @@ class TimelineEventItem extends StatelessWidget {
       );
     } else if (lower.contains('crossbar') ||
         lower.contains('shoot_crossbar') ||
-        lower.contains('post') ||
+        typeLower.contains('post') ||
+        lower.contains('hit_post') ||
+        lower.contains('hit post') ||
         lower.contains('عارضة') ||
         lower.contains('قائم')) {
       return (
@@ -1047,11 +1081,17 @@ class TimelineEventItem extends StatelessWidget {
         redColor,
         l10n.isArabic ? 'إنذار ثانٍ / طرد' : '2nd Yellow / Red',
       );
-    } else if (lower.contains('yellow') ||
+    } else if (typeLower.contains('yellow') ||
+        lower.contains('yellow_card') ||
+        lower.contains('yellow-card') ||
+        lower.contains('yellow card') ||
         lower.contains('صفراء') ||
         lower.contains('إنذار')) {
       return (MatchVisualEventType.yellowCard, yellowColor, null);
-    } else if (lower.contains('red') ||
+    } else if (typeLower.contains('red') ||
+        lower.contains('red_card') ||
+        lower.contains('red-card') ||
+        lower.contains('red card') ||
         lower.contains('حمراء') ||
         lower.contains('طرد')) {
       return (MatchVisualEventType.redCard, redColor, null);
@@ -1061,7 +1101,9 @@ class TimelineEventItem extends StatelessWidget {
         isDark ? AppColors.substitution : const Color(0xFF0891B2),
         null,
       );
-    } else if (lower.contains('var')) {
+    } else if (typeLower.contains('var') ||
+        lower.contains('var_decision') ||
+        lower.contains('var ')) {
       return (
         MatchVisualEventType.varDecision,
         isDark ? AppColors.varEvent : const Color(0xFF2563EB),

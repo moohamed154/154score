@@ -30,13 +30,14 @@ void main() async {
       DeviceOrientation.portraitDown,
     ]);
 
-    // 0. Initialize Android foreground task communication port
+    // 0. Initialize Android foreground task communication port & configuration
     if (Platform.isAndroid) {
       try {
         FlutterForegroundTask.initCommunicationPort();
+        await LiveMatchForegroundService.init();
       } catch (e) {
         debugPrint(
-            '[main] FlutterForegroundTask.initCommunicationPort error: $e');
+            '[main] FlutterForegroundTask init error: $e');
       }
     }
 
@@ -91,7 +92,6 @@ void main() async {
     // 6. Android-only background tasks (Foreground Service & Workmanager)
     if (Platform.isAndroid) {
       try {
-        await LiveMatchForegroundService.init();
         final storage = sl<LocalStorageService>();
         if (storage.isLiveMatchModeEnabled()) {
           await LiveMatchForegroundService.startService();

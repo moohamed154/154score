@@ -224,5 +224,97 @@ void main() {
       final iconWidget = tester.widget<MatchEventVisualIcon>(iconFinder);
       expect(iconWidget.type, MatchVisualEventType.missedPenalty);
     });
+
+    testWidgets(
+      '9. Substitution with player name containing "red" ("Adem Redjem") renders as substitution (not red card) with consistent IN/OUT order in English and Arabic',
+      (tester) async {
+        // API semantics: playerName = Player OUT (Kaboria #98),
+        // secondaryPlayerName = Player IN (Adem Redjem #7).
+        const subEventEn = MatchEventEntity(
+          minute: '78',
+          playerName: 'Kaboria',
+          playerId: '940251207',
+          playerNumber: 98,
+          secondaryPlayerName: 'Adem Redjem',
+          secondaryPlayerId: '1121519',
+          secondaryPlayerNumber: 7,
+          type: 'substitution',
+          isHomeTeam: true,
+        );
+
+        final widgetEn = MaterialApp(
+          locale: const Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          theme: AppTheme.darkTheme,
+          home: const Scaffold(
+            body: SingleChildScrollView(
+              child: SizedBox(
+                width: 400,
+                child: TimelineEventItem(event: subEventEn),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpWidget(widgetEn);
+        await tester.pumpAndSettle();
+
+        // Must NOT render a MatchEventVisualIcon of type redCard
+        expect(find.byType(MatchEventVisualIcon), findsNothing);
+
+        // Both player names must be present
+        final inFinderEn = find.text('Adem Redjem');
+        final outFinderEn = find.text('Kaboria');
+        expect(inFinderEn, findsOneWidget);
+        expect(outFinderEn, findsOneWidget);
+
+        // Player IN (Adem Redjem) must be on Line 1 (above Player OUT Kaboria)
+        expect(
+          tester.getTopLeft(inFinderEn).dy,
+          lessThan(tester.getTopLeft(outFinderEn).dy),
+        );
+
+        // Player IN's jersey number (#7) must be on Line 1 (above #98)
+        final numInFinder = find.text('7');
+        final numOutFinder = find.text('98');
+        expect(numInFinder, findsOneWidget);
+        expect(numOutFinder, findsOneWidget);
+        expect(
+          tester.getTopLeft(numInFinder).dy,
+          lessThan(tester.getTopLeft(numOutFinder).dy),
+        );
+
+        // Now verify Arabic renders the exact same vertical order (IN on top, OUT on bottom)
+        const subEventAr = MatchEventEntity(
+          minute: '78',
+          playerName: 'كابوريا',
+          playerId: '940251207',
+          playerNumber: 98,
+          secondaryPlayerName: 'أدم رجم',
+          secondaryPlayerId: '1121519',
+          secondaryPlayerNumber: 7,
+          type: 'substitution',
+          isHomeTeam: true,
+        );
+
+        await tester.pumpWidget(
+          buildTestWidget(const TimelineEventItem(event: subEventAr)),
+        );
+        await tester.pumpAndSettle();
+
+        final inFinderAr = find.text('أدم رجم');
+        final outFinderAr = find.text('كابوريا');
+        expect(inFinderAr, findsOneWidget);
+        expect(outFinderAr, findsOneWidget);
+        expect(
+          tester.getTopLeft(inFinderAr).dy,
+          lessThan(tester.getTopLeft(outFinderAr).dy),
+        );
+      },
+    );
   });
 }

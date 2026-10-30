@@ -458,12 +458,12 @@ class LiveMatchForegroundService {
         eventAction: ForegroundTaskEventAction.repeat(
           5000,
         ), // Poll every 5s for zero-delay
-        autoRunOnBoot: true,
-        autoRunOnMyPackageReplaced: true,
+        autoRunOnBoot: false,
+        autoRunOnMyPackageReplaced: false,
         allowWakeLock: true,
         allowWifiLock: true,
-        allowAutoRestart: true,
-        stopWithTask: false,
+        allowAutoRestart: false,
+        stopWithTask: true,
       ),
     );
     _isInitialized = true;
